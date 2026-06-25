@@ -1,0 +1,41 @@
+MIT License
+
+Copyright (c) 2026 David Temkin
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+Scope of this license
+======================
+
+The MIT license above applies to the NEW code authored for OpenLaszlo 5.0 —
+principally the TypeScript LZX->DHTML compiler (`compiler/src`, the built
+`compiler/dist` and `compiler/lzc-browser.js`), the static bootstrap and
+Service Worker (`index.html`, `service-worker.js`), and other 5.0-original
+tooling and glue.
+
+This repository also bundles components from the original OpenLaszlo 4.x
+platform — including the DHTML runtime (`runtime/`), original documentation
+(`docs/`), and original LZX example sources — which are
+Copyright (c) 2001-2010 Laszlo Systems, Inc. and remain licensed under the
+Common Public License Version 1.0 (CPL 1.0), the license under which
+OpenLaszlo was originally released. Those terms continue to govern that
+original material; see https://www.openlaszlo.org and the original LPS
+distribution for the full CPL text.
