@@ -1,0 +1,74 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;constantboundslayout&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>constantboundslayout<span class="ang">&gt;</span></h1><p class="short">Arranges a set of views to a constant 'x' or 'y' value with a bounding rect</p><p class="meta">Extends <code>layout</code></p>
+        
+        <p>
+          A 
+          <code>&lt;view&gt;</code>
+           can have an 
+          <code>xoffset</code>
+           and a 
+          <code>yoffset</code>
+          . These offsets allow the view to be placed relative to the point (
+          <code>xoffset</code>
+          , 
+          <code>yoffset</code>
+          ). (Otherwise the view is placed using the view's top left corner as a reference point.) If a view has an offset, then 
+this will effect how layouts position it relative to other views.
+        </p>
+        
+        <p>
+          The easiest way to see how constantboundslayout works is to contrast it with 
+          <code>&lt;constantlayout&gt;</code>
+           as shown here.
+        </p>
+        
+        <p>
+          The example below shows three views, one with an 
+          <code>xoffset</code>
+           value of five. When using just a 
+          <code>&lt;constantlayout&gt;</code>
+           the yellow view is shifted left five pixels because of its 
+          <code>xoffset</code>
+          .
+        </p>
+        
+        <pre class="example">
+&lt;canvas height="85"&gt;
+  &lt;view bgcolor="red" &gt;
+    &lt;view width="80" height="80" bgcolor="yellow" xoffset="5"/&gt;       
+    &lt;view width="60" height="60" bgcolor="silver"/&gt; 
+    &lt;view width="40" height="40" bgcolor="green"/&gt;           
+    &lt;constantlayout axis="x" value="10"/&gt; 
+  &lt;/view &gt;
+&lt;/canvas&gt;
+
+</pre>
+        
+        <p>
+          With a 
+          <code>constantboundslayout</code>
+           that offset is effectively ignored, meaning only the bounds of the view matters in the layout process. The example below shows all of the subviews now aligned with the use of a 
+          <code>constantboundslayout</code>
+          .
+        </p>
+        
+        <pre class="example">
+&lt;canvas height="85"&gt;
+  &lt;include /&gt;
+  &lt;view bgcolor="red"&gt;
+    &lt;view width="80" height="80" bgcolor="yellow" xoffset="5"/&gt;      
+    &lt;view width="60" height="60" bgcolor="silver"/&gt; 
+    &lt;view width="40" height="40" bgcolor="green"/&gt;           
+    &lt;constantboundslayout axis="x" value="10"/&gt;
+  &lt;/view &gt;
+&lt;/canvas&gt;
+
+            </pre>
+                 
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">axis</td><td class="ty">string</td><td class="ty">y</td><td>The axis in which this layout operates either 'x' or 'y'.</td></tr><tr><td class="nm">value</td><td class="ty">expression</td><td class="ty">0</td><td>The constant value that is applied to the attribute
+              ( defined in 'axis' as 'x' or 'y' ) of each subview in the layout.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

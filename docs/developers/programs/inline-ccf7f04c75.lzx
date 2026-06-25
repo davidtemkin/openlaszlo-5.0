@@ -1,0 +1,15 @@
+<class name="baseslider" extends="basevaluecomponent" width="200">
+  <!-- attributes begin here -->
+  <!-- ...                   -->
+  <!-- attributes end here   -->
+
+  <method name="init">
+    super.init();
+    // have to adjust thumb once at start 
+    _adjustThumb();
+  </method>        
+
+  <!-- methods begin here -->
+  <!-- ...                -->
+  <!-- methods end here   -->
+</class>

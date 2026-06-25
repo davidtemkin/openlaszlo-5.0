@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1002">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Almond Cookies and Daffodils</title>
+  <description>Almond Cookies and Daffodils — from the OpenLaszlo sample image library.</description>
+  <dates posted="1490086400" />
+  <urls><url type="photopage">data/photos/1002.jpg</url></urls>
+  <tags><tag>almond</tag><tag>cookies</tag><tag>daffodils</tag></tags>
+</photo>
+</rsp>

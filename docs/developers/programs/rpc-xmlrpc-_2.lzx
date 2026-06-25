@@ -1,0 +1,39 @@
+
+
+<canvas debug="true" height="400" width="100%">
+    <!-- this isues one call of the freshmeat XML-RPC API -->
+    <!-- Documented here: http://freshmeat.net/faq/view/49/ -->
+
+    <xmlrpc name="freshmeat"
+            service="http://freshmeat.net/xmlrpc/">
+
+        <handler name="onload">
+            Debug.debug('freshmeat XML-RPC service loaded');
+            Debug.debug('proxy:');
+            Debug.inspect(this.proxy);
+        </handler>
+
+        <handler name="ondata" args="data">
+            Debug.debug('got data: %w', data);
+        </handler>
+
+        <handler name="onerror" args="error">
+            Debug.debug('onerror: %w', error);
+        </handler>
+
+        <remotecall name="fal" funcname="fetch_available_licenses" />
+
+    </xmlrpc>
+
+    <button text="fetch_available_licenses" x="10" y="10">
+        <handler name="onclick">
+            Debug.debug('getting licenses...');
+            freshmeat.fal.invoke()
+        </handler>
+    </button>
+
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

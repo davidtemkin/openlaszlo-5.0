@@ -1,0 +1,2 @@
+<slider onminvalue="Debug.debug('minvalue: %w', this.minvalue)"
+        onmaxvalue="Debug.debug('maxvalue: %w', this.maxvalue)"/>

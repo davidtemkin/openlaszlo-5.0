@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1049">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Rainforest Waterfall Stream</title>
+  <description>Rainforest Waterfall Stream — from the OpenLaszlo sample image library.</description>
+  <dates posted="1494147200" />
+  <urls><url type="photopage">data/photos/1049.jpg</url></urls>
+  <tags><tag>rainforest</tag><tag>waterfall</tag><tag>stream</tag></tags>
+</photo>
+</rsp>

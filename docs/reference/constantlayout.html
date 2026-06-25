@@ -1,0 +1,53 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;constantlayout&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>constantlayout<span class="ang">&gt;</span></h1><p class="short">Arranges a set of views to a constant 'x' or 'y' value.</p><p class="meta">Extends <code>layout</code></p>
+                    
+        <p>
+                          
+          <code>constantlayout</code>
+           extends
+                
+          <code>&lt;LzLayout&gt;</code>
+          , and therefore it is responsible for
+                arranging all of the subviews for the view that it is attached to. The
+                attributes of a view that 
+          <code>constantlayout</code>
+                          effects are the 
+          <code>x</code>
+           and 
+          <code>y</code>
+                          values, and as its name implies 
+          <code>constantlayout</code>
+                          sets all of the subviews to the same value.
+        </p>
+                    
+        <pre class="example">
+    &lt;canvas height="100"&gt;
+        &lt;view bgcolor="red" &gt;
+            &lt;view width="80" height="80" bgcolor="teal"/&gt;       
+            &lt;view width="60" height="60" bgcolor="silver"/&gt; 
+            &lt;view width="40" height="40" bgcolor="green"/&gt;           
+            &lt;constantlayout axis="x" value="10"/&gt;
+        &lt;/view &gt;
+    &lt;/canvas&gt;
+            </pre>
+                    
+        <p>In this example the teal, silver and green views are aligned on the horizontal (x) axis; the layout element's value attribute (10) causes the subviews to be shifted ten pixels to the right.</p>
+           
+        <pre class="example">
+        &lt;canvas height="100" &gt;
+            &lt;view bgcolor="red" &gt;
+                &lt;view width="80" height="80" bgcolor="teal"/&gt;       
+                &lt;view width="60" height="60" bgcolor="silver"/&gt; 
+                &lt;view width="40" height="40" bgcolor="green"/&gt;           
+                &lt;constantlayout axis="y" value="10"/&gt;
+            &lt;/view &gt;
+        &lt;/canvas&gt;
+            </pre>
+                
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">axis</td><td class="ty">string</td><td class="ty">y</td><td>The axis in which this layout operates either 'x' or 'y'.</td></tr><tr><td class="nm">value</td><td class="ty">expression</td><td class="ty"/><td>The constant value that is applied to the attribute
+          ( defined in 'axis' as 'x' or 'y' ) of each subview in the layout.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

@@ -1,0 +1,6 @@
+  <canvas>
+      <connection authenticator="anonymous"/>
+      <script>
+        canvas.connection.connect();
+      </script>
+  </canvas>

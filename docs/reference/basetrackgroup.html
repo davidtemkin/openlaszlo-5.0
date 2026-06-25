@@ -1,0 +1,86 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basetrackgroup&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basetrackgroup<span class="ang">&gt;</span></h1><p class="short">used for grouping a set of views responding to mousetrack events.</p><p class="meta">Extends <a href="view.html"><code>LzView</code></a></p>
+                    
+        <p>A utility class which simplifies tracking of cursor movement across
+            a set of views while in a mousedown state.  This involves creating a
+            trackgroup with a unique ID and the registering of any views
+            associated with that trackgroup.</p>
+                    
+            
+        <p>
+          <code>basetrackgroup</code>
+           handles this
+            automatically. It creates the unique trackgroup name and automatically
+            registers its subviews to be tracked by the group. A developer needs
+            to create the methods within the subviews to respond to the set of
+            mousetrack events.
+        </p>
+                    
+            
+        <p>
+          The example below displays four colored rectangles within a
+            
+          <code>basetrackgroup</code>
+           layed out vertically.  The
+            rectangles respond to the various moustrack events by changing their
+            background colors.  Try pressing the mouse down on one square, and
+            dragging across the other squares.
+        </p>
+                    
+            
+        <pre class="example">
+            &lt;canvas height="200"&gt;
+                &lt;include /&gt;
+                &lt;class name="testview"  bgcolor="red" width="100%" height="30" clickable="true"&gt;
+                &lt;handler name="onmousetrackover"&gt;
+                  this.setHilite(true);
+                &lt;/handler&gt;
+            
+                &lt;handler name="onmousetrackout"&gt;
+                  this.setHilite(false);
+                &lt;/handler&gt;
+            
+                &lt;handler name="onmousetrackup"&gt;
+                  this.setSelect(true);
+                &lt;/handler&gt;
+            
+                &lt;method name="setHilite" args="ishilite"&gt;
+                 if (ishilite ) this.setAttribute('bgcolor', 0x00FF00);
+                 else this.setAttribute('bgcolor', 0xFF0000)
+                &lt;/method&gt;
+            
+                &lt;method name="setSelect" args="isSelect"&gt;
+                  if (isSelect) this.setAttribute('bgcolor', 0x0000FF);
+                  else this.setAttribute('bgcolor', 0xFF0000)
+                &lt;/method&gt;
+              &lt;/class&gt;
+            
+              &lt;basetrackgroup x="20" y="20" width="100" height="200"&gt;
+                &lt;testview name="v1"/&gt;
+                &lt;testview name="v2"/&gt;
+                &lt;testview name="v3"/&gt;
+                &lt;testview name="v4"/&gt;
+                &lt;simplelayout axis="y" spacing="10"/&gt;
+              &lt;/basetrackgroup&gt;
+            &lt;/canvas&gt;
+            </pre>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">activateevents</td><td class="ty">expression</td><td class="ty">['onmousedown']</td><td>
+                an array of events which will activate tracking. 
+           To override, you must declare as once. For example:
+           
+                <pre><code>&lt;attribute name="activateevents" value="['onmouseover']" when="once"/&gt;</code></pre>
+              </td></tr><tr><td class="nm">boundsref</td><td class="ty">expression</td><td class="ty">this</td><td>The view that will be used to define the bounding rect for tracking
+              the mouse</td></tr><tr><td class="nm">deactivateevents</td><td class="ty">expression</td><td class="ty">['onmouseup']</td><td>
+                an array of events which will deactivate tracking. 
+           To override, you must declare as once. For example:
+           
+                <pre><code>&lt;attribute name="deactivateevents" value="['onmouseover']" when="once"/&gt;</code></pre>
+              </td></tr><tr><td class="nm">tracking</td><td class="ty">expression</td><td class="ty">true</td><td>Indicates if this trackgroup is currently tracking or not.
+              It can bet set to turn tracking on or off, or use the methods
+              activatetrackgroup and deactivatetrackgroup</td></tr><tr><td class="nm">trackingrate</td><td class="ty">expression</td><td class="ty">150</td><td>The periodic rate in milliseconds to track the mouse</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

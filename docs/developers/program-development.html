@@ -1,0 +1,329 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 4. Overview of OpenLaszlo Application Development</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.overview.html" title="Part I. Overview"><link rel="prev" href="designers.html" title="Chapter 3. OpenLaszlo for Designers"><link rel="next" href="developers.tutorials.html" title="Part II. Tutorial Introduction"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 4. Overview of OpenLaszlo Application Development</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="designers.html">Prev</a> </td><th width="60%" align="center">Part I. Overview</th><td width="20%" align="right"> <a accesskey="n" href="developers.tutorials.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="program-development"></a>Chapter 4. Overview of OpenLaszlo Application Development</h2></div></div></div><p>
+This chapter summarizes information about OpenLaszlo application structure and mechanics that an experienced programmer will need in order to start playing with code.</p><p>This discussion is necessarily abbreviated and incomplete; its
+purpose is merely to point you in the right direction. As you begin to
+write LZX applications, you should also work through the <a class="ulink" href="../developers/" target="_top">tutorials</a>.</p><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1415"></a>1. The program development cycle in a nutshell</h2></div></div></div><p>
+The program development cycle differs somewhat depending on whether you deploy your application proxied or SOLO. 
+Developing proxied applications is the simpler case, so we'll start with that here.  
+</p><p>
+The process of developing an OpenLaszlo application can be summarized:</p><div class="orderedlist"><ol class="orderedlist compact" type="1"><li class="listitem"><p>
+start up the OpenLaszlo Server</p></li><li class="listitem"><p>
+using a text editor, write program code; save the file with a .lzx extension</p></li><li class="listitem"><p>
+place file in an appropriate directory</p></li><li class="listitem"><p>
+compile the application</p></li><li class="listitem"><p>
+debug and modify the program</p></li><li class="listitem"><p>
+repeat steps 2-5 until the program is perfect</p></li><li class="listitem"><p>
+deploy the application</p></li></ol></div><p>
+Each of these steps is described in turn below, and explored in greater depth throughout this Guide. But first we'll say a word about the Developer's Console, which is the default interface for performing common development activities.</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1405"></a>1.1. The Developer's Console</h3></div></div></div><p>
+The Developer's Console is a small OpenLaszlo application for selecting things like the target runtime, the deployment mode (proxied or SOLO) and whether the debugger is included.  When you first compile an OpenLaszlo application (as explained below), by default it is returned with the Developer's Console appearing at the bottom of the application.</p><p>
+Depending on whether your compile to SWF (the default) or DHTML, a slightly different version of the Developer's Console is returned. The illustrations below call out features of both versions.
+</p><div class="informalfigure"><div class="mediaobject"><img src="images/dev_console_dhtml.gif"></div></div><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1404"></a>1.1.1. Turning off the Developer's Console</h4></div></div></div><p>
+To return the "naked" OpenLaszlo application without the Developer's Console, simply compile the application using the "URL" method of placing the URL to the application in your browser's address bar with ?lzt=html appended to the address. This will return the application in an HTML page. See <a class="xref" href="compiler.html" title="Chapter 49. Understanding Compilation">Chapter 49, <i>Understanding Compilation</i></a> and <a class="xref" href="browser-integration.html" title="Chapter 35. Browser Integration">Chapter 35, <i>Browser Integration</i></a> for elaboration of this topic.
+</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1406"></a>1.2. Start up the OpenLaszlo Server</h3></div></div></div><p>
+  The way to start the OpenLaszlo Server (OLS) depends on the operating system and how it was installed. On Windows, typically you start OLS from the Start menu; on Mac OS X the default installation places the OpenLaszlo launch icon on your desktop. If you don't have the OpenLaszlo Server installed on your machine, you can download it from http://www.openlaszlo.org/download.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1407"></a>1.3. Create a program file</h3></div></div></div><p>Because LZX files are XML documents, you can use any text or XML
+editor to create and edit source. Filenames must end with the .lzx
+extension. As you write, you'll want to have the <a class="ulink" href="../reference/../reference/" target="_top">LZX Reference Manual</a> handy. See below for a
+discussion of how to use this document efficiently.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="program-development.where-to-put-files"></a>1.4. 
+Place file in the appropriate directory</h3></div></div></div><p>In order to be compiled by the OpenLaszlo Server, files
+must be placed in subdirectories of the following path:</p><p>[Windows]</p><pre class="programlisting">c:\Program Files\Laszlo Presentation Server 4.9.1\jakarta-tomcat-5.0.24\webapps\lps-4.9.1\</pre><p>[MacOS]</p><pre class="programlisting">Macintosh HD:/Applications/Laszlo Presentation Server 4.9.1/jakarta-tomcat-5.0.24/webapps/lps-4.9.1:</pre><p>Typically you will create a directory with a name such as
+<code class="literal">my-apps</code> in which to place programs under development. You
+can nest subdirectories, such as</p><pre class="programlisting">my-apps/practice/samples</pre><p>so long as they are under the correct path to the OpenLaszlo Server (lps).</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1410"></a>1.5. Compile the application</h3></div></div></div><p>See <a class="xref" href="compiler.html" title="Chapter 49. Understanding Compilation">Chapter 49, <i>Understanding Compilation</i></a> for a complete discussion of all compilation options.</p><p>
+There are two distinct techniques for compiling the application:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>You can load it into a web browser, which will cause the OpenLaszlo Server to compile it automatically when the program is first used and any time it changes; or</p></li><li class="listitem"><p>You can invoke the stand-alone compiler separately.</p></li></ul></div><p>
+The simplest and most common way to compile applications, especially when you are first getting familiar with OpenLaszlo, is to let the OpenLaszlo Server handle it.  Both techniques are described in turn below.
+</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1408"></a>1.5.1. Compiling by loading the application into a web browser</h4></div></div></div><p>
+In order to run your program, simply load it into your browser. The exact URL depends on the configuration of the server, but will typically look something like:</p><pre class="programlisting">http://127.0.0.1:8080/lps-4.9.1/<em class="replaceable"><code>path to your directory</code></em></pre><p>The OpenLaszlo Server checks the source files for valid syntax, compiles them,
+caches the executables and makes the application immediately visible
+in the browser.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1409"></a>1.5.2. Using the standalone compiler lzc</h4></div></div></div><p>
+The standalone compiler is called <code class="literal">lzc</code>. Its location depends on how you have installed OpenLaszlo. Developers who build OpenLaszlo from the source will find lzc in <code class="literal">$LPS_HOME/WEB-INF/lps/server/bin/</code>. Developers who install OpenLaszlo with a binary installer will find it in the directory <code class="literal">OpenLaszlo Server 4.9.1/bin</code>.</p><p>Developers with more than one version of the OpenLaszlo server in play should define an alias: <code class="literal">alias lzc='$LPS_HOME/WEB-INF/lps/server/bin/lzc'</code>. By defining an alias based on $LPS_HOME, one can have multiple shells -- each with a different $LPS_HOME -- and the alias will map to the correct compiler for each shell</p><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="program-development.IE_spurious_warning"></a>1.5.3. Spurious Internet Explorer Content Block Warning</h4></div></div></div><p>
+If you open a local
+SWF file in Internet Explorer, or an HTML page that accesses a local SWF file in Internet Explorer,
+you will get a "blocked content" warning message. You can safely disregard this message and continue developing. Here is why: this is not a problem with OpenLaszlo nor is it a problem with IE per se. Rather it is a security feature built into IE
+to keep viruses from accessing ActiveX controls, and it only appears when you're developing applications, not when you're deploying them.
+</p><p>
+Internet Explorer uses an ActiveX
+control to display Flash files. It assumes that a local file
+trying to access an ActiveX control may very well be a virus, so it
+puts up the warning. 
+</p><p>
+When you actually deploy your OpenLaszlo
+application, however, it will be served to your visitors through a Web Server
+(IIS, Apache, etc) off of an actual domain, and therefore will not
+show the error message.  To verify this, run a web
+server locally on your system and serve the page off of your local
+web server. you will see that the error message will not be
+displayed.
+</p><p>
+Please see also the discussion of <a class="ulink" href="http://blog.deconcept.com/2005/12/15/internet-explorer-eolas-changes-and-the-flash-plugin/" target="_top">SWFObject</a> in <a class="xref" href="browser-integration.html" title="Chapter 35. Browser Integration">Chapter 35, <i>Browser Integration</i></a> for a more complete discussion of embedding Flash files in HTML pages.
+</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1411"></a>1.6. Debug and modify the program</h3></div></div></div><p>
+If the Sever detects errors that prevent compilation, error messages are displayed in the browser.</p><p>If it detects non-critical errors or questionable constructs that do not prevent compilation, warning messages are displayed in the browser below the application (you may have to scroll down to see them):</p><p>Runtime errors are displayed in the debugger, if the debugger is running.</p><p>See <a class="xref" href="program-development.html#program-development.debugging" title="2.7. Debugging">Section 2.7, “Debugging”</a> for a brief discussion of the debugger.  See <a class="xref" href="debugging.html" title="Chapter 51. Debugging">Chapter 51, <i>Debugging</i></a> for a full discussion.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1412"></a>1.7. Iterate</h3></div></div></div><p>
+After you've made changes to the source, simply click the Refresh button on the browser. The OpenLaszlo Server automatically rechecks the source for syntax, then recompiles, re-caches and makes the application visible in the browser.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1413"></a>1.8. Optimize</h3></div></div></div><p>Optimize your program using the techniques in <a class="xref" href="performance-tuning.html" title="Chapter 43. Performance Monitoring and Tuning">Chapter 43, <i>Performance Monitoring and Tuning</i></a>.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1414"></a>1.9. Deploy</h3></div></div></div><p>
+See <a class="xref" href="proxied.html" title="Chapter 25. Proxied and SOLO Applications">Chapter 25, <i>Proxied and SOLO Applications</i></a> for discussion of how to make your application available for general use.</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1428"></a>2. From "Hello, World" to real programs</h2></div></div></div><p>The canonical "Hello, World" program can be written in LZX:</p><div class="example"><a name="id3274"></a><p class="title"><b>Example 4.1. Hello world</b></p><div class="example-contents"><pre class="programlisting">
+      
+&lt;canvas height="40" width="100%"&gt;
+  &lt;text&gt;Hello, World!&lt;/text&gt; 
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+ 
+    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-development-_1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-development-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>This program illustrates three essential features of all Laszlo
+applications:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>LZX files are well-formed XML documents</p></li><li class="listitem"><p><a class="indexterm" name="id3283"></a><code class="sgmltag-element">&lt;canvas&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ is the root node; programs open with
+  the <code class="literal">&lt;canvas&gt;</code> tag and close with
+  <code class="literal">&lt;/canvas&gt;</code></p></li><li class="listitem"><p>Within the canvas, views are displayed. As we shall see, a
+  <a class="indexterm" name="id3291"></a><code class="sgmltag-element">&lt;text&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ element is simply a kind of view.</p></li></ul></div><p>The next section discusses the ingredients of a typical OpenLaszlo
+application. See also the <a class="ulink" href="../../examples/" target="_top">example programs</a> to get a
+feel for the general structure of LZX applications.</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1416"></a>2.1. Essential Structures</h3></div></div></div><p>
+Typical Laszlo applications contain the following parts, which are discussed briefly in turn below</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>canvas (<a class="xref" href="program-development.html#program-development.canvas" title="2.2. The Canvas">Section 2.2, “The Canvas”</a>)</p></li><li class="listitem"><p>views (<a class="xref" href="program-development.html#program-development.views" title="2.3. Views">Section 2.3, “Views”</a>)</p></li><li class="listitem"><p>data (<a class="xref" href="program-development.html#program-development.data-binding" title="2.4. Data Binding">Section 2.4, “Data Binding”</a>)</p></li><li class="listitem"><p>libraries and includes (<a class="xref" href="program-development.html#program-development.libraries-and-includes" title="2.5. Includes and libraries">Section 2.5, “Includes and libraries”</a>)</p></li><li class="listitem"><p>comments (<a class="xref" href="program-development.html#program-development.comments" title="2.6. Comments">Section 2.6, “Comments”</a>)</p></li></ul></div><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="program-development.canvas"></a>2.2. The Canvas</h3></div></div></div><p>
+The root node of every Laszlo application is the
+<em class="glossterm">canvas</em>; there is one and only one canvas per
+LZX application.  The canvas is the logical container of all other
+nodes in the program; visually it is a rectangle that is displayed in
+the content area of a web browser. You can explicitly set the height
+and width of the canvas, in pixels, by assigning values to attributes
+in the opening tag.</p><pre class="programlisting">
+&lt;canvas height="20" width="30"&gt; 
+&lt;/canvas&gt;
+</pre><p>
+If you do not set the height and width, the canvas — like other views — sizes itself to the size of the views it contains. Unlike other views, the canvas, by default, has a nonzero width  and height: it sizes itself to the HTML page that contains it. Therefore the null LZX application</p><pre class="programlisting">
+&lt;canvas/&gt;
+</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/inline-c575f18536.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/inline-c575f18536.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div><p>defines an invisible object that is the size of the page.</p><p>In addition to its height and width, the canvas has several other
+visible attributes. The background color, defined by the
+<a class="indexterm" name="id3326"></a><code class="sgmltag-attribute">bgcolor</code> attribute, is most useful for learning
+about the visual structures of LZX applications.</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1417"></a>2.2.1. The <a class="indexterm" name="id3331"></a><code class="sgmltag-element">&lt;script&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag</h4></div></div></div><p>Within LZX applications, you can embed arbitrary JavaScript
+functions by nesting them in <a class="indexterm" name="id3336"></a><code class="sgmltag-element">&lt;script&gt;</code>
+constructs. This is helpful for defining (global) functions that will
+be used by different classes. The <a class="indexterm" name="id3339"></a><code class="sgmltag-element">&lt;script&gt;</code> tag must
+be a child of <a class="indexterm" name="id3342"></a><code class="sgmltag-element">&lt;canvas&gt;</code>.  That is to say,</p><pre class="programlisting">
+&lt;canvas&gt;
+  &lt;script&gt;
+    var Constant = 1;
+  &lt;/script&gt; 
+&lt;/canvas&gt;
+</pre><p>is an allowed structure while</p><pre class="programlisting">
+&lt;canvas&gt; 
+  &lt;view&gt; 
+    &lt;script&gt; <a name="N1019F"></a>(1)
+      var Constant = 1;
+    &lt;/script&gt; 
+  &lt;/view&gt; 
+&lt;/canvas&gt;
+</pre><div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><p><a href="#N1019F">(1)</a> </p></td><td valign="top" align="left"><p>
+        Wrong! The <a class="indexterm" name="id3352"></a><code class="sgmltag-element">&lt;script&gt;</code> tag is not allowed inside a view!</p></td></tr></table></div><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1418"></a>2.2.2. <a class="indexterm" name="id3357"></a><code class="sgmltag-attribute">name</code> vs. <a class="indexterm" name="id3360"></a><code class="sgmltag-attribute">id</code></h4></div></div></div><p>In LZX the <a class="indexterm" name="id3364"></a><code class="sgmltag-attribute">id</code> attribute of an object is a
+global identifier that is visible throughout the entire program space,
+while the <a class="indexterm" name="id3367"></a><code class="sgmltag-attribute">name</code> of an object is an attribute
+like any other, which can only be referenced by its path (except in
+the case of named children of the canvas, as noted
+below). Consider</p><pre class="programlisting">
+&lt;canvas&gt; 
+  &lt;view id="v1" name="outer_view"&gt; 
+    &lt;view id="v2" name="inner_view" bgcolor="blue"/&gt; 
+  &lt;/view&gt; 
+&lt;/canvas&gt;</pre><p>The value of the outer view's background color can be referenced as
+<code class="literal">v1.bgcolor</code> or <code class="literal">outer_view.bgcolor</code>. The
+background color of the inner view can be referenced as
+<code class="literal">v2.bgcolor</code> from anywhere within the application. To
+reference it by name from outside of <code class="varname">inner_view</code> you would
+specify <code class="literal">outer_view.inner_view.bgcolor</code>.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1419"></a>2.2.3. Named children of the canvas</h4></div></div></div><p>
+Objects that are named children of the canvas can be simply addressed. For example, consider</p><pre class="programlisting">
+&lt;canvas&gt;
+  &lt;view name="artichoke"&gt;
+  &lt;!-- more program code --&gt;
+&lt;/canvas&gt;</pre><p>The view <code class="varname">artichoke</code> can be referenced from
+anywhere within the application simply as <code class="literal">artichoke</code>. That
+is, it is not necessary to reference it as
+<code class="literal">canvas.artichoke</code>.</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="program-development.views"></a>2.3. Views</h3></div></div></div><p>The view is the basic visible element in an OpenLaszlo
+application. Anything that is displayed on the canvas is a view (or an
+object that is an instance of a class that extends view).</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1420"></a>2.3.1. Visible and invisible views </h4></div></div></div><p>A view is only visible if it has color, or text, or an image
+assigned to it, and if the height and width of the view are greater
+than zero. For example, the following code would display only one
+view even though three views are defined.  The second and third views
+exist but they are invisible. The second has no color
+assigned to it and the third has zero width. They still, however,
+affect the arrangement of the other two views.</p><div class="example"><a name="id3392"></a><p class="title"><b>Example 4.2. Nested views</b></p><div class="example-contents"><pre class="programlisting">
+      
+&lt;canvas height="100" width="100%"&gt; 
+  &lt;!-- shows a red square: --&gt; 
+  &lt;view width="50" height="50" bgcolor="red"/&gt;
+  &lt;!-- nothing is displayed, but view still exists: --&gt; 
+  &lt;view width="50" height="50"/&gt;
+  &lt;!-- nothing is displayed, but view still exists: --&gt; 
+  &lt;view width="0" height="50" bgcolor="blue"/&gt;
+  &lt;simplelayout axis='x' spacing="5"/&gt; 
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;  
+    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-development-_8.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-development-_8.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1421"></a>2.3.2. Views as containers of other views</h4></div></div></div><p>
+Views can also contain other views, allowing you to create complex visual elements. Each 'parent' view can have any number of children. By default, each child view is positioned relative to the top-left corner of its parent as shown in the example.</p><p>Although it is always possible to position any view by specifying
+its horizontal (<a class="indexterm" name="id3399"></a><code class="sgmltag-attribute">x</code>) and vertical
+(<a class="indexterm" name="id3402"></a><code class="sgmltag-attribute">y</code>) origin, stated in pixels, relative to its
+parent, it is often convenient to have the system lay things out for
+you. Layout types built into the system include
+<a class="indexterm" name="id3405"></a><code class="sgmltag-element">&lt;simplelayout&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+, <a class="indexterm" name="id3409"></a><code class="sgmltag-element">&lt;stableborderlayout&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+,
+<a class="indexterm" name="id3413"></a><code class="sgmltag-element">&lt;constantlayout&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+, <a class="indexterm" name="id3417"></a><code class="sgmltag-element">&lt;resizelayout&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ and
+<a class="indexterm" name="id3421"></a><code class="sgmltag-element">&lt;wrappinglayout&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1422"></a>2.3.3. View sizing and clipping</h4></div></div></div><p>Consider the following application:</p><div class="example"><a name="id3428"></a><p class="title"><b>Example 4.3. Parent and children dimensions</b></p><div class="example-contents"><pre class="programlisting">
+      
+&lt;canvas height="200" width="100%"&gt;
+  &lt;view bgcolor="red" x="50" y="50" width="100" height="100"&gt; 
+    &lt;view bgcolor="yellow" x="50" y="50" width="60" height="105"/&gt; 
+  &lt;/view&gt; 
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;  
+    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-development-_9.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-development-_9.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Running the example above also shows that the width and height of a view can be different than the dimensions of the bounding box of its child views. No clipping occurred on the "yellow" view even though it lies outside the boundary of its parent.</p><p>
+If no width and height are actually defined for a view, then it will adopt the width and height of the bounding box not its subviews. If clipping is desired, however, then the attribute <code class="literal">clip="true"</code>
+can be added to the parent, which would look like the following.</p><div class="example"><a name="id3434"></a><p class="title"><b>Example 4.4. Clipping</b></p><div class="example-contents"><pre class="programlisting">
+      
+&lt;canvas height="200" width="100%"&gt;
+  &lt;view bgcolor="red" x="50" y="50" width="100" height="100" clip="true"&gt; 
+    &lt;view bgcolor="yellow" x="50" y="50" width="60" height="105"/&gt; 
+  &lt;/view&gt; 
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;  
+    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-development-_10.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-development-_10.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1423"></a>2.3.4. Images and other resources</h4></div></div></div><p>
+In addition to showing text and color, views are used to display, or play, media files of various formats, such as .gif, .jpeg, .png, .swf, and .mp3, for example. These resources may be compiled into the application or brought in at run time; they can be on the OpenLaszlo server or on a remote back end, and can be referenced by relative paths or absolute ids. </p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="program-development.data-binding"></a>2.4. Data Binding</h3></div></div></div><p>
+LZX derives much of its power from its unique implementation of data binding, in which the contents of a view are determined by the contents of a dataset. A dataset is simply a named hierarchy of XML data that has a single root node. All data in LZX applications is contained in datasets.</p><p>
+The concept of data binding implies more than the use of views to display XML data; rather the data itself can determine the size, color, contents, placement, etc. of views, and even cause views to be created or destroyed.  
+</p><p>Consider the following program:</p><div class="example"><a name="id3446"></a><p class="title"><b>Example 4.5. Simple databinding</b></p><div class="example-contents"><pre class="programlisting">
+      
+&lt;canvas height="100" width="100%"&gt; 
+  &lt;dataset name="ds"&gt; 
+    &lt;record x="10" y="20" name="first" color="332136432"/&gt; 
+    &lt;record x="5" y="5" name="second" color="56521236432"/&gt; 
+    &lt;record x="20" y="2" name="third" color="1565336432"/&gt; 
+  &lt;/dataset&gt; 
+  &lt;simplelayout axis="y"/&gt;
+  &lt;view datapath="ds:/record"&gt; 
+    &lt;text datapath="@name" bgcolor="$path{'@color'}" x="$path{'@x'}"/&gt; 
+  &lt;/view&gt; 
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;  
+    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-development-_11.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-development-_11.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
+In the above example, the one line</p><pre class="programlisting">
+&lt;view datapath="ds:/record"&gt; 
+</pre><p>Causes three views to be created, and the line</p><pre class="programlisting">
+&lt;text datapath="@name" bgcolor="$path{@color}" x="$path{@x}"/&gt;
+</pre><p>causes each view's textual content, background color and
+<a class="indexterm" name="id3454"></a><code class="sgmltag-attribute">x</code> position to be determined by the contents of
+the dataset.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="program-development.libraries-and-includes"></a>2.5. Includes and libraries</h3></div></div></div><p>
+The source code for an LZX application can be contained in a single file; such files can grow quite large and thus hard to manipulate and maintain. By dividing your application into a number of smaller files, however, you can increase maintainability and understandability of your application.   You can even break deep view hierarchies into multiple files to improve modularity, clarity, and source code organization.</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1424"></a>2.5.1. The <a class="indexterm" name="id3463"></a><code class="sgmltag-element">&lt;include&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag</h4></div></div></div><p>This tag allows you to specify the name of a file to be include at
+any point in your application. The file to be included can be a
+library, a view, or text.</p><p>When the target is a library file (an XML file whose root element
+is <a class="indexterm" name="id3469"></a><code class="sgmltag-element">&lt;library&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+), the contents of the library file are
+included in the application. Any views, scripts, fonts, resources,
+audios, datasources, datasets, class definitions, etc. in the library
+file are included in the application. A library file can include other
+libraries, but a library is included in an application only once, no
+matter how many <a class="indexterm" name="id3473"></a><code class="sgmltag-element">&lt;include&gt;</code> statements reference
+it. For example,</p><pre class="programlisting">
+&lt;canvas&gt; 
+  &lt;include href="library.lzx"/&gt; 
+  &lt;mywindow/&gt; 
+&lt;/canvas&gt; 
+</pre><pre class="programlisting">
+&lt;library&gt; 
+  &lt;class name="mywindow" extends"window" 
+         title="My Title"&gt; 
+    &lt;button&gt; Click me! &lt;/button&gt; 
+  &lt;/class&gt; 
+&lt;/library&gt; 
+</pre><p>
+The semantics for including views and text are analogous but slightly different.  Unlike including a library file, a non text or view file is inserted once each time it's included. 
+</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="program-development.comments"></a>2.6. Comments</h3></div></div></div><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1425"></a>2.6.1. XML comments</h4></div></div></div><p>These take the form</p><pre class="programlisting">&lt;!--  comment --&gt;</pre><p>
+and may appear between (but not within) tags in XML text. XML does not have a separate syntax for line ending comments, and does not allow nested comments.</p><p>
+Often when debugging you find yourself commenting out sections of code. Because it's illegal to nest XML comments within XML comments, this technique does not work for commented sections of declarative LZX. A good way around this problem is to use XML processing instructions which are of the form</p><pre class="programlisting">
+&lt;?ignore
+
+?&gt;
+</pre><p>So, to comment out the blue and green views below,</p><pre class="programlisting">
+    &lt;canvas height="100"&gt;
+    &lt;simplelayout/&gt; 
+    &lt;!-- This is a red view --&gt; 
+    &lt;view bgcolor="red" width="100" height="20"/&gt; 
+    &lt;?ignore <a name="N102A3"></a>(1)
+    &lt;!-- This is a blue view --&gt; 
+    &lt;view bgcolor="blue" width="100" height="20"/&gt; 
+    &lt;!-- This is a green view --&gt; 
+    &lt;view bgcolor="green" width="100" height="20"/&gt; 
+    ?&gt;       <a name="N102AD"></a>(2)
+    &lt;!-- This is a yellow view --&gt; 
+    &lt;view bgcolor="yellow" width="100" height="20"/&gt; 
+    &lt;/canvas&gt;  
+</pre><div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><p><a href="#N102A3">(1)</a> </p></td><td valign="top" align="left"><p>Lines between <code class="literal">&lt;?ignore</code> and <code class="literal">?&gt;</code> are ignored</p></td></tr><tr><td width="5%" valign="top" align="left"><p><a href="#N102AD">(2)</a> </p></td><td valign="top" align="left"><p>End of the <em class="wordasword">ignore</em> section</p></td></tr></table></div><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1426"></a>2.6.2. Script comments</h4></div></div></div><p>
+In script, block comments are of the form</p><pre class="programlisting">/* comment */</pre><p>Line ending comments start with <code class="literal">//</code> and continue to the end of the line:</p><pre class="programlisting">// line comment</pre><pre class="programlisting">
+&lt;script&gt; 
+  /* script comments look like this */ 
+  some.method() // this is an example of comment syntax 
+  &lt;!-- ERROR!  do not enclose XML comments in script! --&gt; 
+&lt;/script&gt;  // ERROR! Do not include script comments in XML!</pre><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="program-development.debugging"></a>2.7. Debugging</h3></div></div></div><p>The OpenLaszlo system includes an interactive debugger that can be compiled into any application. The debugger displays run time errors, and can be used interactively to inspect and set any tag attributes or JavaScript fields.</p><p>You can also use the JavaScript <a class="indexterm" name="id3514"></a><code class="methodname">Debug.debug()</code> method
+to cause messages to be displayed in the debugger pane. For
+example,</p><div class="example"><a name="id3518"></a><p class="title"><b>Example 4.6. Using the debugger to write messages</b></p><div class="example-contents"><pre class="programlisting">
+      
+&lt;canvas width="100%" height="200" debug="true"&gt; 
+  &lt;script&gt; 
+    Debug.debug("Well now how about that!") 
+  &lt;/script&gt; 
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+ 
+    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-development-_15.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-development-_15.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
+To invoke the debugger, set the attribute <code class="literal">debug="true"</code>
+in the <a class="indexterm" name="id3523"></a><code class="sgmltag-element">&lt;canvas&gt;</code> tag. You can modify the appearance and position of the <a class="indexterm" name="id3526"></a><code class="sgmltag-element">&lt;debug&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag. Note, however, that this tag does not invoke the debugger.</p><p>
+To use the debugger interactively to inspect a value, you type an expression in to the evaluation pane. For example,</p><div class="example"><a name="id3531"></a><p class="title"><b>Example 4.7. Nested views</b></p><div class="example-contents"><pre class="programlisting">
+      
+&lt;canvas width="100%" height="200" bgcolor="red" debug="true"&gt; 
+  &lt;debug y="60"/&gt; 
+  &lt;view name="sam" bgcolor="blue" height="50" width="50"/&gt; 
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+ 
+</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-development-_16.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-development-_16.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
+In the evaluation pane, type,</p><pre class="programlisting">sam.setAttribute('x', 50)</pre><p>and press return. The view named <code class="varname">sam</code> (the blue
+square) now appears fifty pixels to the right. </p><p>See <a class="xref" href="debugging.html" title="Chapter 51. Debugging">Chapter 51, <i>Debugging</i></a> for a full discussion of the debugger.</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1427"></a>2.7.1. The OpenLaszlo code viewer</h4></div></div></div><p>The OpenLaszlo Server contains a code viewer that you can
+use to inspect any XML file in the lps directory, including, of
+course, .lzx sources.  When used to read .lzx files, the viewer
+displays syntactically-colored sources, as well as a list of
+cross-references such as classes, libraries and art assets.  To invoke
+the veiwer, in a browser window enter the URL to <code class="literal">/lps-4.9.1/lps/utils/viewer/viewer.jsp</code> and
+supply the name of the file you want to view as a <code class="literal">file=</code> request type, for example:</p><pre class="programlisting">
+http://127.0.0.1:8080/lps-4.9.1/lps/utils/viewer/viewer.jsp?file=/my-apps/copy-of-hello.lzx
+</pre><p class="fixme"><em><span class="remark"><span class="para-label">FIXME: </span>Say something about running various LPS's at the same time during development?  Also, about cache clearing?
+
+</span></em></p><p></p></div></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="designers.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.overview.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="developers.tutorials.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 3. OpenLaszlo for Designers </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Part II. Tutorial Introduction</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

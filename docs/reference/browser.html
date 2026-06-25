@@ -1,0 +1,37 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>LzBrowserService — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1>LzBrowserService</h1><p class="short">Provides access to the browser and player environment</p>
+        <p>
+          <code>lz.Browser</code>
+           is the single instance of the class
+ 
+          <code>lz.BrowserService</code>
+          .
+        </p>
+         
+        <p>Interface to the browser via the runtime kernel</p>
+         
+        <p>
+          The 
+          <code>lz.Browser</code>
+           service provides access to the browser and player environment.
+ It includes methods to load URLs in the browser, and check the version of the player. For example:
+        </p>
+         
+        <pre class="example">
+ &lt;canvas height="140" debug="true"&gt;
+   &lt;!-- Load the OpenLaszlo site in a new window --&gt;
+   &lt;button onclick="lz.Browser.loadURL('http://www.openlaszlo.org/', '_blank')"&gt;
+     Click me
+   &lt;/button&gt;
+   &lt;script&gt;
+     // List the player version
+     Debug.debug('Player version: %w', lz.Browser.getVersion());
+   &lt;/script&gt;
+ &lt;/canvas&gt;
+ </pre>
+      <h3>Methods</h3><ul class="methods"><li><code>makeProxiedURL()</code></li></ul>
+</main><script src="_nav.js"></script></body></html>

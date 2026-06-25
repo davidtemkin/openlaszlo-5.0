@@ -1,0 +1,2 @@
+  <attribute name='intermediate' value="$path{'degf'}" \>
+  <attribute name='text' value="${Number(intermediate) * 5 / 9}" />

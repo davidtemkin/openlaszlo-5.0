@@ -1,0 +1,125 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;tree&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>tree<span class="ang">&gt;</span></h1><p class="short">
+              A tree control.
+          </p><p class="meta">Extends <code>basetree</code></p>
+                    
+        <p>
+          A 
+          <code>tree</code>
+           provides a hierarchical view of
+              data. Each node is represented by an 
+          <code>&lt;dfn&gt;expander resource&lt;/dfn&gt;</code>
+          , an
+              
+          <code>&lt;dfn&gt;icon resource&lt;/dfn&gt;</code>
+          , and a 
+          <code>&lt;dfn&gt;label&lt;/dfn&gt;</code>
+          . A tree can be
+              specified lexically or through data replication
+              
+          
+          .
+        </p>
+                      
+        <p>
+                            When the 
+          <code>tree</code>
+           expands recursively, the datapath must be
+                  a relative reference to the dataset. If an absolute
+                  refrence is used, the same nodes would be selected over
+                  and over forever, resulting in and endless loop.
+                  
+                  For example, this will hang in an endless loop: 
+                  
+                  
+          <pre><code>
+                      &lt;dataset name="navdata"&gt;
+                      &lt;navmenu&gt;
+                      &lt;section /&gt;
+                      &lt;/navmenu&gt;
+                      &lt;/dataset&gt;
+                      
+                      
+                      &lt;view x="10" y="10" layout="axis: x; spacing: 10"&gt;
+                      &lt;tree width="160" height="20" datapath="navdata:/navmenu" /&gt;
+                      &lt;/view&gt;
+                  </code></pre>
+                            
+                  It needs to be rewritten to have a relative datapath in the recursively expanding
+                  tree node. 
+                  
+                  
+          <pre><code>
+                      &lt;tree width="160" height="20" datapath="navdata:/navmenu"&gt;
+                      &lt;tree width="160" height="20" datapath="*" /&gt;
+                      &lt;/tree&gt;
+                  </code></pre>
+                        
+        </p>
+                    
+        <p>Each resource, if specified, should have three states. The expander resource
+              should have an open (frame 1), closed (frame 2), and transparent (frame 3)
+              state. The icon resource should have similar frames. See the default resources
+              in tree as an example.</p>
+                    
+        <pre class="example">
+              &lt;canvas height="250"&gt;
+              &lt;include /&gt;
+
+              &lt;dataset name="ancestors"&gt;
+              &lt;hobbit name="Frodo"&gt;
+              &lt;hobbit name="Drogo"&gt;
+              &lt;hobbit name="Fosco" grandparent="true"/&gt;
+              &lt;hobbit name="Bolger, Ruby" grandparent="true"/&gt;
+              &lt;/hobbit&gt;
+              &lt;hobbit name="Brandybuck, Primula"&gt;
+              &lt;hobbit name="Brandybuck, Gorbadoc" grandparent="true"/&gt;
+              &lt;hobbit name="Took, Mirabella" grandparent="true"/&gt;
+              &lt;/hobbit&gt;
+              &lt;/hobbit&gt;
+              &lt;/dataset&gt;
+
+              &lt;view x="20" y="20" layout="axis: x; spacing: 10"&gt;
+              &lt;!-- declared tree --&gt;
+              &lt;view width="200" height="200"&gt;
+              &lt;tree open="true" text="valuemeal"&gt;
+              &lt;tree text="fries" isleaf="true"/&gt;
+              &lt;tree open="true" text="drink"&gt;
+              &lt;tree text="cola" isleaf="true"/&gt;
+              &lt;/tree&gt;
+              &lt;tree open="true" text="burger"&gt;
+              &lt;tree text="patty" isleaf="true"/&gt;
+              &lt;tree text="lettuce" isleaf="true"/&gt;
+              &lt;tree text="onions" isleaf="true"/&gt;
+              &lt;tree text="buns" isleaf="true"/&gt;
+              &lt;/tree&gt;
+              &lt;/tree&gt;
+              &lt;/view&gt;
+              
+              &lt;!-- data replicated tree --&gt;
+              &lt;view width="200" height="200"&gt;
+              &lt;tree datapath="ancestors:/" icon="null" showroot="false"&gt;
+              &lt;tree datapath="*" icon="null" text="$path{'@name'}" 
+              isleaf="$path{'@grandparent'}"/&gt;
+              &lt;/tree&gt;
+              &lt;/view&gt;
+              &lt;/view&gt;
+              &lt;/canvas&gt;
+            </pre>
+                    
+        <p class="meta">See also: 
+                        
+          <code>basetree</code> 
+                      
+        </p>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">expander</td><td class="ty">string</td><td class="ty">lztree_arrow_rsc</td><td>The resource for the expanding icon:
+              frame 1 (closed), frame 2 (opened), frame 3 (leaf).
+              Default is lztree_arrow_rsc defined in lz/tree.lzx.</td></tr><tr><td class="nm">icon</td><td class="ty">string</td><td class="ty">lztree_folder_rsc</td><td>The resource for the item icon:
+              frame 1 (closed), frame 2 (opened), frame 3 (leaf) 
+              Default is lztree_folder_rsc defined in lz/tree.lzx.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

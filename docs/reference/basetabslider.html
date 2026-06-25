@@ -1,0 +1,85 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basetabslider&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basetabslider<span class="ang">&gt;</span></h1><p class="short">A non-visual container that animates and coordinates the sliding of basetabelements</p><p class="meta">Extends <code>baselist</code></p>
+                    
+        <p>
+          A 
+          <code>basetabslider</code>
+           coordinates the opening and
+            closing of its 
+          <code>basetabelement</code>
+          s contained within
+            its scope. 
+          <code>basetabslider</code>
+           and
+            
+          <code>basetabelement</code>
+           have no visual aspects. The
+            
+          <code>tabslider</code>
+           class (which extends
+            
+          <code>basetabslider</code>
+          ) does contain a visual UI and
+            shows how 
+          <code>basetabslider</code>
+           can be extended to
+            create your own visual framework for a unique tab slider.
+        </p>
+                    
+            
+        <p>An example of the use of these classes is shown below. In order to
+            make the base classes visible, background colors have been assigned to
+            them.</p>
+                    
+            
+        <pre class="example">
+            &lt;canvas height="220"&gt;
+              &lt;include /&gt;
+              &lt;basetabslider bgcolor="yellow" width="100" 
+                            height="200" mintabheight="40" 
+                            spacing="2" slideduration="300"&gt;
+                &lt;basetabelement clickable="true" bgcolor="red" width="100%"/&gt;
+                &lt;basetabelement clickable="true" bgcolor="red" width="100%"/&gt;
+                &lt;basetabelement clickable="true" bgcolor="red" width="100%"/&gt;
+              &lt;/basetabslider&gt;
+            &lt;/canvas&gt;
+            </pre>
+                    
+            
+        <p>
+          The 
+          <code>mintabheight</code>
+           specified for a
+            
+          <code>basetabslider</code>
+           applies to all of its
+            
+          <code>basetabelement</code>
+          s except those
+            
+          <code>basetabelement</code>
+          s that define it for themselves,
+            as demonstrated in the following example.
+        </p>
+                    
+            
+        <pre class="example">
+            &lt;canvas height="220"&gt;
+              &lt;include /&gt;
+              &lt;basetabslider bgcolor="yellow" width="100" 
+                            height="200" mintabheight="40" 
+                            spacing="2" slideduration="300"&gt;
+                &lt;basetabelement clickable="true" bgcolor="red" width="100%"/&gt;
+                &lt;basetabelement clickable="true" bgcolor="red" width="100%" minheight="15"/&gt;
+                &lt;basetabelement clickable="true" bgcolor="red" width="100%"/&gt;
+              &lt;/basetabslider&gt;
+            &lt;/canvas&gt;
+            </pre>
+                  This class is a non-visual container that animates and coordinates the
+          sliding of basetabelements.
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">availableheight</td><td class="ty">expression</td><td class="ty">0</td><td/></tr><tr><td class="nm">hilite</td><td class="ty">expression</td><td class="ty">false</td><td>Deprecated. See todo 3570.</td></tr><tr><td class="nm">inset_bottom</td><td class="ty">expression</td><td class="ty">8</td><td>The bottom inset for content appearing within a tabelement.</td></tr><tr><td class="nm">inset_left</td><td class="ty">expression</td><td class="ty">8</td><td>The left inset for content appearing within a tabelement.</td></tr><tr><td class="nm">inset_right</td><td class="ty">expression</td><td class="ty">8</td><td>The right inset for content appearing within a tabelement.</td></tr><tr><td class="nm">inset_top</td><td class="ty">expression</td><td class="ty">8</td><td>The top inset for content appearing within a tabelement.</td></tr><tr><td class="nm">mintabheight</td><td class="ty">expression</td><td class="ty">22</td><td>The default height of every tab when closed.</td></tr><tr><td class="nm">opennedtab</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">slideduration</td><td class="ty">expression</td><td class="ty">300</td><td>The duration of the tabs openning and closing.</td></tr><tr><td class="nm">spacing</td><td class="ty">expression</td><td class="ty">0</td><td>The spacing of the tabs.</td></tr><tr><td class="nm">totalminheight</td><td class="ty">expression</td><td class="ty">0</td><td/></tr></table>
+</main><script src="_nav.js"></script></body></html>

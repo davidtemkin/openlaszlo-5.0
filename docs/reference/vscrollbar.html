@@ -1,0 +1,42 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;vscrollbar&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>vscrollbar<span class="ang">&gt;</span></h1><p class="short">
+          Provides a vertical scrollbar.
+      </p><p class="meta">Extends <code>basescrollbar</code></p>
+                
+        <p>
+          This tag creates a vertical scrollbar.  If you do not specify a
+          
+          <code>scrolltarget</code>
+           the scrollbar will automatically
+          be aligned to the right and size its height to its parent's height.
+          It is expected that the parent view be smaller than the scrolltarget
+          and set 
+          <code>clip=true</code>
+          .  The scrolling effect is produced by
+          moving the scrolltarget while its visible region is clipped by the
+          parent view.
+        </p>
+                
+        <p>
+          If you would like the target view to start scrolled, simply set its
+          y position to a negative number.  For example, 
+          <code>y=-10</code>
+           will
+          cause the view to be scrolled 10 pixels.
+        
+        </p>
+                
+        <div class="note">
+          If you have no horizontal scrollbars in your application, using
+          the 
+          <code>vscrollbar</code>
+           tag will make the applications
+          slightly smaller, than if you were to use 
+          <code>&lt;scrollbar
+            axis="y"&gt;</code>
+          .
+</main><script src="_nav.js"></script></body></html>

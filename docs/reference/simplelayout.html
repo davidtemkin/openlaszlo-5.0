@@ -1,0 +1,92 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;simplelayout&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>simplelayout<span class="ang">&gt;</span></h1><p class="short">A quick layout for arranging siblings vertically or horizontally.</p><p class="meta">Extends <code>layout</code></p>
+                
+        <p>
+                      
+          <code>simplelayout</code>
+           extends 
+          <code>&lt;LzLayout&gt;</code>
+          . 
+          <code>simplelayout</code>
+           arranges sibling views along the 
+          <code>x</code>
+           and 
+          <code>y</code>
+           axis, or both. 
+          <code>simplelayout</code>
+           places each sibling view based on the width
+            (or height) of the previous subview, depending on whether the x-axis or the y-axis was specified.
+        </p>
+                
+        
+        
+        <p>
+          The following example illustrates the use of
+            
+          <code>simplelayout</code>
+          . The first instance of 
+          <code>simplelayout</code>
+           lays out the sibling views 'across' and 'down' along the y-axis. Then the 'across' and 'down' views apply their own 
+          <code>simplelayout</code>
+          : three blue views are simply laid out on the x-axis within the 'across' view, and three red views are simply laid out on the y-axis within the 'down' view. 
+        </p>
+                
+        <pre class="example">
+    &lt;canvas height="160"&gt;
+        
+        &lt;simplelayout axis="y" spacing="10"/&gt;
+        
+        &lt;view id="across"&gt;
+            &lt;simplelayout axis="x" spacing="10"/&gt;
+            &lt;view bgcolor="blue" height="30" width="50"/&gt;
+            &lt;view bgcolor="blue" height="30" width="50"/&gt;
+            &lt;view bgcolor="blue" height="30" width="50"/&gt;
+        &lt;/view&gt;
+        
+        &lt;view id="down"&gt;
+            &lt;simplelayout axis="y" spacing="10"/&gt;
+            &lt;view bgcolor="red" height="30" width="50"/&gt;
+            &lt;view bgcolor="red" height="30" width="50"/&gt;
+            &lt;view bgcolor="red" height="30" width="50"/&gt;
+        &lt;/view&gt;
+        
+    &lt;/canvas&gt;
+        </pre>
+                
+        <p>More than one layout can be applied to a view as long as the attributes are controlled by only one layout. This next example demonstrates this feature.</p>
+                
+        <pre class="example">
+    &lt;canvas height="120"&gt;
+        &lt;view &gt;
+            &lt;view bgcolor="blue" height="30" width="50"/&gt;
+            &lt;view bgcolor="blue" height="30" width="50"/&gt;
+            &lt;view bgcolor="blue" height="30" width="50"/&gt;
+            &lt;simplelayout axis="x" spacing="0"/&gt;
+            &lt;simplelayout axis="y" spacing="0"/&gt;
+        &lt;/view &gt;
+    &lt;/canvas&gt;
+        </pre>
+                
+        <p>Finally, like all layouts, when an attribute of a subview changes its value and that new value effects the overall layout, then the layout object will update automatically. This is shown in the next example.</p>
+                
+        <pre class="example">
+    &lt;canvas height="65"&gt;
+        &lt;view&gt;
+            &lt;view bgcolor="blue" height="30" width="50"/&gt;
+            &lt;view bgcolor="red" height="30" width="50"
+                onclick="this.animate('width', 100, 500, true)"/&gt;
+            &lt;view bgcolor="blue" height="30" width="50"/&gt;
+            &lt;simplelayout axis="x" spacing="10"/&gt;
+        &lt;/view&gt;
+        &lt;view &gt;
+            &lt;text&gt;Click on the red rectangle. Layout is conserved as its size changes.&lt;/text&gt;
+        &lt;/view&gt;
+        &lt;simplelayout axis="y" spacing="15"/&gt;
+    &lt;/canvas&gt;
+        </pre>
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">axis</td><td class="ty">string</td><td class="ty">y</td><td>The axis in which this layout operates. One of 'x' or 'y'.</td></tr><tr><td class="nm">inset</td><td class="ty">expression</td><td class="ty">0</td><td>A pixel amount to inset the first view controlled by the layout</td></tr><tr><td class="nm">spacing</td><td class="ty">expression</td><td class="ty">0</td><td>A pixel amount to use between each view in the layout</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

@@ -1,0 +1,6 @@
+<font name="myfont">
+  <face src="myfont.ttf"      style="plain"      />
+  <face src="myfont-bold.ttf" style="bold"       />
+  <face src="myfont-ital.ttf" style="italic"     />
+  <face src="myfont-bita.ttf" style="bold italic"/>
+</font>

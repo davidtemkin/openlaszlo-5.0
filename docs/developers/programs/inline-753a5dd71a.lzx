@@ -1,0 +1,7 @@
+    <![CDATA[<handler name="oninit">
+      var y_del = new LzDelegate(this, "myConstraintMethod");
+      y_del.register(m, "ony");
+    </handler> 
+    <method name="myConstraintMethod" args="newValue">
+      this.setAttribute("y", m.y); 
+    </method>]]>

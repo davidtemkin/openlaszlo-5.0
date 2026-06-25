@@ -1,0 +1,64 @@
+
+<canvas width="100%" >
+  <!-- An item that will get clicked and dragged -->
+  <class name="imageRow" bgcolor="0x93A5FF" width="$once{parent.width}" height="20">
+    <attribute name="text" type="text"/>
+    <text name="txt" text="${parent.text}" resize="true"/>
+    <handler name="onmousedown">
+      this.f = new lz.view(canvas, {width: this.width,
+                                   height: this.height,
+                                   bgcolor: this.bgcolor,
+                                   x: this.getAttributeRelative("x", canvas),
+                                   y: this.getAttributeRelative("y", canvas),
+                                   clickable: true
+                                   });
+      // Make view follow mouse around
+      this.x_offset = this.getMouse("x");
+      this.y_offset = this.getMouse("y");
+      this.startDraggingFloater();
+    </handler>
+    
+    <method name="startDraggingFloater">
+      this.d = new LzDelegate(this, "adjustFloaterPosition", lz.Idle, "onidle");
+      this.gm = new LzDelegate(this, "cancelFloater", lz.GlobalMouse, "onmouseup");
+    </method>
+    
+    <method name="adjustFloaterPosition" args="v">
+      this.f.setAttribute("x", canvas.getMouse("x")-this.x_offset);
+      this.f.setAttribute("y", canvas.getMouse("y")-this.y_offset);
+    </method>
+    
+    <method name="cancelFloater" args="v">
+      this.gm.unregisterAll();
+      this.d.unregisterAll();
+      this.f.destroy();
+    </method>
+  </class>
+
+ <view>
+  <view name="stage" width="400" height="300" x="20" bgcolor="0xeaeaea">
+    <!-- Area for viewing images -->
+    <text>Stage</text>
+    <!-- ... -->
+  </view>
+  
+  <view name="listOfImages" width="200" height="300" x="500" bgcolor="0xffff00">
+    <!-- Data-replicated list of images -->
+    <simplelayout axis="y" spacing="2"/>
+    
+    <imageRow>One</imageRow>
+    <imageRow>Two</imageRow>
+    <imageRow>Three</imageRow>
+  </view>
+  
+  <view name="trash" width="200" height="75" x="500" y="310" bgcolor="0xff0000">
+    <!-- Trash for disposing of images -->
+    <text>Trash</text>
+    <!-- ... -->
+  </view>
+ </view>
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

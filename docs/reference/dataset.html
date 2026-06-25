@@ -1,0 +1,178 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;dataset&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>dataset<span class="ang">&gt;</span></h1><p class="short">An in-memory xml-style data hierarchy.</p><p class="meta">Extends <a href="node.html"><code>LzNode</code></a></p>
+        <p>
+           A 
+          <code>dataset</code>
+           tag defines a
+  local dataset.  The name of the dataset is used in the 
+          <code>datapath</code>
+            attribute of a view. 
+        </p>
+         
+ 
+        <p>
+           The 
+          <code>src</code>
+           attribute of the 
+          <code>dataset</code>
+           element specifies whether the data is compiled into the 
+ application or fetched at runtime:
+ 
+        </p>
+         
+        <ul>
+           
+          <li>If the src attribute is a URL, the value of
+  the dataset is the XML data that a request to the URL named by the
+  src attribute returns when the application is run.</li>
+            
+          <li>If the src
+  attribute is a pathname, the value of the dataset is the content of
+  the XML file that the pathname refers to, and is compiled into the
+  application.</li>
+           
+          <li>
+              If the src attribute is not present, the value of the
+  dataset is the content of the 
+            <code>dataset</code>
+             element.
+          </li>
+           
+        </ul>
+         
+ 
+        <p>
+          All data in an OpenLazlo application is contained within one or more datasets. A given dataset usually represents a single conceptual set that may or may not be modified or reloaded during the execution of the application. 
+ The data within a dataset is accessed using a 
+          <code>datapointer</code>
+           or a instance of one of its subclasses. 
+ Datasets can represent
+        </p>
+         
+ 
+        <ul>
+           
+          <li>local data (i.e. data which is static after compile time), or </li>
+           
+          <li>http-data (data which is returned as XML over HTTP)</li>
+           
+        </ul>
+         
+ 
+        <p>
+           If a dataset is not explictly contained within in a 
+          <code>lz.DataProvider</code>
+          , it will make an instance of datasource and be contained inside that. A dataset can be populated or re-poplulated at runtime by calling 
+          <code>doRequest</code>
+           on the dataset. The result of the request is then returned to the application and the dataset's 
+          
+            <code>ondata</code>
+          
+           event is run. Any 
+          
+           that is bound to the dataset will also run its 
+          
+            <code>ondata</code>
+          
+           event at this time as well.
+ 
+        </p>
+         
+        <p>
+          See the 
+          <a href="../developers/data-structures.html">Developers's Guide</a>
+           for more discussion of data and datasets. 
+        </p>
+         
+        <p>
+           
+          <strong>Datasets in SOLO applications</strong>
+          .  Datasets are implemented differently in proxied and SOLO applications, with slight differences in functionality. For example, in SOLO applications in the SWF8 and SWF9 runtimes is it not possible to retrieve http response headers. Also, white space may be handled differently.  See the 
+          <a href="../developers/proxied.html">Developer's Guide</a>
+          .
+ 
+        </p>
+         
+ 
+        <p>
+ The example below makes a request of the cgi script on Laszlo's website that serves up weather information in xml form.</p>
+         
+ 
+        
+           
+          <pre><code>&lt;canvas height="250" debug="true"&gt;
+  &lt;debug y="100"/&gt; 
+  &lt;dataset type="http" name="weatherdata"
+           src="http://www.laszlosystems.com/cgi-pub/weather.cgi"/&gt; 
+  &lt;view&gt;
+     &lt;inputtext width="90" name="t"&gt;zip&lt;/inputtext&gt;
+     &lt;button&gt;  submit
+       &lt;handler name="onclick"&gt; var d = canvas.datasets.weatherdata;
+         Debug.debug("sending request for weather data.");
+         d.setQueryString({zip : parent.t.getText()});
+         d.doRequest(); 
+       &lt;/handler&gt;
+     &lt;/button&gt;
+     &lt;datapointer xpath="weatherdata:/weather"&gt;
+       &lt;handler name="ondata"&gt;
+         var duplicate_pointer = this.dupePointer();
+         duplicate_pointer.selectChild();
+         while (duplicate_pointer.selectNext()){
+           Debug.debug("%w", duplicate_pointer.serialize());
+         }
+       &lt;/handler&gt;
+     &lt;/datapointer&gt;
+     &lt;simplelayout axis="x"/&gt;
+   &lt;/view&gt;
+ &lt;/canvas&gt;</code></pre>
+        
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">acceptencodings</td><td class="ty">boolean</td><td class="ty"/><td>When true, the server will accept
+ encoded responses for this request.  
+ Encoded responses require more work for the LPS (encoding the 
+ response) and client (decoding the response) in trade for lower 
+ network bandwidth usage.</td></tr><tr><td class="nm">cacheable</td><td class="ty">boolean</td><td class="ty">false</td><td>When true, the server will attempt to cache 
+ response (defaults to false).  There are security concerns 
+ when this field is true.  When this field is true, you will usually
+ want the getresponseheaders field to be false.</td></tr><tr><td class="nm">dataprovider</td><td class="ty">expression</td><td class="ty"/><td>Holds a pointer to the DataProvider which handles data load requests for this dataset. 
+ Default value is canvas.defaultdataprovider</td></tr><tr><td class="nm">getresponseheaders</td><td class="ty">boolean</td><td class="ty"/><td>
+                When true, the proxy server (if making a proxied request) will encode and 
+ send the HTTP response headers along with the data (defaults to false). 
+ Due to a lack of a native API to get this information, SOLO SWF applications
+ will always return an empty set.
+
+ When making a proxied request,
+ 
+                <code>getresponseheaders</code>
+                 must be true in
+ order for the response headers to be retrieved via the
+ 
+                <code>&lt;method&gt;getResponseHeader&lt;/method&gt;</code>
+                 or
+ 
+                <code>&lt;method&gt;getAllResponseHeaders&lt;/method&gt;</code>
+                 methods.
+              </td></tr><tr><td class="nm">nsprefix</td><td class="ty">boolean</td><td class="ty">false</td><td>When true, the server will preserve namespace prefixes
+ on data node names and attribute names</td></tr><tr><td class="nm">postbody</td><td class="ty">string</td><td class="ty"/><td>Used to send a string as the entire body of a POST request.
+
+ For a POST request, setting postbody to a non-null string value
+ will send that string as the complete body of the POST request. In
+ this case any other query parameters that have been set via
+ setQueryParam dataset will be ignored.
+
+ The behavior of a GET request with a non-null postbody is not
+ defined.
+
+ Note, the swf8 runtime is forced to XML-quote the postbody, due to
+ limitations in the Flash 8 player API. This restriction is not
+ present in later swf runtimes, or in the DHTML runtime.</td></tr><tr><td class="nm">proxyurl</td><td class="ty">string</td><td class="ty"/><td>The URL of the proxy server, for proxied requests</td></tr><tr><td class="nm">querystring</td><td class="ty">string</td><td class="ty"/><td>A string to be appended to the request that
+ the dataset makes.</td></tr><tr><td class="nm">querytype</td><td class="ty">get|post|GET|POST</td><td class="ty"/><td>HTTP request method. Value must be one of "GET" or "POST".</td></tr><tr><td class="nm">request</td><td class="ty">boolean</td><td class="ty"/><td>If true, the datset will make a request when it
+ inits. The default for this is false.</td></tr><tr><td class="nm">secureport</td><td class="ty">integer</td><td class="ty">443</td><td>TCP port number to use for secure (HTTPS) requests</td></tr><tr><td class="nm">timeout</td><td class="ty">Number</td><td class="ty"/><td>The numer of milliseconds to wait before the request times out, and an ontimeout event is sent.</td></tr><tr><td class="nm">trimwhitespace</td><td class="ty">boolean</td><td class="ty"/><td>When true, the server will trim 
+ whitespace in the XML data (defaults to false).</td></tr><tr><td class="nm">type</td><td class="ty">http|soap</td><td class="ty"/><td>When set to "http" or "soap", the dataset
+ interprets it's src attribute as a URL to be loaded at runtime.
+ If the "src" attribute is set to a URL (e.g., starts with "http:") then
+ the type attribute implicitly becomes "http".</td></tr></table><h3>Events</h3><ul class="events"><li><code>onerror</code> — Sent when the dataset's request results in an error.</li><li><code>ontimeout</code> — Sent when the request made by the dataset times out.</li></ul>
+</main><script src="_nav.js"></script></body></html>

@@ -1,0 +1,114 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basedatepicker&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basedatepicker<span class="ang">&gt;</span></h1><p class="short">An abstract date picker.</p><p class="meta">Extends <code>basecomponent</code></p>
+                    
+        <p>
+           
+                Basedatepicker is an abstract class from which you can build a fully
+                functional month-based datepicker from. When creating an implementation of
+                the basedatepicker, it is expected that certain methods from basedatepicker,
+                basedatepickerday and basedatepickerweek will be overridden to provide full
+                functionality of a datepicker.  For datepicker, these methods include
+                doSpaceUp(), doEnterUp(), and optionally setMonthToShow().  See the source code of
+                datepicker for a more extensive example.  See also 
+          
+           and 
+          
+                      
+            
+        </p>
+                    
+        <pre class="example">
+            &lt;canvas height="200"&gt; 
+                &lt;class name="myday" 
+                       extends="basedatepickerday" 
+                       bgcolor="green"
+                       width="20"
+                       height="20"&gt;
+                    &lt;handler name="onclick"&gt; 
+                    &lt;![CDATA[
+                        if( !this.disabled  ) {
+                            this.setAttribute('selected', true);    
+                        } 
+                    ]]&gt;
+                    &lt;/handler&gt;
+            
+                    &lt;text text="${parent.daynum}"
+                          visible="${!parent.disabled}" 
+                          opacity="${parent.selectable ? 1 : .3 }"/&gt;       
+                &lt;/class&gt;
+            
+                &lt;class name="myweek" extends="basedatepickerweek"&gt;
+                    &lt;simplelayout axis="x" spacing="1"/&gt; 
+                &lt;/class&gt; 
+                
+                &lt;class name="mydatepicker" 
+                       extends="basedatepicker" 
+                       weekclass="lz.myweek"
+                       dayclass="lz.myday"
+                       xinset="0"
+                       yinset="0"&gt;
+            
+                    &lt;method name="setMonthToShow" args="month, year"&gt;
+                        super.setMonthToShow(month,year);
+                        this.display.month.datapath.setXPath(
+                        "datepicker_strings_en:/months/month[@index='" + month + "']/@full" );
+                        this.display.year.setAttribute('text', year );
+                    &lt;/method&gt;
+            
+                    &lt;handler name="onselecteddate"&gt;
+                        if( this.selecteddate != null ) {
+                            this.selected.year.setAttribute('text', this.selecteddate.getFullYear() );
+                            this.selected.month.datapath.setXPath(
+                                    "datepicker_strings_en:/months/month[@index='" + 
+                                    this.selecteddate.getMonth() + "']/@full" ); 
+                            this.selected.date.setAttribute('text', this.selecteddate.getDate() );
+                        }
+                    &lt;/handler&gt;
+            
+                    &lt;view options="ignorelayout"&gt;
+                        &lt;text width="20" height="20" bgcolor="red" text="S"/&gt;
+                        &lt;text width="20" height="20" bgcolor="red" text="M"/&gt;
+                        &lt;text width="20" height="20" bgcolor="red" text="T"/&gt;
+                        &lt;text width="20" height="20" bgcolor="red" text="W"/&gt;
+                        &lt;text width="20" height="20" bgcolor="red" text="T"/&gt;
+                        &lt;text width="20" height="20" bgcolor="red" text="F"/&gt;
+                        &lt;text width="20" height="20" bgcolor="red" text="S"/&gt;
+                        &lt;simplelayout axis="x" spacing="1"/&gt;
+                    &lt;/view&gt; 
+                    &lt;view&gt; 
+                        &lt;button text="previous" onclick="classroot.showPreviousMonth()"/&gt;
+                        &lt;button text="next" onclick="classroot.showNextMonth()"/&gt;
+                        &lt;simplelayout axis="x"/&gt;
+                    &lt;/view&gt;
+                    &lt;view name="display"&gt;
+                        &lt;text&gt; Showing: &lt;/text&gt;
+                        &lt;text name="month" datapath="." resize="true"/&gt;
+                        &lt;text name="year" resize="true"/&gt;
+                        &lt;simplelayout axis="x" spacing="2"/&gt;
+                    &lt;/view&gt;
+                    &lt;view name="selected"&gt;
+                        &lt;text&gt; Selected: &lt;/text&gt;
+                        &lt;text name="month" datapath="." resize="true"/&gt;
+                        &lt;text name="date" resize="true"/&gt;
+                        &lt;text name="year" resize="true"/&gt;
+                        &lt;simplelayout axis="x" spacing="2"/&gt;
+                    &lt;/view&gt; 
+            
+                    &lt;simplelayout axis="y" placement="content" spacing="1" inset="20"/&gt; 
+                    &lt;simplelayout axis="y"/&gt;
+                &lt;/class&gt; 
+                &lt;mydatepicker/&gt; 
+            &lt;/canvas&gt; 
+            </pre>
+                  Abstract class for the datepicker.  The basedatepicker class
+          shows the days of the week in a typical month based layout.  Extend
+          this class to create a full featured UI of a datepicker, or just use
+          the datepicker component.
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">dayclass</td><td class="ty">expression</td><td class="ty"/><td>The dayclass to use for this basedatepicker</td></tr><tr><td class="nm">daysinmonth</td><td class="ty">expression</td><td class="ty">[ 31,                                                 28,                                                 31,                                                 30,                                                 31,                                                 30,                                                31,                                                31,                                                30,                                                31,                                                30,                                                31 ]</td><td>An array containing the number of days in each month. This is used 
+              by the method getNumberOfDaysInMonth, which also calculates the
+              number of days in February, depending on the year.</td></tr><tr><td class="nm">earliestdate</td><td class="ty">expression</td><td class="ty">null</td><td>The earliest date that is selectable.</td></tr><tr><td class="nm">latestdate</td><td class="ty">expression</td><td class="ty">null</td><td>The latest date that is selectable.</td></tr><tr><td class="nm">selecteddate</td><td class="ty">expression</td><td class="ty">null</td><td>The Date that is currently selected.</td></tr><tr><td class="nm">selecteddatepickerday</td><td class="ty">expression</td><td class="ty">null</td><td>The datepickerday which has been selected.</td></tr><tr><td class="nm">showingdate</td><td class="ty">expression</td><td class="ty">null</td><td>A Date object which represents the month to be shown.</td></tr><tr><td class="nm">showingmonth</td><td class="ty">number</td><td class="ty">null</td><td>The month that is currently showing in the datepicker.</td></tr><tr><td class="nm">showingyear</td><td class="ty">number</td><td class="ty">null</td><td>The year that is currently showing in the datepicker.</td></tr><tr><td class="nm">weekclass</td><td class="ty">expression</td><td class="ty"/><td>The weekclass to use for this basedatepicker</td></tr><tr><td class="nm">xinset</td><td class="ty">number</td><td class="ty">null</td><td>The number if pixels from this.x to show the datepicker days</td></tr><tr><td class="nm">yinset</td><td class="ty">number</td><td class="ty">null</td><td>The number if pixels from this.y to show the datepicker days</td></tr></table><h3>Methods</h3><ul class="methods"><li><code>focusOnDay()</code></li><li><code>focusOnFirstDayInMonth()</code></li><li><code>focusOnLastDayInMonth()</code></li><li><code>getNumberOfDaysInMonth()</code></li><li><code>isDayDisabled()</code></li><li><code>isLastWeekInMonth()</code></li><li><code>removeFocusFromDay()</code></li><li><code>selectFocusDay()</code></li><li><code>setMonthToShow()</code></li><li><code>setSelecteddatepickerday()</code></li><li><code>setStartingDay()</code></li><li><code>showNextMonth()</code></li><li><code>showPreviousMonth()</code></li></ul>
+</main><script src="_nav.js"></script></body></html>

@@ -1,0 +1,9 @@
+<method name="startDraggingFloater">
+  this.d = new LzDelegate(this, "adjustFloaterPosition", lz.Idle, "onidle");
+  this.gm = new LzDelegate(this, "cancelFloater", lz.GlobalMouse, "onmouseup");
+</method>
+    
+<method name="adjustFloaterPosition">
+  this.f.setX(canvas.getMouse("x")-this.x_offset);
+  this.f.setY(canvas.getMouse("y")-this.y_offset);
+</method>

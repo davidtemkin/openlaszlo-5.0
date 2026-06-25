@@ -1,0 +1,625 @@
+<?xml version="1.0"?>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2010 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+
+<!-- the content of this file was derived from files a.html, b.html, br.html,
+ etc. in the docs/wrappers/ directory. -->
+
+<js2doc>
+
+<property id="tag-a" topic="LZX" subtopic="HTML Markup" access="public">
+<doc>
+<tag name="lzxname"><text>a</text></tag>
+<tag name="shortdesc"><text>HTML hypertext link.</text></tag>
+<tag name="docfilename"><text>tag-a</text></tag>
+<text>
+<p/>
+<p>HTML hypertext link.  This tag can only occur inside XHTML
+text containers such as <sgmltag class="element" role="LzText">&lt;text&gt;</sgmltag>.</p>
+
+<example>
+&lt;canvas height="30"&gt;
+  &lt;text&gt;A &lt;a href="http://www.openlaszlo.org" target="_blank"&gt;link&lt;/a&gt;&lt;/text&gt;
+&lt;/canvas&gt;
+</example>
+
+<p>Unlike HTML, the text in the link is not automatically styled.  To style the text, use the 
+<sgmltag class="element" role="tag-u">&lt;u&gt;</sgmltag> and <sgmltag class="element" role="LzFont">font</sgmltag> tags:</p>
+
+<example>
+&lt;canvas height="30"&gt;
+  &lt;text&gt;
+    A &lt;font color="#0000FF"&gt;&lt;u&gt;&lt;a
+      href="http://www.laszlosystems.com" target="_blank"&gt;link&lt;/a&gt;&lt;/u&gt;&lt;/font&gt;
+  &lt;/text&gt;
+&lt;/canvas&gt;
+</example>
+</text>
+</doc>
+
+<class>
+  <property name="__ivars__">
+    <attribute name="id" select="$attrs-id"/>
+    <object>
+      <property id="tag-a.__ivars__.href" name="href" type="" modifiers="final">
+        <doc>
+          <tag name="lzxtype"><text>URL</text></tag>
+          <text>The link target</text>
+        </doc>
+      </property>
+      <property id="tag-a.__ivars__.target" name="target" type="" modifiers="final">
+        <doc>
+          <tag name="lzxtype"><text>_blank | _parent | _self | _top</text></tag>
+          <text>
+            The value of this attribute determines where the link target will be displayed. The interpretation is the same as in HTML, where the "current frame" is the frame containing the LZX application. The value must be a name beginning with an alphabetic character, or one of the following:
+            <dl>
+              <dt> 
+                _blank
+              </dt>
+              <dd>
+                The user agent should load the designated
+                document in a new, unnamed window.
+              </dd>
+              <dt> 
+                _parent
+              </dt>
+              <dd>
+                The user agent should load the document into the full,
+                original window (thus canceling all other
+                frames). This value is equivalent
+                to <code>_self</code> if the current frame has no
+                parent.
+              </dd>
+              <dt> 
+                _self
+              </dt>
+              <dd>
+                The user agent should load the document in
+                the same frame as the element that refers to this target.
+              </dd>
+              <dt> 
+                _top
+              </dt>
+              <dd>
+                The user agent should load the document into the
+                immediate FRAMESET parent of the current frame. This
+                value is equivalent to <code>_self</code> if the
+                current frame has no parent.
+              </dd>
+            </dl>
+          </text>
+        </doc>
+      </property>
+    </object>
+  </property>
+</class>
+</property>
+
+
+<property id="tag-b" topic="LZX" subtopic="HTML Markup" access="public">
+<doc>
+<tag name="shortdesc"><text>Bold Text.</text></tag>
+<tag name="lzxname"><text>b</text></tag>
+<tag name="docfilename"><text>tag-b</text></tag>
+<text>
+<p>HTML bold character markup.  This tag can only occur inside XHTML
+text containers such as <sgmltag class="element" role="LzText">&lt;text&gt;</sgmltag> and
+<sgmltag class="element" role="lz.button">&lt;button&gt;</sgmltag>.</p>
+
+
+<example>
+&lt;canvas height="30"&gt;
+  &lt;text&gt;Some &lt;b&gt;bold&lt;/b&gt; text&lt;/text&gt;
+&lt;/canvas&gt;
+</example>
+
+
+</text>
+</doc>
+<class/>
+</property>
+
+<property id="tag-br" topic="LZX" subtopic="HTML Markup" access="public">
+<doc>
+<tag name="shortdesc"><text>Line break.</text></tag>
+<tag name="lzxname"><text>br</text></tag>
+<tag name="docfilename"><text>tag-br</text></tag>
+<text>
+<p>HTML line break.  This tag can only occur inside XHTML
+text containers such as <tagname>text</tagname>.</p>
+
+<note>As in XHTML, the <tagname>br</tagname> element must contain both
+a start and an end tag: <code>&lt;br/&gt;</code> or
+<code>&lt;br&gt;&lt;/br&gt;</code>, not
+<code>&lt;br&gt;</code>.</note>
+
+<example>
+&lt;canvas height="30"&gt;
+  &lt;text multiline="true"&gt;Some &lt;br/&gt; text&lt;/text&gt;
+&lt;/canvas&gt;
+</example>
+
+</text>
+</doc>
+<class/>
+</property>
+
+<property id="tag-font" topic="LZX" subtopic="HTML Markup" access="public">
+<doc>
+<tag name="shortdesc"><text>Inline font markup.</text></tag>
+<tag name="lzxname"><text>font</text></tag>
+<tag name="docfilename"><text>tag-font</text></tag>
+<text>
+<para>A <sgmltag class="element">&lt;font&gt;</sgmltag> tag controls the font face, size, and color for its textual content.</para>
+<note>The XHMTL <sgmltag class="element">&lt;font&gt;</sgmltag> tag, which controls the appearance of its content, is different 
+from the top-level <sgmltag class="element" role="LzFont">&lt;font&gt;</sgmltag> which defines a font and imports it into the application.</note>
+<example><![CDATA[
+<canvas height="75">
+  <font name="Arioso" src="ariosor.ttf">
+    <face src="ariosob.ttf" style="bold"/>
+  </font>
+
+  <text height="75">
+    Some <font color="#ff0000">red</font> text, and text
+    in <font face="Arioso" size="24">Arioso</font>
+    and <font face="Arioso" size="24"><b>Arioso bold</b></font>.
+  </text>
+</canvas>]]></example>
+</text>
+</doc>
+<class>
+  <property name="__ivars__">
+  <object>
+    <property name="color" modifiers="final">
+      <tag name="lzxtype"><text>color</text></tag>
+    </property>
+    <property name="face" modifiers="final">
+      <tag name="lzxtype"><text>string</text></tag>
+    </property>
+    <property name="size" modifiers="final">
+      <tag name="lzxtype"><text>Number</text></tag>
+    </property>
+  </object>
+  </property>
+</class>
+</property>
+
+<property id="tag-i" topic="LZX" subtopic="HTML Markup" access="public">
+<doc>
+<tag name="shortdesc"><text>Italic text.</text></tag>
+<tag name="lzxname"><text>i</text></tag>
+<tag name="docfilename"><text>tag-i</text></tag>
+<p/>
+<text>
+<p>HTML italic character markup.  This tag can only occur inside
+XHTML text containers such as <sgmltag class="element" role="LzText">&lt;text&gt;</sgmltag> and
+<sgmltag class="element" role="lz.button">&lt;button&gt;</sgmltag>.</p>
+
+<example>
+&lt;canvas height="30"&gt;
+  &lt;text&gt;Some &lt;i&gt;italic&lt;/i&gt; text&lt;/text&gt;
+&lt;/canvas&gt;
+</example>
+
+</text>
+</doc>
+<class/>
+</property>
+
+<property id="tag-img" topic="LZX" subtopic="HTML Markup" access="public">
+<doc>
+<tag name="shortdesc"><text>A way to import images into html</text></tag>
+<tag name="lzxname"><text>img</text></tag>
+<tag name="docfilename"><text>tag-img</text></tag>
+<text>
+<p>
+ The compiler supports the &lt;img&gt; tag in HTML text content, for 
+ applications compiled for swf8 and higher. The URL 
+ for the image must return an image in a format accepted by the Flash 
+ player (.jpg, or .swf). No gif or .png or other formats will work. 
+</p>
+</text>
+</doc>
+<class>
+  <property name="__ivars__">
+    <attribute name="id" select="$attrs-id"/>
+    <object>
+      <property id="tag-img.__ivars__.align" name="align" type="" modifiers="final">
+        <doc>
+          <tag name="lzxtype"><text>String</text></tag>
+          <text></text>
+        </doc>
+      </property>
+      <property id="tag-img.__ivars__.height" name="height" type="" modifiers="final">
+        <doc>
+          <tag name="lzxtype"><text>String</text></tag>
+          <text></text>
+        </doc>
+      </property>
+      <property id="tag-img.__ivars__.hspace" name="hspace" type="" modifiers="final">
+        <doc>
+          <tag name="lzxtype"><text>String</text></tag>
+          <text></text>
+        </doc>
+      </property>
+      <property id="tag-img.__ivars__.src" name="src" type="" modifiers="final">
+        <doc>
+          <tag name="lzxtype"><text>String</text></tag>
+          <text></text>
+        </doc>
+      </property>
+      <property id="tag-img.__ivars__.vspace" name="vspace" type="" modifiers="final">
+        <doc>
+          <tag name="lzxtype"><text>String</text></tag>
+          <text></text>
+        </doc>
+      </property>
+      <property id="tag-img.__ivars__.width" name="width" type="" modifiers="final">
+        <doc>
+          <tag name="lzxtype"><text>String</text></tag>
+          <text></text>
+        </doc>
+      </property>
+    </object>
+  </property>
+</class>
+</property>
+
+<property id="tag-p" topic="LZX" subtopic="HTML Markup" access="public">
+<doc>
+<tag name="shortdesc"><text>Paragraph.</text></tag>
+<tag name="lzxname"><text>p</text></tag>
+<tag name="docfilename"><text>tag-p</text></tag>
+<text>
+
+<p>An HTML paragraph.  This tag only occurs inside XHTML text such as
+<sgmltag class="element" role="LzText">&lt;text&gt;</sgmltag>.</p>
+
+<example>
+&lt;canvas height="100"&gt;
+  &lt;text multiline="true"&gt;
+    &lt;p&gt;A paragraph.&lt;/p&gt;
+    &lt;p&gt;Another one.&lt;/p&gt;
+  &lt;/text&gt;
+&lt;/canvas&gt;
+</example>
+
+</text>
+</doc>
+<class/>
+</property>
+
+<property id="tag-pre" topic="LZX" subtopic="HTML Markup" access="public">
+<doc>
+<tag name="shortdesc"><text>Preformatted text.</text></tag>
+<tag name="lzxname"><text>pre</text></tag>
+<tag name="docfilename"><text>tag-pre</text></tag>
+<text>
+<p>An HTML preformatted text region.  Whitespace and line breaks within
+this element are preserved.</p>
+
+<example>
+&lt;canvas height="70" layout="axis: x"&gt;
+  &lt;text&gt;
+    Text
+    without
+    pre
+  &lt;/text&gt;
+
+  &lt;text multiline="true"&gt;
+    &lt;pre&gt;Text
+      with
+      pre&lt;/pre&gt;
+  &lt;/text&gt;
+&lt;/canvas&gt;
+</example>
+
+</text>
+</doc>
+<class/>
+</property>
+
+<property id="tag-u" topic="LZX" subtopic="HTML Markup" access="public">
+<doc>
+<tag name="shortdesc"><text>Underlined text.</text></tag>
+<tag name="lzxname"><text>u</text></tag>
+<tag name="docfilename"><text>tag-u</text></tag>
+<text>
+<p>HTML underlined character markup.  This tag can only occur inside
+XHTML text containers such as <sgmltag class="element" role="LzText">&lt;text&gt;</sgmltag> and
+<sgmltag class="element" role="lz.button">&lt;button&gt;</sgmltag>.</p>
+
+<example>
+&lt;canvas height="30"&gt;
+  &lt;text&gt;Some &lt;u&gt;underlined&lt;/u&gt; text&lt;/text&gt;
+&lt;/canvas&gt;
+</example>
+
+</text>
+</doc>
+<class/>
+</property>
+
+
+<!-- ================================================================ -->
+<property id="tag-audio" topic="LZX" subtopic="Media" access="public">
+<doc>
+<tag name="shortdesc"><text>Imports an audio file.</text></tag>
+<tag name="lzxname"><text>audio</text></tag>
+<tag name="docfilename"><text>tag-audio</text></tag>
+<text>
+<warning>This tag is obsolete.  Its functionality has been replaced by
+the <tagname>resource</tagname> tag.</warning>
+
+<p>The <tagname>resource</tagname> tag defines another way to import a
+sound into an application.  The <tagname>resource</tagname> tag can
+also be used to import images and movies.</p>
+
+<p>The <tagname>audio</tagname> tag imports an audio file.  The file
+is included in the application when the application is compiled.  The
+tag has a required <attribute>src</attribute> attribute.  The value of
+this attribute is a filename, that is resolved relative to the source
+file that contains the <tagname>audio</tagname> tag.  The file should
+contain an mp3 file.</p>
+
+<p> The <classname>LzAudio</classname> service can be used from
+JavaScript to play the clip.  The string that is passed to the
+<method>LzAudio.playSound</method> method should match the value of
+the <attribute>name</attribute> attribute of an
+<attribute>audio</attribute> tag.</p>
+
+<example>
+&lt;canvas height="150"&gt;
+  &lt;audio src="resources/poof.mp3" name="poof"/&gt;
+  &lt;button text="Poof"
+          onclick="LzAudio.playSound('poof');"/&gt;
+&lt;/canvas&gt;
+</example>
+
+<p>Also see the <a href="${examples}audio.lzx">audio</a> example.</p>
+
+<p>The audio clip must be an MP3 file at one of the following sample
+rates: 11.025 khz, 22.5 khz, and 44.1 khz, and encoded at no more than
+160kbps.</p>
+
+</text>
+</doc>
+<class/>
+</property>
+
+<property id="tag-face" topic="LZX" subtopic="Media" access="public">
+<doc>
+<tag name="shortdesc"><text></text></tag>
+<tag name="lzxname"><text>face</text></tag>
+<tag name="docfilename"><text>tag-face</text></tag>
+<text>
+<p>Defines a font face or style within the font family that the
+outer element defines.</p>
+<p>
+See the <a href="LzFont.html" target="_self">font</a> element for details.
+</p>
+</text>
+</doc>
+<class>
+  <property name="__ivars__">
+    <attribute name="id" select="$attrs-id"/>
+    <object>
+      <property id="tag-face.__ivars__.src" name="src" type="" modifiers="final">
+        <doc>
+          <tag name="lzxtype"><text>URL</text></tag>
+          <text>The path of a file that contains the source for this object.</text>
+        </doc>
+      </property>
+      <property id="tag-face.__ivars__.style" name="style" type="" modifiers="final">
+        <doc>
+          <tag name="lzxtype"><text>bold | italic | bold italic | italic bold | plain </text></tag>
+          <text>Corresponds to the fontstyle attribute of a view.</text>
+        </doc>
+      </property>
+    </object>
+  </property>
+</class>
+</property>
+
+<property id="tag-resource" topic="LZX" subtopic="Media" access="public">
+<doc>
+<tag name="shortdesc"><text>A tag that defines a media object that can be associated with a view.</text></tag>
+<tag name="lzxname"><text>resource</text></tag>
+<tag name="docfilename"><text>tag-resource</text></tag>
+<text>
+
+<p>This tag defines a media object, that can be presented within a
+view.  A media object is an image, movie, animation, or sound clip.
+This tag imports the object into the application, and binds it to a
+string which can be used within a view.  For example:</p>
+
+<example class="program" id="resource-1">
+&lt;canvas height="70"&gt;
+  &lt;resource name="logo" src="../images/logo.png"/&gt;
+  &lt;view resource="logo"/&gt;
+&lt;/canvas&gt;
+</example>
+
+<p>The <literal>src</literal> attribute refers to the filename of any valid resource type, including an optional directory path relative to the directory of the declaration.   Valid resource types for images and animations include: .SWF, .PNG, .JPG, and .GIF; valid audio types include: .MP3.</p>
+  
+  <p>The <literal>offsetx</literal> and <literal>offsety</literal> attributes (SWF10 only) allow you to specify an offset of a bitmap resource used for a custom cursor,
+    so that the mouse will align with the proper 'hotspot' in the cursor image. </p>
+    
+    <p>Example: set a custom crosshair cursor from a bitmap resource, with an offset of (-8,-8)</p>
+    
+<programlisting>
+  &lt;resource name=&quot;crosshair&quot; src=&quot;cursor_crosshair.png&quot; offsetx=&quot;-8&quot; offsety=&quot;-8&quot; /&gt;
+  &lt;view height=&quot;40&quot; bgcolor=&quot;#cccccc&quot; width=&quot;100&quot; cursor=&quot;crosshair&quot; /&gt;
+</programlisting>
+
+<p>Audio resources must be MP3 files at one of the following 
+sample rates: 11.025 khz, 22.5 khz, and 44.1 khz, and encoded at no 
+more than 160kbps.</p>
+
+<p>The <a href="${examples}image-loading/dataimage.lzx">dataimage</a> example
+further demonstrates the use of the <literal>resource</literal> tag.</p>
+
+<p>
+For details on multi-frame resources, see <a href="tag-frame.html">frame</a>.
+</p>
+</text>
+</doc>
+  <class>
+    <property name="__ivars__" access="public">
+      <object>
+        <property name="name" type="" modifiers="final">
+          <doc>
+            <tag name="lzxtype"><text>token</text></tag>
+            <text>The name of a variable that will be set to this
+            object when the application is started.  If this element
+            is directly within a
+            <a href="../reference/canvas.html">canvas</a>
+            or
+            <a herf="../reference/library.html">library</a>
+            element, the global variable and the canvas property with
+            this name will be set to this object.  If this element is
+            within another object, that object's property with this
+            name will be set to this object.</text>
+          </doc>
+        </property>
+        <property name="offsetx" type="" modifiers="final">
+          <doc>
+            <tag name="lzxtype"><text>Number</text></tag>
+            <text>The x offset of a bitmap resource used for a custom cursor.</text>
+          </doc>
+        </property>
+        <property name="offsety" type="" modifiers="final">
+          <doc>
+            <tag name="lzxtype"><text>Number</text></tag>
+            <text>The y offset of a bitmap resource used for a custom cursor.</text>
+          </doc>
+        </property>
+        <property name="src" type="" modifiers="final">
+          <doc>
+            <tag name="lzxtype"><text>URL</text></tag>
+            <text>The path of a file that contains the source for this object.</text>
+          </doc>
+        </property>
+      </object>
+    </property>
+  </class>
+</property>
+
+<property id="tag-frame" topic="LZX" subtopic="Media" access="public">
+<doc>
+<tag name="shortdesc"><text>A frame of a multi-frame resource.</text></tag>
+<tag name="lzxname"><text>frame</text></tag>
+<tag name="docfilename"><text>tag-frame</text></tag>
+<text>
+<p>The <tagname>frame</tagname> tag is used to define a single frame
+of a multi-frame <sgmltag class="element" role="tag-resource">&lt;resource&gt;</sgmltag>.  A multi-frame resource
+contains several images which can be toggled among by script commands.
+For example:</p>
+
+<!-- TODO: [2008-01-28 dda] handle <example extract="false"> in XSL.
+  This was: <example extract="false"><programlisting class="code">...
+  but that produces no output.  All such examples have been converted,
+  and <programlisting class="code"> has been added when it is missing.
+ -->
+
+<!--<example>-->
+<programlisting class="code">
+&lt;resource name="mfr"&gt;
+  &lt;frame src="f1.jpg"/&gt;
+  &lt;frame src="f2.jpg"/&gt;
+&lt;/resource&gt;
+</programlisting>
+<!--</example-->
+
+<p>
+Multiple frame tags can be declared consecutively to produce a single
+resource constructed of an unlimited number of frames.  Such composed
+resources are often used to conveniently implement mouse rollovers,
+button states, or other UI elements where alternate views of a
+resource are required.  Once a multi-frame resource has been defined
+and presented within a <sgmltag class="element" role="LzView">&lt;view&gt;</sgmltag>, the developer
+can designate which frame is actively visible through the use of the
+view's <method>setResourceNumber</method> method.</p>
+
+<p>Multi-frame resources can be used in conjunction with components
+such as <sgmltag class="element" role="lz.basebutton">&lt;basebutton&gt;</sgmltag>, which pre-define complex
+button behavior using frames designated by the user.</p>
+
+<p>The following example manually implements a simple button with
+mouse rollover and down state behavior:</p>
+
+<example>
+&lt;canvas height="120"&gt;
+  &lt;!-- create the multi-frame resource and give it a name --&gt;
+  &lt;resource name="mybutton_rsrc"&gt;
+      &lt;!-- first frame is the mouseup state of the button --&gt;
+      &lt;frame src="../images/basebutton/button-up.png"/&gt;
+      &lt;!-- second frame is the mouseover state of the button --&gt;
+      &lt;frame src="../images/basebutton/button-over.png"/&gt;
+      &lt;!-- third frame is the mousedown state of the button --&gt;
+      &lt;frame src="../images/basebutton/button-down.png"/&gt;
+  &lt;/resource&gt;
+
+  &lt;!-- include the resource in a view with mouse behaviors --&gt;
+  &lt;view resource="mybutton_rsrc" 
+        onmouseover="setResourceNumber(2)"
+        onmouseout="setResourceNumber(1)"
+        onmousedown="setResourceNumber(3)"
+        onmouseup="setResourceNumber(2)"/&gt;
+&lt;/canvas&gt;
+</example>
+
+</text>
+</doc>
+<class>
+  <property name="__ivars__">
+    <attribute name="id" select="$attrs-id"/>
+    <object>
+      <property id="tag-frame.__ivars__.name" name="name" type="" modifiers="final">
+        <doc>
+          <tag name="lzxtype"><text>token</text></tag>
+          <text>The name of a variable that will be set to this object when the application is started. If this element is directly within a <sgmltag class="element" role="LzCanvas">&lt;canvas&gt;</sgmltag> or <sgmltag class="element" role="tag.library">&lt;library&gt;</sgmltag> element, the global variable and the canvas property with this name will be set to this object. If this element is within another object, that object's property with this name will be set to this object.</text>
+        </doc>
+      </property>
+      <property id="tag-frame.__ivars__.src" name="src" type="" modifiers="final">
+        <doc>
+          <tag name="lzxtype"><text>URL</text></tag>
+          <text>The path of a file that contains the source for this object.</text>
+        </doc>
+      </property>
+    </object>
+  </property>
+</class>
+</property>
+  <property id="tag-setter" topic="LZX" subtopic="Scripting" access="public">
+    <doc>
+      <tag name="shortdesc"><text>A tag to declare or override attribute setter methods.</text></tag>
+      <tag name="lzxname"><text>setter</text></tag>
+      <tag name="docfilename"><text>tag-setter</text></tag>
+      <text>
+        <p>Use the <tagname>setter</tagname> tag to declare or override 
+          attribute setter methods. For example:</p>
+<programlisting class="code">
+  &lt;setter name=&quot;y&quot; args=&quot;y&quot; &gt;
+    super.setAttribute(&apos;y&apos;, Math.max(parent.arrowbuttonheight-1 , Math.min( y , parent.height - (parent.thumbheight + parent.arrowbuttonheight))));
+  &lt;/setter&gt;
+</programlisting>
+        <p>Here's another example.</p>
+       
+<programlisting class="code">
+  &lt;text x=&quot;${Math.round((parent.width-this.width)/2)}&quot; font=&quot;vera_super_bold&quot; fgcolor=&quot;0x4d4d4d&quot; datapath=&quot;@username&quot; resize=&quot;true&quot;&gt;
+    &lt;setter name=&quot;text&quot;&gt;
+      if (typeof(this.datapath.data) != &apos;undefined&apos;) {
+      super.setAttribute(&apos;text&apos;, this.datapath.data + &quot;&apos;s information&quot;);
+      }
+    &lt;/setter&gt;
+  &lt;/text&gt;
+</programlisting>
+        <para>For a complete description of &lt;setter&gt;s, including how to update from previous versions of OpenLaszlo, see <xref linkend="settertag" /> of the Developer's Guide.</para>
+      </text>
+    </doc>
+    <class/>
+  </property>
+</js2doc>

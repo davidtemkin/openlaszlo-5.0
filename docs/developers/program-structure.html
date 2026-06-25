@@ -1,0 +1,389 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 15. Program Structure</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.building-apps.html" title="Part III. Fundamental Concepts"><link rel="prev" href="developers.building-apps.html" title="Part III. Fundamental Concepts"><link rel="next" href="comp-overview.html" title="Chapter 16. Getting More from Components"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 15. Program Structure</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="developers.building-apps.html">Prev</a> </td><th width="60%" align="center">Part III. Fundamental Concepts</th><td width="20%" align="right"> <a accesskey="n" href="comp-overview.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="program-structure"></a>Chapter 15. Program Structure</h2></div></div></div><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="program-structure.canvas-tag"></a>1. The canvas tag</h2></div></div></div><p>An LZX application has exactly one canvas.  The canvas is the
+container for all views and elements of the application.</p><p>An LZX application file is an XML file whose document root is a
+canvas element.  The canvas contains attributes and elements that
+configure and define the application.  For example,</p><div class="example"><a name="id5387"></a><p class="title"><b>Example 15.1. Hello World</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="15" width="100%"&gt;
+  &lt;text&gt;Hello, World&lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-structure-_1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-structure-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>is a simple LZX application. The canvas has a height and width
+measured in pixels; if you do not specify values for these attributes
+the default width  and height are "100%".</p><p>
+In addition to the LZX code contained in the &lt;canvas&gt; block, OpenLaszlo applications 
+may use code contained in separate library files. These libraries can be either compiled
+into the main program (using the <a class="indexterm" name="id5392"></a><code class="sgmltag-element">&lt;include&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag) or separately compiled and downloaded at 
+run time (the <a class="indexterm" name="id5396"></a><code class="sgmltag-element">&lt;import&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag).  These are described below.
+</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1481"></a>1.1. Files included at compile time</h3></div></div></div><p>An LZX application file may include other LZX files using the
+<a class="indexterm" name="id5403"></a><code class="sgmltag-element">&lt;include&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ element.  When you use the <a class="indexterm" name="id5407"></a><code class="sgmltag-element">&lt;include&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag, the
+libraries you reference will be compiled into the program.
+</p><p>
+For example,</p><div class="example"><a name="id5412"></a><p class="title"><b>Example 15.2. Simple include</b></p><div class="example-contents"><pre class="programlisting">
+&lt;canvas&gt;
+  &lt;include href="hello-incl.lzx"/&gt;
+&lt;/canvas&gt;
+</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/inline-3e44642576.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/inline-3e44642576.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="informalexample"><pre class="programlisting">
+&lt;library&gt;
+  &lt;text&gt;Hello World!&lt;/text&gt;
+&lt;/library&gt;
+</pre></div><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1482"></a>1.2. Files imported at run time</h3></div></div></div><p>
+A dynamic library is a portion of a program that can be loaded after the main application execution file has loaded. The goal for dynamic
+ libraries is to reduce the initial download size of an OpenLaszlo application. This is required because initial download size (including all 
+requests that precede initial user interaction) is used to evaluate web applications. Reducing the initial download size has 
+the additional benefits of reducing the time to first interaction (although there are other ways of doing this), and of reducing 
+bandwidth costs in the case where an optional feature of the application is not used.
+</p><p>
+Imported libraries can contain classes, instances, datasets, and &lt;script&gt; blocks. But any media resources in them are moved to the main (calling) application.  For example, if this tag is included in the library file to be imported,</p><pre class="programlisting">
+&lt;view resource="foo.png"/&gt;
+</pre><p>
+the image resource is baked into the canvas application itself as a Flash resource. This means that  the image is downloaded with the calling file, not the called file, as one might otherwise expect.</p><p>
+Resources that are loaded over http, as for example,
+</p><pre class="programlisting">
+&lt;view resource="http:foo.png"/&gt; 
+</pre><p>
+are still compiled into  a runtime request. </p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1483"></a>1.3. Summary comparison of &lt;include&gt; and &lt;import&gt;</h3></div></div></div><p>
+&lt;include&gt; and &lt;import&gt; both break an application into source files: they let you distribute an application's sources among multiple source files.  They address developer workflow, code ownership, and source control issues.
+</p><p>
+However they are incorporated into an application, all library files share the same namespace.
+</p><p>
+&lt;import&gt; additional breaks an application into multiple delivery components: they let an application defer download of some components.  It addresses the initial download size of an application; nothing more.  It is intended for the scenario where all the source files are available when an application is created; it's synonymous with &lt;include&gt; except that the bits it creates are distributed across multiple files, instead of all placed in one file.  These bits can't be mixed and matched any more than the bits in a single-object-file application created with &lt;include&gt; can.
+</p><p>
+OpenLaszlo does not support separate compilation: the library files will only work with the specific application file that they were compiled against, and vice versa.  
+</p><p>
+The rest of this chapter explores these concepts in greater detail.
+</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="program-structure.include-tag"></a>2. The <a class="indexterm" name="id5436"></a><code class="sgmltag-element">&lt;include&gt;</code> tag for compiled-in libraries</h2></div></div></div><p>The <a class="indexterm" name="id5440"></a><code class="sgmltag-element">&lt;include&gt;</code> tag implements the 
+<a class="ulink" href="http://www.w3.org/TR/xinclude/" target="_top">XInclude</a> standard for XML
+inclusions.  The <a class="indexterm" name="id5444"></a><code class="sgmltag-element">&lt;include&gt;</code> tag can be used in three
+ways:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>To include a <a class="indexterm" name="id5450"></a><code class="sgmltag-element">&lt;library&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ file.</p></li><li class="listitem"><p>To include an element hierarchy.</p></li><li class="listitem"><p>To include text from a text file.</p></li></ul></div><p>The source code for an OpenLaszlo application can be contained in a
+single source file which specifies all aspects of the application.
+Alternatively, the <a class="indexterm" name="id5459"></a><code class="sgmltag-element">&lt;include&gt;</code> and <a class="indexterm" name="id5462"></a><code class="sgmltag-element">&lt;library&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tags can be used to separate the
+source for an application into multiple files.</p><p>By dividing your application into a number of files, you can limit
+the size of your source files to a maintainable size. You can even
+break deep view hierarchies into multiple files to improve
+modularity, clarity and source code organization.</p><p>The value of the <a class="indexterm" name="id5468"></a><code class="sgmltag-attribute">href</code> attribute is the name
+of a file whose content is included at the point of the
+<a class="indexterm" name="id5471"></a><code class="sgmltag-element">&lt;include&gt;</code> element. This is the <span class="i">target</span> of the
+include.</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1484"></a>2.1. Including a Library</h3></div></div></div><p>When the target is a <span class="i">library file</span> (an XML file whose root
+element is <a class="indexterm" name="id5479"></a><code class="sgmltag-element">&lt;library&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+), the contents of
+the library file are included in the application.  Any views, scripts,
+fonts, resource, audio, datasource, dataset, and class definitions in
+the library file are included in the application.  A library file can
+include other libraries, but a library is included in an application
+only once, no matter how many include statements reference it.  For
+example:</p><div class="example"><a name="id5483"></a><p class="title"><b>Example 15.3. Including a library file</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="100" width="100%"&gt;
+  &lt;include href="library.lzx"/&gt;
+  &lt;mywindow/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/include-1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/include-1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="informalexample"><pre class="programlisting">
+&lt;library&gt;
+  &lt;class name="mywindow" extends="window"
+   title="MyTitle"&gt;
+    &lt;button&gt;Click me!&lt;/button&gt;
+  &lt;/class&gt;
+&lt;/library&gt;
+</pre></div><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1485"></a>2.2. Including an instance</h3></div></div></div><p>When the target is an XML file that is not a library file, its root element is included at the point of the include element. 
+ This can be used to break a view hierarchy into multiple files.  Unlike including a library file, a non-library file is inserted once each time it is included.</p><p>The following example shows a view with two buttons, both labeled
+"Click me!":</p><div class="example"><a name="id5492"></a><p class="title"><b>Example 15.4. Including a node</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="100" width="100%"&gt;
+  &lt;window layout="axis: y"&gt;
+    &lt;include href="inner.lzx"/&gt;
+    &lt;include href="inner.lzx"/&gt;
+  &lt;/window&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/include-3.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/include-3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="example"><a name="id5495"></a><p class="title"><b>Example 15.5. inner.lzx</b></p><div class="example-contents"><pre class="programlisting">
+&lt;button&gt;Click me!&lt;/button&gt;
+</pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1486"></a>2.3. Including Text</h3></div></div></div><p>If the type attribute has the value <code class="literal">text</code>, the included
+file is included as characters, rather than XML.  This can be used to
+include literal text from another file.</p><div class="example"><a name="id5502"></a><p class="title"><b>Example 15.6. Including text</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="100" width="100%"&gt;
+  &lt;window&gt;
+    &lt;button&gt;
+      &lt;include href="mytext.txt" type="text"/&gt;
+    &lt;/button&gt;
+  &lt;/window&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/include-5.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/include-5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="example"><a name="id5505"></a><p class="title"><b>Example 15.7. mytext.txt</b></p><div class="example-contents"><pre class="programlisting">
+Click me!
+</pre></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="program-structure.library-tag"></a>3. The <a class="indexterm" name="id5511"></a><code class="sgmltag-element">&lt;library&gt;</code> tag</h2></div></div></div><p>A library file is a file contained in a <a class="indexterm" name="id5515"></a><code class="sgmltag-element">&lt;library&gt;</code> tag.  A library file cannot be compiled to
+an application, but an application can include library files through
+use of the <a class="indexterm" name="id5518"></a><code class="sgmltag-element">&lt;include&gt;</code> tag.  Library files are
+used to break an application's source into multiple files, or to share
+code among multiple applications.</p><p>For example, instead of defining a view as in <code class="literal">&lt;canvas&gt;&lt;window
+title="mywindow"/&gt;&lt;/canvas&gt;</code>, an application can include a
+library that defines the view.  In this case, the application's canvas
+source file would read <code class="literal">&lt;canvas&gt;&lt;include
+href="mylib.lzx"/&gt;&lt;/canvas&gt;</code>, and <code class="literal">mylib.lzx</code> would contain the definition <code class="literal">&lt;library&gt;&lt;window
+title="mywindow"/&gt;&lt;/library&gt;</code>.</p><p>A library file can contain any element that a canvas source file
+can contain, except for the <a class="indexterm" name="id5527"></a><code class="sgmltag-element">&lt;splash&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+,
+<a class="indexterm" name="id5531"></a><code class="sgmltag-element">&lt;connection&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+, and <a class="indexterm" name="id5535"></a><code class="sgmltag-element">&lt;debug&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ elements.
+Including a library includes the elements — code, views, and
+definitions — in the library.</p><p>An application only contains one copy of each library, no
+matter how many includes for that library its source files contain.
+For example, <code class="literal">&lt;canvas&gt;&lt;include
+href="mylib.lzx"/&gt;&lt;include href="mylib.lzx"/&gt;&lt;/canvas&gt;</code> is
+equivalent to the previous example: only one window is defined.</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1488"></a>3.1. Library directories</h3></div></div></div><p>If a directory contains a file named <code class="literal">library.lzx</code>, you
+can include that file by referencing the name of the directory. For
+example, the <code class="literal">utils</code> components directory contains a file
+named <code class="literal">library.lzx</code>.  Therefore, the following two
+fragments have the same effect:</p><div class="example"><a name="id5547"></a><p class="title"><b>Example 15.8. Include library.lzx file</b></p><div class="example-contents"><pre class="programlisting">
+&lt;include href="utils/library.lzx"/&gt;
+</pre></div></div><br class="example-break"><div class="example"><a name="id5550"></a><p class="title"><b>Example 15.9. Include directory with library file</b></p><div class="example-contents"><pre class="programlisting">
+&lt;include href="utils"/&gt;
+</pre></div></div><br class="example-break"><p>Similarly, you can write <code class="literal">&lt;include
+href="utils/states"/&gt;</code> to include the files that the
+file <code class="literal">utils/states/library.lzx</code> includes, and
+<code class="literal">&lt;include href="lz"/&gt;</code> to include the OpenLaszlo
+component set.</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="program-structure.autoinclude"></a>3.1.1. Auto-includes</h4></div></div></div><p>Some of the distributed components are automatically included, if the application references them.  If the application uses a tag that it has not defined, but that is defined in the <code class="literal">base</code>, <code class="literal">lz</code>, <code class="literal">charts</code> or <code class="literal">utils</code> directory, the file that contains this class is included.  The following pairs of programs are therefore equivalent:</p><div class="example"><a name="id5565"></a><p class="title"><b>Example 15.10. Including a library file</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="50" width="100%"&gt;
+  &lt;include href="lz/button.lzx"/&gt;
+  &lt;button&gt;Click me!&lt;/button&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-structure-_12.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-structure-_12.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="example"><a name="id5568"></a><p class="title"><b>Example 15.11. Use button with implicit include</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="50" width="100%"&gt;
+  &lt;button&gt;Click me!&lt;/button&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-structure-_13.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-structure-_13.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="example"><a name="id5571"></a><p class="title"><b>Example 15.12. Subclass button with explicit include</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="50" width="100%"&gt;
+  &lt;include href="lz/button.lzx"/&gt;
+  &lt;class name="mybutton" extends="button"/&gt;
+  &lt;mybutton&gt;Click me!&lt;/mybutton&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007-2009 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-structure-_14.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-structure-_14.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="example"><a name="id5574"></a><p class="title"><b>Example 15.13. Subclass button with implicit include</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="50" width="100%"&gt;
+  &lt;class name="mybutton" extends="button"/&gt;
+  &lt;mybutton&gt;Click me!&lt;/mybutton&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007-2009 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-structure-_15.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-structure-_15.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>A file is only included if the application references a class that it does not define in its own sources.  The following two programs define their own <a class="indexterm" name="id5578"></a><code class="sgmltag-element">&lt;button&gt;</code> tag, and therefore do not implicitly include the file that defines the OpenLaszlo <a class="indexterm" name="id5581"></a><code class="sgmltag-element">&lt;button&gt;</code> tag.</p><div class="example"><a name="id5584"></a><p class="title"><b>Example 15.14. Define button</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="50" width="100%"&gt;
+  &lt;class name="button"&gt;
+    &lt;text&gt;Click me!&lt;/text&gt;
+  &lt;/class&gt;
+  &lt;button/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-structure-_16.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-structure-_16.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="example"><a name="id5587"></a><p class="title"><b>Example 15.15. Define and subclass button</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="50" width="100%"&gt;
+  &lt;class name="button"&gt;
+    &lt;text&gt;Click me!&lt;/text&gt;
+  &lt;/class&gt;
+  &lt;class name="mybutton" extends="button"/&gt;
+  &lt;mybutton/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007-2009 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-structure-_17.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-structure-_17.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1487"></a>3.1.2. More on base components</h4></div></div></div><p>An application can include the entire set of Base components by
+including the line <code class="literal">&lt;include
+href="base"/&gt;</code>.  An application can include individual Base
+components by including just the files that define those components.
+The Base components are included automatically if an application
+refers to them but does not define or include them.  </p><p></p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1490"></a>4. The <a class="indexterm" name="id5596"></a><code class="sgmltag-element">&lt;import&gt;</code> tag for runtime includes</h2></div></div></div><p>
+The tag <a class="indexterm" name="id5600"></a><code class="sgmltag-element">&lt;import&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+, is used to include dynamic libraries. 
+</p><p>
+The <a class="indexterm" name="id5605"></a><code class="sgmltag-element">&lt;import&gt;</code> tag must occur at the top level of an application 
+(as the immediate child of the <a class="indexterm" name="id5608"></a><code class="sgmltag-element">&lt;canvas&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ or <a class="indexterm" name="id5612"></a><code class="sgmltag-element">&lt;library&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ document root element of a file).
+</p><p>
+ The syntax of the import tag is as follows:
+</p><pre class="programlisting">
+ &lt;import href="mylib.lzx" prefix="ns" stage="late"/&gt;
+</pre><p>
+All attributes except href are optional. The "href" attribute of an import statement is the pathname of a library file. 
+The pathname is resolved relative to the pathname of the file that contains the import statement.
+</p><p>
+The &lt;import&gt; tag has these attributes:
+</p><div class="table"><a name="id5620"></a><p class="title"><b>Table 15.1. Attributes for &lt;import&gt;</b></p><div class="table-contents"><table class="table" summary="Attributes for &lt;import&gt;" border="1"><colgroup><col><col><col><col></colgroup><thead><tr><th>name</th><th>type</th><th>default</th><th>description</th></tr></thead><tbody><tr><td><code class="literal">href</code></td><td>URI</td><td>required</td><td> The URI of a file that defines the library. In the case where stage is "late", this has the same meaning as it does 
+in an &lt;include&gt; tag. If stage="defer", the URI is resolved relative to the location of the location of the file that contains 
+the &lt;import&gt; element,
+ and a request for this URI is sent to the server to request a library file that is downloaded into the running application.
+    </td></tr><tr><td><code class="literal">stage</code></td><td>  "late" | "defer"</td><td>compile</td><td> If stage is "late", the library is imported once the main application file has finished loading. If it is "defer", the library is imported during the execution of the application by an API call, as described below.</td></tr><tr><td><code class="literal">name</code></td><td>JavaScript Identifier</td><td>global</td><td> If this is not empty, it is the name of an ECMAScript object whose properties are the global ECMAScript names 
+(classes, functions, objects) that the library defines. If it is not empty and is the name of a namespace prefix that the 
+including file defines with a xmlns or xmlns:prefix attribute, tag names such as myclass that the library defines 
+are accessible outside the library as prefix myclass.</td></tr><tr><td><code class="literal">prefix</code></td><td>XML namespace prefix </td><td>""</td><td>
+ If this is not empty, it must be an XML namespace prefix that is in scope on the &lt;import&gt; element. In this case, 
+class definitions in the target library are bound to XML tags in the specified namespace.</td></tr><tr><td><code class="literal">onerror</code></td><td>script</td><td>""</td><td> Code to be executed if the import call generates an error. For example, it is an error for a program to contain an XML reference to a class that is defined in a late or defer library.</td></tr><tr><td><code class="literal">onload</code></td><td>script</td><td>""</td><td> Code to be executed after the library has successfully completed loading.</td></tr><tr><td><code class="literal">ontimeout</code></td><td>script</td><td>""</td><td>Code to be executed if the operation times out.
+ </td></tr></tbody></table></div></div><br class="table-break"><p></p><p>
+A "defer" library is loaded programmatically via a JavaScript method on the object bound to the variable named by the value of its "name" attribute;
+in this example, "mylib".
+</p><pre class="programlisting">
+ &lt;import name="mylib" href="lib/foo.lzx" stage="defer" onload="doSomething()"/&gt;
+</pre><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1489"></a>4.1. Positioning of imported library views </h3></div></div></div><p>
+Say you had a view, call it "blueview" in a library to be imported.  If you merely used the <a class="indexterm" name="id5678"></a><code class="methodname">load()</code>to import the code for "blueview", you would see the view show up at the bottom of the application, not at the place where the method was invoked. This is because the <a class="indexterm" name="id5682"></a><code class="methodname">load()</code> method only tells <a class="indexterm" name="id5686"></a><code class="sgmltag-element">&lt;import&gt;</code> what to load, not where to load it.
+To get the effect we want, we could define a class in a library
+and instantiate it dynamically. (The following discussion assumes an understanding of delegates and timers, explained in <a class="xref" href="delegates.html" title="Chapter 30. Delegates">Chapter 30, <i>Delegates</i></a>.)
+</p><p>
+ To do position code where we want it in the importing application, we would make a delegate that directly listens for the
+<a class="indexterm" name="id5691"></a><code class="sgmltag-attribute">onload</code> event from the <code class="sgmltag-element">&lt;import&gt;</code> and instantiates the class (or calls a method to do so).  Something like:</p><pre class="programlisting">
+   &lt;handler name="onload" reference="blueview"&gt;
+      this.makeChild({name: 'blueview', ...});
+   &lt;/handler&gt;
+</pre><p>
+We could define an <a class="indexterm" name="id5697"></a><code class="methodname">onload()</code> on <code class="sgmltag-element">&lt;import&gt;</code> to call a method to set a global variable <code class="literal">loaded</code> to true. 
+</p><p>
+Then, at the place where we want blueview to appear, we could load the library and then set up a delegate and timer which calls a method to see if the variable
+<code class="literal">loaded</code> is true, and if not reset the timer.  If it is true--that is, if the class has been loaded-- the view is created.
+</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1491"></a>5. Deleting Imported Libraries</h2></div></div></div><p>
+To 'unload' an imported library, three things have to be done:
+</p><div class="orderedlist"><ol class="orderedlist compact" type="1"><li class="listitem"><p>Destroy all the instances that were created by the library. This is done by calling <code class="literal">iii.destroy();</code> for each instance <code class="literal">iii</code>. Note that if you have created references to the instance outside of the library, you must delete those references.</p></li><li class="listitem"><p>Destroy all classes that were created by the snippet. This is done by calling <code class="literal">ccc.destroy();</code> for each class <code class="literal">ccc</code>. Note that if you have created references to the class outside of the library, you must delete those references.</p></li><li class="listitem"><p>Unload the library. This is done by calling <code class="literal">sss.unload()`</code> where <code class="literal">sss</code> is the name of the library (in the import tag).</p></li></ol></div><p>
+At this point, you can re-load the library by calling <code class="literal">sss.load()`</code> If you know you will never use the library again, you can call <code class="literal">sss.destroy();</code> to remove the library from your application altogether. 
+</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1492"></a>6. Conditional Compilation of Runtime-Dependent code</h2></div></div></div><p class="fixme"><em><span class="remark"><span class="para-label">FIXME: </span>
+Revisit this after Henry finalizes the syntax of the "when" tag.
+</span></em></p><p>
+You can enclose blocks of code within <a class="indexterm" name="id5730"></a><code class="sgmltag-element">&lt;switch&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ elements that are associated with a specific runtime.  The <a class="indexterm" name="id5734"></a><code class="sgmltag-element">&lt;switch&gt;</code> is a compiler directive that instructs the compiler to compile or omit blocks according to the target runtime to which the application is being compiled. 
+</p><p>
+ See <a class="xref" href="compiler.html" title="Chapter 49. Understanding Compilation">Chapter 49, <i>Understanding Compilation</i></a>, <a class="xref" href="compiler.html#conditionalcompilation" title="5.1. Conditional Compilation of Runtime-Dependent code">Section 5.1, “Conditional Compilation of Runtime-Dependent code”</a> for a more in-depth discussion of these compiler directives.
+</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1493"></a>7. Debugging</h2></div></div></div><p>An LZX application can be debugged by requesting that the
+application be compiled in debug mode by setting the canvas's
+<a class="indexterm" name="id5743"></a><code class="sgmltag-attribute">debug</code> attribute to true:</p><div class="example"><a name="id5746"></a><p class="title"><b>Example 15.16. Compiling with the debugger</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="140" debug="true"&gt;
+  &lt;!-- ... --&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-structure-_19.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-structure-_19.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>This has the same effect as pressing the Debug button in the
+developer console. It is also possible to invoke the debugger by loading the
+application using the <code class="literal">?debug=true</code> query parameter.</p><p>See <a class="xref" href="debugging.html" title="Chapter 51. Debugging">Chapter 51, <i>Debugging</i></a> 
+for more information on using the
+debugger.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1494"></a>8. Resources, Fonts, and Datasources</h2></div></div></div><p>In addition to including classes and instances, a library file can use the <a class="indexterm" name="id5756"></a><code class="sgmltag-element">&lt;font&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+,
+<a class="indexterm" name="id5760"></a><code class="sgmltag-element">&lt;resource&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+, and <a class="indexterm" name="id5764"></a><code class="sgmltag-element">&lt;datasource&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tags to include fonts, media
+resources, and XML datasources defined in external files as well.</p><p>Elements within an application, such as <a class="indexterm" name="id5769"></a><code class="sgmltag-element">&lt;script&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+, <a class="indexterm" name="id5773"></a><code class="sgmltag-element">&lt;class&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+,
+and extensions of <a class="indexterm" name="id5777"></a><code class="sgmltag-element">&lt;view&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+, are evaluated
+in the order that they appear in the source file.  In particular, code
+in a <a class="indexterm" name="id5781"></a><code class="sgmltag-element">&lt;script&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ element cannot refer to
+<a class="indexterm" name="id5785"></a><code class="sgmltag-element">&lt;view&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ elements that follow it.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1497"></a>9. Accessibility</h2></div></div></div><p>
+OpenLaszlo provides partial support for the <a class="ulink" href="http://msdn.microsoft.com/en-us/library/ms697707.aspx" target="_top">Microsoft Active Accessibility</a> specification, which states, "[b]y using Active Accessibility and following accessible design practices, developers can make applications running on Windows more accessible to many people with vision, hearing, or motion disabilities." Accessibility support is a common requirement for application development in order to conform to the U.S. Federal requirement for accessible information systems (also known as Section 508). This support requires installation of third party software on the client machine, and is only available in the OpenLaszlo targets that run the Flash Player under Internet Explorer. See below for a list of currently available third party software.
+</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1496"></a>9.1. Overview of implementation</h3></div></div></div><p>
+Accessibility is implemented using five attributes on <a class="indexterm" name="id5796"></a><code class="sgmltag-element">&lt;view&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ and two methods on <a class="indexterm" name="id5800"></a><code class="classname">lz.Browser</code>. 
+</p><p>
+In LZX, the most basic visible object is a view. Since almost every visible object inherits from view, almost all visible objects will inherit accessibility support including image, text, button, checkbox, and radio button. (The one exception, images embedded within editable text views, is covered at the end of this section.) The following methods and attributes will be added to view:
+</p><p>
+These are the attributes on view. They are described briefly below. </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">aaactive="boolean"</span></dt><dd><p>activate/deactivate children for accessibility</p></dd><dt><span class="term">aaname="string"</span></dt><dd><p>accessibility name</p></dd><dt><span class="term">aadescription="string"</span></dt><dd><p>accessibility description</p></dd><dt><span class="term">aatabindex="number"</span></dt><dd><p>accessibility tab ordering </p></dd><dt><span class="term">aasilent="boolean"</span></dt><dd><p>accessibility silencing/unsilencing</p></dd></dl></div><p>
+These are the methods on <a class="indexterm" name="id5827"></a><code class="classname">lz.Browser</code>.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">lz.Browser.isAAActive()</span></dt><dd><p>returns true if a screen reader is active and the Flash player is focused.</p></dd><dt><span class="term">lz.Browser.setClipboard(string)</span></dt><dd><p> sets system clipboard</p></dd></dl></div><p>
+By default, all text contained in an OpenLaszlo application will be read by supported screen readers. Therefore, the activation feature allows you to specify which views should be read by the screen reader. Activation applies to the current view and all of its children. Accessibility name and description provide the overview and detailed text for the screen reader. Accessibility tab ordering, specifies the reading order for accessible objects. Silencing/unsilencing specifies whether an individual item is accessible or not. Finally, lz.Browser provides the isAAActive() method to determine if a screen reader is active and the Flash player is currently focused.
+</p><p>
+<a class="indexterm" name="id5841"></a><code class="sgmltag-attribute">aadescription</code> is treated separately from the contents. If it's specified, <a class="indexterm" name="id5844"></a><code class="sgmltag-attribute">aadescription</code> will be read in addition to the <a class="indexterm" name="id5847"></a><code class="sgmltag-attribute">aaname</code>. By default, <a class="indexterm" name="id5850"></a><code class="sgmltag-attribute">aaname</code> is equal to the contents of the text field. <a class="indexterm" name="id5853"></a><code class="sgmltag-attribute">aaname</code> can also be specified or overridden.
+</p><p>
+For non-MSAA compliant screen readers such as R&amp;W Gold, OpenLaszlo supports the ability to place text on the clipboard from within an OpenLaszlo application using the <a class="indexterm" name="id5857"></a><code class="methodname">lz.Browser.setClipboard()</code>.
+</p><p>
+In this example, there are two views that provide accessibility information. When the first view is clicked, it uses the scripting API to unsilence the button.
+</p><pre class="programlisting">
+&lt;view aaactive="true" aaname="Activation Button" 
+    aadescription="This button allows you to access more information by activating important views." 
+    aatabindex="1" 
+    onclick="important.setAASilent(false)"&gt;
+
+&lt;button id="important" 
+    aaactive="true" 
+    aaname="Important Information" 
+    aadescription="Here is some important information." 
+    aatabindex="2" aasilent="true"/&gt;
+</pre><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1495"></a>9.1.1. Compatibility Notes</h4></div></div></div><p>
+The Flash Player has basic support for screen readers with Flash Player versions 6 and above. For best results, we recommend upgrading to Flash 8. OpenLaszlo's built-in version detection feature can facilitate automatic upgrades.
+</p><p>
+Here are some notes from the Macromedia Flash 8 accessibility FAQ:</p><p><span class="i"> 
+Microsoft Active Accessibility (MSAA) makes it easier for all assistive technologies to incorporate support for Macromedia Flash Player. Once the contents of a Macromedia Flash movie are placed under MSAA, it is up to the individual assistive technology to render that content for the user. Macromedia is committed to expanding the number of tools that take advantage of the new features of Macromedia Flash Player. Macromedia is working with leading vendors of assistive technology to ensure the broadest possible support for Macromedia Flash Player. To date, the following assistive technologies support the Flash player: Window Eyes from GW Micro, JAWS from Freedom Scientific, Home Page Reader from IBM and ZoomText from Ai Squared. 
+</span></p><p></p></div></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="developers.building-apps.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.building-apps.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="comp-overview.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Part III. Fundamental Concepts </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 16. Getting More from Components</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

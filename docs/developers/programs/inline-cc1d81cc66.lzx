@@ -1,0 +1,2 @@
+    <class extends="alert" name="myalert" x="${Math.max(survey.width - this.width, 0)/2}" y="${Math.max(survey.height - this.height, 0)/3}">
+    </class>

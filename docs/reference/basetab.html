@@ -1,0 +1,64 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basetab&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basetab<span class="ang">&gt;</span></h1><p class="short">The base tab class.</p><p class="meta">Extends <code>baselistitem</code></p>
+                     
+        <code>&lt;para&gt;This class is to be used only in conjunction with
+              basetabs and basetabapane classes. You can pass the name of this class
+              in the 'tabclass' attribute of basetabpane, tabpane, basetabs, and
+              tabs classes. Basetabs uses this class as its default 'tabclass'.&lt;/para&gt;</code>
+                     
+        <pre class="example">
+&lt;canvas height="75"&gt;
+  &lt;include /&gt;
+
+  &lt;class name="aquatab" extends="basetab" 
+         width="40" height="20" bgcolor="aqua"&gt;
+    &lt;text&gt;tab&lt;/text&gt;
+  &lt;/class&gt;
+  &lt;class name="greentab" extends="basetab" 
+         width="40" height="20" bgcolor="green"&gt;
+    &lt;text&gt;tab&lt;/text&gt;
+  &lt;/class&gt;
+
+  &lt;basetabs x="10" y="10" tabclass="aquatab"&gt;
+    &lt;basetabpane&gt;
+      &lt;text&gt;one&lt;/text&gt;
+    &lt;/basetabpane&gt;
+    &lt;basetabpane tabclass="greentab"&gt;
+      &lt;text&gt;two&lt;/text&gt;
+    &lt;/basetabpane&gt;
+    &lt;basetabpane &gt;
+      &lt;text&gt;three&lt;/text&gt;
+    &lt;/basetabpane&gt;
+  &lt;/basetabs&gt;
+&lt;/canvas&gt;
+
+             </pre>
+                         
+        <p>
+          <strong>See Also:</strong>
+        </p>
+                         
+        <ul>
+                               
+          <li>
+                                     
+            <code>&lt;basetabsbar&gt;</code>
+            , 
+                         
+            <code>&lt;basetabs&gt;</code>
+            ,
+                          and 
+            <code>&lt;basetabpane&gt;</code>
+                                 
+          </li>
+                           
+        </ul>
+                    
+             
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">tabpane</td><td class="ty">expression</td><td class="ty">null</td><td>The tabpane associated with this tab.</td></tr><tr><td class="nm">text</td><td class="ty">text</td><td class="ty">this.tabpane.text</td><td>The name of this tab. This is constrained to the tabpane's
+              text.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;script&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>script<span class="ang">&gt;</span></h1><p class="short">A block of JavaScript.</p><p class="meta">Extends <a href="node.html"><code>LzNode</code></a></p>
+        <p>
+          The 
+          <code>script</code>
+           element contains JavaScript code that is
+ executed when the application is loaded.  This element must be at the
+ 
+          <code>canvas</code>
+           level; that is, it cannot be contained within any
+ subordinate tag. If the 
+          <code>src</code>
+           attribute is
+ present, it names a JavaScript file whose contents are compiled into
+ the application.
+        </p>
+         
+        <p>
+          In the example below, we add a method to the built-in
+ 
+          <code>Array</code>
+           class that will let us find the index of
+ elements in an array. Note that 
+          <code>Array.find</code>
+           uses
+ 
+          <code>===</code>
+           for finding, so that two objects that are similar
+ will not be confused. This is why looking for 
+          <code>{example:
+ 'sneaky'}</code>
+           finds nothing, whereas looking for
+ 
+          <code>sneaky</code>
+           succeeds.
+        </p>
+         
+        <pre class="example">
+ &lt;canvas debug="true" height="200"&gt;
+   &lt;debug y="5%" height="90%" /&gt;
+   &lt;script&gt;
+   &lt;![CDATA[
+     // Add a find method to Array
+     Array.prototype.find = function ( what ) {
+       for (var i = 0; i &lt; this.length; ++i) {
+         if (this[i] === what) {
+           return i;
+         }
+       }
+     }
+
+     var sneaky = {example: 'sneaky'};
+     var tryit = ['foo', 42, sneaky, Math.PI, false];
+
+     Debug.format("42 is at: %s\n", tryit.find(42));
+     Debug.format("false is at: %s\n", tryit.find(false));
+     Debug.format("'bar' is at: %s\n", tryit.find('bar'));
+     Debug.format("{example: 'sneaky'} is at: %s\n", tryit.find({example: 'sneaky'}));
+     Debug.format("sneaky is at: %s\n", tryit.find(sneaky));
+   ]]&gt;
+   &lt;/script&gt;
+ &lt;/canvas&gt;
+ </pre>
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">src</td><td class="ty">string</td><td class="ty"/><td>
+                The pathname of a Javascript file. This pathname is resolved
+ relative to the file that contains the
+ 
+                <code>&lt;script&gt;</code>
+                 element.
+              </td></tr></table>
+</main><script src="_nav.js"></script></body></html>

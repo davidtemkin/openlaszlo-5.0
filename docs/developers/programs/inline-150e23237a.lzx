@@ -1,0 +1,40 @@
+<class name="baseslider" extends="basevaluecomponent" width="200">
+  <!-- attributes begin here -->
+  <!-- ...                   -->
+  <!-- attributes end here   -->
+
+  <!--- Sets the value for the slider that must be within min and max.
+        @param Number v: a number between the minimum and maximum value
+        for the slider. -->
+  <method <emphasis role="em">name="setValue"</emphasis> args="v">
+    if (this.value == v) return;
+    // ensure in bounds
+    v = math.max(v,this.minValue);
+    v = math.min(v,this.maxValue);
+    this.value = v;
+    if (onvalue) onvalue.sendEvent();
+    if (!isinited) return;
+    <emphasis role="em">_adjustThumb();</emphasis>
+  </method>
+
+  <!--- Set the value by percentage of range from min to max.
+        @param Number p: a percentage between the min and the max. -->
+  <method <emphasis role="em">name="setPercentage"</emphasis> args="p">
+    var diff = this.minValue-this.maxValue;
+    setValue( diff*p + this.minValue );
+  </method>
+
+  <!--- Get the percentage of the range selected by the value.
+        @return Number: the percentage selected. -->
+  <method <emphasis role="em">name="getPercentage"</emphasis>>
+    return (this.value-this.minValue) / (this.maxValue-this.minValue);
+  </method>
+
+  <!--- adjusts the thumb location
+        @keywords private -->
+  <method <emphasis role="em">name="_adjustThumb"</emphasis>>
+    var perc = getPercentage();
+    var x = Math.round( (this.width-track.thumb.width)*perc );
+    <emphasis role="em">track.thumb.setX(x);</emphasis>
+  </method>
+</class>

@@ -1,0 +1,20 @@
+<canvas height="140" width="100%">
+  <class name="foo">
+    <method name="talk">
+      message.addText("\nhello");
+    </method>
+    <button text="click" onclick="parent.talk()"/>
+  </class>
+  <class name="bar" extends="foo">
+    <method name="talk">
+      super.talk();
+      message.addText("\ngoodbye");
+    </method>
+  </class>
+  <text id="message" y="30" multiline="true" />
+  <bar/>
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

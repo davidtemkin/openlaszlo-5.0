@@ -1,0 +1,46 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>LzKeysService — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1>LzKeysService</h1><p class="short">Keyboard input service.</p><p class="meta">Extends <a ><code>LzEventable</code></a></p>
+        <p>
+          <code>lz.Keys</code>
+           is the single instance of the class
+ 
+          <code>lz.KeysService</code>
+          .
+        </p>
+         lz.Keys is a service that provides key handling messages. Objects can also
+ register callbacks to be sent when specific key combinitions are down.
+
+ 
+        <p>Here is a simple example:</p>
+         
+        
+           
+          <pre><code>
+ &lt;canvas height="250" debug="true"&gt;
+   &lt;debug height="90%" /&gt;
+   &lt;handler name="onkeydown" reference="lz.Keys" args="k"&gt;
+     Debug.debug("key %w %s", k, "down");
+   &lt;/handler&gt;
+   &lt;handler name="onkeyup" reference="lz.Keys" args="k"&gt;
+     Debug.debug("key %w %s", k, "up");
+   &lt;/handler&gt;
+   &lt;method name="pressA" args="ignore=null"&gt;
+     Debug.debug("A pressed");
+   &lt;/method&gt;
+   &lt;handler name="oninit"&gt;
+     var del = new LzDelegate(this, "pressA");
+     lz.Keys.callOnKeyCombo(del, ["A"]);
+   &lt;/handler&gt;
+ &lt;/canvas&gt;
+ </code></pre>
+        
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">mousewheeldelta</td><td class="ty">Number</td><td class="ty">0</td><td>The amount the mouse wheel last moved.  Use the
+ onmousewheeldelta event to learn when this value changes.</td></tr></table><h3>Events</h3><ul class="events"><li><code>onkeydown</code> — Sent when a key is pressed; sent with keycode
+ for key that was pressed.</li><li><code>onkeyevent</code> — Sent for all key events</li><li><code>onkeyup</code> — Sent whenever a key goes up; sent with keycode
+ for key that was let go.</li><li><code>onmousewheeldelta</code> — Sent when the mouse wheel changes state.  Sent with a positive or
+ negative number depending on the direction and amount the wheel moved.</li></ul>
+</main><script src="_nav.js"></script></body></html>

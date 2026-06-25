@@ -1,0 +1,16 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;richtexteditarea&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>richtexteditarea<span class="ang">&gt;</span></h1><p class="short"/><p class="meta">Extends <code>scrollrichedittext</code></p>A view which contains the text area for a rich text editor. Combine with a 
+    richtexttoolbar to make an actual editor.<h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">currentformat</td><td class="ty">expression</td><td class="ty"/><td>The current format in which text should be added, and which the
+              toolbar should reflect.  Everyone interested in the current format
+              should look at this attribute to see what it is.</td></tr><tr><td class="nm">defaultfontcolor</td><td class="ty">expression</td><td class="ty">0x000000</td><td>Default font color</td></tr><tr><td class="nm">defaultfontname</td><td class="ty">string</td><td class="ty">Verdana</td><td>Default font name</td></tr><tr><td class="nm">defaultfontsize</td><td class="ty">number</td><td class="ty">11</td><td>Default size of text</td></tr><tr><td class="nm">editortype</td><td class="ty">string</td><td class="ty">flash-html</td><td>Attribute indicating the type of HTML content produced by editor.</td></tr><tr><td class="nm">indentsize</td><td class="ty">expression</td><td class="ty">35</td><td>The size in points of an indent</td></tr><tr><td class="nm">insertionpoint</td><td class="ty">expression</td><td class="ty">0</td><td>The current index of the insertion point. Should be -1 if there's
+              no insertion point.</td></tr><tr><td class="nm">isHTML</td><td class="ty">expression</td><td class="ty">false</td><td>Indicates whether there's formatting on the text contained by this
+              editor.</td></tr><tr><td class="nm">linkpanel</td><td class="ty">expression</td><td class="ty">null</td><td>Reference to the hyperlink creation dialog.
+            This attribute should be set by users, if there is 
+            an associated link panel</td></tr><tr><td class="nm">startformat</td><td class="ty">expression</td><td class="ty"/><td/></tr><tr><td class="nm">toolbar</td><td class="ty">expression</td><td class="ty">null</td><td>Reference to the toolbar associated with this editor. 
+            For the toolbar to show the correct format when the insertion
+            point moves, this attribute must be set by users.</td></tr><tr><td class="nm">toolbarplacement</td><td class="ty">expression</td><td class="ty">null</td><td>The placement for the toolbar in the richtexteditor.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

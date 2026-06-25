@@ -1,0 +1,71 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;wrappinglayout&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>wrappinglayout<span class="ang">&gt;</span></h1><p class="short">A layout for arranging siblings in multiple lines.</p><p class="meta">Extends <code>layout</code></p>
+                      
+        <code>&lt;para&gt;
+          <code>wrappinglayout</code>
+           extends 
+          <code>&lt;layout&gt;</code>
+          , and is therefore 
+              responsible for arranging all of the subviews for the view that it is attached to. 
+          <code>wrappinglayout</code>
+           affects the 
+              position of its sibling views, in rows or columns depending on the axis specified.
+        &lt;/para&gt;</code>
+                      
+        <code>&lt;para&gt;
+          <code>wrappinglayout</code>
+           places the first subview at the top-left corner, then the next view will be placed to the right 
+              (if 
+          <code>axis="x"</code>
+          ) or below (if 
+          <code>axis="y"</code>
+          ). The layout continues placing views along the axis until a view 
+              overlaps the width or height of the containing view, then the layout will begin placing views at the next row or column.
+        &lt;/para&gt;</code>
+                      
+        <pre class="example">
+&lt;canvas height="100"&gt;
+  &lt;view width="200" bgcolor="silver"&gt;
+    &lt;wrappinglayout axis="x" spacing="10"/&gt;
+    &lt;view bgcolor="blue" height="30" width="50"/&gt;
+    &lt;view bgcolor="blue" height="30" width="50"/&gt;
+    &lt;view bgcolor="blue" height="30" width="50"/&gt;
+    &lt;view bgcolor="blue" height="30" width="50"/&gt;
+    &lt;view bgcolor="blue" height="30" width="50"/&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+              </pre>
+                      
+        <code>&lt;para&gt;The following example shows how the layout of views is dynamically recalculated when the size of the container view changes. 
+              The contained views have been given different shapes and colors to make it easier for you to follow how they're rearranged.&lt;/para&gt;</code>
+                      
+        <pre class="example">
+&lt;canvas height="100"&gt;
+  &lt;view width="200" bgcolor="silver" onmousedown="rs.apply()" onmouseup="rs.remove()"&gt;
+    &lt;resizestate name="rs"/&gt;
+    &lt;wrappinglayout axis="x" spacing="10"/&gt;
+    &lt;view bgcolor="blue" height="30" width="50"/&gt;
+    &lt;view bgcolor="red" height="10" width="50"/&gt;
+    &lt;view bgcolor="green" height="40" width="50"/&gt;
+    &lt;view bgcolor="yellow" height="20" width="50"/&gt;
+    &lt;view bgcolor="teal" height="30" width="50"/&gt;
+  &lt;/view&gt;
+  &lt;text y="${canvas.height-this.height}"&gt;
+    Resize the gray view with your mouse to see dynamic layout.
+  &lt;/text&gt;
+&lt;/canvas&gt;
+              </pre>
+                
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">axis</td><td class="ty">string</td><td class="ty">x</td><td>The primary axis for wrapping.</td></tr><tr><td class="nm">duration</td><td class="ty">expression</td><td class="ty">0</td><td>If given, a number of miliseconds to use to animate the views in to
+          place.</td></tr><tr><td class="nm">spacing</td><td class="ty">expression</td><td class="ty">1</td><td>A pixel amount to use between the views controlled by the layout in
+          both axes. By default, both xspacing and yspacing are set to this
+          value.</td></tr><tr><td class="nm">xinset</td><td class="ty">expression</td><td class="ty">0</td><td>A pixel amount to offset the first view controlled by the layout in x
+          axis</td></tr><tr><td class="nm">xspacing</td><td class="ty">expression</td><td class="ty">this.spacing</td><td>A pixel amount to use between the views controlled by the layout in
+          the x axis.</td></tr><tr><td class="nm">yinset</td><td class="ty">expression</td><td class="ty">0</td><td>A pixel amount to offset the first view controlled by the layout in y
+          axis</td></tr><tr><td class="nm">yspacing</td><td class="ty">expression</td><td class="ty">this.spacing</td><td>A pixel amount to use between the views controlled by the layout in
+          the y axis.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

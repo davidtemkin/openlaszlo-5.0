@@ -1,0 +1,26 @@
+{
+  "name": "openlaszlo-compiler",
+  "version": "5.0.0",
+  "private": true,
+  "type": "module",
+  "description": "OpenLaszlo 5.0 LZX->DHTML compiler (TypeScript; byte-for-byte vs the original Java 4.9 oracle). Runs as a CLI, in Node, and in the browser.",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./node": "./dist/node.js",
+    "./browser": "./dist/browser.js"
+  },
+  "bin": {
+    "lzc": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "bundle:browser": "npx esbuild dist/browser.js --bundle --format=esm --platform=browser --outfile=lzc-browser.js",
+    "dist": "npm run build && npm run bundle:browser"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.0",
+    "esbuild": "^0.28.1",
+    "typescript": "^5.9.3"
+  }
+}

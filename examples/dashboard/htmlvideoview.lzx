@@ -1,0 +1,129 @@
+<!-- htmlvideoview: a DHTML video component for OpenLaszlo 4.x.
+     The stock <videoview> (lps/components/extensions/av/videoview.lzx) is Flash-only
+     (NetStream/NetConnection). This wraps a browser-native HTML5 <video> in the view's
+     sprite div and exposes a videoview-like API: url, autoplay, muted, play/stop/pause/
+     seek, playvolume, and the live attributes playing/playhead/totaltime (+ events) so
+     app constraints/handlers can bind to playback state. DHTML only. -->
+<library>
+<class name="htmlvideoview" extends="view" width="320" height="240" clip="true">
+    <!--- URL of the video (mp4/webm/ogg — whatever the browser supports). -->
+    <attribute name="url" value="" type="string"/>
+    <!--- Start playing as soon as the url is set. -->
+    <attribute name="autoplay" value="false" type="boolean"/>
+    <!--- Muted (browsers require muted for autoplay/programmatic play). -->
+    <attribute name="muted" value="true" type="boolean"/>
+    <!--- Loop playback. -->
+    <attribute name="loop" value="false" type="boolean"/>
+    <!--- Live state (readonly): is it playing, current time, duration (seconds). -->
+    <attribute name="playing" value="false" type="boolean"/>
+    <attribute name="playhead" value="0" type="number"/>
+    <attribute name="totaltime" value="0" type="number"/>
+    <!--- Volume 0..1. -->
+    <attribute name="playvolume" value="1.0" type="number"/>
+    <!--- The DOM <video> element. @keywords private -->
+    <attribute name="_video" value="null"/>
+
+    <event name="onplay"/>
+    <event name="onstop"/>
+    <event name="onpause"/>
+    <event name="onplayhead"/>
+    <event name="ontotaltime"/>
+    <event name="onend"/>
+
+    <handler name="oninit"><![CDATA[
+        if (! $dhtml) return;            // browser-native video; no-op on swf
+        var div = this.getDiv();
+        if (! div) return;
+        var v = document.createElement('video');
+        v.setAttribute('playsinline', '');
+        v.setAttribute('webkit-playsinline', '');
+        v.style.position = 'absolute';
+        v.style.left = '0px';
+        v.style.top = '0px';
+        v.style.width = this.width + 'px';
+        v.style.height = this.height + 'px';
+        v.style.background = '#000';
+        v.muted = this.muted;
+        v.loop = this.loop;
+        v.volume = this.playvolume;
+        v.preload = 'metadata';
+        var self = this;
+        v.addEventListener('loadedmetadata', function () {
+            self.setAttribute('totaltime', v.duration || 0);
+            if (self.ontotaltime) self.ontotaltime.sendEvent(self.totaltime);
+        });
+        v.addEventListener('timeupdate', function () {
+            self.setAttribute('playhead', v.currentTime || 0);
+            if (self.onplayhead) self.onplayhead.sendEvent(self.playhead);
+        });
+        v.addEventListener('play', function () {
+            self.setAttribute('playing', true);
+            if (self.onplay) self.onplay.sendEvent();
+        });
+        v.addEventListener('pause', function () {
+            self.setAttribute('playing', false);
+            if (self.onpause) self.onpause.sendEvent();
+        });
+        v.addEventListener('ended', function () {
+            self.setAttribute('playing', false);
+            if (self.onend) self.onend.sendEvent();
+            if (self.onstop) self.onstop.sendEvent();
+        });
+        div.appendChild(v);
+        this._video = v;
+        if (this.url) {
+            v.src = this.url;
+            if (this.autoplay) { var pr = v.play(); if (pr && pr['catch']) pr['catch'](function(){}); }
+        }
+    ]]></handler>
+
+    <!--- Get the view's underlying DOM div (the sprite container). @keywords private -->
+    <method name="getDiv"><![CDATA[
+        var s = this.sprite;
+        return s ? (s.__LZdiv || s.__LZcanvasdiv || null) : null;
+    ]]></method>
+
+    <method name="play"><![CDATA[
+        if (this._video) { var pr = this._video.play(); if (pr && pr['catch']) pr['catch'](function(){}); }
+    ]]></method>
+    <method name="pause"> if (this._video) this._video.pause(); </method>
+    <method name="stop"><![CDATA[
+        if (this._video) { this._video.pause(); this._video.currentTime = 0; }
+        if (this.onstop) this.onstop.sendEvent();
+    ]]></method>
+    <!--- Seek to time in seconds. -->
+    <method name="seek" args="t"> if (this._video) this._video.currentTime = t; </method>
+
+    <setter name="url" args="u"><![CDATA[
+        this.url = u;
+        if (this._video && u) {
+            this._video.src = u;
+            if (this.autoplay) { var pr = this._video.play(); if (pr && pr['catch']) pr['catch'](function(){}); }
+        }
+        if (this.onurl) this.onurl.sendEvent(u);
+    ]]></setter>
+    <event name="onurl"/>
+
+    <setter name="playvolume" args="v">
+        this.playvolume = v;
+        if (this._video) this._video.volume = v;
+        if (this.onplayvolume) this.onplayvolume.sendEvent(v);
+    </setter>
+    <event name="onplayvolume"/>
+
+    <setter name="muted" args="m">
+        this.muted = m;
+        if (this._video) this._video.muted = m;
+    </setter>
+
+    <!-- geometry as handlers (not setters): a constrained width/height re-enters via
+         setAttribute and infinite-loops the $delegates merge (bit the Dashboard, whose
+         video size is constraint-driven; the standalone videolib used fixed sizes). -->
+    <handler name="onwidth" args="w">
+        if (this._video) this._video.style.width = w + 'px';
+    </handler>
+    <handler name="onheight" args="h">
+        if (this._video) this._video.style.height = h + 'px';
+    </handler>
+</class>
+</library>

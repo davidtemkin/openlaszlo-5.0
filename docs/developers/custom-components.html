@@ -1,0 +1,444 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 34. Designing Custom Components</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.power.html" title="Part IV. In Depth"><link rel="prev" href="class-inheritance.html" title="Chapter 33. Extending Classes"><link rel="next" href="browser-integration.html" title="Chapter 35. Browser Integration"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 34. Designing Custom Components</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="class-inheritance.html">Prev</a> </td><th width="60%" align="center">Part IV. In Depth</th><td width="20%" align="right"> <a accesskey="n" href="browser-integration.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="custom-components"></a>Chapter 34. Designing Custom Components</h2></div></div></div><p>A component is a reusable class that is typically simple and easy to
+use. Examples of a few components that ship with OpenLaszlo are <a class="indexterm" name="id11933"></a><code class="classname">button</code>, <a class="indexterm" name="id11936"></a><code class="classname">window</code>, and
+<a class="indexterm" name="id11939"></a><code class="classname">tabslider</code>. The standard OpenLaszlo components can be found in the
+<code class="literal">lps/components</code> directory.</p><p>This chapter assumes you know how to use the OpenLaszlo components, have a good
+understanding of OpenLaszlo classes, know how to include resources, and are
+well-versed in LZX.</p><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1780"></a>1. Base components and LZ components</h2></div></div></div><p>There are two types of standard components: <a class="indexterm" name="id11947"></a><em class="glossterm">base components</em> and
+<a class="indexterm" name="id11950"></a><em class="glossterm">lz components</em>. Base components are generally non-visual, abstract classes. Lz
+components are visual classes that ship with art assets and maintain a
+particular look and feel.</p><p>This division in classes exists so that you can create a subclass that has
+  complete control over the look and feel of the component, yet still leverage
+  common behavior. Occasionally you will want to define
+  views
+  and
+  interaction behavior that is inherited. For example: the windowpanel class
+  is extended by window, alert and modal dialog.</p><p>An lz component should be subclassed if the look and feel matches the custom
+component desired. Minor changes to methods and adding new views should be
+straightforward. For example: you would subclass lz classes, if you want a class
+  for a frequently used icon button or a specific kind of listitem. Subclass
+  a base
+  component
+  if you want
+  a completely
+  different look and feel
+or if the functionality is extensively different than what's available in the lz classes.</p><p>Ideally, when writing a complex custom component, it's best to implement as much of
+the non-visual behaviors as possible in a base class. Visible views and
+functions that are applied specifically to those views should go into an visual
+component class. While this can seem a lot of extra effort, it promotes base
+  class
+reusability by allowing subclasses to create different looks while maintaining
+the same functionality. For examples, compare <code class="literal">base/basebutton.lzx</code>
+to <code class="literal">lz/button.lzx</code> and <code class="literal">base/baselist.lzx</code>
+to <code class="literal">lz/list.lzx</code>.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1787"></a>2. Deciding what base component to subclass</h2></div></div></div><p>A big part of implementing a custom component is understanding how it's going
+to be used. Is it part of a list? Will it hold a value? This section describes
+how to decide which base class a custom component should use.</p><p>There are four basic types of base components:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p><a class="indexterm" name="id11967"></a><code class="classname">basecomponent</code></p></li><li class="listitem"><p><a class="indexterm" name="id11972"></a><code class="classname">basevaluecomponent</code></p></li><li class="listitem"><p><a class="indexterm" name="id11977"></a><code class="classname">baseformitem</code></p></li><li class="listitem"><p><a class="indexterm" name="id11982"></a><code class="classname">baselistitem</code></p></li><li class="listitem"><p><a class="indexterm" name="id11987"></a><code class="classname">baselist</code></p></li></ul></div><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1781"></a>2.1. Basecomponent</h3></div></div></div><p><a class="indexterm" name="id11993"></a><code class="classname">basecomponent</code> is the abstract class that all
+components subclass. <a class="indexterm" name="id11996"></a><code class="classname">basecomponent</code> applies
+styles, defines an HTML text attribute, and handles focus events, to
+name a few basic features. See the source code in
+<code class="literal">lps/components/base/basecomponent.lzx</code>.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1782"></a>2.2. Basevaluecomponent</h3></div></div></div><p>Subclasses of <a class="indexterm" name="id12003"></a><code class="classname">basevaluecomponent</code> are known
+to have a <code class="literal">value</code> property. This is the value that the item
+instance represents. When the item is selected, the parent selection
+group's value will be set to this
+value. <a class="indexterm" name="id12007"></a><code class="classname">basevaluecomponent</code> should be subclassed
+if the component has to represent a
+value. <a class="indexterm" name="id12010"></a><code class="classname">basevaluecomponent</code> has a
+<a class="indexterm" name="id12013"></a><code class="methodname">getValue()</code> method that, if no value is set, it returns
+the class's text as its value. Hence, the value retrieved with the
+<a class="indexterm" name="id12017"></a><code class="sgmltag-attribute">value</code> attribute may be different from the value
+that <a class="indexterm" name="id12020"></a><code class="methodname">getValue()</code> returns. Because of this, most
+subclasses of <a class="indexterm" name="id12024"></a><code class="classname">basevaluecomponent</code> require that
+<a class="indexterm" name="id12027"></a><code class="methodname">getValue()</code> is called instead of directly accessing the
+<a class="indexterm" name="id12031"></a><code class="sgmltag-attribute">value</code> attribute.</p><div class="example"><a name="id12034"></a><p class="title"><b>Example 34.1. Basevaluecomponent</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas debug="true" height="260" width="100%"&gt;
+  &lt;debug height="250" y="20"/&gt;
+  &lt;include href="base/basevaluecomponent.lzx"/&gt;
+  
+  &lt;class name="myvaluecomponent" extends="basevaluecomponent"&gt;
+    &lt;handler name="oninit"&gt;
+      Debug.debug("%w text: %w", this.name, this.text);
+      Debug.debug("%w value: %w", this.name, this.value);
+      Debug.debug("%w getValue(): %w\n", this.name, this.getValue());
+    &lt;/handler&gt;
+  &lt;/class&gt;
+  
+  &lt;!-- Text is inherited from basecomponent, the superclass of --&gt;
+  &lt;!-- basevalue component.                                    --&gt;
+  &lt;myvaluecomponent name="one" text="this is the text"/&gt;
+  
+  &lt;!-- Set the value this time. Note that value is an expression type. --&gt;
+  &lt;!-- Have to use quotes to set a string value.                       --&gt;
+  &lt;myvaluecomponent name="two" value="'this is the value'"/&gt;
+  
+  &lt;!-- Set both text and value. --&gt;
+  &lt;myvaluecomponent name="three" text="this is the text" 
+    value="'this is the value'"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/custom-components-_1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/custom-components-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1783"></a>2.3. Baseformitem</h3></div></div></div><p><a class="indexterm" name="id12040"></a><code class="classname">baseformitem</code> is a subclass of
+<a class="indexterm" name="id12043"></a><code class="classname">basevaluecomponent</code>. Instances of
+<a class="indexterm" name="id12046"></a><code class="classname">baseformitem</code> can have their value accessed and
+submitted using the <a class="indexterm" name="id12049"></a><code class="sgmltag-element">&lt;form&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag. Subclass
+<a class="indexterm" name="id12053"></a><code class="classname">baseformitem</code> if the custom component needs to
+be accessed in a <a class="indexterm" name="id12056"></a><code class="classname">form</code>. Examples of
+<a class="indexterm" name="id12059"></a><code class="classname">baseformitem</code>: <a class="indexterm" name="id12062"></a><code class="classname">checkbox</code>,
+<a class="indexterm" name="id12065"></a><code class="classname">radiogroup</code>, <a class="indexterm" name="id12068"></a><code class="classname">combobox</code> and <a class="indexterm" name="id12071"></a><code class="sgmltag-element">&lt;datacombobox&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+.
+Note that <a class="indexterm" name="id12075"></a><code class="classname">radiobutton</code> is a
+<a class="indexterm" name="id12078"></a><code class="classname">basevalueitem</code> not a
+<a class="indexterm" name="id12081"></a><code class="classname">baseformitem</code>, because it contributes its value
+to a <a class="indexterm" name="id12084"></a><code class="classname">radiogroup</code>, rather than to a
+<a class="indexterm" name="id12087"></a><code class="classname">form</code>.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1784"></a>2.4. Baselistitem</h3></div></div></div><p>Another subclass of <a class="indexterm" name="id12093"></a><code class="classname">basevaluecomponent</code> is
+<a class="indexterm" name="id12096"></a><code class="classname">baselistitem</code>. Instances of <a class="indexterm" name="id12099"></a><code class="classname">baselistitem</code> are
+typically used within a <a class="indexterm" name="id12102"></a><code class="classname">baselist</code>. When a baselistitem instance is
+selected, the parent of the instance (baselist/list) is informed of the
+selection. Subclass <a class="indexterm" name="id12105"></a><code class="classname">baselistitem</code> if the custom component should
+be
+accessed in a list context. Examples of baseformitem: <a class="indexterm" name="id12108"></a><code class="classname">radiobutton</code>, <a class="indexterm" name="id12111"></a><code class="classname">tabelement</code>, <a class="indexterm" name="id12114"></a><code class="classname">listitem</code>. </p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1785"></a>2.5. Baselist</h3></div></div></div><p><a class="indexterm" name="id12120"></a><code class="classname">baselist</code> is a subclass of <a class="indexterm" name="id12123"></a><code class="classname">baseformitem</code>.
+  Typically a subclass of <a class="indexterm" name="id12126"></a><code class="classname">baselist</code> will contribute its value to
+  a form (like <a class="indexterm" name="id12129"></a><code class="classname">list</code> and <a class="indexterm" name="id12132"></a><code class="classname">combobox</code>, although <a class="indexterm" name="id12135"></a><code class="classname">baselist</code> is also used by any
+  component that manages any list of items, such as <a class="indexterm" name="id12138"></a><code class="classname">tabslider</code> and <a class="indexterm" name="id12141"></a><code class="classname">tabs</code>. </p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1786"></a>2.6. basefloatinglist</h3></div></div></div><p>
+This implements the base class for lists that "float" above the application.  Two kinds of floating lists that are derived from it ship with the OpenLaszlo platform: <a class="indexterm" name="id12147"></a><code class="sgmltag-element">&lt;floatinglist&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ and <a class="indexterm" name="id12151"></a><code class="sgmltag-element">&lt;plainfloatinglist&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+.
+</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1803"></a>3. Writing the slider component</h2></div></div></div><p>The slider will be used to demonstrate how to design and write a custom
+component. You can find the complete code in <code class="literal">base/baseslider.lzx</code> and
+<code class="literal">lz/slider.lzx</code>.</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1788"></a>3.1. Design</h3></div></div></div><p>First, we need to think about the different parts a slider consists of. To
+drag and adjust a slider a thumb button has to exist. A slider track is needed
+so it can contain the thumb that will ride on it. Finally, we need a container
+to hold the track. The container will be our slider component and will pass down
+attributes and styles for the track and the thumb.</p><p>The basic design of our slider will look like:</p><div class="figure"><a name="id12164"></a><p class="title"><b>Figure 34.1. Basic design of custom slider</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/slider.png" alt="Basic design of custom slider"></div></div></div><br class="figure-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1797"></a>3.2. The base classes</h3></div></div></div><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1794"></a>3.2.1. Baseslider</h4></div></div></div><p>The <a class="indexterm" name="id12174"></a><code class="classname">baseslider</code> is the base component for
+<a class="indexterm" name="id12177"></a><code class="classname">slider</code>.</p><p></p><div class="section"><div class="titlepage"><div><div><h5 class="title"><a name="id1789"></a>3.2.1.1. Framework</h5></div></div></div><p>We'll start off by building our slider with the base (non-visual) class and
+extend <a class="indexterm" name="id12183"></a><code class="classname">basevaluecomponent</code>, since a slider contains a value.</p><div class="example"><a name="id12186"></a><p class="title"><b>Example 34.2. Baseslider extends basevaluecomponent</b></p><div class="example-contents"><pre class="programlisting">
+&lt;class name="baseslider" <span class="b">extends="basevaluecomponent"</span>&gt;
+&lt;/class&gt;
+</pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h5 class="title"><a name="id1790"></a>3.2.1.2. Attributes</h5></div></div></div><p>An attribute for the size of the track and thumb will be needed.</p><div class="example"><a name="id12193"></a><p class="title"><b>Example 34.3. Basic baseslider attributes</b></p><div class="example-contents"><pre class="programlisting">
+&lt;class name="baseslider" extends="basevaluecomponent" <span class="b">width="200"</span>&gt;
+  &lt;attribute <span class="em">name="trackheight"</span> value="8" type="number"/&gt;
+  &lt;attribute <span class="em">name="thumbwidth"</span> value="10" type="number"/&gt;
+  &lt;attribute <span class="em">name="thumbheight"</span> value="18" type="number"/&gt;
+&lt;/class&gt;
+</pre></div></div><br class="example-break"><p>The track will constrain its width to the <a class="indexterm" name="id12201"></a><code class="classname">baseslider</code>'s width and
+its height to <code class="literal">trackheight</code>. The thumb will constrain its width and
+height to the <a class="indexterm" name="id12205"></a><code class="classname">baseslider</code>'s <code class="literal">thumbwidth</code> and
+<code class="literal">thumbheight</code>, respectively.</p><p>Other values that a slider will need to include:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term"><a class="indexterm" name="id12214"></a><code class="sgmltag-attribute">minvalue</code></span></dt><dd><p>The minimum value of the slider.</p></dd><dt><span class="term"><a class="indexterm" name="id12221"></a><code class="sgmltag-attribute">maxvalue</code></span></dt><dd><p>the maximum value of the slider.</p></dd><dt><span class="term"><a class="indexterm" name="id12228"></a><code class="sgmltag-attribute">showfill</code></span></dt><dd><p>Boolean to show a filled area in the slider's track.</p></dd><dt><span class="term"><a class="indexterm" name="id12235"></a><code class="sgmltag-attribute">showvalue</code></span></dt><dd><p>Boolean to show a floating value text on top of the thumb when
+  the user drags.</p></dd><dt><span class="term"><a class="indexterm" name="id12242"></a><code class="sgmltag-attribute">showrange</code></span></dt><dd><p>Boolean to show the bounding min and max value range.</p></dd></dl></div><div class="example"><a name="id12247"></a><p class="title"><b>Example 34.4. More baseslider attributes</b></p><div class="example-contents"><pre class="programlisting">
+&lt;class name="baseslider" extends="basevaluecomponent" width="200"&gt;
+  &lt;attribute name="trackheight" value="8" type="number"/&gt;
+  &lt;attribute name="thumbwidth" value="10" type="number"/&gt;
+  &lt;attribute name="thumbheight" value="18" type="number"/&gt;
+
+  &lt;attribute <span class="em">name="minvalue"</span> value="0" type="number"/&gt;
+  &lt;attribute <span class="em">name="maxvalue"</span> value="100" type="number"/&gt;
+  &lt;attribute <span class="em">name="showfill"</span> value="true"/&gt;
+  &lt;attribute <span class="em">name="showvalue"</span> value="true" type="boolean"/&gt;
+  &lt;attribute <span class="em">name="showrange"</span> value="true" type="boolean"/&gt;
+&lt;/class&gt;
+</pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h5 class="title"><a name="id1791"></a>3.2.1.3. Methods</h5></div></div></div><p>The slider will need to provide APIs to set and get the value as a percentage
+of the range.</p><div class="example"><a name="id12258"></a><p class="title"><b>Example 34.5. Percentage APIs</b></p><div class="example-contents"><pre class="programlisting">
+&lt;class name="baseslider" extends="basevaluecomponent" width="200"&gt;
+  &lt;!-- attributes begin here --&gt;
+  &lt;!-- ...                   --&gt;
+  &lt;!-- attributes end here   --&gt;
+
+  &lt;!--- Sets the value for the slider that must be within min and max.
+        @param Number v: a number between the minimum and maximum value
+        for the slider. --&gt;
+  &lt;method <span class="em">name="setValue"</span> args="v"&gt;
+    if (this.value == v) return;
+    // ensure in bounds
+    v = math.max(v,this.minValue);
+    v = math.min(v,this.maxValue);
+    this.value = v;
+    if (onvalue) onvalue.sendEvent();
+    if (!isinited) return;
+    <span class="em">_adjustThumb();</span>
+  &lt;/method&gt;
+
+  &lt;!--- Set the value by percentage of range from min to max.
+        @param Number p: a percentage between the min and the max. --&gt;
+  &lt;method <span class="em">name="setPercentage"</span> args="p"&gt;
+    var diff = this.minValue-this.maxValue;
+    setValue( diff*p + this.minValue );
+  &lt;/method&gt;
+
+  &lt;!--- Get the percentage of the range selected by the value.
+        @return Number: the percentage selected. --&gt;
+  &lt;method <span class="em">name="getPercentage"</span>&gt;
+    return (this.value-this.minValue) / (this.maxValue-this.minValue);
+  &lt;/method&gt;
+
+  &lt;!--- adjusts the thumb location
+        @keywords private --&gt;
+  &lt;method <span class="em">name="_adjustThumb"</span>&gt;
+    var perc = getPercentage();
+    var x = Math.round( (this.width-track.thumb.width)*perc );
+    <span class="em">track.thumb.setX(x);</span>
+  &lt;/method&gt;
+&lt;/class&gt;
+</pre></div></div><br class="example-break"><p>The <a class="indexterm" name="id12268"></a><code class="methodname">_adjustThumb()</code> method is called whenever the
+value of the slider, or the percentage of the slider, changes.  This
+is so the thumb maintains a correct position relative to the slider's
+range.  <a class="indexterm" name="id12272"></a><code class="classname">baseslider</code> assumes its subclasses will
+contain a track node called <code class="varname">track</code> that contains a
+thumb node called <code class="varname">thumb</code>.</p><p>Note that <a class="indexterm" name="id12278"></a><code class="methodname">_adjustThumb()</code> begins with an underscore. This naming
+convention indicates that the method or attribute should be considered private
+to the user of the component. The <a class="indexterm" name="id12282"></a><code class="sgmltag-attribute">value</code> attribute is inherited from
+<a class="indexterm" name="id12285"></a><code class="classname">basevaluecomponent</code>.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h5 class="title"><a name="id1792"></a>3.2.1.4. Events</h5></div></div></div><p>Now the slider needs a set of APIs to get and set its min and max
+values. Components can declare events by adding a prefix of "on" with a type of
+<em class="glossterm">expression</em>. For example, the event name used when the width changes is
+<a class="indexterm" name="id12292"></a><code class="literal">onwidth</code>. Initialize the event attributes to
+<code class="literal">null</code>. Undeclared events will display a debugger warning.</p><div class="example"><a name="id12296"></a><p class="title"><b>Example 34.6. Min/max value APIs and events </b></p><div class="example-contents"><pre class="programlisting">
+&lt;class name="baseslider" extends="basevaluecomponent" width="200"&gt;
+  &lt;!-- attributes begin here --&gt;
+  &lt;!-- ...                   --&gt;
+  
+  &lt;!-- Event handler when minvalue changes. --&gt; 
+  &lt;attribute <span class="em">name="onminvalue"</span> value="null" type="expression"/&gt;
+  
+  &lt;!-- Event handler when maxvalue changes. --&gt; 
+  &lt;attribute <span class="em">name="onmaxvalue"</span> value="null" type="expression"/&gt;
+
+  &lt;!-- attributes end here   --&gt;
+
+  &lt;method name="setValue" args="v"&gt;
+    // setValue body
+  &lt;/method&gt;
+
+  &lt;method name="setPercentage" args="p"&gt;
+    // setPercentage body
+  &lt;/method&gt;
+
+  &lt;method name="getPercentage"&gt;
+    // getPercentage body
+  &lt;/method&gt;
+
+  &lt;method name="_adjustThumb"&gt;
+    // _adjustThumb body
+  &lt;/method&gt;
+
+  &lt;!--- Get the minimum value of the slider.
+        @return Number: the minimum value. --&gt;
+  &lt;method <span class="em">name="getMinValue"</span>&gt;
+    return this.minValue;
+  &lt;/method&gt;
+  &lt;!--- Get the maximum value of the slider.
+        @return Number: the maximum value. --&gt;
+  &lt;method <span class="em">name="getMaxValue"</span>&gt;
+    return this.maxValue;
+  &lt;/method&gt;
+
+  &lt;!--- Set the minimum value.
+        @param Number v: the minimum value. --&gt;
+  &lt;method <span class="em">name="setMinValue"</span> args="v"&gt;
+    if (this.minValue == v) return;
+    this.minValue = v;
+    <span class="em">if (this.onminvalue) this.onminvalue.sendEvent();</span>
+    // adjust value
+    if (this.minValue &gt; this.value) this.setAttribute("value",v);
+    _adjustThumb();
+  &lt;/method&gt;
+
+  &lt;!--- Set the maximum value.
+        @param Number v: the maximum value. --&gt;
+  &lt;method <span class="em">name="setMaxValue"</span> args="v"&gt;
+    if (this.maxValue == v) return;
+    this.maxValue = v;
+    <span class="em">if (this.onmaxvalue) this.onmaxvalue.sendEvent();</span>
+    // adjust value
+    if (this.value &gt; v) this.setAttribute("value",v);
+    _adjustThumb();
+  &lt;/method&gt;
+&lt;/class&gt;
+</pre></div></div><br class="example-break"><p>This code structure is common when sending events:</p><div class="example"><a name="id12308"></a><p class="title"><b>Example 34.7. Sending events</b></p><div class="example-contents"><pre class="programlisting">
+    if (this.onmaxvalue) this.onmaxvalue.sendEvent();
+</pre></div></div><br class="example-break"><p>It only sends the event if the user of the component defines it like:</p><div class="example"><a name="id12312"></a><p class="title"><b>Example 34.8. Defining events in the slider</b></p><div class="example-contents"><pre class="programlisting">
+&lt;slider onminvalue="Debug.debug('minvalue: %w', this.minvalue)"
+        onmaxvalue="Debug.debug('maxvalue: %w', this.maxvalue)"/&gt;
+</pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h5 class="title"><a name="id1793"></a>3.2.1.5. <a class="indexterm" name="id12317"></a><code class="methodname">init()</code> vs. <a class="indexterm" name="id12321"></a><code class="literal">oninit</code></h5></div></div></div><p>The slider needs to set the position of the its thumb during
+initialization. Setting the value doesn't position the thumb in the correct
+location so we do this in the <a class="indexterm" name="id12325"></a><code class="methodname">init()</code> method.</p><div class="example"><a name="id12329"></a><p class="title"><b>Example 34.9. Min/max value APIs and events </b></p><div class="example-contents"><pre class="programlisting">
+&lt;class name="baseslider" extends="basevaluecomponent" width="200"&gt;
+  &lt;!-- attributes begin here --&gt;
+  &lt;!-- ...                   --&gt;
+  &lt;!-- attributes end here   --&gt;
+
+  &lt;method name="init"&gt;
+    super.init();
+    // have to adjust thumb once at start 
+    _adjustThumb();
+  &lt;/method&gt;        
+
+  &lt;!-- methods begin here --&gt;
+  &lt;!-- ...                --&gt;
+  &lt;!-- methods end here   --&gt;
+&lt;/class&gt;
+</pre></div></div><br class="example-break"><p>When writing a component, it's recommended that <a class="indexterm" name="id12333"></a><code class="methodname">init()</code> is used
+over handling the <a class="indexterm" name="id12337"></a><code class="literal">oninit</code> event. The reason is that the order in
+which <a class="indexterm" name="id12340"></a><code class="literal">oninit</code> gets called is undefined, whereas <a class="indexterm" name="id12343"></a><code class="methodname">init()</code> is
+well-defined because it gets called synchronously. By writing the component using <a class="indexterm" name="id12347"></a><code class="methodname">init()</code>, 
+any user of the component may define <a class="indexterm" name="id12351"></a><code class="literal">oninit</code> code which is guaranteed to be called
+after the component's init code. When using
+<a class="indexterm" name="id12354"></a><code class="methodname">init()</code>, be sure to call <code class="literal">super.init()</code> in the body or
+the class may not initialize correctly.</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1795"></a>3.2.2. Baseslidertrack</h4></div></div></div><p>The slider track contains the thumb. The visual aspect of the track
+will be discussed later. An instance of
+<a class="indexterm" name="id12362"></a><code class="classname">baseslidertrack</code> expects to be contained in a
+<a class="indexterm" name="id12365"></a><code class="classname">baseslider</code> and sets its class parent's track
+attribute to itself.</p><div class="example"><a name="id12368"></a><p class="title"><b>Example 34.10. Baseslidertrack</b></p><div class="example-contents"><pre class="programlisting">
+&lt;!--- Baseslidertrack expects to be within a baseslider (or its
+    subclass). In other words, its "classroot" should be a slider. --&gt;
+&lt;class name="baseslidertrack" width="100%" bgcolor="0x333333" 
+       height="${classroot.trackheight}"&gt;
+  &lt;method name="init"&gt;
+    super.init();
+    classroot.track = this;
+  &lt;/method&gt;
+&lt;/class&gt;
+</pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1796"></a>3.2.3. Basesliderthumb</h4></div></div></div><p>The thumb is basically a draggable button that rides on top of a slider
+track. The slider track contains the thumb.</p><div class="example"><a name="id12374"></a><p class="title"><b>Example 34.11. Basesliderthumb</b></p><div class="example-contents"><pre class="programlisting">
+&lt;!--- Basesliderthumb expects to be within a baseslidertrack (or its
+    subclass). In other words, its "classroot" should be a
+    slidertrack. --&gt;
+&lt;class name="basesliderthumb" <span class="em">extends="button"</span> <span class="em">focusable="false"</span>
+       width="${parent.classroot.thumbwidth}" 
+       height="${parent.classroot.thumbheight}"
+       <span class="em">onmousedown="thedragstate.apply();"</span>
+       <span class="em">onmouseup="thedragstate.remove();"</span>
+       y="${(parent.height-height)/2}"&gt;
+
+  &lt;!--- Toggles the floating value text when dragging thumb. Constrain
+        showvalue to baseslider's showvalue: parent is track,
+        parent.parent is slider container. --&gt;
+  &lt;attribute <span class="em">name="showvalue" value="${parent.parent.showvalue}"</span>/&gt;
+
+  &lt;!--- @keywords private --&gt;
+  &lt;dragstate <span class="em">name="thedragstate"</span> drag_axis="x"&gt;
+    &lt;text name="t"
+         resize="true"
+         x="${classroot.width/2-width/2}"
+         y="-14"
+         text="${parent.parent.parent.value}"
+         visible="${classroot.showvalue}"
+    /&gt;
+  &lt;/dragstate&gt;
+
+  &lt;!--- constrain to parents bounds, and adjust slider value when dragged
+        @keywords private --&gt;
+  &lt;method <span class="em">name="setX"</span> args="x"&gt;
+    var boundedx = x;
+    if ( x &gt; parent.getWidth()-getWidth() ) {
+      var constrainX = parent.getWidth()-getWidth();
+      boundedx = constrainX;
+    } else
+    if (parent.x &gt; x) {
+      boundedx =  parent.x;
+    }
+    super.setX(boundedx);
+
+    //update slider value
+    var perc = ( (x) / (parent.parent.width-width) );
+    var val = Math.round( ( (perc)*(parent.parent.maxValue-parent.parent.minValue) )
+                          + parseInt(parent.parent.minValue) );
+    //only adjust value if user is dragging or left or right key is pressed
+    if (thedragstate.isapplied || 
+      lz.Keys.isKeyDown("leftarrow") || 
+      lz.Keys.isKeyDown("rightarrow") ) {
+      parent.parent.setValue(val);
+    }
+  &lt;/method&gt;
+&lt;/class&gt;
+</pre></div></div><br class="example-break"><p>Technically speaking, <a class="indexterm" name="id12385"></a><code class="classname">basesliderthumb</code> would not really be
+considered a base component because there's no way to override its visual look
+since it extends from <a class="indexterm" name="id12388"></a><code class="classname">button</code>. By default, a
+<a class="indexterm" name="id12391"></a><code class="classname">basesliderthumb</code> is keyboard focusable because it's a
+<a class="indexterm" name="id12394"></a><code class="classname">button</code>. However, since it's really part of the
+<a class="indexterm" name="id12397"></a><code class="classname">baseslider</code> component, the <a class="indexterm" name="id12400"></a><code class="classname">basesliderthumb</code> has this
+attribute set to false.</p><p>Since <a class="indexterm" name="id12404"></a><code class="classname">basesliderthumb</code> must be draggable, a
+<a class="indexterm" name="id12407"></a><code class="classname">dragstate</code> is declared in its body. It's applied when the mouse is
+down and removed when the mouse is up.</p><p>The thumb assumes that it's contained in a <a class="indexterm" name="id12411"></a><code class="classname">baseslidertrack</code>
+(parent), which in turn is contained in a <a class="indexterm" name="id12414"></a><code class="classname">baseslider</code>
+(parent.parent). The thumb's <code class="literal">showvalue</code> is constrained to the
+<code class="literal">baseslider</code>'s <code class="literal">showvalue</code>.</p><p>The <a class="indexterm" name="id12421"></a><code class="methodname">setX()</code> method sets the correct value for the slider and
+ensures that the thumb is placed within the bounds of its parents'.</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1801"></a>3.3. The lz (visual) classes</h3></div></div></div><div class="figure"><a name="id12427"></a><p class="title"><b>Figure 34.2. Enlarged view of custom slider</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/slider1.png" alt="Enlarged view of custom slider"></div></div></div><br class="figure-break"><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1798"></a>3.3.1. Slider</h4></div></div></div><p>The <a class="indexterm" name="id12435"></a><code class="classname">slider</code> is a visual subclass of
+<a class="indexterm" name="id12438"></a><code class="classname">baseslider</code>. Since it contains visual elements, this is where styles
+should be applied. The <a class="indexterm" name="id12441"></a><code class="methodname">_applystyle()</code> method sets the colors for the
+<code class="literal">slider</code>'s track. </p><p><a class="indexterm" name="id12447"></a><code class="classname">slider</code> declares and contains an instance of
+<a class="indexterm" name="id12450"></a><code class="classname">baseslidertrack</code> or its
+subclasses. <a class="indexterm" name="id12453"></a><code class="classname">baseslidertrack</code> creates a reference
+to itself (in <a class="indexterm" name="id12456"></a><code class="classname">baseslider</code>) during
+initialization.</p><p>If <a class="indexterm" name="id12460"></a><code class="sgmltag-attribute">showrange</code> is true, the min and max values will be shown on
+the left and right sides of the slider, respectively.</p><div class="example"><a name="id12463"></a><p class="title"><b>Example 34.12. Slider</b></p><div class="example-contents"><pre class="programlisting">
+&lt;!--- a slider component allowing for easy selection of a value within a range --&gt;
+&lt;class name="slider" extends="baseslider"&gt;
+  &lt;<span class="em">slidertrack</span>/&gt;
+
+  &lt;<span class="em">state apply="${classroot.showrange}"</span>&gt;
+      &lt;text y="${classroot.track.y + classroot.track.height + 2}"
+            text="${classroot.minvalue}"/&gt;
+      &lt;text y="${classroot.track.y + classroot.track.height + 2}" resize="true"
+            x="${classroot.track.x+classroot.track.width-width}"
+            text="${classroot.maxvalue}"/&gt;
+  &lt;/<span class="em">state</span>&gt;
+
+  &lt;!--- @keywords private --&gt;
+  &lt;method <span class="em">name="_applystyle"</span> args="s"&gt;
+    track.setbgcolor(s.bordercolor);
+    track.background.setbgcolor(s.basecolor);
+    track.filled.setbgcolor(s.selectedcolor);
+  &lt;/method&gt;
+&lt;/class&gt;
+</pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1799"></a>3.3.2. Slidertrack</h4></div></div></div><p>An instance of <a class="indexterm" name="id12473"></a><code class="classname">slidertrack</code> has three
+views:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term"><code class="varname">background</code></span></dt><dd><p>The background color of the track.</p></dd><dt><span class="term"><code class="varname">filled</code></span></dt><dd><p>The background color of the filled track area.</p></dd><dt><span class="term"><code class="varname">thumb</code></span></dt><dd><p>An instance of <a class="indexterm" name="id12492"></a><code class="classname">basesliderthumb</code> that is the
+  draggable button of the track.</p></dd></dl></div><p>This class constrains its <a class="indexterm" name="id12496"></a><code class="sgmltag-attribute">showfill</code> attribute to its parent's
+(<a class="indexterm" name="id12499"></a><code class="classname">slider</code>) <a class="indexterm" name="id12502"></a><code class="sgmltag-attribute">showfill</code> attribute.</p><div class="example"><a name="id12505"></a><p class="title"><b>Example 34.13. Slidertrack</b></p><div class="example-contents"><pre class="programlisting">
+&lt;!--- the inner track on which the sliderthumb rides --&gt;
+&lt;class name="slidertrack" <span class="em">extends="baseslidertrack"</span>&gt;
+  &lt;!--- @keywords private --&gt;
+  &lt;attribute <span class="em">name="showfill"</span> value="${parent.showfill}" type="number"/&gt;
+
+  &lt;view name="background" bgcolor="red"
+        height="${parent.height-(2*parent.classroot.bordersize)}"
+        width="${parent.width-(2*parent.classroot.bordersize)}"
+        x="${parent.classroot.bordersize}"
+        y="${(parent.height-height)/2}"
+  /&gt;
+  &lt;!-- the filled area --&gt;
+  &lt;view name="filled" bgcolor="0xff9933" opacity=".8" visible="${classroot.showfill}"
+        height="${parent.height-(2*parent.classroot.bordersize)}"
+        width="${Math.max(0,Math.min(classroot.thumb.x+classroot.thumb.width,parent.width)-
+                                     (2*parent.classroot.bordersize))}"
+        y="${(parent.height-height)/2}"
+        x="${parent.classroot.bordersize}"
+  /&gt;
+
+  &lt;sliderthumb name="thumb"/&gt;
+&lt;/class&gt;
+</pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1800"></a>3.3.3. Sliderthumb</h4></div></div></div><p>Since <a class="indexterm" name="id12513"></a><code class="classname">basesliderthumb</code> already contains a borrowed look and feel
+from <a class="indexterm" name="id12516"></a><code class="classname">button</code>, sliderthumb can just extend itself from
+<a class="indexterm" name="id12519"></a><code class="classname">basesliderthumb</code>. Alternatively, the slider track could've just
+declared <a class="indexterm" name="id12522"></a><code class="classname">basesliderthumb</code> instead of <a class="indexterm" name="id12525"></a><code class="classname">sliderthumb</code>.</p><div class="example"><a name="id12528"></a><p class="title"><b>Example 34.14. Sliderthumb</b></p><div class="example-contents"><pre class="programlisting">
+&lt;!--- the visual thumb the user drags to select a value --&gt;
+&lt;class name="sliderthumb" <span class="em">extends="basesliderthumb"</span>&gt;
+&lt;/class&gt;
+</pre></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1802"></a>3.4. Using the slider</h3></div></div></div><p>Examine <code class="literal">base/baseslider</code> and <code class="literal">lz/slider.lzx</code> for the complete
+code set.</p><p>The following example demonstrates how to use the slider component.</p><div class="example"><a name="id12538"></a><p class="title"><b>Example 34.15. Using slider</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="200" width="100%"&gt;
+  &lt;include href="lz/slider.lzx"/&gt;
+  &lt;slider x="50" y="50" value="30"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/custom-components-_15.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/custom-components-_15.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1804"></a>4. Component auto-include</h2></div></div></div><p>You can auto-include a component so you can use the new tag anywhere without having to include it.</p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Copy your component somewhere under lps/components. Be sure to explicitly include all auto-included lzx files, for example, if you use simplelayout, be sure to add:</p><p><code class="literal">&lt;include href="util/layouts/simplelayout.lzx"/&gt;</code></p><p>Notice how the path is relative to the root of the components directory.</p></li><li class="listitem"><p>Add the tag name and component path to WEB-INF/lps/misc/lzx-autoincludes.properties. For example, to add an 
+image component under base/image.lzx, add this line to the properties file:</p><p><code class="literal">image: base/image.lzx</code></p><p>Once again, notice how the path is relative to the root of the components directory.</p></li><li class="listitem"><p>Restart LPS. You should now be able to use the new tag anywhere without having to include it. </p></li></ol></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="class-inheritance.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.power.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="browser-integration.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 33. Extending Classes </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 35. Browser Integration</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

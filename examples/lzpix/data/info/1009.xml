@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1009">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Chambord Castle Approach</title>
+  <description>Chambord Castle Approach — from the OpenLaszlo sample image library.</description>
+  <dates posted="1490691200" />
+  <urls><url type="photopage">data/photos/1009.jpg</url></urls>
+  <tags><tag>chambord</tag><tag>castle</tag><tag>approach</tag></tags>
+</photo>
+</rsp>

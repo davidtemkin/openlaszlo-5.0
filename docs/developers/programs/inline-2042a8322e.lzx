@@ -1,0 +1,4 @@
+class MyClass(object):
+  def f():
+    return 100
+myobject = MyClass()

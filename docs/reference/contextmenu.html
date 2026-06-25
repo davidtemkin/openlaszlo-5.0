@@ -1,0 +1,25 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;contextmenu&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>contextmenu<span class="ang">&gt;</span></h1><p class="short">A contextual menu</p><p class="meta">Extends <a href="node.html"><code>LzNode</code></a></p>
+        <p>
+           The 
+          <code>contextmenu</code>
+           represents a context (right-click) menu.
+ 
+        </p>
+         
+        <pre class="example">
+ &lt;canvas height="60"&gt;
+   &lt;view width="240" height="40" bgcolor="#aeaeae"&gt;
+     &lt;contextmenu&gt;
+       &lt;contextmenuitem caption="menu item"/&gt;
+     &lt;/contextmenu&gt;
+     &lt;text align="center"&gt;Right click for context menu&lt;/text&gt;
+   &lt;/view&gt;
+ &lt;/canvas&gt;
+ </pre>
+      <h3>Events</h3><ul class="events"><li><code>onmenuopen</code> — Send when the menu is opened</li></ul><h3>Methods</h3><ul class="methods"><li><code>addItem()</code></li><li><code>clearItems()</code></li><li><code>getItems()</code></li><li><code>hideBuiltInItems()</code></li><li><code>makeMenuItem()</code></li><li><code>setDelegate()</code></li><li><code>showBuiltInItems()</code></li></ul>
+</main><script src="_nav.js"></script></body></html>

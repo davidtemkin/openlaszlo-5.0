@@ -1,0 +1,101 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;microphone&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>microphone<span class="ang">&gt;</span></h1><p class="short">A microphone connection to a media server.</p><p class="meta">Extends <code>mediadevice</code></p>
+                        
+        <p>
+          The 
+          <code>&lt;class&gt;&lt;microphone&gt;&lt;/class&gt;</code>
+           element allows you to set up and control a microphone that is connected to a media server. For privacy protection, the 
+          <code>allowed</code>
+           attribute must be set to 
+          <code>true</code>
+           by the user.
+        </p>
+                        
+        <p>The following figure shows a microphone control.</p>
+                            
+        <pre><code>
+    &lt;canvas&gt;
+        
+        &lt;microphone id="m" 
+            capturing="${controlpanel.capturing.value}"
+        /&gt;
+        
+        &lt;view
+            x="10" 
+            y="20" 
+            width="102" 
+            height="12" 
+            bgcolor="black"
+            &gt;
+            &lt;view
+                x="1" 
+                y="1" 
+                bgcolor="yellow" 
+                width="${m.level}" 
+                height="10"
+            /&gt;
+        &lt;/view&gt;
+        &lt;view
+            y="100"
+            &gt;
+            &lt;simplelayout
+                axis="x" 
+                inset="10" 
+                spacing="20"
+            /&gt;
+            &lt;view
+                layout="axis: y; spacing: 4"
+                &gt;
+                &lt;text
+                    text="${'deviceindex: ' + m.deviceindex}" 
+                    resize="true"
+                /&gt;
+                &lt;text
+                    text="${'devicename: ' + m.devicename}" 
+                    resize="true"
+                /&gt;
+                &lt;text
+                    text="${'capturing: ' + m.capturing}"
+                    resize="true"
+                /&gt;
+                &lt;text
+                    text="${'allowed: ' + m.allowed}"
+                    resize="true"
+                /&gt;
+                &lt;text
+                    text="${'level: ' + m.level}" 
+                    resize="true"
+                /&gt;
+            &lt;/view&gt;
+            &lt;view
+                width="1" 
+                height="100" 
+                bgcolor="black"
+            /&gt;
+            &lt;view id="controlpanel" 
+                layout="axis: y; spacing: 10"
+                &gt;
+                &lt;checkbox name="capturing"
+                    text="Capturing"
+                    value="false"
+                /&gt;
+                &lt;button
+                    text="Show Settings"
+                    onclick="m.showSettings()"
+                /&gt;
+            &lt;/view&gt;
+        &lt;/view&gt;
+                        
+   &lt;/canvas&gt;
+                    </code></pre>
+                    
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">codec</td><td class="ty">string</td><td class="ty">NellyMoser</td><td>The codec to use, either 'NellyMoser' or 'Speex'.</td></tr><tr><td class="nm">echosuppression</td><td class="ty">boolean</td><td class="ty">true</td><td>If true, the microphone will attempt to use echo suppression.</td></tr><tr><td class="nm">encodequality</td><td class="ty">number</td><td class="ty">6</td><td>The quality of encoded speech quality when using the Speex codec.
+              Possible values are from 0 to 10.</td></tr><tr><td class="nm">framesperpacket</td><td class="ty">number</td><td class="ty">6</td><td>Number of Speex speech frames transmitted in a packet.</td></tr><tr><td class="nm">gain</td><td class="ty">number</td><td class="ty">50</td><td>The amount the microphone boosts the signal.</td></tr><tr><td class="nm">level</td><td class="ty">number</td><td class="ty">0</td><td>Audio level, 0-100, the amount of sound detected by this microphone.
+              Reset to 0 when there is no audio (no activity or not allowed).</td></tr><tr><td class="nm">rate</td><td class="ty">number</td><td class="ty">8</td><td>Rate in khz the microphone is using to capture sound, either 5, 8, 11, 22, or 44.</td></tr><tr><td class="nm">silencelevel</td><td class="ty">number</td><td class="ty">10</td><td>Silence level, 0-100, the amount of sound required to activate 
+              the microphone.</td></tr><tr><td class="nm">silencetimeout</td><td class="ty">number</td><td class="ty">-1</td><td>Silence timeout in ms, the amount of silent time signifying that 
+              silence has actually begun.</td></tr><tr><td class="nm">stream</td><td class="ty">expression</td><td class="ty">null</td><td>Mediastream to associate with the microphone, for audio recording.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

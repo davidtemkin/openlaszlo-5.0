@@ -1,0 +1,78 @@
+/* Stylesheet for the OpenLaszlo 4 docs built from DocBook source with the stock
+   docbook-xsl (chunk.xsl). Targets stock docbook-xsl HTML classes. */
+body{font:14px/1.6 -apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;color:#222;
+     max-width:880px;margin:0 auto;padding:16px 36px 60px}
+h1,h2,h3,h4{color:#394660;line-height:1.25}
+.book h1.title,.book .title h1{font-size:26px;border-bottom:2px solid #394660;padding-bottom:8px}
+.chapter h2.title,.preface h2.title,.part h1.title,.appendix h2.title{font-size:23px;border-bottom:1px solid #ccd;padding-bottom:6px;margin-top:0}
+.section h2.title{font-size:19px;margin-top:1.8em}
+.section h3.title{font-size:16px}
+.section h4.title{font-size:14px;text-transform:uppercase;letter-spacing:.03em;color:#556}
+a{color:#36c;text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* table of contents */
+.toc{background:#fafbfc;border:1px solid #e2e4ea;border-radius:5px;padding:10px 20px;margin:1em 0}
+.book>.toc>p>b,.toc>p>b{font-size:15px;color:#394660}
+.toc dl{margin:.2em 0}
+.toc dt{margin:.12em 0;line-height:1.4}
+
+/* code */
+code,tt,.literal,.sgmltag-element,.sgmltag-attribute,.sgmltag-starttag,.sgmltag-endtag,
+.classname,.methodname,.varname,.parameter,.type,.function,.property,.constant,.errorcode{
+  font-family:Menlo,Consolas,monospace;font-size:.9em;background:#f2f3f6;padding:1px 4px;border-radius:3px;color:#234}
+.sgmltag-element{color:#338}
+pre.programlisting,pre.screen,pre.synopsis{background:#f6f7f9;border:1px solid #e2e4ea;border-left:3px solid #8aa;
+  padding:11px 15px;overflow:auto;font-family:Menlo,Consolas,monospace;font-size:12.5px;line-height:1.45;border-radius:3px}
+pre.programlisting code,pre.programlisting .literal{background:none;padding:0}
+
+/* examples / figures */
+.example,.figure,.informalexample,.table{margin:1.3em 0}
+.example .title,.figure .title,.table .title{font-size:13px;color:#556;font-weight:bold;margin-bottom:.3em}
+.example-contents{border:1px solid #e2e4ea;border-radius:4px;padding:2px 12px;background:#fcfcfd}
+.example-break{display:none}
+
+/* admonitions */
+.note,.tip,.important,.warning,.caution{border:1px solid #e8e0b8;background:#fffdf0;border-radius:4px;
+  padding:8px 16px;margin:1.2em 0}
+.warning,.caution{border-color:#e8c8b8;background:#fff6f0}
+.note h3,.tip h3,.warning h3,.note .title,.warning .title{margin:.2em 0;font-size:13px}
+
+/* tables */
+table{border-collapse:collapse;margin:1em 0;font-size:.95em}
+.table table,table.calstable{border:1px solid #dde}
+td,th{border:1px solid #dde;padding:5px 10px;text-align:left;vertical-align:top}
+th{background:#eef;color:#394660}
+.informaltable td,.informaltable th{border:1px solid #e5e7ee}
+
+/* lists */
+.variablelist dt{font-weight:bold;margin-top:.5em}
+.itemizedlist li,.orderedlist li{margin:.25em 0}
+
+/* nav header/footer (Prev / Next / Up) */
+.navheader,.navfooter{font-size:13px}
+.navheader table,.navfooter table{width:100%;border:none}
+.navheader td,.navfooter td{border:none;padding:2px 0}
+.navheader th{border:none;background:none;font-weight:bold;color:#445;text-align:center}
+.navheader{border-bottom:1px solid #e2e4ea;padding-bottom:6px;margin-bottom:18px}
+.navfooter{border-top:1px solid #e2e4ea;padding-top:6px;margin-top:30px}
+
+/* hide index markers and editorial remarks from the rendered page */
+.indexterm{display:none}
+.remark{display:none}
+
+img{max-width:100%}
+
+/* live examples — Run/Edit toolbar injected after a runnable <pre>, plus the lazy iframe */
+.live-example{margin:-12px 0 18px}
+.live-toolbar{display:flex;gap:8px;align-items:center;background:#eef1f7;border:1px solid #d4dae8;border-top:0;
+  border-radius:0 0 4px 4px;padding:5px 8px}
+.live-run,.live-edit{font:12px/1 -apple-system,Helvetica,Arial,sans-serif;padding:5px 12px;border-radius:3px;
+  border:1px solid transparent;cursor:pointer;text-decoration:none;display:inline-block}
+.live-run{background:#3f6fd1;color:#fff;border-color:#3f6fd1}
+.live-run:hover{background:#4f7fe0}
+.live-edit{background:#fff;color:#36488f;border-color:#c2cbe0}
+.live-edit:hover{background:#f4f7ff;text-decoration:none}
+.live-frame{display:block;width:100%;height:240px;margin-top:8px;border:1px solid #d4dae8;border-radius:4px;background:#fff}
+/* tuck the toolbar tight under the example's code block */
+.example-contents pre.programlisting,.informalexample pre.programlisting{margin-bottom:0}

@@ -1,0 +1,252 @@
+<!-- vacation-survey.lzx -->
+
+<canvas width="457" height="206" bgcolor="0xeaeaea" title="Vacation Survey" >
+
+    <!-- [2006-9-25 jgrandy] (LPP-2755) commented out  <splash/> -->
+
+    <include   href="utils/layouts/reverselayout.lzx" />
+
+    <debug x="250"/>
+
+    <!-- DATA SOURCE — static (default). The dynamic backend (real cross-user vote tally
+         via POST to /api/survey, served by server/example-data/survey/index.mjs which is
+         left in place) is preserved just below; to re-enable it, swap the two blocks. -->
+    <dataset name="surveydataset" type="http" request="false">
+        <handler name="oninit">this.setAttribute('src', 'data/survey.xml')</handler>
+    </dataset>
+    <!-- DYNAMIC BACKEND — swap in (and comment out the static block above) for real tallying:
+    <dataset name="surveydataset" type="http" request="false" querytype="post">
+        <handler name="oninit">this.setAttribute('src', '/api/survey')</handler>
+    </dataset>
+    -->
+    <!-- src set at runtime (the compiler resolves a compile-time src as a local file) -->
+
+    <node id="resultdata">
+        <attribute name="hawaii" 
+            value="$path{'surveydataset:/response/summary/option[1]/text()'}"/>
+        <attribute name="paris" 
+            value="$path{'surveydataset:/response/summary/option[2]/text()'}"/>
+        <attribute name="jamaica" 
+            value="$path{'surveydataset:/response/summary/option[3]/text()'}"/>
+        <attribute name="total" 
+            value="$path{'surveydataset:/response/summary/@total'}"/>
+        <!-- static: set client-side to the user's pick on Vote (below).
+             dynamic: echo the server's accepted vote — swap to:
+               value="$path{'surveydataset:/response/vote/text()'}" -->
+        <attribute name="vote" type="string" />
+    </node>
+
+    <!-- Auto-resizing text -->
+    <class name="rtext" extends="text" resize="true" />
+
+    <!-- Color for the vote -->
+    <class name="votepatch" extends="view" bgcolor="#EBC84F"/>
+
+    <!-- Class that puts a border around it's first child -->
+    <!-- You must offset the child by the border -->
+    <class name="box" extends="view" 
+        width="${this.subviews[0].width+this.border*2}"
+        height="${this.subviews[0].height+this.border*2}" >
+        <attribute name="border" value="1" />
+    </class>
+
+    <!-- The form -->
+    <box border="2" bgcolor="#787878" id="survey" >
+        <view x="2" y="2" >
+            <simplelayout axis="y" />
+
+            <view height="20" 
+                  bgcolor="#878787" 
+                  width="${this.parent.width}" >
+                <text valign="middle" x="5"><font color="#FFFFFF">Vacation Survey</font></text>
+            </view>
+
+            <view height="1" width="${this.parent.width}" bgcolor="#787878" />
+
+            <form name="form" bgcolor="#c0c0c0" spacing="33">
+
+                <submit id="surveysubmit" dataset="${surveydataset}" />
+ 
+                <view height="20" >
+                    <text>What is your favorite vacation spot?</text>
+                </view> 
+                <radiogroup x="20" 
+                            layout="class: simplelayout; axis: y; spacing:6" 
+                            name="vote">
+                    <radiobutton value="'hawaii'" 
+                                 selected="true" >Hawaii</radiobutton>
+                    <radiobutton value="'paris'"  >Paris</radiobutton>
+                    <radiobutton value="'jamaica'">Jamaica</radiobutton>
+                    <radiobutton value="'trenton'">Trenton</radiobutton>
+                </radiogroup>
+                <button isdefault="true">Vote
+                    <handler name="onclick"><![CDATA[
+                        // static mode: highlight the user's pick + show the seeded results.
+                        resultdata.setAttribute('vote', this.parent.vote.getValue());
+                        surveydataset.doRequest();
+                        // dynamic backend (swap in): surveysubmit.submit();
+                    ]]></handler>
+                </button>
+            </form>
+        </view>
+    </box>
+
+    <!-- A class that displays a city -->
+    <class name="city" extends="view" >
+
+        <attribute name="cname"  type="string" />
+        <attribute name="color" type="number" />
+        <attribute name="votes" type="number" />
+        <attribute name="vote" type="string" />
+        <attribute name="total" type="number" />
+        <attribute name="myvote" type="expression" />
+        <attribute name="lcname" />
+        <attribute name="img" />
+        <attribute name="p"     value="${votes/total}" />
+        <attribute name="h"     value="100" />
+        
+        <handler name="oninit">
+            if(this.cname != null){
+                this.setAttribute('lcname', this.cname.toLowerCase());
+                this.setAttribute('img', 'http:' + this.lcname + '.gif');
+                this.pic.setSource(this.img);
+            }
+        </handler>
+
+        <simplelayout axis="y" />
+        <view bgcolor="#BFBFBF" 
+            width="${this.parent.pic.width}"
+            height="${this.classroot.h}" >
+            <view x="1" y="1" 
+                bgcolor="#DEDEDE"
+                width="${this.parent.width-2}" 
+                height="${this.parent.height-1}" >
+                <reverselayout axis="y" />
+                <view x="-1" name="cswatch" bgcolor="black" 
+                      width="${this.classroot.pic.width}"
+                      height="${this.classroot.h * this.classroot.p}" >
+                      <view x="1" y="1" 
+                          bgcolor="${this.classroot.color}" 
+                          width="${this.parent.width-2}" 
+                          height="${this.parent.height-1}" />
+                </view>
+                <view x="-1" name="voteswatch" bgcolor="black"
+                      visible="${this.classroot.vote == this.classroot['lcname']}"
+                      width="${this.classroot.pic.width}"
+                      height="${this.subviews[0].height + 1}" >
+                    <votepatch x="1" y="1" height="2" 
+                                           width="${this.parent.width-2}" />
+                </view>
+                <rtext align="center" text="${this.classroot.votes}" /> 
+            </view>
+        </view>
+        <view name="pic" />
+        <view height="5" width="1" />
+        <rtext width="1" align="center" text="${this.classroot.cname}" /> 
+        <view height="5" width="1" />
+    </class>
+
+    <!-- The results -->
+
+    <box id="results" x="0" bgcolor="#787878" border="2" visible="false" >
+        <attribute name="status" 
+                   value="$path{'surveydataset:/response/@status'}" />
+        <handler name="oninit">
+            survey.bringToFront();
+        </handler>
+        <handler name="onstatus">
+            if (this.status == null) {
+                return;
+            }
+            if (this.status == 'ok') {
+                if (this.visible == false) {
+                    this.setAttribute('x', 0);
+                    this.setAttribute('visible', true);
+                }
+                this.animate('x', survey.width - 2, 1500, false);
+            } else {
+                this.animate('x', -survey.width - 2, 1500, false);
+            }
+        </handler>
+
+        <view x="2" y="2" >
+            <simplelayout axis="y" />
+
+            <view height="20" bgcolor="#B7B7B7" >
+                <text x="5" valign="middle" >Survey Results:</text>
+                <box valign="middle" name="box" x="120" bgcolor="black">
+                    <votepatch x="1" y="1" height="8" width="8" />
+                </box>
+                <text name="t" valign="middle" x="${this.parent.box.x+16}">
+                     your vote</text>
+                <view width="26"  height="1" 
+                      x="${this.parent.t.x+this.parent.t.width}" />
+            </view>
+
+            <view height="1" width="${this.parent.width}" bgcolor="#787878" />
+
+            <view bgcolor="#D4D4D4" >
+                <simplelayout axis="x" spacing="14" inset="14" />
+                <view y="12" id="summary" >
+                    <simplelayout axis="x" inset="14" spacing="14" />
+
+                    <city cname="Hawaii" color="12820934" 
+                          votes="${resultdata.hawaii}" 
+                          total="${resultdata.total}" 
+                          vote="${resultdata.vote}" />
+                    <city cname="Paris" color="13944964" 
+                          votes="${resultdata.paris}" 
+                          total="${resultdata.total}" 
+                          vote="${resultdata.vote}" />
+                    <city cname="Jamaica" color="9621175" 
+                          votes="${resultdata.jamaica}" 
+                          total="${resultdata.total}" 
+                          vote="${resultdata.vote}" />
+                </view>
+                <view bgcolor="#D4D4D4" width="14" />
+            </view>
+        </view>
+    </box>
+    
+    <!-- An alert centered nicely -->
+    <class extends="alert" name="myalert"  
+           x="${Math.max(survey.width - this.width, 0)/2}"
+           y="${Math.max(survey.height - this.height, 0)/3}" >
+    </class>
+
+    <!-- An alert that fires when the JSP signals its status was not 'ok' -->
+    <myalert title="Error" 
+             id="errors"
+             text="$path{ '/response/@status' }"
+             datapath="surveydataset:/">
+        <handler name="ontext">
+            <![CDATA[ 
+            if ( this.text != null && this.text != 'ok' ){
+                this.open();
+            }
+            ]]>
+        </handler>
+    </myalert>
+
+    <!-- An alert that fires when the app has problems getting   -->
+    <!-- to the JSP                                              -->
+    <!--                                                         -->
+    <!-- The form will place '/@status' and '/@error' attributes -->
+    <!-- on your dataset's root element                          -->
+    <!--                                                         -->
+    <myalert title="Problem connecting to server"
+             id="problems">
+        <attribute name="status" value="${surveysubmit.status}" />
+        <handler name="ontext"><![CDATA[ 
+            if ( this.text != null && this.text != "" &&  
+                 this.text != 'ok' && this.text != 'requesting' ){
+                this.open();
+            }
+        ]]></handler>
+    </myalert>
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2008 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->

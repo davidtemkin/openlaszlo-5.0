@@ -1,0 +1,26 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>LzHistoryService — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1>LzHistoryService</h1><p class="short">Manages interaction with the browser history and back button.</p><p class="meta">Extends <a ><code>LzEventable</code></a></p>
+        <p>
+          <code>lz.History</code>
+           is the single instance of the class
+ 
+          <code>lz.HistoryService</code>
+          .
+        </p>
+         
+        <p>The lz.History service manages interaction with the browser history and back button.  Save state as often as you like, and advance the
+  history when a new 'page' of values is required.</p>
+         
+ 
+        <pre><code>
+ &lt;form&gt;
+     &lt;input type="button" value="0" onclick="lz.embed.setCanvasAttribute('foo', 0)"/&gt; 
+     &lt;input type="button" value="1" onclick="lz.embed.setCanvasAttribute('foo', 1)"/&gt; 
+ &lt;/form&gt;
+ </code></pre>
+      <h3>Events</h3><ul class="events"><li><code>onoffset</code> — Sent when the history offset changes.</li><li><code>onready</code> — Sent when history events are ready to be sent and received.</li></ul>
+</main><script src="_nav.js"></script></body></html>

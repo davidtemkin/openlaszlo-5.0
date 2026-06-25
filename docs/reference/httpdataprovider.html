@@ -1,0 +1,36 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>LzHTTPDataProvider — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1>LzHTTPDataProvider</h1><p class="short">DataProvider which implements HTTP request transport</p><p class="meta">Extends <a href="dataprovider.html"><code>LzDataProvider</code></a></p>
+        <p>
+           
+          <code>&lt;class&gt;lz.HTTPDataProvider&lt;/class&gt;</code>
+           implements the DataProvider interface, to support HTTP data requests.
+ 
+        </p>
+          
+ 
+        <p>
+           Requests are submitted using the 
+          <code>&lt;method&gt;doRequest&lt;/method&gt;</code>
+          , passing a  request
+ object of type 
+          <code>&lt;class&gt;lz.HTTPDataRequest&lt;/class&gt;</code>
+          . And instance of 
+          <code>&lt;class&gt;lz.HTTPDataProvider&lt;/class&gt;</code>
+           is the default
+ data provider for the runtime, and is what is used by 
+          <code>dataset</code>
+           to load data.
+ 
+        </p>
+         
+        <p>
+           
+          <code>&lt;event&gt;onstatus&lt;/event&gt;</code>
+          : Sent to a datarequest to update the status of the request.
+        </p>
+      <h3>Methods</h3><ul class="methods"><li><code>abortLoadForRequest()</code></li><li><code>doRequest()</code></li></ul>
+</main><script src="_nav.js"></script></body></html>

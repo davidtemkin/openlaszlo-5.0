@@ -1,0 +1,4 @@
+<view name="container">
+  <view resource="someimg.jpg" options="ignorelayout"/>
+  <view name="childView"/>
+</view>

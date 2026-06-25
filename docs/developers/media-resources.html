@@ -1,0 +1,459 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 18. Media Resources</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.building-apps.html" title="Part III. Fundamental Concepts"><link rel="prev" href="layout-and-design.html" title="Chapter 17. Layout and Design"><link rel="next" href="css.html" title="Chapter 19. Cascading Style Sheets"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 18. Media Resources</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="layout-and-design.html">Prev</a> </td><th width="60%" align="center">Part III. Fundamental Concepts</th><td width="20%" align="right"> <a accesskey="n" href="css.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="media-resources"></a>Chapter 18. Media Resources</h2></div></div></div><p>This chapter describes how to include external media
+  resources (images, audio, animation, and video) into OpenLaszlo
+  applications.</p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1515"></a>1. Overview</h2></div></div></div><p>LZX is designed to make it easy for you to integrate
+    media resources into your application in a flexible and dynamic
+    manner. You can include images, audio, video, and animations
+    that were created using standard third-party content creation
+    tools. This chapter describes the media formats that are
+    currently supported as resources to 
+    <code class="sgmltag-element">view</code>s in
+    OpenLaszlo 4.0. It then goes on to describes how to integrate
+    and control media in your application. It concludes with some
+    optimization tips.</p><p>Note that in addition to media that can be attached as
+    resources to views, streaming audio and video can be played by 
+    <a class="indexterm" name="id6302"></a>
+    <code class="sgmltag-element">videoview</code>s. See 
+    <a class="xref" href="video.html" title="Chapter 42. Audio and Video">Chapter 42, <i>Audio and Video</i></a> for a discussion of streaming
+    media.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1522"></a>2. Supported media types</h2></div></div></div><p>The list of supported media types varies slightly
+    depending on the target runtime and whether the application is
+    to be deployed SOLO or proxied.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1517"></a>2.1. Media for SWF SOLO
+      applications</h3></div></div></div><p>SOLO applications compiled to SWF depend on Flash to
+      load images (whereas the proxied applications get help from
+      the transcoder on the server). This means that SOLO
+      applications are limited to file types supported natively by
+      Flash.</p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1516"></a>2.1.1. Flash 7 and Flash 8 limitations</h4></div></div></div><p>Flash player version 7 can only load a limited set
+        of jpegs encodings; it cannot do interleaved or progressive
+        jpeg. Flash player 8 can do a wider range
+        of jpeg encoding. Set the compiler to compile for Flash 8
+        as a target runtime to get this expanded range of image
+        formats (also PNG and GIF).</p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1520"></a>2.2. DHTML Limitations and
+      workaround</h3></div></div></div><p>Browsers do not natively support .swf or audio or video
+      formats. You must transcode them, omit them from your
+      application, or embed a flash player in your application to
+      handle them.</p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1518"></a>2.2.1. Transcoding .swf to .png</h4></div></div></div><p>Files in .swf format can be transcoded to .png format
+        for display by the DHTML runtime. OpenLaszlo provides a
+        facility, called 
+        <code class="literal">autopng</code>, for doing this automatically.
+        As a convenience, the server and compiler search for a
+        corresponding png file if a swf file is referenced in the
+        DHTML runtime. To use this mechanism in your own code,
+        create a png file with the same basename as the swf file,
+        and place it in the same directory as the swf resource you
+        want it to replace.</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1519"></a>2.2.2. Audio and Video in DHTML applications</h4></div></div></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>The following discussion applies to audio and video
+          resources attached to 
+          <code class="sgmltag-element">view</code>s,
+          not to 
+          <a class="indexterm" name="id6321"></a>
+          <code class="sgmltag-element">videoview</code>s. 
+          <a class="indexterm" name="id6324"></a>
+          <code class="sgmltag-element">videoview</code>s are not
+          supported at all for the DHTML runtime.</p></div><p>In order to display swf-formatted audio and video
+        within a DHTML application, you may embedd a swf player in
+        the page. For a discussion of how to do this, see 
+        <a class="xref" href="browser-integration.html" title="Chapter 35. Browser Integration">Chapter 35, <i>Browser Integration</i></a>.</p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1521"></a>2.3. Summary of Supported Media</h3></div></div></div><p>OpenLaszlo 4.0 and above support the following media
+      types:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">JPEG</span></dt><dd><p>Depending on target runtime and mode of
+            deployment, different .jpg and .jpeg files are
+            supported. Progressive and interleaved files are not
+            supported for Flash 7 SOLO deployment. See the 
+            <a class="ulink" href="http://www.w3.org/Graphics/JPEG/" target="_top">W3C JPEG
+            JFIF Specification</a>. 
+            </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+              <span class="emphasis"><em>Progressive</em></span> files are re-encoded
+              in the OpenLaszlo Server.</p></div></dd><dt><span class="term">GIF</span></dt><dd><p>All .gif files are supported. See the 
+            <a class="ulink" href="http://www.w3.org/Graphics/GIF/spec-gif89a.txt" target="_top">
+            GIF Spec</a>.</p></dd><dt><span class="term">PNG</span></dt><dd><p>All Portable Network Graphics files (
+            <a class="ulink" href="http://www.w3.org/Graphics/PNG/" target="_top">PNG
+            details at W3C information</a>) are supported. This
+            includes PNGs with alpha channels
+            (transparency).</p></dd><dt><span class="term">MP3</span></dt><dd><p>For proxied applications compiled
+          to .swf, support is limited to audio MP3 files with 
+          <span class="emphasis"><em>sample</em></span>-rates of 44.1 kHz, 22.050
+          kHz, 11.025 kHz, 8.000 kHz and 5.512 kHz.</p><p>Flash behaves poorly with mp3s it doesn't like,
+          which makes tracking down problems difficult. If you run
+          into a problem, a good idea would be to find out whether
+          your mp3 plays in a standalone Flash app separate from
+          OpenLaszlo. (You can use the mtasc.org compiler to test
+          this, using Flash's Sound class to load an play your
+          mp3.) If your mp3 does not work in standalone
+          Flash, then the problem is not OpenLaszlo.</p><p>
+              Mp3s are
+          not natively supported by browsers, so applications that
+          compile to DHTML should make provisions, as described
+          above.</p></dd><dt><span class="term">SWF</span></dt><dd><p>Macromedia Flash (SWF) files. (See 
+            
+            Macromedia documentation).</p><p>For applications compiled to Flash, support is
+            limited to SWF files that contain stills or animation
+            only. Very limited ActionScript is allowed/supported
+            (see below for more details).</p><p>For applications compiled to DHTML, .swf format
+            files are not supported. See above for a
+            workaround.</p></dd></dl></div><p>For up-to-date discussion of supported media and
+      considerations about their deployment in various runtimes,
+      see the 
+      
+      OpenLaszlo Wiki.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1526"></a>3. Views and resources</h2></div></div></div><p>The 
+    <code class="sgmltag-element">view</code> is the
+    most basic viewable element in an OpenLaszlo application and it
+    is described in 
+    <a class="xref" href="views.html" title="Chapter 26. Views">Chapter 26, <i>Views</i></a>. A view may have a 
+    <span class="emphasis"><em>resource</em></span> attached to it. The resource
+    represents a piece of media (image, audio, video, or animation)
+    that the view controls. For images, the view typically displays
+    the image. For time-based media (audio, video, animation), the
+    view can be used to start, stop, or jump to a specific frame or
+    time in the media.</p><p>For a simple informal introduction to attaching resources
+    to views, see 
+    <a class="xref" href="tutorials/art_assets.html" title="Chapter 8. Introduction to Media and Art Assets">Chapter 8, <i>Introduction to Media and Art Assets</i></a>. The chapter you're reading now
+    briefly goes over topics covered in that tutorial and then goes
+    into greater depth.</p><p>Resources may be declared directly inside a view using
+    the view's 
+    <code class="sgmltag-attribute">
+    resource</code> attribute:</p><div class="example"><a name="id6375"></a><p class="title"><b>Example 18.1. Importing a resource</b></p><div class="example-contents"><pre class="programlisting">
+        
+&lt;canvas height="110" width="100%"&gt;
+  &lt;view resource="resources/logo.gif"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+      </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/media-resources-_1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/media-resources-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Or they may be declared externally as first-class objects
+    themselves:</p><div class="example"><a name="id6379"></a><p class="title"><b>Example 18.2. Importing a resource</b></p><div class="example-contents"><pre class="programlisting">
+        
+&lt;canvas height="110" width="100%"&gt;
+  &lt;resource name="myname" src="resources/logo.gif"/&gt;
+  &lt;view resource="myname"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+      </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/media-resources-_2.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/media-resources-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>You cannot set a resource on a view with subviews. The following
+    code will result in an error:</p></div><div class="example"><a name="id6384"></a><p class="title"><b>Example 18.3. Setting a resource on a view with subviews</b></p><div class="example-contents"><pre class="programlisting">
+        &lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;canvas height="100" width="100%" debug="true"&gt;
+    &lt;resource name="myname" src="resources/logo.gif"/&gt;
+    &lt;view&gt;
+        &lt;handler name="oninit"&gt;
+            this.setAttribute('resource', 'myname');
+        &lt;/handler&gt;
+        &lt;view bgcolor="red" /&gt;
+    &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2009 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+      </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/viewresource.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/viewresource.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1523"></a>3.1. Resources are not views</h3></div></div></div><p>Note that a 
+      <code class="sgmltag-element">
+      resource</code> is 
+      <span class="emphasis"><em>not</em></span> itself a view. Resources do not have
+      x and y positions, or background color, or any of the 49 or
+      so attributes that views have. A resource that is not
+      attached to a view is essentially invisible to the
+      application. As explained below, in order to manipulate a
+      resource, you perform actions on the view to which the
+      resource is attached.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1524"></a>3.2. Summary of APIs that act on resources</h3></div></div></div><p>There are a number of 
+      <code class="sgmltag-element">view</code> APIs (methods, fields,
+      and events) that can be used to find out about and control a
+      view's resource.</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>Resource and view size, scaling and
+          stretching:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: circle; "><li class="listitem"><p><code class="sgmltag-attribute">
+              resourcewidth</code></p></li><li class="listitem"><p><code class="sgmltag-attribute">
+              resourceheight</code></p></li><li class="listitem"><p><code class="sgmltag-attribute">
+              stretches</code></p></li><li class="listitem"><p><code class="methodname">
+              stretchResource()</code></p></li><li class="listitem"><p><code class="methodname">
+              measureWidth()</code></p></li><li class="listitem"><p><code class="methodname">
+              measureHeight()</code></p></li><li class="listitem"><p><code class="methodname">
+              updateResourceSize()</code></p></li></ul></div><p class="remark"><em><span class="remark">Discuss how view and resource sizes
+          interact (need details from Adam/Sarah since I'm not
+          really sure)</span></em></p></li><li class="listitem"><p>Resource loading (discussed 
+          <a class="link" href="media-resources.html#media-resources.loading" title="5. Resource loading">
+          below</a>):</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: circle; "><li class="listitem"><p><code class="sgmltag-attribute">resource</code></p></li><li class="listitem"><p><code class="methodname">
+              setSource()</code></p></li><li class="listitem"><p><code class="methodname">
+              unload()</code></p></li><li class="listitem"><p><code class="sgmltag-attribute">loadratio</code></p></li><li class="listitem"><p><code class="sgmltag-attribute">
+              framesloadratio</code></p></li><li class="listitem"><p><code class="sgmltag-attribute">
+              onload</code></p></li><li class="listitem"><p><code class="sgmltag-attribute">
+              onerror</code></p></li><li class="listitem"><p> <code class="sgmltag-attribute">
+              ontimeout</code></p></li><li class="listitem"><p><code class="sgmltag-attribute">
+              onaddsubresource</code></p></li></ul></div></li><li class="listitem"><p>Animation/video/frames:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: circle; "><li class="listitem"><p><code class="methodname">
+              play()</code></p></li><li class="listitem"><p> <code class="methodname">
+              stop()</code></p></li><li class="listitem"><p><code class="methodname">
+              seek()</code></p></li><li class="listitem"><p><code class="methodname">
+              getTotalTime()</code></p></li><li class="listitem"><p><code class="methodname">
+              getCurrentTime()</code></p></li><li class="listitem"><p><code class="methodname">
+              setResourceNumber()</code></p></li><li class="listitem"><p><code class="sgmltag-attribute">frame</code></p></li><li class="listitem"><p><code class="sgmltag-attribute">
+              totalframes</code></p></li><li class="listitem"><p><code class="sgmltag-attribute">
+              onlastframe</code></p></li><li class="listitem"><p><code class="sgmltag-attribute">
+              onplay</code></p></li><li class="listitem"><p><code class="sgmltag-attribute">
+              onstop</code></p></li></ul></div></li><li class="listitem"><p>Audio:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: circle; "><li class="listitem"><p><code class="methodname">
+              getVolume()</code></p></li><li class="listitem"><p><code class="methodname">
+              setVolume()</code></p></li><li class="listitem"><p><code class="methodname">
+              getPan()</code></p></li><li class="listitem"><p><code class="methodname">
+              setPan()</code></p></li><li class="listitem"><p><code class="methodname">
+              play()</code></p></li><li class="listitem"><p><code class="methodname">
+              stop()</code></p></li><li class="listitem"><p><code class="methodname">
+              getTotalTime()</code></p></li><li class="listitem"><p><code class="methodname">
+              getCurrentTime()</code></p></li></ul></div></li></ul></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1525"></a>3.3. Resource declarations and naming</h3></div></div></div><p>When a resource is declared externally, it must be
+      given a name. The namespace for resources is global to the
+      entire application. Resource tags can only be used as direct
+      children of either the 
+      <code class="sgmltag-element">canvas</code> or 
+      <code class="sgmltag-element">
+      library</code> tags.</p><p>This style of resource inclusion makes it simpler to
+      separate out art assets from code and can make for improved
+      designer/developer interactions.</p><p>When you directly import a resource without naming it,
+      as in the first example, the LZX compiler assigns a unique
+      name to that resource.</p><p>Behavior when two resources share the same name is
+      undefined. Therefore you should take care to make sure that
+      each resource has a unique and appropriate name.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1529"></a>4. Multi-frame resources</h2></div></div></div><p>Laszlo supports the notion of a resource 
+    <span class="emphasis"><em>frame</em></span>. A multi-frame resource is a
+    resource that has a single name but refers to multiple
+    independent pieces of media that are sequenced. Here is an
+    example of declaring a multi-frame resource:</p><div class="example"><a name="id6524"></a><p class="title"><b>Example 18.4. Declaring a multi-frame resource</b></p><div class="example-contents"><pre class="programlisting">
+        
+&lt;canvas height="180" width="100%"&gt;
+  &lt;resource name="myresource"&gt;
+    &lt;frame src="resources/logo.gif"/&gt;
+    &lt;frame src="resources/sky.jpg"/&gt;
+  &lt;/resource&gt;
+  &lt;simplelayout spacing="5"/&gt;
+  &lt;view id="myview" resource="myresource"/&gt;
+  &lt;view layout="axis: x; spacing: 3"&gt;
+    &lt;text&gt;Frame:&lt;/text&gt;
+    &lt;radiogroup&gt;
+      &lt;radiobutton selected="true"&gt;1&lt;/radiobutton&gt;
+      &lt;radiobutton&gt;2&lt;/radiobutton&gt;
+      &lt;handler name="onvalue" args="v"&gt;
+        myview.setAttribute('frame', Number(v));
+      &lt;/handler&gt;
+    &lt;/radiogroup&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+      </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/media-resources-_3.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/media-resources-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>You can use a multi-frame resource to construct an
+    animation that moves between frames when you call the 
+    <code class="literal">lz.view.play()</code> method. Conversely, when
+    you import a resource that contains an animation, each frame of
+    the animation automatically becomes a frame in that resource.
+    In other words, art assets that contain multiple frames
+    themselves 
+    <span class="emphasis"><em>are</em></span> multi-frame resources. Just as with
+    multi-frame resources that are constructed in LZX by importing
+    each frame individually, you can control the frame that is
+    currently displayed.</p><div class="example"><a name="id6530"></a><p class="title"><b>Example 18.5. Importing an animation</b></p><div class="example-contents"><pre class="programlisting">
+        
+&lt;canvas height="220" width="100%"&gt;
+  &lt;simplelayout spacing="5"/&gt;
+  &lt;resource name="myresource" src="resources/logo.swf"/&gt;
+  &lt;button onclick="me.stop()"&gt; Stop &lt;/button&gt;
+  &lt;button onclick="me.play()"&gt; Play &lt;/button&gt;
+  &lt;text text="${me.frame + ' out of ' + me.totalframes + ' frame(s)'}"/&gt;
+  &lt;view layout="axis: x; spacing: 4"&gt;
+    &lt;button isdefault="true" text="Set current frame: " 
+      onclick="me.setAttribute('frame', Number(tt.text))"/&gt;
+    &lt;edittext id="tt" width="50"/&gt;
+  &lt;/view&gt;
+  &lt;view id="me" resource="myresource"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+      </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/media-resources-_4.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/media-resources-_4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Multi-frame resources are also useful for structuring the
+    display of a single visual element or component that takes on
+    different appearances:</p><div class="example"><a name="id6534"></a><p class="title"><b>Example 18.6. Using multi-frame resources</b></p><div class="example-contents"><pre class="programlisting">
+        
+&lt;canvas height="120" width="100%"&gt;
+  &lt;!-- create the multi-frame resource and give it a name --&gt;
+  &lt;resource name="mybutton_rsrc"&gt;
+    &lt;!-- first frame is the mouseup state of the button --&gt;     
+    &lt;frame src="resources/button-up.png"/&gt;   
+    &lt;!-- second frame is the mouseover state of the button --&gt;     
+    &lt;frame src="resources/button-over.png"/&gt; 
+    &lt;!-- third frame is the mousedown state of the button --&gt;     
+    &lt;frame src="resources/button-down.png"/&gt; 
+  &lt;/resource&gt;
+
+  &lt;!-- attach the resource to a view with mouse events --&gt;
+  &lt;view resource="mybutton_rsrc" 
+        onmouseover="setAttribute('frame', 2)"
+        onmouseout="setAttribute('frame', 1)"
+        onmousedown="setAttribute('frame', 3)"
+        onmouseup="setAttribute('frame', 2)"/&gt;
+
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+      </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/media-resources-_5.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/media-resources-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1528"></a>4.1. Frame rates</h3></div></div></div><p>As of OpenLaszlo 3.1, all LZX applications are compiled
+      to Macromedia Flash (SWF) files. With the exception of audio
+      files noted below, SWF files are played by the Flash plugin
+      at a fixed frame rate and all imported animations are played
+      at that frame rate. This frame rate is fixed at 30 frames per
+      second.</p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1527"></a>4.1.1. Audio rates</h4></div></div></div><p>Animations that include an audio soundtrack are
+        played at a rate that maintains the original audio/video
+        synchronization in the incoming animation.</p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="media-resources.loading"></a>5. Resource loading</h2></div></div></div><p>In the examples above, we've declaratively tied resources
+    to view. But we haven't expressed anything about when or how
+    the application should pull in the needed resource. We call
+    this 
+    <a class="indexterm" name="id6544"></a>
+    <em class="glossterm">resource loading</em> and LZX provides
+    flexibility over how and when the application loads resources.
+    The most important choice is whether a resource should be
+    loaded at 
+    <em class="glossterm">compile time</em> or 
+    <em class="glossterm">run time</em>.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1530"></a>5.1. Compile time resources</h3></div></div></div><p>Resources that are loaded at compile time are included
+      in the application binary and add to the initial download
+      size of the application.</p><div class="example"><a name="id6551"></a><p class="title"><b>Example 18.7. Including a resource at compile time</b></p><div class="example-contents"><pre class="programlisting">&lt;resource name="myname"
+        src="resources/logo.gif"/&gt;</pre></div></div><br class="example-break"><p>Compile-time resource inclusion is good for</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>small assets that are fixed for the life-time of
+          the running application.</p></li><li class="listitem"><p>assets that are needed by all users of an
+          application</p></li></ul></div><p>Examples of resources that are included at compile time
+      include most of the assets associated with user-interface
+      components.</p><p>The LZX compiler may transcode compile-time resources
+      for inclusion in the SWF application; the OpenLaszlo Server
+      caches the results of these transcodes. The compiler checks
+      the last-modified time of all compile-time-included resources
+      to determine if an application needs to be recompiled.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="media-resources.runtime-resources"></a>5.2. Run-time resources</h3></div></div></div><p>There are two main ways to load resources at run-time.
+      The first is to use special syntax that is understood by the 
+      <code class="sgmltag-element">view</code>'s 
+      <code class="sgmltag-attribute">
+      resource</code> attribute. If you specify a value for this
+      attribute that is an HTTP url, the compiler assumes that this
+      resource should be loaded at runtime:</p><div class="example"><a name="id6567"></a><p class="title"><b>Example 18.8. Loading a resource at runtime</b></p><div class="example-contents"><pre class="programlisting">
+          
+&lt;canvas height="180" width="100%"&gt;
+  &lt;view resource="http:resources/logo.gif"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+        </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/media-resources-_7.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/media-resources-_7.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>The second method is to use the 
+      <code class="methodname">
+      setSource()</code>method. The previous example is
+      equivalent to the following one:</p><div class="example"><a name="id6572"></a><p class="title"><b>Example 18.9. Loading a resource at runtime using script</b></p><div class="example-contents"><pre class="programlisting">
+          
+&lt;canvas height="180" width="100%"&gt;
+  &lt;view oninit="this.setAttribute('source', 'http:resources/logo.gif')"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+        </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/media-resources-_8.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/media-resources-_8.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>LZX treats HTTP URLs that omit the two slashes 
+        <code class="literal">//</code>after the colon (:) as being relative
+        to the application.</p></div><p>
+      <a class="indexterm" name="id6579"></a>
+      <code class="methodname">
+      setSource()</code> provides more control over the
+      loading of the resource. Using this method, you can:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>choose whether or not the server and/or client
+          should cache the resource;</p></li><li class="listitem"><p>specify a URL that instructs the server to use a
+          specific protocol to fetch the resource;</p></li><li class="listitem"><p>specify HTTP request headers that should be used
+          when fetching the resource over HTTP.</p></li></ul></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1531"></a>5.2.1. Protocols for proxied applications</h4></div></div></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>This section does not apply to SOLO
+          applications.</p></div><p>Before sending resources to a running, proxied,
+        OpenLaszlo application, the OpenLaszlo Server first fetches
+        (or proxies) the resource. The server uses the URL for the
+        resource to determine how and where to get the resource.
+        The term 
+        <span class="emphasis"><em>back-end</em></span> is used to refer to the server
+        that is ultimately providing the resource. Depending on
+        your configuration, the back-end can be the OpenLaszlo
+        Server host itself. Or it may be another distinct
+        host.</p><p>The OpenLaszlo Server determines the protocol to use
+        to communicate to the back-end based on the URL for the
+        resource. By default, URLs that are to be loaded at
+        runtime, that don't specify the protocol are assumed to be
+        HTTP urls. OpenLaszlo supports communication to back-end
+        hosts (including localhost itself) via the HTTP protocol.
+        Relative HTTP URLs are thus fetched using a localhost HTTP
+        transfer.</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1532"></a>5.2.2. Caching</h4></div></div></div><p>By default, in proxied applications, media that is
+        accessed at runtime is cached both in the server 
+        <span class="bold"><strong>and</strong></span> in the client browser.
+        The OpenLaszlo Server uses the standard HTTP
+        If-Modified-Since/Last-Modified caching mechanism specified
+        in the 
+        <a class="ulink" href="http://www.w3.org/Protocols/rfc2616/rfc2616.html" target="_top">
+        HTTP 1.1 specification</a>.</p><p>The OpenLaszlo Server actually maintains two media
+        caches. One cache is used for resources that are requested
+        at runtime. This is simply called the 
+        <a class="indexterm" name="id6600"></a>
+        <em class="glossterm">Media Cache</em>. It also maintains a
+        second cache for resources that are compiled into
+        applications called the 
+        <a class="indexterm" name="id6603"></a>
+        <em class="glossterm">Compiler Media Cache</em>. In general,
+        the Compiler Media Cache settings only affect the speed of
+        the OpenLaszlo compiler. The settings for the Media Cache
+        can affect server performance. See the 
+        
+        <a class="ulink" href="../deployers/" target="_top">OpenLaszlo System Administrator's Guide</a> for details.</p><p>The example below provides a text input area for you
+        to type in urls that you'd like to test.</p><div class="example"><a name="id6608"></a><p class="title"><b>Example 18.10. Testing runtime resource loading</b></p><div class="example-contents"><pre class="programlisting">
+            &lt;canvas height="400" width="100%"&gt;
+  &lt;font src="helmetr.ttf" name="helvet"/&gt; 
+  &lt;simplelayout spacing="3"/&gt; 
+  &lt;view&gt; 
+    &lt;simplelayout axis="x" spacing="2"/&gt; 
+    &lt;text valign="middle"&gt;Type url:&lt;/text&gt; 
+    &lt;edittext width="500" id="url"&gt;http:resources/logo.gif&lt;/edittext&gt;
+  &lt;/view&gt;
+  &lt;text&gt;(also try resources/logo.swf)&lt;/text&gt; 
+  &lt;command onselect="butt.doit();" key="['Enter']" active="true"/&gt; 
+  &lt;checkbox text="Cache in client" id="ccache"/&gt; 
+  &lt;checkbox text="Cache in server" id="scache"/&gt; 
+  &lt;button id="butt"&gt;
+    Make request 
+    &lt;handler name="onclick"&gt; this.doit(); &lt;/handler&gt; 
+    &lt;method name="doit"&gt; &lt;![CDATA[ 
+      status.setAttribute("text", "Requesting: " + url.getText()); 
+      // Determine caching from checkboxes 
+      var caching = 'none';
+      if (ccache.getValue() &amp; scache.getValue()) { 
+          caching = 'both'; 
+      } else if (ccache.getValue()) { 
+          caching = 'clientonly'; 
+      } else if (scache.getValue()) { 
+          caching = 'serveronly'; 
+      } 
+      me.setAttribute("source", url.getText(), caching); 
+    ]]&gt;&lt;/method&gt; 
+  &lt;/button&gt; 
+  &lt;button onclick="me.stop()"&gt; Stop &lt;/button&gt; 
+  &lt;button onclick="me.play()"&gt; Play &lt;/button&gt; 
+  &lt;text text="${me.frame + ' out of ' + me.totalframes + ' frame(s)'}"/&gt; 
+  &lt;text multiline="true" width="200" height="100" id="status"/&gt; 
+  &lt;view id="me"&gt; 
+    &lt;handler name="onload" args="e"&gt; 
+      status.setAttribute("text", 'loaded: ' + e); 
+    &lt;/handler&gt; 
+    &lt;handler name="onerror" args="e"&gt; 
+      status.setAttribute("text", 'error: ' + e); 
+    &lt;/handler&gt; 
+    &lt;handler name="ontimeout" args="e"&gt; 
+      status.setAttribute("text", 'timeout: ' + e); 
+    &lt;/handler&gt; 
+  &lt;/view&gt; 
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+          </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/media-resources-_9.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/media-resources-_9.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1533"></a>6. Using the &lt;image&gt; tag</h2></div></div></div><p>The 
+    <code class="sgmltag-element">image</code> tag has
+    the effect of declaring a view and associating a resource with
+    it. This is a convenient shorthand that can make your programs
+    easier to read and maintain. Do not confuse the 
+    <code class="sgmltag-element">image</code> tag
+      with the <code class="literal">&lt;img&gt;</code> tag. The
+    latter is used to include images inside HTML text and behaves
+    like the &lt;img&gt; tag in HTML.</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="layout-and-design.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.building-apps.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="css.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 17. Layout and Design </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 19. Cascading Style Sheets</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

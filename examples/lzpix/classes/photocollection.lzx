@@ -1,0 +1,63 @@
+<library>
+    <class name="photocollection">
+
+        <attribute name="photoclass" value="lz.photo" when="once"/>
+
+        <attribute name="activephotos" value="$once{ [] }"/>
+
+        <method name="addSelection" args="sel">
+            <![CDATA[
+            var offset = activephotos.length;
+            // Add the selection to the active photos before setting
+            // the datapath to remove timing issues. (See LPP-5937)
+            for ( var i =0; i< sel.length; i++ ){
+                var p = this.getPhoto( );
+                p.sendToBack();
+                activephotos.push( p );
+            }
+            for ( var i =0; i< sel.length; i++ ){
+                var e = sel[i];
+                activephotos[offset+i].datapath.setFromPointer(e.datapath);
+            }
+            ]]>
+        </method>
+
+        <attribute name="photopool" value="$once{ [] }"/>
+
+        <method name="getPhoto">
+            var r;
+            if ( photopool.length ) {
+                r = photopool.pop();
+            } else {
+                r = new photoclass( this , { visible : false } );
+                new lz.datapath( r );
+                r.txt.setAttribute('visible',  false )
+            }
+            showdel.register( r, "onloaded" );
+            return r;
+        </method>
+
+        <attribute name="showdel" 
+                   value="$once{ new LzDelegate( this, 'showAfterLoad' ) }"/>
+
+        <!-- pure virtual
+        <method name="showAfterLoad">
+        -->
+
+        <method name="poolAll">
+            while( activephotos.length ){
+                var p = activephotos.pop();
+                p.setAttribute('visible',  false );
+                p.datapath.setPointer( null );
+                photopool.push( p );
+            }
+            showdel.unregisterAll();
+        </method>
+
+    </class>
+</library>
+<!--
+* X_LZ_COPYRIGHT_BEGIN ****************************************************
+* Copyright 2006-2008 Laszlo Systems, Inc.  All Rights Reserved.          *
+* Use is subject to license terms.                                        *
+* X_LZ_COPYRIGHT_END ******************************************************-->

@@ -1,0 +1,484 @@
+<chapter id="rpc-javarpc">
+
+<title>JavaRPC</title>
+<!-- remove commented out sample code that was ignored by the build. IORIO 20 nov 2007 -->
+<!-- add titleabbrev to use as target text per LPP-4923, IORIO 17 oct 2007 -->
+<titleabbrev id="rpc-javashort">JavaRPC</titleabbrev>
+<para>JavaRPC is a feature that allows server-side Java objects and methods to be
+accessed from a client application. The &lt;javarpc&gt; element is used to
+declare a JavaRPC object in LZX. JavaRPC is part of the OpenLaszlo RPC family and
+shares similar APIs with SOAP and XML-RPC. See the RPC chapter for details.</para>
+
+
+
+
+<para/><section><title condition="proxied">&lt;javarpc&gt;</title>
+
+<para>Declare a javarpc element to create a JavaRPC object in LZX. The remoteclassname
+attribute specifies what class javarpc represents. To use a class, place it in
+WEB-INF/classes or, if it exists in a jar, in WEB-INF lib. This will ensure that
+the class is accessible to the OpenLaszlo Server.</para>
+
+<informalexample role="live-example"><programlisting>
+&lt;javarpc remoteclassname="..."
+     attributename="..."
+     scope="[session|webapp|none]"
+     loadoption="[loadcreate|loadonly|create]"
+     createargs="..."
+     objectreturntype="[pojo|javabean]"
+     autoload="[true|false]"
+     secure="[true|false]"
+     secureport="..."&gt;
+</programlisting></informalexample>
+
+<para/></section><section><title>Attributes</title>
+
+<para><indexterm significance="preferred"><primary>remoteclassname</primary></indexterm><glossterm>remoteclassname</glossterm>: (String) the remote java class to instantiate in the
+server, or if scope is 'none', the static stub to return to the client
+associated to the remoteclassname. <emphasis role="b">This is a required attribute.</emphasis></para>
+
+<para><indexterm significance="preferred"><primary>attributename</primary></indexterm><glossterm>attributename</glossterm>: (String) the key to use for the server-side object
+(see scope attribute). Attributename (or name) is required if scope is 'session'
+or 'webapp'. <emphasis role="b">Defaults to the name attribute of this object.</emphasis></para>
+
+<para><indexterm significance="preferred"><primary>scope</primary></indexterm><glossterm>scope</glossterm>: (String) one of 'session', 'webapp', or 'none'. Session
+scope means that the server object will be saved in a session attribute (see
+javax.servlet.http.HttpSession). If scope is webapp, the server object is saved
+in a web application context (see javax.servlet.ServletContext). For session and
+webapp scopes, client-side remote methods will always invoke the same saved
+server objects. The objects are saved in a java.util.Map that is placed in an
+attribute called "__lzobj". The map key for the object is the
+<literal>attributename</literal> of the client-side javarpc object. If scope is none, no
+object is saved in the server and only public static methods are defined in the
+client-side javarpc object. <emphasis role="b">This is a required attribute.</emphasis></para>
+
+<para><indexterm significance="preferred"><primary>loadoption</primary></indexterm><glossterm>loadoption</glossterm>: (String) one of 'loadcreate', 'loadonly', or
+'create'. Loadcreate tries to load javarpc object if it exists in the server,
+else it creates it before loading. 'Loadonly' will only load object if it
+exists, else an error is returned. 'Create' will always create the object in the
+server. <emphasis role="b">Default is 'loadcreate'.</emphasis></para>
+
+<para><indexterm significance="preferred"><primary>createargs</primary></indexterm><glossterm>createargs</glossterm>: (Array) valid only when loadoption='loadcreate' or
+loadoption='create'. The array consists of parameters to construct server-side
+object, for example [1, 'mystring', 1.45] would instantiate an object using a
+constructor that takes an integer, a string, and a double. <emphasis role="b">Default is
+null.</emphasis></para>
+
+<para><indexterm significance="preferred"><primary>objectreturntype</primary></indexterm><glossterm>objectreturntype</glossterm>: (String) one of 'pojo' or 'javabean'. If an
+object is returned from the server, 'pojo' will return only the public member
+values of that object and 'javabean' will return member values for members that
+have corresponding getters. See <emphasis role="b">examples/javarpc/returnpojo.lzx</emphasis> and
+<emphasis role="b">examples/javarpc/returnjavabean.lzx</emphasis> for usage example.</para>
+
+<para><indexterm significance="preferred"><primary>autoload</primary></indexterm><glossterm>autoload</glossterm>: (Boolean) if true, calls to load client proxy during
+init stage. If false, the proxy must be loaded using the load() method.
+<emphasis role="b">Default is true.</emphasis></para>
+
+<para><indexterm significance="preferred"><primary>secure</primary></indexterm><glossterm>secure</glossterm>: (Boolean) if true, creates a secure HTTPS connection
+between the client and OpenLaszlo Server. Also see secureport below. <emphasis role="b">Default is
+false.</emphasis></para>
+
+<para><indexterm significance="preferred"><primary>secureport</primary></indexterm><glossterm>secureport</glossterm>: (Number) valid only when secure attribute is set to
+true. The secure port to use. There is no client-side default. Most servers use
+port 443 as the default HTTPS port.</para>
+
+<para/><section><title>Read-only properties</title>
+
+<para><indexterm significance="preferred"><primary>proxy</primary></indexterm><glossterm>proxy</glossterm>: (Object) this is the object containing function stubs. It
+is created by calling load() (which happens during init if autoload is true). If
+scope is session or webapp, proxy contains all public methods described in the
+server class (see remoteclassname attribute). If scope is none, proxy contains all
+public static methods described in the server class. Note that proxy is not
+defined until the onload event is sent, thus function stubs cannot be invoked
+until onload. Each function stub requires two arguments: an array of parameters
+and delegate. You can unload the proxy (i.e., set to null) by calling the
+unload() method. Calling unload will also remove the server-side object if scope
+is session or webapp. See the proxy section in the RPC chapter for details.</para>
+
+
+
+<para/></section></section><section><title>Events</title>
+
+<para>Note: event handler methods must be declared in the body of
+&lt;javarpc&gt;. Attribute event handlers will not work.</para>
+
+<para><indexterm significance="preferred"><primary>onload</primary></indexterm><glossterm>onload</glossterm>: this event is triggered when the proxy is returned to the
+client.</para>
+
+<para><indexterm significance="preferred"><primary>onunload</primary></indexterm><glossterm>onunload</glossterm>: this event is triggered when the proxy is unloaded from
+the client.</para>
+
+<para><indexterm significance="preferred"><primary>ondata</primary></indexterm><glossterm>ondata</glossterm>: this event is triggered when a declared &lt;remotecall&gt;
+doesn't handle its ondata events. See the &lt;remotecall&gt; section for
+details.</para>
+
+<para><indexterm significance="preferred"><primary>onerror</primary></indexterm><glossterm>onerror</glossterm>: this event is triggered if there was a problem loading or
+unloading the stub, or if a declared &lt;remotecall&gt; didn't handle its
+onerror event. See the &lt;remotecall&gt; section in the RPC chapter for
+details.</para>
+
+
+
+<para/></section><section><title>Methods</title>
+
+
+
+<para/><section><title>load()</title>
+
+<para>Load() is responsible for setting up the proxy property. When loading a
+session scoped or webapp scoped object, a tuple of arguments may be passed in to
+instantiate the server-side java object using the createargs attribute.
+Createargs is an array of values and must match the server-side parameter
+signature of the constructor. When the call returns, an onload event is sent and
+the proxy will contain function stubs that mirror the public methods in the Java
+class specified.</para>
+
+<example role="live-example">
+   <title>Loading an object</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/rpc-javarpc-$2.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+
+<para>The Java source for the previous example can be found in the
+<literal>$LPS_HOME/WEB-INF/classes/examples</literal> directory. Here's what it looks
+like:</para>
+
+<informalexample role="live-example"><programlisting>
+package examples;
+
+public class ConstructExample {
+
+    int mInt = 0;
+    String mString = "";
+    double mDouble = 0.0;
+
+    public ConstructExample(int i) {
+        mInt = i;
+    }
+
+    public ConstructExample(int i, String s, double d) {
+        mInt = i;
+        mString = s;
+        mDouble = d;
+    }
+
+    public String getInfo() {
+        return "int: " + mInt + "\n"
+            + "string: " + mString + "\n"
+            + "double: " + mDouble + "\n";
+    }
+}
+</programlisting></informalexample>
+
+<para>See RPC chapter for information on remotecall and other details about the
+load() method.</para>
+
+
+
+<para/></section><section><title>unload()</title>
+
+<para>This method unloads the proxy from the RPC object and sets it to null. Also,
+the associated java object is removed from the server-side map. When the call
+returns, an onunload event is sent.</para>
+
+<para><emphasis role="b">unload() implementation in javarpc.lzx</emphasis></para>
+
+<example role="live-example">
+   <title>Unloading proxy from the RPC object</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/rpc-javarpc-$4.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para/></section></section><section><title>Security</title>
+
+<para>Java classes used in an application must be declared in a security
+element. Classes not defined in a security element are not allowed to be
+accessed or instantiated. The format of the security element looks like:</para>
+
+<informalexample role="live-example"><programlisting>
+&lt;security&gt;
+    &lt;allow&gt;
+        &lt;pattern&gt;CLASS1&lt;/pattern&gt;
+        &lt;pattern&gt;CLASS2&lt;/pattern&gt;
+        ...
+        &lt;pattern&gt;CLASSN&lt;/pattern&gt;
+    &lt;/allow&gt;
+&lt;/security&gt;
+</programlisting></informalexample>
+
+<para>Each &lt;pattern&gt; is a regular expression.</para>
+
+<example role="live-example"><title>Allow classes that start with org.openlaszlo</title><programlisting>
+&lt;security&gt;
+    &lt;allow&gt;
+        &lt;pattern&gt;^org\.openlaszlo&lt;/pattern&gt;
+    &lt;/allow&gt;
+&lt;/security&gt;
+</programlisting></example>
+
+<para>A javarpc object who's class is not declared in a security tag will result in
+a load error.</para>
+
+
+<para/></section><section><title>Type Mapping</title>
+
+<para>This section describes how types are mapped from JavaScript function stub
+parameters to Java method parameter and from Java return type to JavaScript
+return type.</para>
+
+<para/><section><title>Type mapping of parameters from JavaScript to Java</title>
+
+<para>
+<informaltable><tgroup cols="2"><thead><row><entry>JavaScript data type</entry><entry>Parameter types expected by java method</entry></row></thead><tbody><row><entry>Number (int)</entry><entry>int</entry></row><row><entry>Number (double)*</entry><entry>double</entry></row><row><entry>lz.rpc.DoubleWrapper</entry><entry>double</entry></row><row><entry>Boolean</entry><entry>boolean</entry></row><row><entry>Array</entry><entry>Vector</entry></row><row><entry>Object</entry><entry>Hashtable</entry></row></tbody></tgroup></informaltable>
+</para>
+
+<para>* Any floating point number with a zero decimal value is considered to be an
+integer, i.e., 1.0 is really 1. Use lz.rpc.DoubleWrapper to ensure a number is
+considered a double. For example:</para>
+
+<informalexample role="live-example"><programlisting>
+    // assume myrpc is a javarpc object and myrpc.proxy.myMethod is a function
+    // that expects a single double as a parameter
+    var mydouble = new lz.rpc.DoubleWrapper(1.0);
+    myrpc.proxy.myMethod([ mydouble ], new LzDelegate(...));
+</programlisting></informalexample>
+
+<para>lz.rpc can be found in <literal>$LPS_HOME/lps/components/rpc/library/rpc.js</literal>.</para>
+
+<example role="live-example">
+   <title>Passing different parameter types</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/rpc-javarpc-$8.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>The java source code used by the previous example can be found in
+<literal>$LPS_HOME/WEB-INF/classes/examples</literal> and looks like:</para>
+
+<informalexample role="live-example"><programlisting>
+package examples;
+
+import java.util.Vector;
+import java.util.Hashtable;
+
+public class TypesExample {
+
+    public static String passInteger(int i) {
+        return "got integer parameter: " + i;
+    }
+
+    public static String passDouble(double d) {
+        return "got double parameter: " + d;
+    }
+
+    public static String passBoolean(boolean b) {
+        return "got boolean parameter: " + b;
+    }
+
+    public static String passClientArray(Vector v) {
+        return "got vector parameter: " + v;
+    }
+
+    public static String passClientObject(Hashtable t) {
+        return "got hashtable parameter: " + t;
+    }
+
+}
+</programlisting></informalexample>
+
+
+
+<para/></section><section><title>Type mapping of return types from Java to JavaScript</title>
+
+<para>
+<informaltable><tgroup cols="2"><thead><row><entry>Server-side Java method return type</entry><entry>Client-side JavaScript function stub return type</entry></row></thead><tbody><row><entry>int/java.lang.Integer</entry><entry>Number+</entry></row><row><entry>short/java.lang.Short</entry><entry>Number+</entry></row><row><entry>long/java.lang.Long</entry><entry>Number+</entry></row><row><entry>float/java.lang.Float</entry><entry>Number+</entry></row><row><entry>double/java.lang.Double</entry><entry>Number+</entry></row><row><entry>byte/java.lang.Byte</entry><entry>Number+</entry></row><row><entry>boolean/java.lang.Boolean</entry><entry>Boolean</entry></row><row><entry>char/java.lang.Character</entry><entry>String</entry></row><row><entry>java.lang.String</entry><entry>String</entry></row><row><entry>"Array"/java.util.List*</entry><entry>Array</entry></row><row><entry>java.util.Map/java.lang.Object*</entry><entry>Object</entry></row></tbody></tgroup></informaltable>
+</para>
+
+<para><programlisting>
++ From "JavaScript The Definitive Guide" - O'Reilly. 
+
+In JavaScript all numbers are floating-point numbers.
+
+JavaScript uses the standard 8 byte IEEE floating-point numeric format, which
+means the range is from:
+
++/- 1.7976931348623157x10^308 - very large, and +/- 5x10^-324 - very small.
+
+As JavaScript uses floating-point numbers the accuracy is only assured for
+integers between: -9,007,199,254,740,992 (-2^53) and 9,007,199,254,740,992
+(2^53)
+</programlisting></para>
+
+<para><programlisting>* User-defined objects returned only contain public members. Also, the
+object isn't saved anywhere in the server.</programlisting></para>
+
+<example role="live-example">
+   <title>Java to JavaScript</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/rpc-javarpc-$10.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>The Java source code used by the previous example looks like:</para>
+
+<informalexample role="live-example"><programlisting>
+package examples;
+
+import java.util.List;
+import java.util.Vector;
+import java.util.Map;
+import java.util.HashMap;
+
+public class ReturnTypeExample {
+
+    public static int returnInteger() {
+        return 1;
+    }
+
+    public static Integer returnIntegerObject() {
+        return new Integer(2);
+    }
+
+    public static short returnShort() {
+        return 3;
+    }
+
+    public static Short returnShortObject() {
+        return new Short((short)4);
+    }
+
+    public static long returnLong() {
+        return 5;
+    }
+
+    public static Long returnLongObject() {
+        return new Long(6);
+    }
+
+    public static float returnFloat() {
+        return 7;
+    }
+
+    public static Float returnFloatObject() {
+        return new Float(8);
+    }
+
+    public static double returnDouble() {
+        return 3.14159;
+    }
+
+    public static Double returnDoubleObject() {
+        return new Double(3.14159);
+    }
+
+    public static byte returnByte() {
+        return (byte)11;
+    }
+
+    public static Byte returnByteObject() {
+        return new Byte((byte)12);
+    }
+
+    public static boolean returnBoolean() {
+        return true;
+    }
+
+    public static Boolean returnBooleanObject() {
+        return new Boolean(false);
+    }
+
+    public static char returnCharacter() {
+        return 'a';
+    }
+
+    public static Character returnCharacterObject() {
+        return new Character('b');
+    }
+
+    public static String returnString() {
+        return "returing a string";
+    }
+
+    public static Coordinate returnCoordinateObject() {
+        return new Coordinate(4,2);
+    }
+
+    public static int[] returnIntegerArray() {
+        int[] intarr = { 1, 2, 3, 4, 5 };
+        return intarr;
+    }
+
+    public static String[] returnStringArray() {
+        String[] strarr = { "one", "two", "three", "four", "five" };
+        return strarr;
+    }
+
+    public static Coordinate[] returnCoordinateObjectArray() {
+        Coordinate[] coarr =  { new Coordinate(1,1), 
+                                new Coordinate(2,2),
+                                new Coordinate(3,3),
+                                new Coordinate(4,4),
+                                new Coordinate(5,5) };
+        return coarr;
+    }
+
+    public static List returnIntegerList() {
+        List list = new Vector();
+        list.add(new Integer(1));
+        list.add(new Integer(2));
+        list.add(new Integer(3));
+        list.add(new Integer(4));
+        list.add(new Integer(5));
+        return list;
+    }
+
+    public static Map returnIntegerMap() {
+        Map map = new HashMap();
+        map.put("one", new Integer(1));
+        map.put("two", new Integer(2));
+        map.put("three", new Integer(3));
+        map.put("four", new Integer(4));
+        map.put("five", new Integer(5));
+        return map;
+    }
+
+    public static List returnCoordinateObjectList() {
+        List list = new Vector();
+        list.add(new Coordinate(1,1));
+        list.add(new Coordinate(2,2));
+        list.add(new Coordinate(3,3));
+        list.add(new Coordinate(4,4));
+        list.add(new Coordinate(5,5));
+        return list;
+    }
+
+    public static Map returnCoordinateObjectMap() {
+        Map map = new HashMap();
+        map.put("one", new Coordinate(1,1));
+        map.put("two", new Coordinate(2,3));
+        map.put("three", new Coordinate(5,8));
+        map.put("four", new Coordinate(13,21));
+        map.put("five", new Coordinate(34,55));
+        return map;
+    }
+
+    static public class Coordinate {
+        public int x;
+        public int y;
+
+        public Coordinate(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        public String toString() {
+            return "x: " + this.x + ", y: " + this.y;
+        }
+    }
+}
+</programlisting></informalexample>
+
+<para/></section></section></chapter>

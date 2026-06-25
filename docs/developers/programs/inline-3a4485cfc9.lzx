@@ -1,0 +1,9 @@
+   <rtmpconnection src="rtmp://127.0.0.1/test" autoconnect="true"/>   
+   <simplelayout/>
+   <rtmpstatus/>
+   <view layout="axis:x; inset:10; spacing:10">
+       <videoview id="live" url="me" type="rtmp" oninit="this.stream.broadcast()" >
+           <camera show="true"/>
+       </videoview>
+       <videoview id="vp" url="you" type="rtmp" oninit="this.stream.play()"/>
+   </view>

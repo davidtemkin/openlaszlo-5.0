@@ -1,0 +1,24 @@
+<!-- Assume mySOAP.proxy contains a function stub called someFunction() -->
+<soap name="mySOAP" wsdl="...">
+    <handler name="onload">
+        Debug.debug('soap proxy loaded:');
+        Debug.inspect(this.proxy);
+    </handler>
+    <handler name="onunload">
+        Debug.debug("soap proxy unloaded: %w", this.proxy);
+    </handler>
+</soap>
+
+<button text="clickme">
+    <attribute name="mydel" type="expression"
+               value="$once{new LzDelegate(this, 'handler')}"
+
+    <handler name="onclick">
+        mySOAP.proxy.someFunction([p1, p2, ..., pN], this.myDel);
+    </handler>
+
+    <method name="handler" args="retObj">
+        Debug.debug("RPC call returned %w", retObj);
+    </method>
+
+</button>

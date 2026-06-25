@@ -1,0 +1,202 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basetabs&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basetabs<span class="ang">&gt;</span></h1><p class="short">A non-visual container for basetabpanes.</p><p class="meta">Extends <code>basecomponent</code></p>
+                    
+        <p>
+          The 
+          <code>basetabs</code>
+           component conceptually houses a
+            row of tabs that control the visibility of a stack of
+            
+          <code>basetabpane</code>
+          s. When a
+            
+          <code>basetabpane</code>
+           is added to the
+            
+          <code>basetab</code>
+           component, a corresponding
+            
+          <code>basetab</code>
+           is created for that
+            
+          <code>basetabpane</code>
+          .
+        </p>
+                    
+            
+        <p>
+          Due to the non-visual nature of 
+          <code>basetab</code>
+          , a
+            visible subclass of 
+          <code>basetab</code>
+           is used in the next
+            example to demonstrate the correlation between
+            
+          <code>basetabpane</code>
+           and 
+          <code>basetab</code>
+                      items.
+        </p>
+                    
+            
+        <pre class="example">
+            &lt;canvas height="75"&gt;
+              &lt;include /&gt;
+            
+              &lt;class name="aquatab" extends="basetab" width="40" height="20" 
+                      bgcolor="aqua"&gt;
+                &lt;text&gt;tab&lt;/text&gt;
+              &lt;/class&gt;
+            
+              &lt;basetabs x="10" y="10" tabclass="aquatab"&gt;
+                &lt;basetabpane&gt;
+                  &lt;text&gt;one&lt;/text&gt;
+                &lt;/basetabpane&gt;
+                &lt;basetabpane&gt;
+                  &lt;text&gt;two&lt;/text&gt;
+                &lt;/basetabpane&gt;
+                &lt;basetabpane&gt;
+                  &lt;text&gt;three&lt;/text&gt;
+                &lt;/basetabpane&gt;
+              &lt;/basetabs&gt;
+            &lt;/canvas&gt;
+            </pre>
+                    
+            
+        <p>
+          As can be seen, three 
+          <code>basetab</code>
+           items have
+            been created for the three 
+          <code>basetabpane</code>
+          s
+            declared.
+        </p>
+                    
+            
+        <p>
+          Though the 
+          <code>basetabpane</code>
+           
+          <em>element</em>
+           is the
+            child of a 
+          <code>basetab</code>
+           element, in the runtime view
+            hierarchy instances of 
+          <code>basetabs</code>
+           are the
+            immediate parents of a 
+          <code>basetabsbar</code>
+           (where
+            
+          <code>basetab</code>
+           components are placed and laid out) and
+            
+          <code>basetabscontent</code>
+           (where the
+            
+          <code>basetabpane</code>
+           components are placed and laid
+            out).
+        </p>
+                    
+            
+        <p>
+          The following diagram illustrates the correlation between
+            
+          <code>basetabs</code>
+          , 
+          <code>basetabsbar</code>
+                      (the container for 
+          <code>basetab</code>
+           items), and
+            
+          <code>basetabscontent</code>
+           (the container for
+            
+          <code>basetabpane</code>
+          s).
+        </p>
+                    
+            
+        <code>&lt;img&gt;&lt;/img&gt;</code>
+                    
+            
+        <p>
+          You can change the look and feel of your basetabs by using a
+            different 
+          <code>basetab</code>
+          ,
+            
+          <code>basetabsbar</code>
+          , and/or
+            
+          <code>basetabscontent</code>
+          .
+        </p>
+                    
+            
+        <pre class="example">
+            &lt;canvas height="75"&gt;
+              &lt;include /&gt;
+              
+              &lt;class name="mytab" extends="basetab" width="40" height="20" bgcolor="lime"&gt;
+                &lt;text&gt;mytab&lt;/text&gt;
+              &lt;/class&gt;
+              
+              &lt;class name="mytabsbar" extends="basetabsbar" bgcolor="navy"
+                     layout="class: simplelayout; axis: x; spacing: 5"/&gt;
+              
+              &lt;class name="mytabscontent" extends="basetabscontent" bgcolor="silver"/&gt;
+              
+              &lt;basetabs x="10" y="10" tabclass="mytab" barclass="mytabsbar"
+                        contentclass="mytabscontent"&gt;
+                &lt;basetabpane&gt;
+                  &lt;text&gt;one&lt;/text&gt;
+                &lt;/basetabpane&gt;
+                &lt;basetabpane&gt;
+                  &lt;text&gt;two&lt;/text&gt;
+                &lt;/basetabpane&gt;
+                &lt;basetabpane&gt;
+                  &lt;text&gt;three&lt;/text&gt;
+                &lt;/basetabpane&gt;
+              &lt;/basetabs&gt;
+            &lt;/canvas&gt;
+            </pre>
+                      
+        <p>
+          <strong>See Also:</strong>
+        </p>
+                      
+        <ul>
+                            
+          <li>
+                                  
+            <code>&lt;basetab&gt;</code>
+            , 
+                      
+            <code>&lt;basetabsbar&gt;</code>
+            , 
+                      
+            <code>&lt;basetabpane&gt;</code>
+            , 
+                      and 
+            <code>&lt;basetabscontent&gt;</code>
+                              
+          </li>
+                        
+        </ul>
+                    
+          The base tabs object. This is the outermost containing component
+          within which there are a basetabsbar and the basetabscontent.
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">bar</td><td class="ty">expression</td><td class="ty">null</td><td>This is a reference to its basetabsbar.</td></tr><tr><td class="nm">barclass</td><td class="ty">string</td><td class="ty">basetabsbar</td><td>Class to instantiate to contain tab items.</td></tr><tr><td class="nm">bordersize</td><td class="ty">number</td><td class="ty">0</td><td>The size of the border surrounding a basetabpane.</td></tr><tr><td class="nm">content</td><td class="ty">expression</td><td class="ty">null</td><td>This is a reference to basetab's content area. This is where all
+              basetabpanes in tabs are placed.</td></tr><tr><td class="nm">contentclass</td><td class="ty">string</td><td class="ty">basetabscontent</td><td>Class to instantiate to contain basetabpanes.</td></tr><tr><td class="nm">inset_bottom</td><td class="ty">number</td><td class="ty">8</td><td>The bottom inset for content appearing within a basetabpane.</td></tr><tr><td class="nm">inset_left</td><td class="ty">number</td><td class="ty">8</td><td>The left inset for content appearing within a basetabpane.</td></tr><tr><td class="nm">inset_right</td><td class="ty">number</td><td class="ty">8</td><td>The right inset for content appearing within a basetabpane.</td></tr><tr><td class="nm">inset_top</td><td class="ty">number</td><td class="ty">8</td><td>The top inset for content appearing within a basetabpane.</td></tr><tr><td class="nm">layout</td><td class="ty">expression</td><td class="ty">class: simplelayout; axis: y; spacing: 0</td><td>Basetab's layout for its basetabsbar and basetabscontent
+              area.</td></tr><tr><td class="nm">tabclass</td><td class="ty">string</td><td class="ty">basetab</td><td>Class to instantiate tab items for basetabsbar. Can be
+              overridden by basetabpane.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

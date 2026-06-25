@@ -1,0 +1,89 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;tabslider&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>tabslider<span class="ang">&gt;</span></h1><p class="short">
+                A Container that animates and coordinates the sliding of Tabelements.
+            </p><p class="meta">Extends <code>basetabslider</code></p>
+                        
+        <p>
+                              A 
+          <code>tabslider</code>
+           coordinates the opening and 
+                    closing of its 
+          
+           contained within
+                    its scope. Only the 
+          <code>tabelement</code>
+           can be 
+                    opened at one time. The height of the opened 
+          <code>tabelement</code>
+                              is determined by the height of the 
+          <code>tabslider</code>
+           
+                    minus the total height of all the tabelements when they are closed.
+                
+        </p>
+                        
+        <pre class="example">
+                    
+&lt;canvas height="250"&gt;
+  &lt;tabslider width="150" x="10" y="10"
+             height="200"
+             spacing="2" slideduration="300"&gt;
+    &lt;tabelement text="Tabelement One"/&gt;
+    &lt;tabelement text="Tabelement Two"/&gt;
+    &lt;tabelement text="Tabelement Three"/&gt;
+  &lt;/tabslider&gt;
+&lt;/canvas&gt;
+                    
+                </pre>
+                        
+        <p>
+                              The height of a 
+          <code>tabelement</code>
+           (when it is closed) is defined in 
+                    the tabelement's 
+          <code>minheight</code>
+           attribute with a default value of 
+                    22. This can also be specified on the tabslider itself using 
+                    the attribute i
+          <code>mintabheight</code>
+          , which will be applied to all of 
+                    its tabelements.
+                
+        </p>
+                        
+        <pre class="example">
+                    
+&lt;canvas height="250"&gt;
+  &lt;tabslider width="150" x="10" y="10"
+             height="200" mintabheight="40"
+             spacing="2" slideduration="300"&gt;
+    &lt;tabelement text="Tabelement One" minheight="20"/&gt;
+    &lt;tabelement text="Tabelement Two"/&gt;
+    &lt;tabelement text="Tabelement Three"/&gt;
+  &lt;/tabslider&gt;
+&lt;/canvas&gt;
+                    
+                </pre>
+                        
+        <p class="meta">See also: 
+                              
+          <code>tabelement</code> 
+                              
+          
+                          
+        </p>
+                    
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">bordercolor</td><td class="ty">color</td><td class="ty">this.style != null ? this.style.bordercolor : null</td><td>
+                The border color. Default is constrained to the 
+              
+                <code>style</code>
+                's 
+                <code>bordercolor</code>
+                 
+              value.
+              </td></tr><tr><td class="nm">bordersize</td><td class="ty">expression</td><td class="ty">1</td><td>The size of the border.</td></tr><tr><td class="nm">defaultplacement</td><td class="ty">string</td><td class="ty">content</td><td>Default placement of children is content.</td></tr><tr><td class="nm">itemclassname</td><td class="ty">expression</td><td class="ty">tabelement</td><td>Item class elements to use as children.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

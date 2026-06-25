@@ -1,0 +1,59 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;rte&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>rte<span class="ang">&gt;</span></h1><p class="short">Adds the capability to edit rich-text pages.</p><p class="meta">Extends <code>html</code></p>
+                
+        <p>
+          <code>rte</code>
+           is a 
+          <code>&lt;html&gt;</code>
+           that allows editing of rich-text pages.
+The rte component uses the dijit.Editor from the dojo toolkit.
+        </p>
+                
+        
+        <p>
+          For best results in Flash (like the html component), set the wmode attribute to 'transparent' when embedding the application.  See examples/extensions/html-swf.jsp for an example.  See examples/extensions/rte.lzx for an example of embedding 
+          <code>rte</code>
+           in a window.
+        </p>
+                
+        
+        
+          <pre><code> &lt;canvas height="400"&gt;
+    &lt;include /&gt;
+
+    &lt;rte width="600" height="400"&gt;Initial contents that you can edit.&lt;/rte&gt;
+    &lt;/canvas&gt;
+        </code></pre>
+        
+                        
+        
+        <p>
+          <code>rte</code>
+           extends 
+          <code>&lt;html&gt;</code>
+          .
+        </p>
+              
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">dojo_css</td><td class="ty">string</td><td class="ty">dijit/themes/</td><td>Dojo stylesheet root (relative to dojo_root). This value is
+          ignored if dojo_root is empty. Default value is 'dijit/themes/'</td></tr><tr><td class="nm">dojo_js</td><td class="ty">string</td><td class="ty">dojo/dojo.js</td><td>Dojo library to load (relative to dojo_root). This value is
+          ignored if dojo_root is empty. Default value is 'dojo/dojo.js'.
+          If you want to load an uncompressed version of dojo, specify
+          'dojo/dojo.js.uncompressed.js'</td></tr><tr><td class="nm">dojo_locale</td><td class="ty">string</td><td class="ty"/><td>dojo locale to use. Default value is '' which will use the
+          locale from the browser.</td></tr><tr><td class="nm">dojo_root</td><td class="ty">string</td><td class="ty"/><td>root url where Dojo library is loaded. An empty string (default)
+          will load the library from Google. This path must end with a '/'.
+          For example, if you have a local version located at /trunk, 
+          you would specify something like '/trunk/dojo-release-1.5.0/'.</td></tr><tr><td class="nm">dojo_theme</td><td class="ty">string</td><td class="ty">tundra</td><td>dojo theme to use. Default value is 'tundra'
+          Other values in dojo 1.5 are soria, nihilo, claro</td></tr><tr><td class="nm">editorready</td><td class="ty">expression</td><td class="ty">false</td><td>If true, the rte editor is ready to receive commands</td></tr><tr><td class="nm">extra_plugins</td><td class="ty">string</td><td class="ty"/><td>Comma-separated list of additional dijit.Editor plugins to load.
+          An empty string (default) will load only the plugins used by default.</td></tr><tr><td class="nm">text</td><td class="ty">html</td><td class="ty"/><td>The initial value of the text to edit. The text is updated while
+          the rte is running.</td></tr><tr><td class="nm">toolbar_order</td><td class="ty">string</td><td class="ty">undo,redo,|,cut,copy,paste,|,bold,italic,underline,strikethrough,|,insertOrderedList,insertUnorderedList,indent,outdent,|,justifyLeft,justifyRight,justifyCenter,justifyFull,|,foreColor,hiliteColor,|,createLink,unlink,insertImage,|,print,smiley,||,fontName,fontSize</td><td>dijit.Editor toolbar order. The list of items to show in the editor
+          toolbar. The default is to show all toolbar features.
+          A '|' inserts a separator between blocks of toolbars. 
+          A '||' will force a linebreak in the toolbar.</td></tr><tr><td class="nm">wrapperfile</td><td class="ty">string</td><td class="ty"/><td>Location of the html wrapper file used by the editor.
+          An empty string (default) loads the system wrapper file.
+          If a custom wrapper file is used, the path is relative to where
+          the application runs from.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

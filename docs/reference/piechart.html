@@ -1,0 +1,58 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;piechart&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>piechart<span class="ang">&gt;</span></h1><p class="short">
+                    The piechart component allows for the creation of a pie chart using series data.
+                </p><p class="meta">Extends <code>chart</code></p>
+                        
+        <code>&lt;warning&gt;This component is of Beta quality and is subject to change.&lt;/warning&gt;</code>
+                        
+        <p>The following is a piechart that uses series data.</p>
+                        
+        <pre class="example">
+                    &lt;canvas height="400" width="400"&gt;    
+                        &lt;dataset name="baseball"
+                            src="resources/pie-data.xml"/&gt; 
+
+                        &lt;piechart id="chart1" width="500" height="500"  dataPointsEnabled="true"
+                        datalabelEnabled="true" datalabelColumn="y" style="defaultchartstyle"&gt;
+                            &lt;dataseries datapath="baseball:/records"&gt;
+                                &lt;datacolumn name="x"  columndatapath="record/@year"
+                                    datatype="number"/&gt; 
+                                &lt;dataseries label="wins"&gt;                
+                                    &lt;datacolumn  name="y" columndatapath="record/@wins"
+                                        datatype="number"/&gt;
+                                &lt;/dataseries&gt;  
+                                &lt;datacolumn name="tooltip" columndatapath="record"&gt;
+                                        &lt;method name="processData" args="v"&gt;
+                                            return  "year: " + v.attributes.year + "  wins: " +
+                                                v.attributes.wins;
+                                        &lt;/method&gt;
+                                &lt;/datacolumn&gt;                        
+                            &lt;/dataseries&gt; 
+
+                            &lt;strokestyle name="pieslicestyle" strokeColor="0x000000" strokeWidth="2"
+                                strokeType="dotted" /&gt;
+                            &lt;legend name="legendbox" legendFontsize="14" initstage="late"
+                                legendborder="false"&gt;
+                                &lt;handler name="onitemmouseover" args="item"&gt;
+                                    var piepiece = parent.plotarea.arrPiePieces[item.identifier];
+                                    piepiece.renderInnerWedge();
+                                &lt;/handler&gt;
+
+                                &lt;handler name="onitemmouseout" args="item"&gt;
+                                    var piepiece = parent.plotarea.arrPiePieces[item.identifier];
+                                    piepiece.renderWedge();
+                                &lt;/handler&gt;
+                            &lt;/legend&gt;
+
+                        &lt;/piechart&gt;
+                    &lt;/canvas&gt;
+                </pre>
+                    
+            A pie chart represents a chart that is displayed in the 2D
+          polar plane. This class inherits immediately from chart class
+          and can be instantiated directly. (Warning: Of beta quality.)
+</main><script src="_nav.js"></script></body></html>

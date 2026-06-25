@@ -1,0 +1,650 @@
+<!DOCTYPE canvas SYSTEM "http://laszlosystems.com/lps/tools/lzx.dtd">
+
+<canvas width="780" height="540" bgcolor="#EAEAEA" fontsize="8">
+    <!-- <inittimer/> -->
+
+    <include href="resources.lzx"/>
+    <include href="classlib.lzx"/>
+    <include href="shoppinglist.lzx"/>
+    <include href="address.lzx"/>
+    <include href="creditcard.lzx"/>
+    <include href="recommendation.lzx"/>
+    <include href="iso8601.lzx"/>
+    <include href="sha256.lzx"/>
+
+    <attribute name="awsSecretKey" value="8xUODoQkvAO19z//Qay0BwO+0kCvKCUkoZ4fcGm0" type="string"/>
+
+    <!-- static build: search/lookup are now client-side over data/catalog.xml +
+         data/lookup/<asin>.xml (no /api/amazon). searchTerm drives the result filter. -->
+    <attribute name="searchTerm" value="" type="string" />
+
+    <!-- dataset holding customer's recommendations -->
+    <dataset name="dsRecommend" request="false" type="http" clientcacheable="true"/>
+
+    <!-- the full catalog; the search filters which items are shown by visibility -->
+    <dataset name="dsKeyword" type="http" src="data/catalog.xml" request="true" clientcacheable="true"/>
+
+    <datapointer xpath="dsKeyword:/*">
+        <handler name="ondata">
+            searchLoader.hide();
+        </handler>
+        <handler name="onerror">
+            searchLoader.hide();
+        </handler>
+        <handler name="ontimeout">
+            Debug.write( "timeout in dataset: dsKeyword" );
+            searchLoader.hide();
+        </handler>
+    </datapointer>
+
+    <!-- dataset to retrieve one item identified by its ASIN (ASIN = Amazon's unique identifier -->
+    <dataset name="dsAsin" type="http" request="false"  clientcacheable="true"/>
+
+    <datapointer xpath="dsAsin:/*">
+        <handler name="ondata">
+            recommend.setAttribute('visible', false );
+            cdinfo.setAttribute('visible', true );
+            cdinfo.bringToFront();
+            infoLoader.hide();
+        </handler>
+        <handler name="onerror">
+            infoLoader.hide();
+        </handler>
+        <handler name="ontimeout">
+            Debug.write( "timeout in dataset: dsAsin" );
+            infoLoader.hide();
+        </handler>
+    </datapointer>
+
+    <!-- dataset to store cart items -->
+    <dataset name="dsCart"/>
+
+    <!-- dataset to store wish list items -->
+    <dataset name="dsWish"/>
+
+    <!-- dataset holding the list of credit cards accepted by the application -->
+    <dataset name="dsCreditCard">
+        <card id="VIS" name="Visa"/>
+        <card id="AMX" name="American Express"/>
+        <card id="DIS" name="Discover"/>
+        <card id="DIN" name="Diners Club"/>
+        <card id="JCB" name="JCB"/>
+    </dataset>
+
+    <dataset name="dsAddressList" src="data/addresses.xml"/>
+    <dataset name="dsCreditCardList" src="data/creditcards.xml"/>
+
+    <script>
+        /* This is a long-winded method for counting the number of 
+        reviews. Unfortunately, there's no reliable way of doing so
+        right now: */
+        function countNodesByName( dp, nodeName ) {
+            var numNodes = 0;
+            do {
+                if ( dp.getNodeName()==nodeName )
+                numNodes++; 
+            } while ( dp.selectNext() ); 
+
+            return numNodes;
+        }
+    </script>
+
+    <!-- Splash -->
+<!--
+    <splash persistent="true">
+        <view resource="images/loading_bg.png" />
+        <view name="splash_anim" ratio="0.5" 
+              resource="images/loading_anim0001.png" />
+    </splash>
+-->
+
+    <!-- Give user a chance to see the splash at 100% -->
+    <attribute name="initdelay" value="400" />
+    <!-- End of Splash -->
+
+    <view width="${parent.width}">
+
+        <simplelayout axis="y"/>
+
+        <view>
+            <view resource="header"/>
+            <view resource="laszlo_powered" x="276" y="13"
+                onmouseover="setAttribute('frame', 2)"
+                onmouseout="setAttribute('frame', 1)">
+                <handler name="onclick">
+                    lz.Browser.loadURL("http://laszlosystems.com", "_blank");
+                </handler>
+            </view>
+        </view>
+
+        <view width="${parent.width}">
+
+            <view id="main" resource="background" x="-215" >
+                <attribute name="closed_posX" type="number" value="-199" />
+                <attribute name="open_posX" type="number" value="0" />
+
+                <view y="20" width="197" id="searchResultsArea" >
+                    <simplelayout axis="y" spacing="4"/>
+
+                    <view id="cdlist" width="${parent.width-2}"> 
+                        <simplelayout axis="y" spacing="2"/>
+                        <view width="17" height="17" />
+                        <!-- Repeated view displaying the list of items 
+                             matching the keyword search -->
+                        <view name="searchResults" height="28"
+                              width="${parent.width}"
+                              visible="${canvas.searchTerm != '' &amp;&amp; this.matchSearch()}">
+                            <datapath xpath="dsKeyword:/ItemSearchResponse/Items/Item" pooling="true" />
+                            <!-- client-side filter: show this row only when its Keywords
+                                 blob contains the (lowercased) search term -->
+                            <method name="matchSearch"><![CDATA[
+                                if (!this.datapath) return false;
+                                var kw = this.datapath.xpathQuery("Keywords/text()");
+                                return kw != null && String(kw).indexOf(canvas.searchTerm) >= 0;
+                            ]]></method>
+                            <view width="${parent.width}" clickable="true"
+                                onmouseover="this.setAttribute('bgcolor', 0xFFFFFF)"
+                                onmouseout="this.setAttribute('bgcolor', 0xCAD0EC)">
+                                <simplelayout axis="y"/>
+                                <text x="4" font="lztahoe8,Arial,Helvetica" datapath="ItemAttributes/Title/text()" width="${parent.width-6}" fontsize="10" resize="false"/>
+                                <text x="4" font="lztahoe8,Arial,Helvetica" datapath="ItemAttributes/Artist[1]/text()" width="${parent.width-6}" fontsize="10" resize="false"/>
+
+                                <!-- When one item is clicked, a request is sent to Amazon for deatailed informations about the item -->
+                                <handler name="onclick">
+                                    <![CDATA[
+                                        infoLoader.show();
+                                        var asin = parent.datapath.xpathQuery("ASIN/text()");
+                                        // static build: per-ASIN detail file instead of ItemLookup
+                                        dsAsin.setAttribute('src', 'data/lookup/' + asin + '.xml');
+                                        dsAsin.doRequest();
+                                    ]]>
+                                </handler>
+                            </view>
+
+                        </view>
+
+                        <loading_indicator id="searchLoader"    
+                                           resource="wait_search"
+                                           align="center"
+                                           y="120" />
+
+                    </view>
+
+                </view>
+
+                <!-- The search panel button -->
+                <multistatebutton resource="search_panel" x="197" y="2"
+                                statenum="0" statelength="3" maxstate="1" 
+                                onclick="this.toggle()" options="ignorelayout">
+                    <method name="toggle">
+                        if (this.statenum == 0) {
+                            this.setStateNum(1);
+                            main.animate('x', main.closed_posX, 333, false);
+                        } else {
+                            this.setStateNum(0);
+                            main.animate('x', main.open_posX, 333, false);
+                        }
+                    </method>
+                </multistatebutton>
+
+                <recommendationpanel id="recommend" x="223" y="10" width="${parent.width-2*x}" height="${parent.height-y}"/>
+
+                <view id="cdinfo" x="223" y="10" width="${parent.width-2*x}" 
+                      height="${parent.height-y}" 
+                      datapath="dsAsin:/ItemLookupResponse/Items/Item" 
+                      bgcolor="#CAD0EC" font="Arial,Helvetica" fontsize="11">
+
+                    <simplelayout axis="y" spacing="16"/>
+
+                    <view resource="back_butt" x="300"
+                        onmouseover="setAttribute('frame', 2);"
+                        onmouseout="setAttribute('frame', 1);"
+                        onmouseup="setAttribute('frame', 1);"
+                        onclick="recommend.setAttribute('visible', true); cdinfo.setAttribute('visible', false ); recommend.bringToFront();"/>
+
+
+                    <view name="info" width="${parent.width}" height="136">
+
+                        <simplelayout axis="x" spacing="10"/>
+                        <!-- Display CD cover: Image is draggable into either the shopping cart or the wish list -->
+                        <view id="cover" datapath="SmallImage/URL/text()"
+                            onmousedown="dragger.start(parent.parent.datapath.xpathQuery('SmallImage/URL/text()'))"
+                            onmouseup="dragger.stopdrag(); itemDropped(parent.parent.datapath);"
+                            ondblclick="cart.addItem(parent.parent.datapath)">
+                            <attribute name="source" value="${this.data}"/>
+                            <method name="itemDropped" args="dpath">
+                                if (dragger.droppedInView(cart.parent.parent)) {
+                                    cart.addItem(dpath);
+                                } else if (dragger.droppedInView(wish.parent.parent)) {
+                                    wish.addItem(dpath);
+                                }
+                            </method>
+                        </view>
+
+                        <view width="${parent.width-cover.width}">
+                            <text datapath="ItemAttributes/Title/text()" width="${parent.width}" fontstyle="bold" fontsize="18" fgcolor="#666699"/>
+                            <text y="20" datapath="ItemAttributes/Artist[1]/text()" width="${parent.width}" fontstyle="bold" fontsize="12" fgcolor="#666699"/>
+                            <text y="40" fgcolor="#666699">Label:</text><text x="90" y="40" datapath="ItemAttributes/Manufacturer/text()" width="${parent.width}" fgcolor="#666699"/>
+                            <text y="55" fgcolor="#666699">Release Date:</text><text x="90" y="55" datapath="ItemAttributes/ReleaseDate/text()" width="${parent.width}" fgcolor="#666699"/>
+                            <text y="70" fgcolor="#666699">Availability:</text><text x="90" y="70" datapath="Offers/Offer[1]/OfferListing/Availability/text()" width="${parent.width}" fgcolor="#666699"/>
+                            <attribute name="totalOffers" value="$path{'Offers/TotalOffers/text()'}" type="number" />
+                            <state applied="${this.parent.totalOffers > 0}" pooling="true">
+                                <text y="87" fgcolor="#666699" fontsize="14">List Price:</text><text x="90" y="87" datapath="ItemAttributes/ListPrice/FormattedPrice/text()" width="${parent.width}" fontsize="14" fgcolor="#666699"/>
+                                <text y="105" fgcolor="#666699" fontstyle="bold" fontsize="16">Our Price:</text><text x="90" y="105" datapath="Offers/Offer[1]/OfferListing/Price/FormattedPrice/text()" width="${parent.width}" fontstyle="bold" fontsize="16" fgcolor="#666699"/>
+                            </state>
+                            <state applied="${this.parent.totalOffers == 0}" pooling="true">
+                                <text y="87" fgcolor="#666699" fontsize="14">Used Price:</text><text x="90" y="87" datapath="OfferSummary/LowestUsedPrice/FormattedPrice/text()" width="${parent.width}" fontsize="14" fgcolor="#666699"/>
+                                <text y="105" fgcolor="#666699" fontstyle="bold" fontsize="16">New Price:</text><text x="90" y="105" datapath="OfferSummary/LowestNewPrice/FormattedPrice/text()" width="${parent.width}" fontstyle="bold" fontsize="16" fgcolor="#666699"/>
+                            </state>
+                            <mouseview resource="cart_butt" x="214" y="105" width="54" height="18"
+                                onclick="cart.addItem(parent.parent.parent.datapath)"/>
+                            <mouseview resource="wish_butt" x="270" y="105"  width="54" height="18"
+                                onclick="wish.addItem(parent.parent.parent.datapath)"/>
+                        </view>
+
+                    </view>
+
+
+                    <tabslider bgcolor="#586886" width="486" height="280" oninit="this.openTab(editorialTab)">
+
+                        <tabpanel name="editorialTab" label="Editorial Review" oninit="this.setAnnotation( '-' );">
+                            <text x="8" y="8"  id="pokeme"
+                                  datapath="EditorialReviews/EditorialReview[1]/Content/text()" 
+                                  multiline="true" width="${parent.width-16}">
+                                <method name="applyData" args="t">
+                                    <![CDATA[
+                                    super.applyData( t );
+                                    if (  t != null && t.length )
+                                        this.parent.setAnnotation( '' );
+                                    else 
+                                        this.parent.setAnnotation( '-' );
+                                    ]]>
+                                </method>
+                            </text>
+                        </tabpanel>
+
+                        <tabpanel label="Tracks">
+
+                            <view width="${parent.width}" height="${parent.height-20}"
+                                  clip="true">
+                                <view datapath="Tracks" width="100%">
+                                    <handler name="ondata">
+                                        <![CDATA[
+                                        var discs = this.datapath.xpathQuery('Disc')
+                                        if (! discs) return;
+
+                                        if (!(discs instanceof Array)) discs = [ discs ];
+                                        var tracks = 0;
+                                        for (var i in discs) {
+                                            var n = discs[i];
+                                            if (n && n.childNodes) tracks += n.childNodes.length;
+                                        }
+                                        parent.parent.setAnnotation(tracks);
+                                        ]]>
+                                    </handler>
+                                    <simplelayout/>  
+                                    <view datapath="Disc" width="100%">
+                                        <simplelayout/>
+                                        <text name="discnum"/>
+                                        <handler name="ondata">
+                                            this.discnum.setAttribute('text', 'Disc ' + this.datapath.xpathQuery('@Number'));
+                                        </handler>
+
+                                        <!-- Repeated view displaying the list of tracks -->
+                                        <view width="${parent.width}">
+                                            <datapath xpath="Track" pooling="true" />
+                                            <simplelayout axis="x" spacing="4"/>
+                                            <text name="tid" datapath="@Number" width="20"/>
+                                            <text datapath="text()" width="${parent.width}"/>
+                                        </view>
+                                    </view>
+                                </view>
+                                <scrollbar/>
+                            </view>
+
+                        </tabpanel>
+
+                        <tabpanel id="CustomerReviewsTab" label="Customer Reviews">
+
+                            <view clip="true" width="${parent.width}" height="${parent.height-20}">
+                                <view width="${parent.width}">
+                                    <view x="8" y="8" width="${parent.width-50}"
+                                            id="customerReviewsContainer">
+                                        <datapath xpath="CustomerReviews" pooling="true"/>
+                                        <simplelayout axis="y" spacing="0"/>
+
+                                        <handler name="ondata">
+                                            var dp = this.datapath.dupePointer();
+                                            dp.selectChild();
+                                            var numberReviews = countNodesByName( dp, 'Review' );
+                                            this.parent.parent.parent.setAnnotation( numberReviews );
+                                        </handler>
+
+
+                                        <!-- Repeated view displaying the list of customer review -->
+                                        <view datapath="Review" width="${parent.width}"
+                                                name="replicatedReviews">
+                                            <simplelayout axis="y" spacing="4"/>
+                                            <view width="${parent.width}" 
+                                                    onclick="parent.detail.animate('height', parent.detail.height==0?parent.detail.comment.height+10:0, 333, false)"
+                                                onmouseover="this.summary.setAttribute('fgcolor', 0x666699)"
+                                                onmouseout="this.summary.setAttribute('fgcolor', 0x000000)">
+                                                <simplelayout axis="x" spacing="4"/>
+                                                <!-- Gif displaying the number of stars -->
+                                                <view resource="stars_rsc" datapath="Rating/text()" ondata="this.setAttribute('frame', parseInt(this.data));"/>
+                                                <!-- Title of the review -->
+                                                <text name="summary" datapath="Summary/text()" fontstyle="bold" width="${parent.width}"/>
+                                            </view>
+                                            <!-- View displaying the body of the review when its title is clicked !-->
+                                            <view name="detail" height="0" width="${parent.width}" clip="true">
+                                            <view name="comment" width="${parent.width}">
+                                                <text x="10" datapath="Content/text()" multiline="true" width="${parent.width}"/>
+                                            </view>
+                                            </view>
+                                        </view>
+                                    </view>
+                                </view>
+                                <scrollbar/>
+                            </view>
+                        </tabpanel>
+
+                    </tabslider>
+
+                </view>
+
+                <loading_indicator id="infoLoader"    
+                                resource="wait_info"
+                                align="center"
+                                y="120" />
+            </view>
+
+            <mouseview resource="search_butt" y="1" onclick="search()">
+                <inputtext name="searchKey" x="20" y="3" fontsize="11">
+                    <handler name="onkeydown" args="k">
+                        if (k==13) {
+                            parent.search();
+                        }
+                    </handler>
+                </inputtext>
+                <method name="search">
+                    <![CDATA[
+                    // client-side search: the full catalog is already in dsKeyword;
+                    // setting searchTerm filters which result rows are visible.
+                    var kw = searchKey.getText();
+                    if (kw != null && kw != '') {
+                        main.animate("x", main.open_posX, 0, false);
+                        // setAttribute (not plain assignment) so the ${} visibility
+                        // constraints on the result rows recompute.
+                        canvas.setAttribute('searchTerm', kw.toLowerCase());
+                    }
+                    ]]>
+                </method>
+            </mouseview>
+
+            <view align="right" height="${parent.height}" font="Arial,Helvetica" fontsize="11">
+
+                <simplelayout axis="x"/>
+
+                <vtabpanel tabresource="slider_cart">
+                    <view width="${parent.width}" height="${parent.height}">
+                        <shoppinglist id="cart" datapath="dsCart:/"
+                                      panel_to_nudge="$once{parent.parent}">
+                            <method name="itemDropped" args="dpath">
+                                if (dragsmall.droppedInView(wish.parent.parent)) {
+                                    wish.addItem(dpath);
+                                    this.removeItem(dpath);
+                                } else if (!dragsmall.droppedInView(cart.parent.parent)) {
+                                    this.removeItem(dpath);
+                                } else if (dragsmall.droppedInTrash(cart.trashCan) ){
+                                    this.removeItem(dpath);
+                                    return
+                                } 
+                            </method>
+                        </shoppinglist>
+                        <view bgcolor="#586886" y="${parent.height-1}" height="1" width="${parent.width}"/>
+                    </view>
+                </vtabpanel>
+
+
+                <vtabpanel tabresource="slider_wish">
+
+                    <view width="${parent.width}" height="${parent.height}">
+                        <shoppinglist id="wish" datapath="dsWish:/"
+                                      panel_to_nudge="$once{parent.parent}">
+                            <method name="itemDropped" args="dpath">
+                                if (dragsmall.droppedInView(cart.parent.parent)) {
+                                    cart.addItem(dpath);
+                                    this.removeItem(dpath);
+                                } else if (dragsmall.droppedInTrash(wish.trashCan) ){
+                                    this.removeItem(dpath);
+                                    return
+                                } else if (!dragsmall.droppedInView(wish.parent.parent)) {
+                                    this.removeItem(dpath);
+                                }
+                            </method>
+                        </shoppinglist>
+                        <view bgcolor="#586886" y="${parent.height-1}" height="1" width="${parent.width}"/>
+                    </view>
+
+                </vtabpanel>
+
+                <vtabpanel id="checkout" tabresource="slider_checkout" openingsize="320">
+
+                    <view width="${parent.width-parent.tab.width}" height="${parent.height}" clip="true">
+
+                        <tabslider x="${-1}" y="8" width="${parent.width}" height="350" bgcolor="#586886"
+                             oninit="this.openTab(addressTab)">
+
+                            <tabpanel name="addressTab" label="Shipping Address">
+
+                                <addressmanager width="${parent.width}" height="290"/>
+
+                            </tabpanel>
+
+                            <tabpanel label="Shipping Method">
+
+                                <view x="20" y="10" width="${parent.width}" fontsize="10">
+                                    <simplelayout axis="y" spacing="6"/>
+                                    <sel id="shipmentSelection"/>
+                                    <view height="60">
+                                        <simplelayout axis="x" spacing="4"/>
+                                        <radiobutton valign="middle" val="7.99" selectionobject="${shipmentSelection}"/>
+                                        <view valign="middle" width="60" resource="usps"/>
+                                        <text valign="middle">Standard Shipping (3-7 business days)</text>
+                                    </view>
+
+                                    <view height="60">
+                                        <simplelayout axis="x" spacing="4"/>
+                                        <radiobutton valign="middle" val="12.99" selectionobject="${shipmentSelection}"/>
+                                        <view valign="middle" width="60" resource="ups"/>
+                                        <text valign="middle">Two Day Shipping (2 business days)</text>
+                                    </view>
+
+                                    <view height="60">
+                                        <simplelayout axis="x" spacing="4"/>
+                                        <radiobutton valign="middle" val="18.99" selectionobject="${shipmentSelection}"/>
+                                        <view valign="middle" width="60" resource="fedex"/>
+                                        <text valign="middle">One Day Shipping (1 business day)</text>
+                                    </view>
+                                </view>
+
+                            </tabpanel>
+
+                            <tabpanel label="Payment Method">
+
+                                <cardmanager width="${parent.width}" height="290"/>
+
+                            </tabpanel>
+
+                        </tabslider>
+                        <view y="357" resource="divider_panel" width="${parent.width}" stretches="both"/>
+
+                        <view x="80" y="374" fontsize="14" fgcolor="#666699" fontstyle="bold">
+                            <simplelayout axis="x" spacing="4"/>
+                            <view width="120">
+                                <simplelayout axis="y" spacing="2"/>
+                                <text align="right">Items: $</text>
+                                <text align="right">Shipping &amp; Handling: $</text>
+                                <text align="right" fontsize="18">Your Total: $</text>
+                            </view>
+                            <view width="100">
+                                <simplelayout axis="y" spacing="2"/>
+                                <text name="items" width="100" align="right" resize="false" text="${Math.round(cart.total*100)/100}"/>
+                                <text name="shipment" width="100" align="right" resize="false" text="${shipmentSelection.val}"/>
+                                <text width="100" align="right" fontsize="18" resize="false" text="${Math.round((cart.total+parseFloat(shipmentSelection.val))*100)/100}"/>
+                            </view>
+                        </view>
+
+                        <mouseview y="448" resource="submit_butt" align="center"/>
+
+                        <view x="${parent.width-1}" y="0" width="1" height="${parent.height}" bgcolor="#586886"/>
+                        <view bgcolor="#586886" y="${parent.height-1}" height="1" width="${parent.width}"/>
+
+                    </view>
+
+                </vtabpanel>
+
+            </view>
+        </view>
+
+    </view>
+
+    <view name="dragger" opacity="0.5">
+
+        <state name="dragging">
+            <attribute name="x" value="${this.immediateparent.getMouse('x')}"/>
+            <attribute name="y" value="${this.immediateparent.getMouse('y')}"/>
+        </state>
+
+        <method name="start" args="dragImage">
+            this.setSource(dragImage);
+            dragging.setAttribute('applied', true);
+            this.setAttribute("visible", true);
+        </method>
+
+        <method name="stopdrag">
+            dragging.setAttribute('applied', false);
+            this.setAttribute("visible", false);
+        </method>
+
+        <method name="droppedInView" args="theView">
+            <![CDATA[
+            var absX = theView.getAttributeRelative( "x", canvas );
+            return (this.x > absX && this.x < absX+theView.width);
+            ]]>
+        </method>
+
+    </view>
+
+    <view name="dragsmall" visible="false">
+        <attribute name="dragging" value="false"/>
+        <view name="img" x="12" y="5" width="50" height="50" opacity="0.7" stretches="both"/>
+        <view name="myframe" resource="dragframe" x="${parent.img.x-12}" y="${parent.img.y-5}"/>
+
+        <dragstate name="drag"/>
+
+        <method name="start">
+            this.dragging=true;
+            drag.setAttribute('applied', true);
+            this.setAttribute("visible", true);
+        </method>
+
+        <method name="display" args="dragView, dragImage">
+            if (! this.dragging) {
+                this.setAttribute("x", dragView.getAttributeRelative("x", canvas)-12);
+                this.setAttribute("y", dragView.getAttributeRelative("y", canvas)-5);
+                img.setSource(dragImage);
+                this.setAttribute("visible", true);
+            }
+        </method>
+
+        <method name="hide">
+            if (dragging!=true) this.setAttribute("visible", false);
+        </method>
+
+        <method name="stopdrag">
+            this.dragging=false;
+            drag.setAttribute('applied', false);
+            this.setAttribute("visible", false);
+        </method>
+
+        <method name="droppedInView" args="theView">
+            <![CDATA[
+            //var absX = theView.getAttributeRelative( "x", canvas );
+            var mouseY = canvas.getMouse('y')-theView.getAttributeRelative('y',canvas);
+            var mouseX = canvas.getMouse('x') - theView.getAttributeRelative('x',canvas);
+            return theView.containsPt(mouseX, mouseY);
+            ]]>
+        </method>
+        
+        <method name="droppedInTrash" args="theTrashCan">
+            <![CDATA[
+            var mouseX = canvas.getMouse('x')-theTrashCan.getAttributeRelative('x',canvas);
+            var mouseY = canvas.getMouse('y')-theTrashCan.getAttributeRelative('y',canvas);
+
+            if ( theTrashCan.containsPt(mouseX, mouseY) ) 
+                return true;
+            return false;
+            ]]>
+        </method>
+
+
+    </view>
+
+    <method name="sign_AWS_request" args="url">
+      <![CDATA[
+        // The local relay endpoint needs no AWS HMAC signing — pass the URL through.
+        return url;
+        ]]>
+     </method>
+
+
+     <!-- Amazon server is strict about what it wants to see for URL encoding:
+
+     Do not URL encode any of the unreserved characters that RFC 3986 defines.
+      These unreserved characters are A-Z, a-z, 0-9, hyphen ( - ), underscore ( _ ), period ( . ), and tilde ( ~ ).
+
+      Percent encode extended UTF-8 characters in the form %XY%ZA....
+
+      Percent encode the space character as %20 (and not +, as common encoding schemes do).
+
+      Percent encode all other characters with %XY, where X and Y are hex characters 0-9 and uppercase A-F.
+      -->
+
+     <attribute name="unreservedChars" value="{
+     'A': true, 'B': true, 'C': true, 'D': true, 'E': true, 'F': true, 'G': true, 'H': true, 'J': true, 'K': true,
+     'L': true, 'M': true, 'N': true, 'O': true, 'P': true, 'Q': true, 'R': true, 'S': true, 'T': true, 'U': true, 'V': true,
+     'W': true, 'X': true, 'Y': true, 'Z': true, 'a': true, 'b': true, 'c': true, 'd': true, 'e': true, 'f': true, 'g': true,
+     'h': true, 'i': true, 'j': true, 'k': true, 'l': true, 'm': true, 'n': true, 'o': true, 'p': true, 'q': true, 'r': true,
+     's': true, 't': true, 'u': true, 'v': true, 'w': true, 'x': true, 'y': true, 'z': true, '0': true, '1': true, '2': true,
+     '3': true, '4': true, '5': true, '6': true, '7': true, '8': true, '9': true, '-': true, '_': true, '.': true, '~': true
+     }" />
+
+
+     <method name="amazonURLEncode" args="str">
+       <![CDATA[
+             var enc = "";
+             var strlen = str.length;
+             var urc = canvas.unreservedChars;
+
+             for (var i = 0; i < strlen; i++) {
+                 var c = str.substr(i, 1);
+                 if (urc[c] == true) {
+                     enc += c;
+                 } else {
+                     enc += encodeURIComponent(c);
+                 }
+             }
+                
+             return enc;
+       ]]>
+     </method>
+
+
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2009 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->
+

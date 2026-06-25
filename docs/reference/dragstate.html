@@ -1,0 +1,67 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;dragstate&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>dragstate<span class="ang">&gt;</span></h1><p class="short">A standard dragging behavior.</p><p class="meta">Extends <code>state</code></p>
+                
+        <p>
+        The dragstate is a class which can be used to make any view draggable.
+        When the dragstate is applied, the view with the dragstate will follow the mouse.
+        </p>
+                
+        <pre class="example">
+        &lt;canvas height="100"&gt;
+            &lt;view bgcolor="blue" width="20" height="20"
+                  onmousedown="dragger.setAttribute('applied', true)" onmouseup="dragger.setAttribute('applied', false)"&gt;
+                &lt;dragstate name="dragger"/&gt;
+            &lt;/view&gt;
+        &lt;/canvas&gt;
+        </pre>
+                
+        
+        <pre class="example">
+        &lt;canvas height="100"&gt;
+            &lt;view bgcolor="red" width="20" height="20"
+                  onmousedown="dragger.setAttribute('applied', true)" onmouseup="dragger.setAttribute('applied', false)"&gt;
+                &lt;dragstate name="dragger" drag_axis="x"/&gt;
+            &lt;/view&gt;
+        &lt;/canvas&gt;
+        </pre>
+                
+        
+        <pre class="example">
+        &lt;canvas height="100"&gt;
+            &lt;view bgcolor="red" width="20" height="20"
+                  onmousedown="dragger.setAttribute('applied', true)" onmouseup="dragger.setAttribute('applied', false)"&gt;
+                &lt;dragstate name="dragger" drag_axis="x"
+                        drag_min_x="0"  drag_max_x="100"/&gt;
+            &lt;/view&gt;
+        &lt;/canvas&gt;
+        </pre>
+                
+        
+        <pre class="example">
+        &lt;canvas width="500" height="350"&gt;
+            &lt;view bgcolor="blue" x="100" y="40" width="300" height="200"&gt;
+                &lt;view bgcolor="red" width="20" height="20"
+                      onmousedown="dragger.setAttribute('applied', true)" onmouseup="dragger.setAttribute('applied', false)"&gt;
+                    &lt;dragstate name="dragger" drag_axis="both"
+                        drag_min_x="0"
+                        drag_max_x="$once{parent.width - this.width}"
+                        drag_min_y="0"
+                        drag_max_y="$once{parent.height - this.height}"/&gt;
+                &lt;/view&gt;
+            &lt;/view&gt;
+        &lt;/canvas&gt;
+        </pre>
+                
+        <p>The above example allows the user to drag the red square within the
+        bounds of the larger blue rectangle.  Note that as with all states the
+        dragstate's attributes are evaluated in the context of its parent.  So
+        to refer to the blue view's width, the example uses parent.width, and to
+        refer to the red square's width, the example uses this.width.
+        </p>
+              this state provides standard 'drag' functionality to its immediateparent when applied
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">drag_axis</td><td class="ty">string</td><td class="ty">both</td><td>'x', 'y' or 'both'</td></tr><tr><td class="nm">drag_max_x</td><td class="ty">number</td><td class="ty">null</td><td>the maximum value for the x attribute. Default : null, no maximum</td></tr><tr><td class="nm">drag_max_y</td><td class="ty">number</td><td class="ty">null</td><td>the maximum value for the y attribute. Default : null, no maximum</td></tr><tr><td class="nm">drag_min_x</td><td class="ty">number</td><td class="ty">null</td><td>the minimum value for the x attribute. Default : null, no minimum</td></tr><tr><td class="nm">drag_min_y</td><td class="ty">number</td><td class="ty">null</td><td>the minimum value for the y attribute. Default : null, no minimum</td></tr><tr><td class="nm">x</td><td class="ty">expression</td><td class="ty">(this.drag_axis == 'both' || this.drag_axis == 'x') ?               this.__dragstate_getnewpos('x',                 this.immediateparent.getMouse( 'x' ) + this.__dragstate_xdoffset)            : this.x</td><td/></tr><tr><td class="nm">y</td><td class="ty">expression</td><td class="ty">(this.drag_axis == 'both' || this.drag_axis == 'y') ?               this.__dragstate_getnewpos('y',                 this.immediateparent.getMouse( 'y' ) + this.__dragstate_ydoffset)            : this.y</td><td/></tr></table>
+</main><script src="_nav.js"></script></body></html>

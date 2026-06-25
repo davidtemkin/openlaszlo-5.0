@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1013">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Converse in the Park</title>
+  <description>Converse in the Park — from the OpenLaszlo sample image library.</description>
+  <dates posted="1491036800" />
+  <urls><url type="photopage">data/photos/1013.jpg</url></urls>
+  <tags><tag>converse</tag><tag>park</tag></tags>
+</photo>
+</rsp>

@@ -1,0 +1,565 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 51. Debugging</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.methodology.html" title="Part VIII. Development Methodology"><link rel="prev" href="editing-lzx.html" title="Chapter 50. Editing"><link rel="next" href="lzunit.html" title="Chapter 52. Unit Testing"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 51. Debugging</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="editing-lzx.html">Prev</a> </td><th width="60%" align="center">Part VIII. Development Methodology</th><td width="20%" align="right"> <a accesskey="n" href="lzunit.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="debugging"></a>Chapter 51. Debugging</h2></div></div></div><p> Openlaszlo provides a powerful debugger which you can use either embedded in the
+    application or as a separate ("remote") process. In addition, when you are compiling
+    applications for deployment to DHTML, you may benefit from using tools for debugging in that
+    environment. </p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2068"></a>1. Using the OpenLaszlo Debugger</h2></div></div></div><p>When you run an application with debugging enabled, the application is compiled with
+      instrumentation to detect runtime errors, and the debugger window appears within the
+      application canvas. The debugger provides these features:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>The top portion of the debug window displays a scrolling list of debug messages. These
+          include warning messages that the OpenLaszlo Runtime Library displays, as well as the
+          arguments to calls to <code class="literal">Debug.debug()</code>.</p></li><li class="listitem"><p>The command-line portion of the debug window can be used to evaluate JavaScript
+          statements and expressions within the context of the running application. Use this to
+          inspect the program state, to test the behavior of functions and methods on various
+          arguments, and to explore the LZX API.</p></li><li class="listitem"><p>Warnings for runtime errors such as undefined variables and functions are detected,
+          and printed to the debug console.</p></li></ul></div><p>
+      </p><div class="informalfigure"><div class="mediaobject"><img src="images/debugger-new-console.png"></div></div><p>
+    </p><p>Debugging may cause the application to run more slowly, even if the debugger window is not
+      visible.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="enabling-the-debugger"></a>2. Enabling the Debugger</h2></div></div></div><p>There are three ways to turn on the debugger in your application:</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2069"></a>2.1. The <code class="literal">debug</code> attribute</h3></div></div></div><p>The debugger is enabled on if the canvas <a class="indexterm" name="id17140"></a><code class="sgmltag-attribute">debug</code> attribute is set to true:</p><div class="example"><a name="id17143"></a><p class="title"><b>Example 51.1. The canvas debug attribute</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas width="100%" height="125" debug="true"&gt;
+  &lt;debug y="5" /&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/debugging-_2.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/debugging-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2070"></a>2.2. The <code class="literal">Debug</code> checkbox</h3></div></div></div><p>Check the <code class="literal">Debug</code> checkbox on the <em class="glossterm">developer
+        console</em> to request a copy of the application with debugging enabled. This is
+        equivalent to recompiling the application with the <code class="literal">debug="true"</code>.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2071"></a>2.3. The <code class="literal">debug</code> query parameter</h3></div></div></div><p>Edit the URL that is used to request the application to include the
+        <code class="literal">debug=true</code> query parameter. This is equivalent to checking the
+          <code class="literal">Debug</code> checkbox in the developer console.</p><p>See the <a class="ulink" href="../deployers/request-types.html" target="_top">OpenLaszlo System
+          Administrator's Guide</a> for more information about request types.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="debugging.runtime-error-checking"></a>3. Runtime Error Checking</h2></div></div></div><p>Enabling the debugger using one of the methods described in <a class="xref" href="debugging.html#enabling-the-debugger" title="2. Enabling the Debugger">Section 2, “Enabling the Debugger”</a> has two effects:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>It includes the debugger visual component. This displays debug messages, and has a
+          command line interface for evaluating JavaScript statements.</p></li><li class="listitem"><p>It compiles the application with additional instrumentation to perform <a class="indexterm" name="id17168"></a><em class="glossterm">runtime error checking</em>. Certain classes of erroneous
+          code (below) result in warnings that are logged to the debug window.</p></li></ul></div><p>A program that is compiled with runtime error checking will contain code that checks for
+      the following conditions:</p><div class="table"><a name="id17172"></a><p class="title"><b>Table 51.1. Runtime error checks</b></p><div class="table-contents"><table class="table" summary="Runtime error checks" border="1"><colgroup><col><col><col></colgroup><thead><tr><th>Condition</th><th>Example</th><th>Notes</th></tr></thead><tbody><tr><td>Reference to undefined variable</td><td>
+              <code class="literal">var w = canvs.width</code>
+            </td><td><code class="varname">canvs</code> is not defined. (There is a global variable named
+                <code class="literal">canvas</code>, instead.)</td></tr><tr><td>Reference to undefined property</td><td>
+              <code class="literal">var w = canvas.widt</code>
+              <a href="#ftn.footnote.no-check-for-brackets" class="footnote" name="footnote.no-check-for-brackets"><sup class="footnote">[a]</sup></a>
+            </td><td><code class="varname">canvas</code> does not have a <code class="literal">widt</code> property. (The
+              name of the property is <code class="literal">canvas.width</code>.)</td></tr><tr><td>Call to undefined method</td><td>
+              <code class="literal">lz.Browser.getVerson()</code>
+            </td><td><code class="literal">lz.Browser.getVerson</code> (with no "i") is not defined.</td></tr><tr><td>Call to undefined function</td><td>
+              <code class="literal">var n = parseInteger("123")</code>
+            </td><td><code class="literal">parseInteger</code> is not defined. (There is a JavaScript function
+                <code class="literal">parseInt</code>.)</td></tr><tr><td>Call to non-function</td><td>
+              <code class="literal">var w = canvas.width()</code>
+            </td><td><code class="literal">canvas.width</code> is a <a class="indexterm" name="id17219"></a><code class="classname">Number</code>, not a <a class="indexterm" name="id17222"></a><code class="classname">Function</code>.</td></tr></tbody><tbody class="footnotes"><tr><td colspan="3"><div id="ftn.footnote.no-check-for-brackets" class="footnote"><p><a href="#footnote.no-check-for-brackets" class="para"><sup class="para">[a] </sup></a>The debugger does not warn about undefined references if the subscript
+                  notation is used: <code class="literal">canvas['widt']</code>, which is otherwise equivalent
+                  to <code class="literal">canvas.widt</code>, does not generate a warning. This format can be
+                  used to prevent a warning about a reference to an undefined property when you are
+                  testing to see if a property exists.</p></div></td></tr></tbody></table></div></div><br class="table-break"><p>Each runtime exception warning is printed once per line per program run, not once each
+      time the exception is encountered. The following program will print one warning, not ten.</p><div class="example"><a name="id17226"></a><p class="title"><b>Example 51.2. Runtime exceptions printed once per line</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas debug="true" height="150" width="100%"&gt;
+  &lt;debug y="10" /&gt;
+  &lt;handler name="oninit"&gt;&lt;![CDATA[
+    for (var i = 0; i &lt; 10; i ++) {
+      canvas.width();
+    }
+  ]]&gt;&lt;/handler&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/debugging-_3.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/debugging-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Turning on runtime error checking makes an application bigger and slower. You should only
+      perform size and speed optimization on the non-debug version of a program. Nonetheless, you
+      will frequently want to run the debug warning to see whether you have introduced any runtime
+      errors.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="loggingdebugger"></a>4. Logging to the Debugger</h2></div></div></div><p>The top portion of the debugger window is the <a class="indexterm" name="id17233"></a><em class="glossterm">debugger log</em>. Use <code class="literal">Debug.write()</code> or
+        <code class="literal">Debug.format()</code> (or one of its variants) to print to the debugger log.
+      These methods are <a class="indexterm" name="id17238"></a><em class="glossterm">variadic</em>: they take any number of arguments. The text
+      representations of the arguments are printed to the debugger log, separated by spaces.</p><div class="example"><a name="id17241"></a><p class="title"><b>Example 51.3. Logging to the debugger</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas debug="true" height="200" width="100%"&gt;
+&lt;debug x="160" y="5" height="150" width="300" /&gt;
+  &lt;script&gt;Debug.debug('user code');&lt;/script&gt;
+  &lt;button text="Get x, y" width="150" height="150"
+  onclick="Debug.debug('click: x=%d, y=%d', getMouse('x'), getMouse('y'))" /&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/debugging-_4.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/debugging-_4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p><code class="literal">Debug.write()</code> is the simplest way to log to the debugger, but it's
+      often a better strategy to use <code class="literal">Debug.format()</code> or one of its variants
+        (<code class="literal">Debug.debug()</code>, <code class="literal">Debug.info()</code>,
+      <code class="literal">Debug.warn()</code>, and <code class="literal">Debug.error()</code>. These methods give you
+      more control over the format of the output. See the reference pages for <a class="ulink" href="../reference/debugservice.html" target="_top">Debug</a> and <a class="ulink" href="../reference/formatter.html" target="_top">lz.Formatter</a> for a complete description and
+      examples. In addition, you can control which messages are logged to the debugger using <a class="link" href="debugging.html#debugmessagelevel" title="11.3. Debug message level">Debug.messageLevel</a>.</p><p>Some object are <em class="glossterm">inspectable</em>. See <a class="xref" href="debugging.html#debugging.inspecting" title="8. Inspecting Objects">Section 8, “Inspecting Objects”</a> for more about the inspect feature of the debugger. See
+        <a class="xref" href="debugging.html#debugging.debug-tostring" title="11.2. Customizing Debug.write()">Section 11.2, “Customizing <code class="literal">Debug.write()</code>
+      ”</a> to see how to customize the display of objects
+      within the debugger.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2072"></a>5. Getting version information</h2></div></div></div><p>There simplest way to get LPS version information is to use
+      <code class="varname">canvas.lpsversion</code>. </p><div class="example"><a name="id17261"></a><p class="title"><b>Example 51.4. Using canvas.lpsversion</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas width="100%" height="200" debug="true"&gt;
+&lt;debug x="5" y="50" height="100" /&gt;
+    &lt;handler name="oninit"&gt;
+        Debug.debug('LPS version %s', canvas.lpsversion)
+    &lt;/handler&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/canvasversion.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/canvasversion.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>You can get more information, for example the build number and target runtime, by using
+        <code class="literal">Debug.versionInfo()</code>.</p><div class="example"><a name="id17266"></a><p class="title"><b>Example 51.5. Using Debug.versionInfo()</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas width="100%" height="225" debug="true"&gt;
+&lt;debug x="5" y="5" height="200" /&gt;
+    &lt;handler name="oninit"&gt;
+        Debug.versionInfo()
+    &lt;/handler&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/debuginfo.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/debuginfo.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>While the previous two methods give you version information, if you want to generat a full
+      bug report, see <a class="xref" href="debugging.html#generate-bug-report" title="9. Generating a bug report">Section 9, “Generating a bug report”</a>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2075"></a>6. Using the Evaluator</h2></div></div></div><p>The bottom portion of the debugger window is the <a class="indexterm" name="id17273"></a><em class="glossterm">evaluator</em>. This is a command-line interface for evaluating
+      JavaScript expressions and statements within the application. Enter a JavaScript statement
+      into this area and press the Enter key (in single-line mode) or the Evaluate button (in
+      multi-line mode) to evaluate the statement within the application. If the statement is an
+      expression, its result (if the result is not <code class="literal">undefined</code>) is printed to the
+      debugger log. If it is a statement but not an expression, it is executed for effect.</p><p>Examples of expressions are <code class="literal">canvas.x</code>, <code class="literal">1+2</code>, and
+        <code class="literal">lz.Browser.LoadURL('http://www.laszlosystems.com/', '_blank')</code>. (The last
+      expression returns the value <code class="literal">undefined</code>, so the debugger does not print the
+      expression value in the debugger log.) An example of a non-expression statements is
+        <code class="literal">for (int i = 0; i &lt; 10; i++) Debug.debug("%d", i)</code>. This is
+      evaluated for effect, and the statement itself does not result in a value, although each
+      execution of the loop prints the value of <code class="varname">i</code> to the debugger log.</p><p>The debugger can be used to define global variables. Use the <code class="literal">var</code>
+      keyword to define a new global variable. For example, after evaluating <code class="literal">var
+      n=100</code>, evaluating <code class="literal">n+1</code> will print the value
+      <code class="literal">101</code>.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>The <code class="literal">var</code> keyword is only necessary to define <span class="em">new</span> global variables. You do not need it to change the value of existing
+        variables. For example, after evaluating <code class="literal">var n=100</code>, you can evaluate
+          <code class="literal">n=200</code> to change the value of <code class="varname">n</code>. You do not need to
+        evaluate <code class="literal">var n=200</code> (although the extra <code class="literal">var</code> is
+        harmless.)</p></div><p>You can also use <code class="literal">var</code> to create new global functions. <code class="literal">var f =
+        function (x) {return x+1}</code> creates a new function named <code class="varname">f</code>, which
+      can be used in subsequent expressions such as <code class="literal">f(1)</code>.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2073"></a>6.1. Functions and Expressions</h3></div></div></div><p> Consider the following debugger evaluations. Notice that the second case is terminated
+        with a semicolon; otherwise the expressions are identical:</p><pre class="programlisting">
+lzx&gt; function foo () { return 'Fu'; }
+Function#0| foo
+lzx&gt; foo
+WARNING: interactive-eval-2:-1: reference to undefined variable 'foo'
+lzx&gt; function foo () { return 'Fu'; };
+lzx&gt; foo
+Function#2| foo
+</pre><p> In the first case, a function named <code class="literal">foo</code> is created, but it is not
+        the value of the global <code class="literal">foo</code>. Instead the Debug evaluator returns a value
+        which is that function object. In the second case, the evaluator does not return a value,
+        and the global <code class="literal">foo</code>
+        <span class="em">is</span> defined to be the function. Why is that?</p><p>The answer is that the debugger evaluator will first try to evaluate what you type as an
+        expression, and if that fails, it will try to evaluate it as a statement. The second form is
+        clearly not an expression (think of what you type as having parentheses around it—the
+        semi-colon forces the second form to be a statement list, with an empty second statement).
+        This distinction, although subtle, is correct ECMAscript semantics. It is not whether you
+        name a function or not that determines when a global definition will be made; rather, two
+        things must be true: </p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>the function must be named, and </p></li><li class="listitem"><p>the function declaration must occur in a statement context.</p></li></ul></div><p> If the function declaration occurs in an expression context, all you have done is to
+        create a named function object as the value of that expression, you have not defined that
+        name as the function. </p><p>Therefore, if you ever wonder why when you define a function in the debugger it does not
+        behave as you expect, take a clue from what the evaluator prints out: if it prints out a
+        function object, all you did was create a function, not define a function. Add the
+        semi-colon after your definition and you will define the function (and not see a value
+        printed). </p><p class="todo">
+        <em><span class="remark"><span class="para-label">TODO: </span>Explain the single-line and
+          multi-line mode of the evaluator</span></em>
+      </p><p class="todo">
+        <em><span class="remark"><span class="para-label">TODO: </span>Screenshot</span></em>
+      </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2074"></a>6.2. Debugger Variables</h3></div></div></div><p>Within a debugger expression, <code class="literal">_</code> refers to the value of the previous
+        expression. For example, after evaluating <code class="literal">canvas.width</code> to display the
+        width of the canvas, you can evaluate the expression <code class="literal">_/2</code> to display half
+        this width.</p><p>The debugger defines the following variables:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+            <code class="literal">_</code>
+          </span></dt><dd><p>The result of the previous expression with a non-undefined value.</p></dd><dt><span class="term"><code class="literal">__</code> [two underscore characters])</span></dt><dd><p>The result of the expression prior to the previous expression.</p></dd><dt><span class="term"><code class="literal">___</code> [three underscore characters]</span></dt><dd><p>The result of the expression prior to the <code class="literal">__</code> expression.</p></dd></dl></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="explaincss"></a>7. 
+      Explaining CSS with <code class="literal">Debug.explainStyleBindings(node)</code>
+    </h2></div></div></div><p>Explain the style bindings of properties on a node For each attribute of the node that has
+      a <code class="literal">$style</code> binding, the CSS rules that apply to the node that could affect
+      that binding are displayed. The rules are displayed (with their source) from the most-specific
+      to the least specific, and the style names and values of the rule that apply to this node are
+      displayed. Values that are superseded by more specific rules are displayed in italics.</p><p>The following example demonstrates the use of
+      <code class="literal">Debug.explainStyleBindings()</code>. Click on the color buttons to toggle the
+      colors; click on the color swatches to see the CSS description.</p><div class="example"><a name="id17355"></a><p class="title"><b>Example 51.6. Dynamic CSS</b></p><div class="example-contents"><pre class="programlisting">
+        &lt;canvas width="100%" height="500" debug="true"&gt; 
+  &lt;debug x="30%" width="65%" y="5%" height="90%" /&gt;
+  &lt;stylesheet&gt;
+    /* default, should only be seen if things are broken */
+    colorswatch { background-color: orange }
+
+    /* Static for buttons */
+    colorbutton[color=red] {background-color: red }
+    /* `lime` is the HTML name for rgb(0,255,0) */
+    colorbutton[color=green] {background-color: lime }
+    colorbutton[color=blue] {background-color: blue }
+
+    /* dynamic single selectors that apply to individual swatches */
+    [red=off] colorswatch { background-color: cyan; opacity: 0.2 }
+    [red=on] colorswatch { background-color: red; opacity: 0.95 }
+    [green=off] colorswatch { background-color: magenta; opacity: 0.2 }
+    [green=on] colorswatch { background-color: lime; opacity: 0.95 }
+    [blue=off] colorswatch { background-color: yellow; opacity: 0.2 }
+    [blue=on] colorswatch { background-color: blue; opacity: 0.95 }
+
+    /* dynamic compound selectors that apply to mixer colorswatch */
+    [red=off] [green=off] [blue=off] [name=mixer] colorswatch { background-color: black; opacity: 1 }
+    [red=off] [green=off] [blue=on] [name=mixer] colorswatch { background-color: blue; opacity: 1 }
+    [red=off] [green=on] [blue=off] [name=mixer] colorswatch { background-color: lime; opacity: 1 }
+    [red=off] [green=on] [blue=on] [name=mixer] colorswatch { background-color: cyan; opacity: 1 }
+    [red=on] [green=off] [blue=off] [name=mixer] colorswatch { background-color: red; opacity: 1 }
+    [red=on] [green=off] [blue=on] [name=mixer] colorswatch { background-color: magenta; opacity: 1 }
+    [red=on] [green=on] [blue=off] [name=mixer] colorswatch { background-color: yellow; opacity: 1 }
+    [red=on] [green=on] [blue=on] [name=mixer] colorswatch { background-color: white; opacity: 1 }
+  &lt;/stylesheet&gt;
+
+ &lt;!-- button to toggle an attribute which should trigger style change --&gt;
+  &lt;class name="colorbutton" width="40" height="20" align="center"&gt;
+    &lt;attribute name="bgcolor" style="background-color" /&gt;
+    &lt;attribute name="color" type="string" /&gt;
+    &lt;text fgcolor="white" text="${this.parent.on}" align="center" /&gt;
+    &lt;attribute name="on" type="string" value="off" /&gt;
+    &lt;handler name="onclick"&gt;
+      this.setAttribute('on', this.on === 'on' ? 'off' : 'on' );
+    &lt;/handler&gt;
+  &lt;/class&gt;
+
+  &lt;!-- color swatch that is styled by background-color and opacity --&gt;
+  &lt;class name="colorswatch" height="60" width="60" bgcolor="gray" align="center"&gt;
+    &lt;attribute name="swatchcolor" style="background-color" type='color' /&gt;
+    &lt;attribute name="swatchopacity" style="opacity" value="1" /&gt;
+    &lt;handler name="onclick"&gt;
+      Debug.clear();
+      Debug.explainStyleBindings(this);
+    &lt;/handler&gt;
+    &lt;view name="swatch" x="5" y="5" height="50" width="50"&gt;
+      &lt;attribute name="bgcolor" value="${parent.swatchcolor}" /&gt;
+      &lt;attribute name="opacity" value="${parent.swatchopacity}" /&gt;
+    &lt;/view&gt;
+  &lt;/class&gt;
+
+  &lt;!-- nested views with red, green, blue attributes that dynamically change
+       to demonstrate the applicability of compound dynamic selectors  --&gt;
+  &lt;view x="5%" y="5%" width="20%" height="80%" layout="axis: y; spacing: 5"&gt;
+    &lt;text width="100%" multiline="true"&gt;
+      Toggle the red, green, and blue buttons on and off to
+      dynamically update the applicable CSS selectors.  Click on a color
+      swatch to explain the applicability of the CSS selectors.
+    &lt;/text&gt;
+    &lt;attribute name="red" value="${this.toggle.on}" type="string" /&gt;
+    &lt;colorbutton name="toggle" color="red" /&gt;
+    &lt;colorswatch /&gt;
+    &lt;view width="100%" layout="axis: y; spacing: 5"&gt;
+      &lt;attribute name="green" value="${this.toggle.on}" type="string" /&gt;
+      &lt;colorbutton name="toggle" color="green" /&gt;
+      &lt;colorswatch /&gt;
+      &lt;view width="100%" layout="axis: y; spacing: 5"&gt;
+        &lt;attribute name="blue" value="${this.toggle.on}" type="string" /&gt;
+        &lt;colorbutton name="toggle" color="blue" /&gt;
+        &lt;colorswatch /&gt;
+        &lt;view width="100%" name="mixer" layout="axis: y; spacing: 5"&gt;
+          &lt;text align="center"&gt;Mixer&lt;/text&gt;
+          &lt;colorswatch id="mixer"/&gt;
+        &lt;/view&gt;
+      &lt;/view&gt;
+    &lt;/view&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+  * Copyright 2010 Laszlo Systems, Inc.  All Rights Reserved.                   *
+  * Use is subject to license terms.                                            *
+  * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+ 
+      </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/dynamiccss.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/dynamiccss.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="debugging.inspecting"></a>8. Inspecting Objects</h2></div></div></div><p>Evaluating <code class="literal">Debug.debug(<code class="varname">object</code>)</code>, where <code class="literal">
+        <code class="varname">object</code>
+      </code> is an expression that evaluates to a JavaScript object, displays an <a class="indexterm" name="id17365"></a><em class="glossterm">inspectable representation</em> of the object in the debugger
+      (not the actual object). Long objects are abbreviated based on the value of
+        <code class="literal">Debug.printLength</code> (see <a class="xref" href="debugging.html#configuring-debugger" title="11. Configuring the Debugger">Section 11, “Configuring the Debugger”</a>).
+      Abbreviated objects are shown enclosed in double angle quotes, with an ellipsis indicating
+      abbreviation like this: </p><div class="blockquote"><blockquote class="blockquote"><p>
+          <code class="literal">«object...»</code>
+        </p></blockquote></div><p>
+    </p><p>If you inspect the abbreviated output, it will print the full object. </p><p> Clicking on an inspectable object displays its non-private properties and their values.
+      Those values which are objects are also displayed as inspectable objects, so that they can be
+      clicked on as well.</p><p>An object's <a class="indexterm" name="id17376"></a><em class="glossterm">private properties</em> are those whose names begin with
+        <code class="literal">$</code> or <code class="literal">__</code> (two underscore characters). These names are
+      used by the compiler and by the OpenLaszlo Runtime Library implementation, respectively, and
+      are not part of the documented API for the object.</p><p>An <a class="indexterm" name="id17382"></a><em class="glossterm">inspectable object</em> can be an OpenLaszlo Runtime Library
+      object such as a window or <a class="indexterm" name="id17385"></a><code class="classname">lz.dataset</code>, or a built-in JavaScript object: for example,
+      an array such as <code class="literal">[1, 2, 3]</code>, or a <a class="indexterm" name="id17389"></a><code class="classname">Object</code> such as <code class="literal">{a: 1, b: 2}</code>.</p><p>The <a class="indexterm" name="id17394"></a><code class="methodname">Debug.inspect()</code> function also displays the object and its
+      properties. Evaluating <code class="literal">Debug.inspect(<code class="varname">object</code>)</code> is
+      equivalent to evaluating <code class="literal">Debug.debug(<code class="varname">object</code>)</code> and then
+      clicking on the object's representation.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+        <code class="literal">Debug.write()</code> behaves differently depending on whether its argument is a
+        string or a non-string object. Note the difference between the two calls to
+          <code class="literal">Debug.write()</code> in the example below.</p><p>Because it's easy to confuse these two calling styles, it's almost always better to use
+          <code class="literal">Debug.format()</code> or one of its variants, like
+        <code class="literal">Debug.debug()</code>.</p></div><div class="example"><a name="id17409"></a><p class="title"><b>Example 51.7. Two ways of calling Debug.write</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas debug="true" height="250" width="100%"&gt;
+  &lt;debug y="10" height="200"/&gt;
+  &lt;handler name="oninit"&gt;
+    Debug.write('subviews: ' + canvas.subviews);
+    Debug.write('subviews:',   canvas.subviews);
+    Debug.debug('subviews: %#w',   canvas.subviews);
+    Debug.debug('subviews: %w',   canvas.subviews);
+  &lt;/handler&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/debugging-_5.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/debugging-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="generate-bug-report"></a>9. Generating a bug report</h2></div></div></div><p>If you encounter a bug that prints a message in the debugger and you believe it is an
+      OpenLaszlo bug, take the following steps to generate a bug report:</p><div class="orderedlist"><ol class="orderedlist compact" type="1"><li class="listitem"><p>Enable Backtrace in the developer console</p></li><li class="listitem"><p>Provoke the error</p></li><li class="listitem"><p>Click on the debugger message to <span class="em">inspect</span> it</p></li><li class="listitem"><p>Invoke <code class="literal">Debug.bugReport()</code> in the debugger</p></li><li class="listitem"><p>Copy and Paste the output into your bug report</p></li></ol></div><p>The Bug Report gives details of the exact build of OpenLaszlo that you are reporting on,
+      the detailed error message, backtrace, and the details of all objects involved.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2076"></a>10. Conditional Compilation of Debugging Code</h2></div></div></div><p> Sometimes you may have computations that you need to make only when you're debugging an
+      application. For example, you may include some time stamps in order to measure performance of
+      certain sections of code. </p><p> The best practice here is to enclose any debug-only computations in </p><pre class="programlisting">
+if ($debug) {
+  ...
+}
+</pre><p> The compiler will omit those statements when you compile without debugging. </p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="configuring-debugger"></a>11. Configuring the Debugger</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2077"></a>11.1. Debugger Window Position</h3></div></div></div><p>By default, the debugger will occupy the bottom half of your application's
+        &lt;canvas&gt;. You can change the basic properties of the debugger by including the
+          <code class="literal">debug</code> tag in your application, like this:</p><pre class="programlisting">&lt;debug x="100" y="100" height="500"/&gt;</pre><p>In DHTML, the debugger appears as a separate HTML frame, rather than
+        in-line in the application. As a consequence the <a class="indexterm" name="id17441"></a><code class="sgmltag-element">&lt;debug&gt;</code> tag does not actually
+        control the size of the debugger frame.</p><p>Note that this does not <span class="em">enable</span> the debugger; it merely
+        configures its appearance when the debugger is enabled. You still have use one of the
+        methods in <a class="xref" href="debugging.html#enabling-the-debugger" title="2. Enabling the Debugger">Section 2, “Enabling the Debugger”</a> to enable debugging. The effect of this
+        is that you can leave the <code class="literal">&lt;debug&gt;</code> tag in your program at
+        all times (including in production code), and it will only have an effect when debugging is
+        enabled.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="debugging.debug-tostring"></a>11.2. Customizing <code class="literal">Debug.write()</code>
+      </h3></div></div></div><p><code class="literal">Debug.write()</code> displays the <a class="indexterm" name="id17453"></a><em class="glossterm">printable representation</em> of an object. Where possible,
+        the representation of an object is what you would type to represent that object in a
+        program. This is the case for instances of <a class="indexterm" name="id17456"></a><em class="glossterm">Singleton</em> types (types with only a single instance, e.g., <a class="indexterm" name="id17459"></a><code class="classname">Undefined</code> and <a class="indexterm" name="id17462"></a><code class="classname">Null</code>) and for instances of <a class="indexterm" name="id17465"></a><em class="glossterm">Atomic</em> types (types whose members have only a single
+        value, no properties; e.g., <a class="indexterm" name="id17468"></a><code class="classname">Boolean</code> or <a class="indexterm" name="id17471"></a><code class="classname">Number</code>). Instances of <a class="indexterm" name="id17474"></a><code class="classname">String</code>s are normally not presented in this fashion (i.e.,
+        they are not quoted), as usually they are either a message or formatting. Instances of
+          <a class="indexterm" name="id17477"></a><em class="glossterm">compound types</em> (types with properties, e.g., <a class="indexterm" name="id17480"></a><code class="classname">Array</code> and <a class="indexterm" name="id17483"></a><code class="classname">Object</code>) and Strings that are longer than
+          <code class="literal">Debug.printLength</code> are printed in <a class="indexterm" name="id17487"></a><em class="glossterm">inspectable</em> format: </p><div class="blockquote"><blockquote class="blockquote"><p>
+          <code class="literal">«<code class="varname">type</code>(<code class="varname">length</code>)#<code class="varname">id</code>|<code class="varname">name</code>»</code>
+        </p></blockquote></div><p> where: </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><code class="literal">type</code> is the type of the object, as computed by
+              <code class="literal">Debug.__typeof()</code>. You can customize this field by defining a
+              <code class="literal">String</code>-valued property <code class="literal">_dbg_typename</code> or a method
+            yielding a <code class="literal">String</code> of the same name on your class</p></li><li class="listitem"><p><code class="literal">length</code> is the length of the object, if it is of a type that has a
+            length, such as <a class="indexterm" name="id17509"></a><code class="classname">Array</code> or <a class="indexterm" name="id17512"></a><code class="classname">String</code></p></li><li class="listitem"><p><code class="literal">id</code> is a unique identifier that can be used to visually
+            distinguish objects whose printed representation may be the same but which are not in
+            fact the same object</p></li><li class="listitem"><p><code class="literal">name</code> is a descriptive name of the object, as computed by
+              <code class="literal">Debug.__String()</code>. You can customize this field by defining a
+              <code class="literal">String</code>-valued property <code class="literal">_dbg_name</code> or a method
+            yielding a <code class="literal">String</code> of the same name on your class</p></li></ul></div><p> By default an object is described by its properties, a function by its name (if
+        available).</p><p>In addition to <code class="literal">Debug.write()</code>, <code class="literal">Debug.warn()</code>,
+          <code class="literal">Debug.info()</code>, <code class="literal">Debug.format()</code>, there are utilities
+        for determining client environment <code class="literal">(Debug.versionInfo()</code> and others) </p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p><code class="literal">
+              <code class="literal">lz.canvas.versionInfoString()</code>
+            </code>, <code class="literal">Debug.versionInfo()</code> which can be very helpful to record
+            for bug reports. </p></li><li class="listitem"><p>
+            <code class="literal">Debug.debug()</code>, <code class="literal">Debug.info()</code> — like
+              <code class="literal">Debug.warn()</code> and <code class="literal">Debug.error()</code>, but with
+            different colors and tags that match many popular Ajax runtimes. </p></li><li class="listitem"><p>
+            <code class="literal">Debug.[write,format,debug,info,warn,error]</code> all "Do What I Mean" for
+            format string </p></li></ul></div><p>Descriptions and Strings are abbreviated to the first
+        <code class="literal">Debug.printLength</code> characters. This property defaults to
+        <code class="literal">1024</code>. You can see all the properties of an abbreviated object, or all of
+        a string by inspecting it (but take care to check the length of the object — it may take a
+        very long time to print if it is large).</p><p> When the debugger prints an object, if the type part of the description is enclosed in
+        ?'s, it means that the object is potentially corrupted. (Technically it means that
+          <code class="literal">object instanceof object.[[prototype]].constructor</code> is not true.)</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="debugmessagelevel"></a>11.3. Debug message level</h3></div></div></div><p>Debug messages are enabled/disabled by the setting of
+        <code class="literal">Debug.messageLevel</code>. The valid levels are one of the keys of
+          <code class="literal">Debug.messageLevels</code>. All messages of a lower level than the current
+        setting will be suppressed.</p><div class="example"><a name="id17557"></a><p class="title"><b>Example 51.8. Setting the debug message level</b></p><div class="example-contents"><pre class="programlisting">
+      &lt;canvas width="100%" height="200" debug="true" &gt;
+  &lt;script&gt;
+    //one of: "ALL", "DEBUG", "INFO", "WARNING", "ERROR", "NONE"
+    Debug.messageLevel = "WARNING";
+    
+    Debug.write("write");  
+    Debug.debug("debug");
+    Debug.info("info");
+    Debug.warn("warn");
+    Debug.error("error");
+  &lt;/script&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/debuglevel.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/debuglevel.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="logging-to-the-server"></a>12. Logging to the Server</h2></div></div></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>This section is unlikely to be of use to LZX users, but it can be helpful for LZX
+        developers.</p></div><p>Messages can be written from an LZX application to the <em class="glossterm">server log</em>
+      through the use of the <code class="literal">logdebug=true</code> query parameter and the
+        <code class="literal">Debug.log()</code> method.</p><p>If you set <code class="literal">logdebug</code> to true, then <span class="em">any</span>
+      output to the debugger will be logged. This can be helpful if you find the system crashing
+      before the debugger is started. We recommend using the console debugger first and only resort
+      to logging if even the console debugger is not working. (For the DHTML runtimes, if there is a
+      runtime <code class="literal">console</code> object with a <code class="literal">log</code> method, logging will
+      be automatically turned on. This is the case for Safari if the Developer feature is enabled,
+      or Firefox if the Firebug plug-in is installed.) </p><p>Where does logging information go? In the case of the SWF8 runtime, the information is
+      logged back to the LZX server and can be seen by inspecting the server log. For the DHTML
+      runtime, if the browser supports a <code class="literal">console</code> (e.g., developer versions of
+      Firefox, Safari), the information will be logged to the browser console. For the SWF9 runtime,
+      if the application is being run under the Flex debugger, <code class="literal">fdb</code>, the
+      information will be logged to the debugger.</p><p>The <code class="literal">Debug.log()</code> method can be used to log directly to the server,
+      independent of the setting of <code class="literal">logdebug</code>, but this is hardly ever necessary.
+      It takes a single argument; if the argument is the result of
+      <code class="literal">Debug.formatToString</code>, some runtimes (e.g., DHTML on Firefox) will "present"
+      the formatted string in a way that will allow you to inspect the objects represented by the
+      string, but this is not supported for all runtimes. </p><p class="todo">
+      <em><span class="remark"><span class="para-label">TODO: </span>Examples</span></em>
+    </p><p>See the <a class="ulink" href="../deployers/logging.html" target="_top">OpenLaszlo System Administrator's
+        Guide</a> for information about configuration and reading the server log.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2083"></a>13. Formatting Output</h2></div></div></div><p> The debugger has capabilities for formatting output according to control strings. </p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2078"></a>13.1. Using <code class="literal">printf</code> conversions</h3></div></div></div><p>
+        <code class="literal">Debug.formatToString</code> produces formatted output to a string, formatting
+        its arguments according to the control string:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>The standard <code class="literal">printf</code> conversions are accepted, with the exception
+            of <code class="literal">a</code>, <code class="literal">n</code>, and <code class="literal">p</code>. </p></li><li class="listitem"><p><code class="literal">e</code>, <code class="literal">f</code>, and <code class="literal">g</code> conversions are
+            accepted but equivalent to <code class="literal">f</code>. </p></li><li class="listitem"><p>The <code class="literal">h</code> and <code class="literal">l</code> length modifiers are accepted but
+            ignored. No errors are signalled for invalid format controls or insufficient
+          arguments.</p></li></ul></div><p>There is an additional format specifier <code class="literal">w</code> that formats the argument
+        as if by <code class="literal">Debug.__String</code> with the 'pretty' option and creates a 'hotlink'
+        so the object can be inspected. If alternate format is requested (#), <code class="literal">w</code>
+        uses the full <code class="literal">Debug.__String</code> format used by
+        <code class="literal">Debug.write</code>. <code class="literal">w</code> format obeys
+        <code class="literal">Debug.printLength</code>, binding it to the maximum width, if specified in the
+        control string.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2080"></a>13.2. Printing 'single-escape' characters</h3></div></div></div><p> When the debugger prints a string and <code class="literal">Debug.printPretty</code> is false, it
+        will escape all the <code class="literal">SingleEscapeCharacter</code>'s in the string (i.e.,
+          <code class="literal">' " \ b \f \n \r \t \v</code>). For example:</p><pre class="programlisting">Debug.format('%#w', 'This is a "test"\nS\bring')  -&gt;«string#6| "This is a \"test\"\nS\bring"»</pre><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id2079"></a>13.2.1. On-the-fly type conversions</h4></div></div></div><p> The <code class="literal">%d</code>, <code class="literal">%u</code>, <code class="literal">%i</code>,
+          <code class="literal">%o</code>, and <code class="literal">%x</code> directives (and their capital variants)
+          cast their arguments to the type Number before formatting them. The <code class="literal">%s</code>
+          directive casts its argument to a String. There is no default precision for these format
+          directives — they will print the fractional part of non-integers by default. If you
+          require that they round to the nearest integer, you can use <code class="literal">%.0d</code>. If
+          passed an argument that cannot be coerced to a Number, these format directives print
+            <code class="literal">NaN</code> (Not a Number). </p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2082"></a>13.3. Inspecting Warnings and Errors</h3></div></div></div><p>Warnings and Errors are <span class="em">inspectable</span>. If you click on
+        them, you will inspect the warning or error object. If backtracing is enabled, a backtrace
+        will be one of the properties of the object that you can inspect. Inspecting the backtrace
+        will reveal the recorded stack frames which record: the function called,
+        <code class="literal">this</code> and the arguments to the function.</p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id2081"></a>13.3.1. Inspecting a debug message to see the backtrace</h4></div></div></div><p>In the following example, when you click on the button, it causes a Debug message to
+          be printed.</p><p>Clicking on the debug message will inspect that, and reveal the backtrace associated
+          with the message. </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>The <code class="literal">&lt;canvas compileroptions= "..."</code> ensures that backtraces
+            are on for this example. This option is only available in OpenLaszlo revisions 4.2.1 and
+            later. Backtraces can also be enabled in the developer console, which is what you would
+            normally do. In general, you would not deploy an application with backtraces on as they
+            impact the performance of the application significantly. Backtraces are currently only
+            available in SWF8 and DHTML runtimes.</p></div><p>If you click on one of the entries in the backtrace, you will see that it is a
+            <code class="literal">StackFrame</code>, and will tell you the function that is called, the
+          arguments, and the value of <code class="literal">this</code> in that call. Each of those in turn
+          can be clicked on to inspect more deeply.</p><div class="example"><a name="id17645"></a><p class="title"><b>Example 51.9. Backtrace example</b></p><div class="example-contents"><pre class="programlisting">
+            &lt;canvas compileroptions="debug: true; backtrace: true" width="100%" height="300"&gt; 
+  &lt;debug x="80" height="90%" /&gt; 
+  &lt;button name="test" width="75" height="75"&gt; 
+    &lt;handler name="onclick"&gt; Debug.debug("Now click on this message, and then click on the backtrace value you see"); &lt;/handler&gt; 
+    Click Me! 
+  &lt;/button&gt; 
+&lt;/canvas&gt; 
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2009 Laszlo Systems, Inc.  All Rights Reserved.             *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+          </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/backtrace.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/backtrace.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2084"></a>14. Monitoring and tracing object properties</h2></div></div></div><p><code class="literal">Debug.monitor(who, what)</code>: Takes an object and property name and will
+      emit a <span class="em">monitor message</span> each time that property is changed. </p><p>
+      <code class="literal">Debug.unmonitor(who, what)</code>: Turns that off. </p><p> A monitor message consists of the function that caused the change, a timestamp, the
+      object and property, and the old and new values. The following example uses
+        <code class="literal">Debug.monitor()</code> and <code class="literal">Debug.trace()</code>:</p><div class="example"><a name="id17657"></a><p class="title"><b>Example 51.10. Using Debug.monitor() and Debug.trace()</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas debug="true" width="100%" height="225"&gt;
+&lt;debug x="110" y="0" height="245" width="550"/&gt;
+  &lt;button name="test" width="100" height="100"&gt;
+    &lt;handler name="onclick"&gt; this.clicked(); &lt;/handler&gt;
+    &lt;method name="clicked" args="ignore=null"&gt;
+      this.x = this.getMouse('x');
+      this.y = this.getMouse('y');
+      return this.x * this.y;
+    &lt;/method&gt;
+    Click Me!
+  &lt;/button&gt;
+  &lt;script&gt;
+    Debug.monitor(test, 'x');
+    Debug.monitor(test, 'y');
+    Debug.trace(test, 'clicked');
+  &lt;/script&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/debug-mon-trace.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/debug-mon-trace.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>As shown in this example:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal">Debug.monitor()</code> monitors attribute modification. It gives a timestamp
+          on attribute modification, shows the function doing the modification and the old and new
+          value. </p></li><li class="listitem"><p>
+          <code class="literal">Debug.trace()</code> traces method calls. It gives a timestamp on function
+          call, shows the call and arguments, and a timestamp on function exit, shows the return
+          value. </p></li></ul></div><p>If backtracing is enabled, the trace and monitor messages also capture a backtrace (which
+      you can see by inspecting the message). Can be especially handy if you are trying to figure
+      out who/what/when is calling a method or clobbering a property. </p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2085"></a>15. Finding "memory leaks"</h2></div></div></div><p> A running OpenLaszlo application allocates parts of available virtual memory to store
+      objects. When these objects are no longer needed the memory should be released by the
+      application in order to become once again available for other use. Sometimes unneeded memory
+      is not properly released, in which case the application tends to slow down over time as less
+      and less memory becomes available. This is "leaking memory." The OpenLaszlo debugger can help
+      you find memory leaks. </p><p> Three methods on <code class="classname">Debug</code> are used to find leaks:</p><div class="orderedlist"><ol class="orderedlist compact" type="1"><li class="listitem"><p>
+          <code class="literal">markObjects()</code>
+        </p></li><li class="listitem"><p>
+          <code class="literal">findNewObjects()</code>
+        </p></li><li class="listitem"><p>
+          <code class="literal">whyAlive()</code>
+        </p></li></ol></div><p> You use them in that order. Typically, you will start up your program, run it for a bit
+      until you think it has reached a steady state. Then invoke
+      <code class="literal">Debug.markObjects()</code>. This runs in the background and will mark all the
+      objects that are currently in use. When you see the output <code class="literal">Trace Done</code> you
+      can move on to the next step. </p><pre class="programlisting">
+     lzx&gt; Debug.markObjects()
+     WARNING: Memory tracing is for experimental use only in this runtime.
+     Marking objects …
+     lzx&gt; DEBUG: 1 loops @ 7590 iterations, 1194.00 milliseconds
+     … done!
+   </pre><p>You exercise your application in a way that you expect not to result in any retained
+      storage (or some small amount of retained storage). </p><pre class="programlisting">
+    lzx&gt; canvas.thisIsALeak = {some: 'new', data: 42}
+    «Object#136| {data: 42, some: 'new'}»
+    </pre><p>Run <code class="code">Debug.findNewObjects()</code>. This also runs in the background and will find
+      any new objects that have been allocated since the <code class="code">markObjects()</code> call that have
+      not yet been garbage-collected. When you see the output <code class="code">done!</code> you can move on to
+      the next step.</p><pre class="programlisting">
+    lzx&gt; Debug.findNewObjects()
+    WARNING: Memory tracing is for experimental use only in this runtime.
+    Finding new objects …
+    lzx&gt; DEBUG: 2 loops @ 3797 iterations, 674.50 milliseconds
+    … done!
+    </pre><p>Call <code class="code">Debug.whyAlive()</code>. This returns a <span class="emphasis"><em>leak list</em></span>. </p><pre class="programlisting">
+    lzx&gt; Debug.whyAlive()
+    WARNING: Memory tracing is for experimental use only in this runtime.
+    18 smoots [1 objects @ ~18 smoots each]:
+    global.canvas.thisIsALeak: (£18) «Object#136| {…, data: 42, some: 'new'}»
+    «__LzLeaks(2)#140| 18 smoots [1 objects @ ~18 smoots each]»
+    lzx&gt;
+  </pre><p>showing <span class="emphasis"><em>&lt;why&gt;: (&lt;size&gt;):
+      &lt;what&gt;</em></span> pairs. <span class="emphasis"><em>&lt;why&gt;</em></span> is the
+      shortest path from global that is keeping the object from being collected;
+        <span class="emphasis"><em>&lt;size&gt;</em></span> is an approximation (in <a class="ulink" href="http://en.wikipedia.org/wiki/Smoot" target="_top">Smoots</a>) of the size of the object and its
+      descendants, which is a rough indication of the cost of the object;
+        <span class="emphasis"><em>&lt;what&gt;</em></span> is the debugger representation of the object. You
+      can also inspect the <span class="emphasis"><em>leak list</em></span> items to see the objects that have been
+      retained. </p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2087"></a>16. Debugging in DHTML</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2086"></a>16.1. Using Firefox</h3></div></div></div><p> For debugging the DHTML runtime, we recommend the <a class="ulink" href="http://getfirebug.com/" target="_top">Firebug</a> extension to Firefox. If Firebug reports an error (with a little tiny red
+        X in the bottom right hand corner of your Firefox window) then there is probably a bug in
+        your code or an OpenLaszlo bug. The errors reported by Firebug can be very obscure, but they
+        usually happen when you are dereferencing a null pointer. </p><p> Firebug is more useful if you compile your DHTML application under debug mode
+          (<code class="literal">debug=true</code>) so that method names show up in firebug stack traces.
+        Dropping down the arrow next to an exception in firebug will show a complete stack trace -
+        often helpful for tracking down the root cause. Please file bugs with a stack trace if
+        possible! </p><p> When you're compiling to DHTML, you generally use a two-step/two debugger process. It
+        is always a good practice for you to have Firebug, because the OpenLaszlo debugger does not
+        catch _all_ errors (it would be too much overhead to do so). We try to make our code
+        debuggable in Firebug, as much as possible, but there are several limitations:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>Firebug does not know about our class system, so it cannot display our objects as
+            intelligently as our debugger, and </p></li><li class="listitem"><p>Firebug does not understand OpenLaszlo #file and #line declarations, so it cannot
+            give as accurate error locations as our debugger does. </p></li></ul></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>If you have Firebug enabled in Firefox, the LZX debugger echos all messages to the
+          Firebug console, preserving objects. The Firebug debugger will attempt to interpret an
+          object with a <code class="literal">length</code> field as an array and try to print every array
+          element. This may cause a <code class="literal">Script Running Slowly</code> error. Disabling
+          Firebug will prevent that.</p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="debugsafari"></a>16.2. Using Safari</h3></div></div></div><p>If you are using Safari to debug DHTML, we recommend that you enable
+          <code class="literal">Preferences/Advanced/Show Develop menu in menu bar</code> and from that menu
+          <code class="literal">Develop/Show Error Console</code>. This will enable Safari's console, and as
+        with Firebug, you will be able to catch errors not caught by the LZX debugger. </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="debugging.deref"></a>16.3. Dereferencing Null Pointers</h3></div></div></div><p> The Flash runtime is permissive about dereferencing a null reference and getting
+        properties on an undefined object. DHTML blows up if you do this. By "blows up" we mean that
+        each DHTML browser crashes or hangs in a different way when the application code
+        dereferences a null pointer. Lots of legacy code doesn't check for null. </p><p> In JavaScript you are allowed to ask for a non-existent slot, but not for a slot on
+        something that is not an object. Therefore, don't say <code class="literal">foo.bar</code> unless you
+        know that foo is an object. If you know foo is either an object or null, you can say
+          <code class="literal">if (foo)</code> before you say <code class="literal">foo.bar</code>. If you don't even
+        know that, you would need to say <code class="literal">if (foo is Object)</code>. </p><p> Furthermore, in DHTML you cannot reference a non-existent variable.
+        Therefore you should declare all your variables. In SWF, you could get by without declaring
+        them, and they would just appear to be <code class="literal">undefined</code>, in DHTML, you will get
+        a <code class="literal">has no properties</code> error if you refer to <code class="literal">foo</code> and you
+        have not first said <code class="literal">var foo</code>.</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="editing-lzx.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.methodology.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="lzunit.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 50. Editing </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 52. Unit Testing</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;tabelement&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>tabelement<span class="ang">&gt;</span></h1><p class="short">
+                A tab element view that is opened and closed in conjunction with a tabslider.
+            </p><p class="meta">Extends <code>basetabelement</code></p>
+                        
+        <p>
+                              
+          <code>tabelement</code>
+           is a non-visual view contained within a 
+                    
+          
+           that opens and closes when directed by a tabslider.
+                    In practice, the 
+          <code>tabelement</code>
+           class can be extended to 
+                    create whatever look and feel is desired. The following example demonstrates how 
+                    that is done.
+                
+        </p>
+                        
+        <pre class="example">
+                    
+&lt;canvas height="200"&gt;
+  &lt;include  /&gt;
+
+  &lt;!-- Custom tabelement --&gt;
+  &lt;class name="mytabelement" extends="tabelement" bgcolor="blue"&gt;
+    &lt;!-- classroot.parent = reference to tabslider --&gt;
+    &lt;view placement="header" bgcolor="red" height="100%" width="100%"&gt;
+      &lt;text name="title" x="2" y="1" text="${classroot.text}"/&gt;
+    &lt;/view&gt;
+  &lt;/class&gt;
+
+  &lt;!-- Use custom tabelement --&gt;
+  &lt;tabslider bgcolor="yellow" width="100" height="200" spacing="2"&gt;
+    &lt;mytabelement text="Tab 1"&gt;
+      &lt;view bgcolor="white" width="30" height="30"/&gt;
+    &lt;/mytabelement&gt;
+    &lt;mytabelement text="Tab 2"/&gt;
+    &lt;mytabelement text="Tab 3"/&gt;
+  &lt;/tabslider&gt;
+&lt;/canvas&gt;
+                    
+                </pre>
+                    
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">contentopacity</td><td class="ty">expression</td><td class="ty">0.5</td><td>This is not being used.</td></tr><tr><td class="nm">defaultplacement</td><td class="ty">string</td><td class="ty">content</td><td>Default placement for views placed in tabelement is 'content'.</td></tr><tr><td class="nm">headerpadding</td><td class="ty">expression</td><td class="ty">0</td><td>Insets the header art on the x-axis.</td></tr><tr><td class="nm">inset_bottom</td><td class="ty">expression</td><td class="ty">parent.inset_bottom</td><td>The bottom inset for content appearing within a tabelement. Default
+              is the containing tabslider's inset_bottom value.</td></tr><tr><td class="nm">inset_left</td><td class="ty">expression</td><td class="ty">parent.inset_left</td><td>The left inset for content appearing within a tabelement. Default
+              is the containing tabslider's inset_left value.</td></tr><tr><td class="nm">inset_right</td><td class="ty">expression</td><td class="ty">parent.inset_right</td><td>The right inset for content appearing within a tabelement. Default
+              is the containing tabslider's inset_right value.</td></tr><tr><td class="nm">inset_top</td><td class="ty">expression</td><td class="ty">parent.inset_top</td><td>The top inset for content appearing within a tabelement. Default
+              is the containing tabslider's inset_top value.</td></tr><tr><td class="nm">shadowheight</td><td class="ty">expression</td><td class="ty">4</td><td>The height of the shadow.</td></tr><tr><td class="nm">shadowvisible</td><td class="ty">expression</td><td class="ty">true</td><td>Boolean to set the shadow of this tabelement.</td></tr><tr><td class="nm">text_x</td><td class="ty">expression</td><td class="ty">4</td><td>The x position of the text field in the header area.</td></tr><tr><td class="nm">text_y</td><td class="ty">expression</td><td class="ty">this.top.header.height/2 - this.top.header.txt.height/2</td><td>The y position of the text field in the header area. Default is centered.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

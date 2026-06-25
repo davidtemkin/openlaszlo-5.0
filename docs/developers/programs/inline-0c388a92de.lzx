@@ -1,0 +1,61 @@
+<class name="baseslider" extends="basevaluecomponent" width="200">
+  <!-- attributes begin here -->
+  <!-- ...                   -->
+  
+  <!-- Event handler when minvalue changes. --> 
+  <attribute <emphasis role="em">name="onminvalue"</emphasis> value="null" type="expression"/>
+  
+  <!-- Event handler when maxvalue changes. --> 
+  <attribute <emphasis role="em">name="onmaxvalue"</emphasis> value="null" type="expression"/>
+
+  <!-- attributes end here   -->
+
+  <method name="setValue" args="v">
+    // setValue body
+  </method>
+
+  <method name="setPercentage" args="p">
+    // setPercentage body
+  </method>
+
+  <method name="getPercentage">
+    // getPercentage body
+  </method>
+
+  <method name="_adjustThumb">
+    // _adjustThumb body
+  </method>
+
+  <!--- Get the minimum value of the slider.
+        @return Number: the minimum value. -->
+  <method <emphasis role="em">name="getMinValue"</emphasis>>
+    return this.minValue;
+  </method>
+  <!--- Get the maximum value of the slider.
+        @return Number: the maximum value. -->
+  <method <emphasis role="em">name="getMaxValue"</emphasis>>
+    return this.maxValue;
+  </method>
+
+  <!--- Set the minimum value.
+        @param Number v: the minimum value. -->
+  <method <emphasis role="em">name="setMinValue"</emphasis> args="v">
+    if (this.minValue == v) return;
+    this.minValue = v;
+    <emphasis role="em">if (this.onminvalue) this.onminvalue.sendEvent();</emphasis>
+    // adjust value
+    if (this.minValue > this.value) this.setAttribute("value",v);
+    _adjustThumb();
+  </method>
+
+  <!--- Set the maximum value.
+        @param Number v: the maximum value. -->
+  <method <emphasis role="em">name="setMaxValue"</emphasis> args="v">
+    if (this.maxValue == v) return;
+    this.maxValue = v;
+    <emphasis role="em">if (this.onmaxvalue) this.onmaxvalue.sendEvent();</emphasis>
+    // adjust value
+    if (this.value > v) this.setAttribute("value",v);
+    _adjustThumb();
+  </method>
+</class>

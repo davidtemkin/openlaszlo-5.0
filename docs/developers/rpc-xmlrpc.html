@@ -1,0 +1,74 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 48. XML-RPC</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.laszlorpc.html" title="Part VII. OpenLaszlo RPC"><link rel="prev" href="rpc-soap.html" title="Chapter 47. SOAP"><link rel="next" href="developers.methodology.html" title="Part VIII. Development Methodology"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 48. XML-RPC</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="rpc-soap.html">Prev</a> </td><th width="60%" align="center">Part VII. OpenLaszlo RPC</th><td width="20%" align="right"> <a accesskey="n" href="developers.methodology.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="rpc-xmlrpc"></a>Chapter 48. XML-RPC</h2></div></div></div><p>XML-RPC is simple spec that describes how to invoke a remote operation using
+XML over HTTP.  OpenLaszlo XML-RPC is part of <a class="xref" href="rpc.html" title="Chapter 45. OpenLaszlo RPC">OpenLaszlo RPC</a>, and shares many of the 
+same APIs and concepts. OpenLaszlo RPC includes <a class="xref" href="rpc-soap.html" title="Chapter 47. SOAP">SOAP</a> and 
+<a class="xref" href="rpc-javarpc.html" title="Chapter 46. JavaRPC">JavaRPC</a>. For more information on XML-RPC,
+go to <a class="ulink" href="http://www.xmlrpc.com/" target="_top">XML-RPC.com</a></p><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2034"></a>1. &lt;xmlrpc&gt;</h2></div></div></div><p>The &lt;xmlrpc&gt; element creates a client-side representation of an XML-RPC
+service. The service attribute is required and must be an URL.</p><div class="example"><a name="id16442"></a><p class="title"><b>Example 48.1. SOAP</b></p><div class="example-contents"><pre class="programlisting">
+&lt;xmlrpc service="..."
+      autoload="[true|false]"
+      secure="[true|false]"
+      secureport="..." &gt;
+</pre></div></div><br class="example-break"><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2030"></a>1.1. Attributes</h3></div></div></div><p><a class="indexterm" name="id16448"></a><em class="glossterm">service</em>: (String) URL of where service is located. This attribute
+is required.</p><p><a class="indexterm" name="id16452"></a><em class="glossterm">autoload</em>: (Boolean) if true, calls to load client proxy during
+init stage. If false, the proxy must be loaded using the load() method. See the
+proxy section in the RPC chapter for details. <span class="b">Default is true.</span></p><p><a class="indexterm" name="id16457"></a><em class="glossterm">secure</em>: (Boolean) if true, creates a secure HTTPS connection
+between the client and the OpenLaszlo Server. Also see secureport below. <span class="b">Default is
+false.</span></p><p><a class="indexterm" name="id16462"></a><em class="glossterm">secureport</em>: (Number) valid only when secure attribute is set to
+true. The secure port to use. There is no client-side default. Most servers use
+port 443 as the default HTTPS port.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2031"></a>1.2. Read-only properties</h3></div></div></div><p><a class="indexterm" name="id16468"></a><em class="glossterm">proxy</em>: (Object) unlike other RPC services, proxy functions are
+created based on declared remotecall elements. Because there is no XML-RPC
+service description, each function stub in the proxy is created by remotecall
+elements declared by the developer. In other RPC services, declared remotecalls
+refer to proxy function stubs that exist after load.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2033"></a>1.3. Methods</h3></div></div></div><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="rpc-xmlrpc.load"></a>1.3.1. load()</h4></div></div></div><p>Load() is responsible for setting up the proxy property. The proxy will have
+function stubs based on remotecalls declared in the body of the &lt;xmlrpc&gt;
+element. This method is automatically invoked if autoload is true. When the call
+returns, an onload event is sent.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id2032"></a>1.3.2. unload()</h4></div></div></div><p>This method unloads the proxy from the RPC object and sets it to null. When
+the call returns, an onunload event is sent.</p><p></p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2035"></a>2. Using remotecall to creating function stubs</h2></div></div></div><p>Most  OpenLaszlo RPC objects like JavaRPC and SOAP will set function stubs in the
+proxy property during load based on methods described by a class (for JavaRPC)
+or on a service description (using a WSDL in SOAP). Remotecall declarations
+refer to these function stubs and any remotecalls not pointing to a function
+stub that doesn't exist will generate an error or warning. In &lt;xmlrpc&gt;,
+function stubs are create based on remotecall declarations. Note that XML-RPC
+use dot notation for their operation names. Because that will conflict with the
+view system's notation, it's suggested that remotecalls be explicitly named.</p><div class="example"><a name="id16483"></a><p class="title"><b>Example 48.2. Creating a function stub</b></p><div class="example-contents"><pre class="programlisting">
+   
+
+&lt;canvas debug="true" height="400" width="100%"&gt;
+    &lt;!-- this isues one call of the freshmeat XML-RPC API --&gt;
+    &lt;!-- Documented here: http://freshmeat.net/faq/view/49/ --&gt;
+
+    &lt;xmlrpc name="freshmeat"
+            service="http://freshmeat.net/xmlrpc/"&gt;
+
+        &lt;handler name="onload"&gt;
+            Debug.debug('freshmeat XML-RPC service loaded');
+            Debug.debug('proxy:');
+            Debug.inspect(this.proxy);
+        &lt;/handler&gt;
+
+        &lt;handler name="ondata" args="data"&gt;
+            Debug.debug('got data: %w', data);
+        &lt;/handler&gt;
+
+        &lt;handler name="onerror" args="error"&gt;
+            Debug.debug('onerror: %w', error);
+        &lt;/handler&gt;
+
+        &lt;remotecall name="fal" funcname="fetch_available_licenses" /&gt;
+
+    &lt;/xmlrpc&gt;
+
+    &lt;button text="fetch_available_licenses" x="10" y="10"&gt;
+        &lt;handler name="onclick"&gt;
+            Debug.debug('getting licenses...');
+            freshmeat.fal.invoke()
+        &lt;/handler&gt;
+    &lt;/button&gt;
+
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/rpc-xmlrpc-_2.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/rpc-xmlrpc-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="rpc-soap.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.laszlorpc.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="developers.methodology.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 47. SOAP </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Part VIII. Development Methodology</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

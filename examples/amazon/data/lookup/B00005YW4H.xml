@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ItemLookupResponse><Items>
+  <Request><IsValid>True</IsValid></Request>
+  <Item>
+    <ASIN>B00005YW4H</ASIN>
+    <SmallImage><URL>data/covers/B00005YW4H.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B00005YW4H.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B00005YW4H.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>Berlin Philharmonic</Artist>
+      <Manufacturer>Deutsche Grammophon</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>1999-10-12</ReleaseDate>
+      <Title>Symphony No. 9 “Choral”</Title>
+      <ListPrice><Amount>1698</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$16.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$9.99</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$4.50</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$12.99</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Beethoven’s towering final symphony in a benchmark recording — the “Ode to Joy” finale remains unmatched.</Content></EditorialReview></EditorialReviews>
+  </Item>
+</Items></ItemLookupResponse>

@@ -1,0 +1,51 @@
+<!-- chat.lzx — the OpenLaszlo chat demo, migrated from 3.4.x to OL4 and rewired from
+     the Flash-only <connection>/<connectiondatasource> onto the DHTML lzconnection
+     component (browser WebSocket). Behavior preserved: pick a name -> login -> connect
+     -> presence -> chat -> online list -> logout. -->
+<canvas bgcolor="#EAEAEA" width="640" height="540">
+
+    <include href="connection.lzx"/>
+
+    <!-- the persistent connection (DHTML, over WebSocket to the relay) -->
+    <lzconnection id="connection" app="chat" receiveuserdisconnect="true">
+        <handler name="onlogin" args="status"><![CDATA[
+            if (status === 'success') { connection.connect(); }
+            else { canvas.dialog.setAttribute('text', 'bad login status: ' + status); canvas.dialog.open(); }
+        ]]></handler>
+        <handler name="onconnect"><![CDATA[
+            canvas.myprint('...connected...');
+            connection.sendMessage('*', '', 'userconnect');   // announce presence
+            connection.getList('*');
+            canvas.viewPicker.setAttribute('visible', false);
+            canvas.viewChat.setAttribute('visible', true);
+        ]]></handler>
+        <handler name="onerror" args="err"><![CDATA[
+            if (connection.connected) { canvas.myprint('...connection error...'); }
+            else { canvas.dialog.setAttribute('text', err); canvas.dialog.open(); }
+        ]]></handler>
+        <handler name="ontimeout"><![CDATA[
+            if (connection.connected) { canvas.myprint('...connection timed out...'); }
+            else { canvas.dialog.setAttribute('text', 'connection timed out'); canvas.dialog.open(); }
+        ]]></handler>
+        <handler name="ondisconnect"><![CDATA[
+            canvas.myprint('...disconnected...');
+            canvas.viewChat.setAttribute('visible', false);
+            canvas.viewPicker.setAttribute('visible', true);
+        ]]></handler>
+        <handler name="onmessage" args="m"><![CDATA[
+            if (m.operation === 'message') canvas.myprint(m.from + ': ' + m.body);
+        ]]></handler>
+        <handler name="onuserconnect" args="from"><![CDATA[
+            canvas.myprint('User ' + from + ' connected!');
+            connection.getList('*');
+        ]]></handler>
+        <handler name="onuserdisconnect" args="user"><![CDATA[
+            canvas.myprint('user ' + user + ' disconnected');
+            connection.getList('*');
+        ]]></handler>
+        <handler name="onlist" args="users"> canvas.setUsers(users); </handler>
+    </lzconnection>
+
+    <include href="chatlib.lzx"/>
+
+</canvas>

@@ -1,0 +1,10 @@
+mainApplication.lzx:
+<library>
+  <tabslider width="$once{canvas.width - 20}" x="10" y="10"
+      height="$once{canvas.height - 20}" spacing="2"
+      slideduration="300">
+    <tabelement name="one" text="Tabelement One"/>
+    <tabelement name="two" text="Tabelement Two"/>
+    <tabelement name="three" text="Tabelement Three"/>
+  </tabslider>
+</library>

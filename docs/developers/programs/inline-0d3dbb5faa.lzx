@@ -1,0 +1,4 @@
+ 
+<view name="someView" 
+   width="${someAttribute + someOtherAttribute}" 
+   /> 

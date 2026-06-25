@@ -1,0 +1,510 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 23. Fonts</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.building-apps.html" title="Part III. Fundamental Concepts"><link rel="prev" href="richtext.html" title="Chapter 22. Rich Text"><link rel="next" href="animation.html" title="Chapter 24. Animation"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 23. Fonts</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="richtext.html">Prev</a> </td><th width="60%" align="center">Part III. Fundamental Concepts</th><td width="20%" align="right"> <a accesskey="n" href="animation.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="fonts"></a>Chapter 23. Fonts</h2></div></div></div><p>This chapter describes how to use fonts in LZX applications.</p><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1575"></a>1. What is a font?</h2></div></div></div><p> A font is a set of glyphs (images) representing the
+       characters from some particular character set in a
+       particular size, style, and typeface.  
+       There are several different computer representations for fonts.  
+       The most widely known are Adobe Systems, Inc.'s
+       Postscript font definitions and Apple's <a class="ulink" href="http://developer.apple.com/fonts/TTRefMan/RM06/Chap6.html" target="_top">TrueType.</a>
+   </p><a name="fonts.pixel-fonts"></a><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1569"></a>1.1. Runtime considerations</h3></div></div></div><p>
+Since DHTML doesn't support compiled fonts, we have to rely on system 
+fonts.  This means fonts may not look 
+exactly the same across runtimes because letter spacing and rendering/smoothing are often different from one implementation to the next.
+</p><p>Small type isn't smoothed in DHTML as it is in SWF.  I'm not sure 
+what to do here, except choose our fonts carefully and/or avoid small 
+point sizes.
+</p><p>
+We make every effort to make font metrics in DHTML match those in swf.  They may not match exactly but they're very close.
+</p><p>
+It is virtually impossible to achieve pixel-perfect font 
+rendering across all runtimes.  However, with minimal changes for 
+alignment and font names, you can usually make SWF and DHTML versions of your application essentially indistinguishable with regard to appearance of text.
+</p><p class="fixme"><em><span class="remark"><span class="para-label">FIXME: </span>conditionalizing application so they can be compiled to either</span></em></p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1570"></a>1.2. Bitmap fonts and outline fonts</h3></div></div></div><p> The image of each character in a font
+       may be encoded either as </p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p> a bitmap (a <span class="i">bitmap font</span>, sometimes called a <span class="i">pixel font</span>) </p></li><li class="listitem"><p> a higher-level description in terms of lines and areas (an <span class="i">outline font</span>). </p></li></ul></div><p>In general, bitmap fonts are intended to be
+       displayed at a specific size and outline fonts can be displayed at a variety of sizes.  
+         </p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1573"></a>1.3. Embedded Fonts and Client Fonts</h3></div></div></div><p>
+Only some runtimes support embedded fonts (just SWF for now). Because of this, if you're not compiling to SWF all fonts need to be on the end-user's system and <a class="indexterm" name="id7513"></a><code class="sgmltag-element">&lt;font&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag(s) don't work.
+Font attributes can take a list of names (optionally including compiled font names for swf.)
+The runtime goes through the comma-separated list and picks the first one it finds on the system. This allows for fallback fonts if one or more fonts can't be found by name.
+</p><p>
+OpenLaszlo applications can access fonts in either of two ways: by building them into the application itself (SWF only) or by using the fonts that 
+are resident on the client machine (DHTML and SWF).
+</p><p>
+       With embedded fonts, there is a reasonable guarantee that the text in that application will look the same, no 
+       matter where it is run. However, fonts are large, and including fonts in your application makes the application 
+(download) larger, and the startup time slower. With client fonts, (also called native
+       fonts or device fonts), applications are smaller and start faster, but there is no guarantee that the rendering of that font, or the font definitions themselves,
+       will be the same from computer to computer.  Embedded fonts provide higher fidelity.
+</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1571"></a>1.3.1. Client fonts cannot be rotated or change opacity</h4></div></div></div><p>
+ In addition, because of limitations of
+the Flash Player, there are certain things you cannot do with client fonts.  For example, client fonts cannot be rotated, nor can
+you vary their opacity. Here is a summary of the differences:
+    </p><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1572"></a>1.3.2. Summary of differences between client and embedded fonts</h4></div></div></div><p>
+<span class="b">Client fonts</span>
+</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>Smaller downloads and faster initialization</p></li><li class="listitem"><p>Some limitations (no rotation, etc)</p></li><li class="listitem"><p>No guarantee that application will look the same on all platforms</p></li></ul></div><p>
+<span class="b">Embedded fonts</span>
+</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>Larger downloads; slower startup</p></li><li class="listitem"><p>All text manipulations available</p></li><li class="listitem"><p>Designer control over application appearance</p></li></ul></div><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1574"></a>1.4. Default Fonts</h3></div></div></div><p>
+By default, OpenLaszlo applications use the device fonts.
+</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3>The Adobe Flash API to measure text width is reporting an incorrect value: there's no way for us to know what the 
+      real width of the text is. As a result, you may see some clipping of text, as in the italicized fonts in the following code example.</div><div class="example"><a name="id7546"></a><p class="title"><b>Example 23.1. Using device fonts</b></p><div class="example-contents"><pre class="programlisting">
+
+&lt;canvas width="100%"&gt; 
+  &lt;window title="Fonts are fun!" width="400" height="400" resizable="true"&gt;
+  &lt;view width="500"&gt;
+    &lt;simplelayout axis="y" spacing="10"/&gt;
+    &lt;view width="400" font="Arial" fontsize="14"&gt;
+      &lt;simplelayout axis="y" spacing="10"/&gt;
+      &lt;text&gt;Arial&lt;/text&gt;
+      &lt;text&gt;abcdefghijklmnopqrstuvwxyz1234567890!@#$%^*()-=+|&lt;/text&gt;
+      &lt;text&gt;ABCDEFGHIJKLMNOPQRSTUVWXYZ ,./ ;?;':"[]{}\~`&lt;/text&gt;
+      &lt;text&gt;&lt;b&gt;Arial&lt;/b&gt;&lt;/text&gt;
+      &lt;text&gt;&lt;i&gt;Arial&lt;/i&gt;&lt;/text&gt;
+      &lt;text&gt;&lt;b&gt;&lt;i&gt;Arial&lt;/i&gt;&lt;/b&gt;&lt;/text&gt;
+      &lt;inputtext&gt;inputtext here&lt;/inputtext&gt;
+      &lt;inputtext multiline="true" height="100" width="100"&gt;hello there&lt;/inputtext&gt;
+      &lt;inputtext&gt;Arial&lt;/inputtext&gt;
+      &lt;text&gt;
+        &lt;b&gt;&lt;i&gt;BoldItalic&lt;/i&gt; Bold &lt;/b&gt;&lt;i&gt;Italic&lt;/i&gt;
+        &lt;u&gt;Underline &lt;b&gt;Bold Underline&lt;/b&gt;&lt;/u&gt;&lt;/text&gt;
+    &lt;/view&gt;
+    
+    &lt;view width="400" font="Arial Narrow" fontsize="14"&gt;
+      &lt;simplelayout axis="y" spacing="10"/&gt;
+      &lt;text&gt;Arial Narrow&lt;/text&gt;
+      &lt;text&gt;abcdefghijklmnopqrstuvwxyz1234567890!@#$%^*()-=+|&lt;/text&gt;
+      &lt;text&gt;ABCDEFGHIJKLMNOPQRSTUVWXYZ ,./?;':"[]{}\~`&lt;/text&gt;
+      &lt;text&gt;&lt;b&gt;Arial Narrow&lt;/b&gt;&lt;/text&gt;
+      &lt;text&gt;&lt;i&gt;Arial Narrow&lt;/i&gt;&lt;/text&gt;
+      &lt;text&gt;&lt;u&gt;Arial Narrow&lt;/u&gt;&lt;/text&gt;
+      &lt;text&gt;&lt;b&gt;&lt;i&gt;Arial Narrow&lt;/i&gt;&lt;/b&gt;&lt;/text&gt;
+      &lt;inputtext&gt;inputtext here&lt;/inputtext&gt;
+      &lt;inputtext multiline="true" height="100" width="100"&gt;hello there&lt;/inputtext&gt;
+      &lt;inputtext&gt;Arial Narrow&lt;/inputtext&gt;
+      &lt;text&gt;
+        &lt;b&gt;&lt;i&gt;BoldItalic&lt;/i&gt; Bold &lt;/b&gt;&lt;i&gt;Italic&lt;/i&gt;
+        &lt;u&gt;Underline &lt;b&gt;Bold Underline&lt;/b&gt;&lt;/u&gt;&lt;/text&gt;
+    &lt;/view&gt;
+    &lt;view width="400" font="Times New Roman" fontsize="14"&gt;
+      &lt;simplelayout axis="y" spacing="10"/&gt;
+      &lt;text&gt;Times New Roman&lt;/text&gt;
+      &lt;text&gt;abcdefghijklmnopqrstuvwxyz1234567890!@#$%^*()-=+|&lt;/text&gt;
+      &lt;text&gt;ABCDEFGHIJKLMNOPQRSTUVWXYZ ,./?;':"[]{}\~`&lt;/text&gt;
+      &lt;text&gt;&lt;b&gt;Times New Roman&lt;/b&gt;&lt;/text&gt;
+      &lt;text&gt;&lt;i&gt;Times New Roman&lt;/i&gt;&lt;/text&gt;
+      &lt;text&gt;&lt;u&gt;Times New Roman&lt;/u&gt;&lt;/text&gt;
+      &lt;text&gt;&lt;b&gt;&lt;i&gt;Times New Roman&lt;/i&gt;&lt;/b&gt;&lt;/text&gt;
+      &lt;inputtext&gt;inputtext here&lt;/inputtext&gt;
+      &lt;inputtext multiline="true" height="100" width="100"&gt;hello there&lt;/inputtext&gt;
+      &lt;inputtext&gt;Times New Roman&lt;/inputtext&gt;
+      &lt;text&gt;
+        &lt;b&gt;&lt;i&gt;BoldItalic&lt;/i&gt; Bold&lt;/b&gt;
+        &lt;i&gt;Italic&lt;/i &gt;&lt;u&gt;Underline &lt;b&gt;Bold Underline&lt;/b&gt;&lt;/u&gt;
+      &lt;/text&gt;
+    &lt;/view&gt;
+    &lt;/view&gt;
+    &lt;scrollbar axis="y"/&gt;
+  &lt;/window&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>  You can override the default font by redefining the default font on the <a class="indexterm" name="id7550"></a><code class="sgmltag-element">&lt;canvas&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+.
+Note that you need to do this within the <a class="indexterm" name="id7554"></a><code class="sgmltag-element">&lt;canvas&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ itself—you cannot do it using an attribute tag.  
+</p><div class="example"><a name="id7558"></a><p class="title"><b>Example 23.2. setting the default font on the canvas</b></p><div class="example-contents"><pre class="programlisting">
+
+&lt;canvas width="100%" height="100" bgcolor="gray" font="default" fontsize="8"&gt;
+     &lt;font name="default" src="verity/verityplus11.ttf"/&gt;
+     &lt;text &gt;default Foobar the quick brown frotz jumped over the bad music&lt;/text&gt; 
+     &lt;text font="default" fontsize='8'&gt;Verity Foobar the quick brown frotz jumped over the bad music&lt;/text&gt; 
+     &lt;text font="Verdana"&gt;Verdana Foobar the quick brown frotz jumped over the bad music&lt;/text&gt;
+     &lt;simplelayout /&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_2.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1576"></a>2. OpenLaszlo "pseudo-pixel" fonts</h2></div></div></div><p>Because the underlying Flash runtime can only display outline fonts, 
+    OpenLaszlo applications today can only support outline fonts.  This would seem to imply that
+    fonts in a OpenLaszlo application can be displayed at any size, and strictly speaking this is true.
+    However, the OpenLaszlo runtime library (the LFC) includes a number of "pseudo-pixel" fonts.  These font files contain outlines that describe precise 
+    bitmaps that, when rendered and antialiased by Flash at a specific size, appear pixel-accurate for another size.  
+    Again, even though you specify the font size in LZX as one value, the characters, as they are rendered,
+    will appear pixel accurate for another font size that is typically indicated by the font file name.  
+    </p><p>
+    The following font files in <code class="literal">$LPS_HOME/lps/fonts</code> are designed to be displayed at font size 8 only.  
+ </p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p><code class="literal">lztahoe<em class="replaceable"><code>*</code></em></code></p></li><li class="listitem"><p><code class="literal">lzsans<em class="replaceable"><code>*</code></em></code></p></li><li class="listitem"><p><code class="literal">verity</code>/<code class="literal">verity<em class="replaceable"><code>*</code></em></code></p></li><li class="listitem"><p>Any font file whose name is of the form: <code class="literal"><em class="replaceable"><code>face</code></em>-<em class="replaceable"><code>size</code></em>-<em class="replaceable"><code>style</code></em>-<em class="replaceable"><code>width</code></em>.ttf</code> </p></li></ul></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>Embarrassing historical tidbit: the lzsans fonts have an '8' in their name but actually appear as
+     size 9.</p></div><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1583"></a>3. Syntax</h2></div></div></div><p>
+There are two ways to identify which font your application, or any element of it, should use: the <a class="indexterm" name="id7592"></a><code class="sgmltag-attribute">font</code> attribute on <a class="indexterm" name="id7595"></a><code class="sgmltag-element">&lt;view&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+s and classes derived from views, and the <a class="indexterm" name="id7599"></a><code class="sgmltag-element">&lt;font&gt;</code>.
+</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1578"></a>3.1. The "font" attribute in opening tags</h3></div></div></div><p>
+The <a class="indexterm" name="id7605"></a><code class="sgmltag-attribute">font</code> attribute specifies font to be used for any 
+<code class="sgmltag-element">&lt;text&gt;</code> or <code class="sgmltag-element">&lt;inputtext&gt;</code> elements that appear inside this view. 
+Like all the font properties (fontstyle and fontsize too) these properties cascade down the view hierarchy until a new value is specified. 
+When the font attributes are modified at runtime, using JavaScript, the font is changed for the view itself, not for any of its subviews.
+</p><p>
+For example,
+</p><div class="example"><a name="id7611"></a><p class="title"><b>Example 23.3. Using the font attribute</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="50" width="100%"&gt;
+  &lt;simplelayout/&gt;
+  &lt;view font="helvetica"&gt;
+    &lt;text&gt;Howdy!&lt;/text&gt;
+  &lt;/view&gt;
+  &lt;view font="times"&gt;
+    &lt;text&gt;Howdy back!&lt;/text&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_3.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1577"></a>3.1.1. Specifying more than one font</h4></div></div></div><p>
+You can supply more than one font name as argument to the font attribute. At runtime, the system will try the font list from left to right and use the first one it finds. This can come in handy if you have an application that you would like to compile to both SWF and DHTML.
+</p><p>
+The font attribute accepts a
+comma-separated list of fonts so DHTML can fall back to a system font when a 
+compiled font isn't found by name.  For example, say you have embedded the "helmet" font:
+</p><pre class="programlisting">
+&lt;font name="helmet" src="helmet.ttf"/&gt;
+</pre><p>
+Then the tag, 
+</p><pre class="programlisting">
+&lt;text font="helmet,helvetica,sans-serif"&gt;
+</pre><p>
+ finds the compiled font 
+'helmet' when you compile to SWF and falls back to 'helvetica, sans-serif' when you compile to DHTML. 
+</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1579"></a>3.2. The <a class="indexterm" name="id7624"></a><code class="sgmltag-element">&lt;font&gt;</code> tag</h3></div></div></div><p>
+The value of the <a class="indexterm" name="id7628"></a><code class="sgmltag-attribute">font</code> attribute is the name of a embedded font, that is declared with the
+ <a class="indexterm" name="id7631"></a><code class="sgmltag-element">&lt;font&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag.
+</p><p>
+The behavior of <a class="indexterm" name="id7636"></a><code class="sgmltag-attribute">font</code> in LZX closely parallels HTML/CSS, but is not equivalent in all cases. In particular:
+</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>The value of the 'font' attribute is a comma-separated list of font names. These font names are used in priority order. The first font in the list that is available is used to render the text of the view.</p></li><li class="listitem"><p>Font names can include the names of fonts on the client runtime, such as (typically) "Helvetica" and "Times".</p></li><li class="listitem"><p>There are three "generic family names", which can be used as font names. These generic family names are "serif", "sans-serif", and "monospace".</p></li><li class="listitem"><p>The default font is "sans-serif". No font is embedded in the application by default.</p></li><li class="listitem"><p>There are no warnings for fonts that are named as the literal values of 'font' attributes but don't have embedded <a class="indexterm" name="id7650"></a><code class="sgmltag-attribute">font</code> definitions.</p></li></ul></div><p>OpenLaszlo does not implement generic font family definitions, but it does not preclude them nor is it incompatible with them 
+(as described below).
+</p><div class="example"><a name="id7654"></a><p class="title"><b>Example 23.4. Default font</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="40" width="100%"&gt;
+     &lt;text&gt;Hello World&lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_4.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
+ This renders Hello World in a client font.
+</p><div class="example"><a name="id7658"></a><p class="title"><b>Example 23.5. Default font with non-default font size</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="100" width="100%"&gt;
+   &lt;text fontsize="24"&gt;Hello World&lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_5.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
+This renders Hello World in a larger client font, with no jaggies.
+</p><div class="example"><a name="id7662"></a><p class="title"><b>Example 23.6. Equivalence of generic and definite names</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="120" width="100%"&gt;
+   &lt;simplelayout axis="y"/&gt;
+   &lt;text font="sans-serif"&gt;Some text&lt;/text&gt;
+   &lt;text font="Helvetica"&gt;Some text&lt;/text&gt;
+   &lt;text font="Times"&gt;Some text&lt;/text&gt;
+   &lt;text font="serif"&gt;Some text&lt;/text&gt;
+   &lt;text font="Courier"&gt;Some text&lt;/text&gt;
+   &lt;text font="monospace"&gt;Some text&lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_6.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_6.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
+ This displays three pairs of items. The items in each pair may be rendered in the same font, depending on the default fonts on the client.
+</p><div class="example"><a name="id7666"></a><p class="title"><b>Example 23.7. "nofont" attribute</b></p><div class="example-contents"><pre class="programlisting">
+   
+ &lt;canvas height="100" width="100%"&gt;
+     &lt;simplelayout axis="y"/&gt;
+     &lt;text font="nofont, nofont, sans-serif"&gt;Some text&lt;/text&gt;
+     &lt;text font="nofont, sans-serif"&gt;Some text&lt;/text&gt;
+     &lt;text font="sans-serif"&gt;Some text&lt;/text&gt;
+ &lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_7.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_7.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
+ This displays three lines in the same font.
+</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1580"></a>3.3. Comparison to CSS</h3></div></div></div><p>
+ The OpenLaszlo <a class="indexterm" name="id7673"></a><code class="sgmltag-attribute">font</code> attribute is similar to the CSS 'font' and 'font-family' properties: <a class="ulink" href="http://www.w3.org/TR/2004/CR-CSS21-20040225/fonts.html#font-family-prop" target="_top">here</a>. 
+The remaining differences are:
+</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>LZX specifies the font as an XML attribute.    HTML+CSS specifies it is a CSS property.</p></li><li class="listitem"><p>An OpenLaszlo 'font' can only be a list of font names. This makes it more similar to the CSS 'font-family' than to the CSS 'font', which is a shorthand property that can also accept font size, style, variant, weight, and line-height values.</p></li><li class="listitem"><p>CSS defines the additional generic font families 'cursive' and 'fantasy' , as well as "system font" names 'caption', 'icon', 'menu', 'message-box', 'small-caption', and 'status-bar'. (Generic family name definitions, below, let the application or library developer define these system names.)</p></li><li class="listitem"><p>CSS allows multiword font names to be quoted, e.g. "Times New Roman" (where the quotes are part of the value). LZX does not allow this.</p></li></ul></div><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1581"></a>3.4. Importing fonts</h3></div></div></div><p>In order to use any font other than the default font in an OpenLaszlo application, you must first declare it.  
+    The default font is described below.
+    </p><p>
+   OpenLaszlo documentation uses the verbs, <span class="i">importing</span>, <span class="i">defining</span>, and <span class="i">declaring</span>,
+    somewhat interchangeably when it comes to fonts.  Each of these words implies that you are letting LZX know
+    about a font you are going to use in your application.
+    In LZX, fonts are referred to by name and there is an application-global
+    namespace for fonts.  Fonts can be defined directly under the <a class="indexterm" name="id7693"></a><code class="sgmltag-element">&lt;canvas&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+
+    or <a class="indexterm" name="id7697"></a><code class="sgmltag-element">&lt;library&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tags like:
+    </p><div class="example"><a name="id7701"></a><p class="title"><b>Example 23.8. Declaring a font</b></p><div class="example-contents"><pre class="programlisting">
+&lt;font name="myfont" src="myfont.ttf"/&gt;
+</pre></div></div><br class="example-break"><p>
+    Each font that is imported has a <a class="indexterm" name="id7705"></a><code class="sgmltag-attribute">name</code>, an optional
+    <a class="indexterm" name="id7708"></a><code class="sgmltag-attribute">style</code>, and a <a class="indexterm" name="id7711"></a><code class="sgmltag-attribute">src</code> file that contains the TTF.  (The name
+    is interpreted as the font face when the LZX application renders HTML text.  See <a class="xref" href="text.html" title="Chapter 21. Text Views">Chapter 21, <i>Text Views</i></a>.)
+    </p><p>
+    The style must be one of <code class="literal">plain</code>, <code class="literal">bold</code>, <code class="literal">italic</code>, or
+    <code class="literal">bold italic</code> and the default style is <code class="literal">plain</code>. You must declare each style of
+    a font that you intend to use.
+    The style of a font is interpreted when LZX applications render HTML text.
+    See <a class="xref" href="text.html" title="Chapter 21. Text Views">Chapter 21, <i>Text Views</i></a> for more information.
+    </p><p>
+    The OpenLaszlo compiler will auto-include the plain, bold, italic, and bold italic styles of
+    the default font, if it can detect that they will be needed.  In general, it is safest to declare
+    the bold, italic, and bold italic styles explicitly if you know you will need them.  For fonts other than the default, you 
+    must explicitly import a file for each of the styles.  For more details, see the section on 
+    the default font.
+    </p><p>
+    Each font must be imported from an external file and the value of the <a class="indexterm" name="id7724"></a><code class="sgmltag-attribute">src</code> attribute must be a
+    pathname to that file  (URLs are not currently supported).
+    Relative pathnames are resolved relative to the including file.
+    The OpenLaszlo Server also looks in <code class="literal">$LPS_HOME/lps/fonts</code> directory.
+    </p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1582"></a>3.5. Syntax for importing fonts</h3></div></div></div><p>
+    There are two syntaxes for importing a font.  The example below imports the plain and bold style of 
+    a font named <code class="literal">myfont</code>.
+    </p><div class="example"><a name="id7732"></a><p class="title"><b>Example 23.9. Declaring fonts</b></p><div class="example-contents"><pre class="programlisting">
+&lt;font name="myfont" src="myfont.ttf"      style="plain"/&gt;
+&lt;font name="myfont" src="myfont-bold.ttf" style="bold" /&gt;
+</pre></div></div><br class="example-break"><p>
+    Alternatively, you can declare several styles at once like:
+    </p><div class="example"><a name="id7736"></a><p class="title"><b>Example 23.10. Declaring multiple font styles (faces) at once</b></p><div class="example-contents"><pre class="programlisting">
+&lt;font name="myfont"&gt;
+  &lt;face src="myfont.ttf"      style="plain"      /&gt;
+  &lt;face src="myfont-bold.ttf" style="bold"       /&gt;
+  &lt;face src="myfont-ital.ttf" style="italic"     /&gt;
+  &lt;face src="myfont-bita.ttf" style="bold italic"/&gt;
+&lt;/font&gt;
+</pre></div></div><br class="example-break"><p>Notes:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p> Redefining a font name is unsupported and application behavior is undefined if you do this.</p></li><li class="listitem"><p> There are no <span class="i">font aliases</span> today.  A single font can have only one name.  If you need the same
+    font to have two names, you must declare it twice (and it will be embedded twice).</p></li></ul></div><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1590"></a>4. Using fonts</h2></div></div></div><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1584"></a>4.1. Font attributes</h3></div></div></div><p>The base LZX visual object, <a class="indexterm" name="id7751"></a><code class="sgmltag-element">&lt;view&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+, has three font attributes, 
+        <a class="indexterm" name="id7755"></a><code class="sgmltag-attribute">font</code>, <a class="indexterm" name="id7758"></a><code class="sgmltag-attribute">fontstyle</code>, and <a class="indexterm" name="id7761"></a><code class="sgmltag-attribute">fontsize</code>.   
+        The <a class="indexterm" name="id7764"></a><code class="sgmltag-attribute">font</code> attribute with value <code class="literal">myfont</code>
+        indicates that this view should look for and use a font named <code class="literal">myfont</code> to render text.
+        The <a class="indexterm" name="id7769"></a><code class="sgmltag-attribute">fontsize</code> attribute indicates the point size at which the font should be rendered and the 
+        <a class="indexterm" name="id7772"></a><code class="sgmltag-attribute">fontstyle</code> indicates the style of the font that should be used.  
+        </p><div class="table"><a name="id7775"></a><p class="title"><b>Table 23.1. Default values for font attributes</b></p><div class="table-contents"><table class="table" summary="Default values for font attributes" border="1"><colgroup><col><col></colgroup><thead><tr><th>Attribute name</th><th>Default value</th></tr></thead><tbody><tr><td><a class="indexterm" name="id7785"></a><code class="sgmltag-attribute">font</code></td><td><code class="literal">"default"</code></td></tr><tr><td><a class="indexterm" name="id7792"></a><code class="sgmltag-attribute">fontsize</code></td><td><code class="literal">8</code></td></tr><tr><td><a class="indexterm" name="id7799"></a><code class="sgmltag-attribute">fontstyle</code></td><td><code class="literal">plain</code></td></tr></tbody></table></div></div><br class="table-break"><p>
+        As you will see below, these are actually the default values of the font attributes for the canvas.
+        Because of the way that font attributes cascade, the values of these attributes on the canvas
+        are essentially the defaults for the entire application.  Below are some examples of using
+        font attributes. </p><div class="example"><a name="id7805"></a><p class="title"><b>Example 23.11. Using a font</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="70" width="100%"&gt;
+  &lt;font name="helmet" src="helmetr.ttf"/&gt;
+  &lt;text font="helmet" fontsize="20"&gt;Hello Helmet&lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_11.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_11.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
+        As you can see below, The HTML text rendering tags, <a class="indexterm" name="id7809"></a><code class="sgmltag-element">&lt;b&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ (for bold) and
+        <a class="indexterm" name="id7813"></a><code class="sgmltag-element">&lt;i&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ (for italic) instruct the OpenLaszlo application to look for and use
+        the bold, italic, or bold italic version of the current font.</p><div class="example"><a name="id7817"></a><p class="title"><b>Example 23.12. Using font styles and html text</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="70" width="100%"&gt;
+  &lt;font name="myfont"&gt;
+    &lt;face src="helmetr.ttf" style="plain"        /&gt;
+    &lt;face src="helmetb.ttf" style="bold"         /&gt;
+    &lt;face src="helmeti.ttf" style="italic"       /&gt;
+    &lt;face src="helmetbi.ttf" style="bold italic" /&gt;
+  &lt;/font&gt;
+  &lt;text font="myfont" fontsize="20"&gt;
+    plain 
+    &lt;b&gt;bold&lt;/b&gt;
+    &lt;i&gt;italic&lt;/i&gt;
+    &lt;b&gt;&lt;i&gt;bold italic&lt;/i&gt;&lt;/b&gt;
+  &lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_12.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_12.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> In the example below, we use the HTML text <a class="indexterm" name="id7821"></a><code class="sgmltag-element">&lt;font&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag to
+    change fonts inside a single piece of text.</p><div class="example"><a name="id7825"></a><p class="title"><b>Example 23.13. Using multiple fonts in HTML text</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="70" width="100%"&gt;
+  &lt;font name="helmet" src="helmetr.ttf"/&gt;
+  &lt;font name="arioso" src="ariosor.ttf"/&gt;
+  &lt;text fontsize="20"&gt;
+    &lt;font face="helmet"&gt;helmet&lt;/font&gt; 
+    &lt;font face="arioso"&gt;arioso&lt;/font&gt;
+  &lt;/text&gt;
+  &lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_13.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_13.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>In the example below, you can see that setting the <a class="indexterm" name="id7829"></a><code class="sgmltag-attribute">fontsize</code>
+    can get you very big text.</p><div class="example"><a name="id7832"></a><p class="title"><b>Example 23.14. Using the fontsize attribute</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="100" width="100%"&gt;
+  &lt;font name="helmet" src="helmetr.ttf"/&gt;
+  &lt;text resize="true" fontsize="100" font="helmet"&gt;BIG&lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_14.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_14.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Many of the fonts look too small at the default fontsize of 8.</p><div class="example"><a name="id7836"></a><p class="title"><b>Example 23.15. Omitting the fontsize attribute</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="70" width="100%"&gt;
+  &lt;font name="helmet" src="helmetr.ttf"/&gt;
+  &lt;text font="helmet"&gt;Helmet at default size(8) is very hard to read!&lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_15.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_15.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>You can specify the font for inputtext, too.</p><div class="example"><a name="id7840"></a><p class="title"><b>Example 23.16. Specifying the font for inputtext</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas fontsize="20" width="100%" height="70"&gt;
+  &lt;font name="helmet" src="helmetr.ttf"/&gt;
+  &lt;inputtext bgcolor="red" font="helmet"&gt;Type your text here&lt;/inputtext&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_16.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_16.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Note that HTML text does <span class="b"><span class="i">not</span></span> work in <a class="indexterm" name="id7846"></a><code class="sgmltag-element">&lt;inputtext&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1588"></a>4.2. How a view chooses its font attributes</h3></div></div></div><p>
+There are two basic rules that a view uses to choose its font attributes.</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>font attributes cascade</p></li><li class="listitem"><p>font attribute definitions in classes bind tightly (to children)</p></li></ul></div><p>
+These are described in turn below.
+</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1585"></a>4.2.1. Font attribute cascading</h4></div></div></div><p>  Cascading occurs when a view
+        does not specify one of its font attributes.  In this case, it will receive its parent's 
+        value for that font attribute.  If the parent doesn't specify a font attribute, it keeps
+        going up the view hierarchy to find a view that specifies a value for that font attribute,
+        going all the way to the canvas, if no ancestors specify a value for the given font attribute.
+        Each of the three font attributes cascade separately.
+        </p><div class="example"><a name="id7862"></a><p class="title"><b>Example 23.17. Using cascaded font attributes</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="250" width="100%"&gt;
+  &lt;font name="conga" src="congar.ttf"/&gt;
+  &lt;font name="conga" src="congab.ttf" style="bold"/&gt;
+  &lt;view layout="axis: y; spacing: 2" font="conga"&gt;
+    &lt;text resize="true" fontsize="12" text="I will be in conga 12"/&gt;
+    &lt;text resize="true" fontsize="22" text="I will be in conga 22"/&gt;
+    &lt;text resize="true" fontsize="32" text="I will be in conga 32"/&gt;
+    &lt;view layout="axis: y; spacing: 2" fontsize="32" fontstyle="bold"&gt;
+      &lt;text resize="true" text="I will be bold"/&gt;
+      &lt;text resize="true" text="Me, too"/&gt;
+      &lt;text resize="true" fontsize="8" font="default" 
+            text="I will be in the default font"/&gt;
+    &lt;/view&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_17.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_17.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>You can even specify font attributes on the canvas:</p><div class="example"><a name="id7866"></a><p class="title"><b>Example 23.18. Specifying a canvas font</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas font="tahoe" width="100%" height="70"&gt;
+  &lt;font name="tahoe" src="lztahoe8.ttf"/&gt;
+  &lt;text text="hello"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_18.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_18.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1586"></a>4.2.2. Font attributes and classes</h4></div></div></div><p>Specifying a font attribute on a class definition:</p><div class="orderedlist"><ol class="orderedlist compact" type="1"><li class="listitem"><p>causes instances of that class to use the class definition of that font attribute and </p></li><li class="listitem"><p>the class definition font attribute cascades down to instance children in the class definition itself. </p></li></ol></div><p> Class font attributes bind more tightly than 
+        cascaded font attributes.
+        </p><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1587"></a>4.2.3. Font attribute summary</h4></div></div></div><p>The following is a set of rules that a view uses to choose its font: </p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>Use the font attribute set on the instance.  If not set, then</p></li><li class="listitem"><p>Use the font attribute set on this instance's baseclass (or any of its subclasses, going up the chain).  If it is not set,</p></li><li class="listitem"><p>Use the cascaded font attribute.</p></li></ul></div><p>You may want to use a font attribute on a class definition if you are going to closely tie
+        the implementation (design, layout, positioning) of that class to that specific font.  In general,
+        you should only do this when absolutely necessary.</p><div class="example"><a name="id7889"></a><p class="title"><b>Example 23.19. Using font attributes in a class definition</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="100" width="100%"&gt;
+  &lt;font name="helmet" src="helmetr.ttf"/&gt;
+  &lt;font name="tahoe" src="lztahoe8.ttf"/&gt;
+  &lt;class name="myclass" fontsize="20" font="helmet"&gt;
+    &lt;attribute name="defaultplacement" value="'content'"/&gt;
+    &lt;text bgcolor="red" text="Uses the class font"/&gt;
+    &lt;view name="content"/&gt;
+  &lt;/class&gt;
+  
+  &lt;view layout="axis:y; spacing: 2" font="tahoe"&gt;
+    &lt;myclass/&gt;
+    &lt;text text="use cascaded font"/&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_19.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_19.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p class="fixme"><em><span class="remark"><span class="para-label">FIXME: </span>Note: sometime in these examples we set the text to be resizable.  Ask Adam or Sarah why</span></em></p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1589"></a>4.3. Fonts provided with the OpenLaszlo Server</h3></div></div></div><p>The OpenLaszlo Server provides a number of fonts for your use in <code class="literal">$LPS_HOME/lps/fonts</code>.
+    The pseudo-pixel fonts that come with the OpenLaszlo Server are described <a class="link" href="fonts.html#fonts.pixel-fonts">above</a>.  The OpenLaszlo
+    default (pseudo-pixel) font, <code class="literal">verity11</code> is there as is an outline version of the same
+    glyphs in <code class="literal">bitstream-1.10-vera</code>.
+    </p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1591"></a>5. DHTML Font design considerations</h2></div></div></div><p>
+There is a general tension in DHTML regarding who controls type
+size—the user or the application.  w3c leans toward the end user having ultimate control, which
+means that you, as designer, have to be prepared for the fonts you have
+specified not being the ones that are displayed.
+</p><p>
+Small type isn't smoothed in DHTML as it is in SWF.  It is hard to offer advice about 
+what to do here, except choose your fonts carefully and/or avoid small
+point sizes. This is a browser and/or display setting, so there is nothing you can do about it.  (For example., OS X allows you to set a
+minimum font size, below which smoothing will never happen; Safari
+lets you set a minimum font size for accessibility and smaller sizes
+will just be mapped up to that minimum.)
+</p><p>However, note that the Flash Player and some browsers do not handle font sizes equivalently.
+You may find
+that, relative to applications compiled to SWF, you need to step the size down for some DHTML OpenLaszlo applications where the text
+shows up too large.
+</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1592"></a>6. Performance considerations</h2></div></div></div><p>
+Embedded fonts (in applications compiled to SWF) increase the size of the application.
+</p><p>When deciding what embedded fonts to use, you may need to take into account how
+fonts affect the size, hence download time, of your application. Here are some heuristics to help you
+with file size/download calculus. - </p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>The <span class="i">larger</span> the font, the larger the application.  The size
+        of the font can be estimated by looking at the file size of the <code class="literal">.ttf</code> file. </p></li><li class="listitem"><p>Fonts with more complicated shape outlines will be larger.</p></li><li class="listitem"><p>Fonts with more character codes in them will be larger.  One size optimization technique
+        is to use a version of the font file that has only the characters in it that your application 
+        uses.</p></li></ul></div><p class="fixme"><em><span class="remark"><span class="para-label">FIXME: </span>
+Some outdated cruft, some of which may be still true.
+    <div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>LPS 2.0 supports embedding <a class="ulink" href="http://developer.apple.com/fonts/TTRefMan/RM06/Chap6.html" target="_top">Apple's TrueType</a> (TTF) fonts.
+       TTF Details: </p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: circle; "><li class="listitem"><p>LZX only supports TTF that are encoded as outline fonts.</p></li><li class="listitem"><p>LZX does not import kerning information from TTFs.</p></li></ul></div><p>
+       </p></li><li class="listitem"><p>LZX does not use kerning information. </p></li></ul></div>
+</span></em></p><p></p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="richtext.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.building-apps.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="animation.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 22. Rich Text </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 24. Animation </td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

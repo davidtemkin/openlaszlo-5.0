@@ -1,0 +1,334 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;javarpc&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>javarpc<span class="ang">&gt;</span></h1><p class="short">java remote procedure call</p><p class="meta">Extends <code>rpc</code></p>
+                        
+        <p>
+          JavaRPC is a feature that allows server-side Java objects and methods 
+                    to be accessed from a client application. JavaRPC is part of the Laszlo 
+                    RPC family and shares similar APIs with SOAP and XML-RPC. See the
+                    
+          <a href="../developers/rpc.html">RPC</a>
+           and 
+          <a href="../developers/rpc-xmlrpc.html"> 
+                        XML RPC</a>
+           chapters of the Developer's Guide 
+                    for more information.
+        </p>
+                        
+        <p>
+          This tag causes the creation of a JavaRPC object. The 
+          <code>remoteclassname</code>
+           attribute 
+                    specifies what class javarpc represents. To use a class, place it in 
+                    
+          <code>WEB-INF/classes</code>
+           or, if it exists in a jar, in 
+          <code>WEB-INF lib</code>
+          . This will ensure 
+                    that the class is accessible to the OpenLaszlo Server.
+        </p>
+                        
+        <p>Java classes used in an application must be declared in a security element. 
+                    Classes not defined in a security element are not allowed to be accessed or 
+                    instantiated. The format of the security element looks like this:</p>
+                        
+        <pre><code>
+    &lt;security&gt;
+        &lt;allow&gt;
+            &lt;pattern&gt;CLASS1&lt;/pattern&gt;
+            &lt;pattern&gt;CLASS2&lt;/pattern&gt;
+            ...
+            &lt;pattern&gt;CLASSN&lt;/pattern&gt;
+        &lt;/allow&gt;
+    &lt;/security&gt;
+                </code></pre>
+                        
+        <p>Each &lt;pattern&gt; is a regular expression.</p>
+                        
+        <pre><code>
+    &lt;security&gt;
+        &lt;allow&gt;
+            &lt;pattern&gt;^org\.openlaszlo&lt;/pattern&gt;
+        &lt;/allow&gt;
+    &lt;/security&gt;
+                </code></pre>
+                        
+        <p>This example demonstrates how to call methods in a java object that exists remotely in the server:</p>
+                        
+        <pre class="example">
+    &lt;canvas debug="true" height="300" width="800"&gt;
+    
+    &lt;debug x="250" y="10" width="500" height="275" /&gt;
+    
+    &lt;security&gt;
+        &lt;allow&gt;
+            &lt;pattern&gt;^examples\.TypesExample&lt;/pattern&gt;
+        &lt;/allow&gt;
+    &lt;/security&gt;
+    
+    &lt;!-- See WEB-INF/classes/TypesExample.java for java source. --&gt;
+    &lt;javarpc name="types_example_rpc" scope="none" 
+    remoteclassname="examples.TypesExample"&gt;
+    
+        &lt;handler name="onload"&gt;
+        // Set buttons visible only after JavaRPC object loads
+        canvas.buttons.setAttribute('visible', true);
+        &lt;/handler&gt;
+        
+        &lt;handler name="ondata" args="res"&gt;
+            Debug.debug('(types ondata) response is: %w', res);
+        &lt;/handler&gt;
+        
+        &lt;handler name="onerror" args="errmsg"&gt;
+            Debug.debug('(types onerror) error: %w', errmsg);
+        &lt;/handler&gt;
+        
+        &lt;!-- Declaratively pass an integer. --&gt;
+        &lt;remotecall funcname="passInteger"&gt;
+            &lt;param value="42" /&gt;
+        &lt;/remotecall&gt;
+        
+        &lt;!-- Declaratively pass a double. Note that we name this function pd1
+        because we have multiple remotecall declarations that call
+        passDouble but with different parameters. --&gt;
+        &lt;remotecall name="pd1" funcname="passDouble"&gt;
+            &lt;param value="42.1" /&gt;
+        &lt;/remotecall&gt;
+        
+        &lt;!-- Declaratively pass a double with 0 decimal. The 0 decimal will
+        truncate and the number will become an integer type when it reaches
+        the server. This call will fail. --&gt;
+        &lt;remotecall name="pd2" funcname="passDouble"&gt;
+            &lt;param value="42.0" /&gt;
+        &lt;/remotecall&gt;
+        
+        &lt;!-- Declaratively pass a double with 0 decimal. Wrapping the double in
+        DoubleWrapper will ensure the value will remain a double when
+        reaching the server. --&gt;
+        &lt;remotecall name="pd3" funcname="passDouble"&gt;
+            &lt;param&gt; 
+                &lt;method name="getValue"&gt;
+                    return new LzRPCDoubleWrapper(42.0);
+                &lt;/method&gt;
+            &lt;/param&gt;
+        &lt;/remotecall&gt;
+    
+    &lt;/javarpc&gt;
+    
+    
+    &lt;view name="buttons" visible="false" layout="spacing: 10" &gt;
+    
+        &lt;button text="pass integer"
+        onclick="types_example_rpc.passInteger.invoke()" /&gt;
+        
+        &lt;button text="pass double"
+        onclick="types_example_rpc.pd1.invoke()" /&gt;
+        
+        &lt;button text="pass double (will fail)"
+        onclick="types_example_rpc.pd2.invoke()" /&gt;
+        
+        &lt;button text="pass double w/LzRPCDoubleWrapper" 
+        onclick="types_example_rpc.pd3.invoke()" /&gt;
+        
+        &lt;button text="pass boolean" onclick="this.passBoolean.invoke()"&gt;
+        &lt;!-- This is a way to declare a remotecall closer to where it's being
+        used. The remotecontext must be set. --&gt;
+            &lt;remotecall funcname="passBoolean" 
+            remotecontext="$once{ types_example_rpc }"&gt;
+                &lt;param value="true" /&gt;
+            &lt;/remotecall&gt;
+        &lt;/button&gt;
+        
+        &lt;button text="pass array" onclick="this.passArray.invoke()"&gt;
+            &lt;remotecall name="passArray" funcname="passClientArray" 
+            remotecontext="$once{ types_example_rpc }"&gt;
+                &lt;param value="[1, 'a string', 4.5, false]" /&gt;
+            &lt;/remotecall&gt;
+        &lt;/button&gt;
+        
+        &lt;button text="pass hash" onclick="this.passObject.invoke()"&gt;
+            &lt;remotecall name="passObject" funcname="passClientObject" 
+            remotecontext="$once{ types_example_rpc }"&gt;
+                &lt;param value="{ a: 1, b: 3.14159, c: 'a string value', d: true}"&gt;
+                &lt;/param&gt;
+            &lt;/remotecall&gt;
+        &lt;/button&gt;
+        
+    &lt;/view&gt;
+    
+    &lt;/canvas&gt;
+                </pre>
+                        
+        <p>The java source code, which can be found in $LPS_HOME/WEB-INF/classes/examples, looks like:</p>
+            
+        <pre><code>
+        package examples;
+        
+        import java.util.Vector;
+        import java.util.Hashtable;
+        
+        public class TypesExample {
+        
+        public static String passInteger(int i) {
+            return "got integer parameter: " + i;
+        }
+        
+        public static String passDouble(double d) {
+        return "got double parameter: " + d;
+        }
+        
+        public static String passBoolean(boolean b) {
+            return "got boolean parameter: " + b;
+        }
+        
+        public static String passClientArray(Vector v) {
+            return "got vector parameter: " + v;
+        }
+        
+        public static String passClientObject(Hashtable t) {
+            return "got hashtable parameter: " + t;
+        }
+        
+        }
+    </code></pre>
+                        
+                
+        <code>&lt;table&gt;
+                              
+                    
+          <code>&lt;tr&gt;
+                                    
+            <code>&lt;th&gt;JavaScript data type&lt;/th&gt;</code>
+            <code>&lt;th&gt;Parameter types expected by java method&lt;/th&gt;</code>
+                                
+          &lt;/tr&gt;</code>
+                              
+                    
+          <code>&lt;tr&gt;
+                                    
+            <code>&lt;td&gt;Number (int)&lt;/td&gt;</code>
+            <code>&lt;td&gt;int&lt;/td&gt;</code>
+                                
+          &lt;/tr&gt;</code>
+                              
+                    
+          <code>&lt;tr&gt;
+                                    
+            <code>&lt;td&gt;Number (double)*&lt;/td&gt;</code>
+            <code>&lt;td&gt;double&lt;/td&gt;</code>
+                                
+          &lt;/tr&gt;</code>
+                              
+                    
+          <code>&lt;tr&gt;
+                                    
+            <code>&lt;td&gt;LzRPCDoubleWrapper&lt;/td&gt;</code>
+            <code>&lt;td&gt;double&lt;/td&gt;</code>
+                                
+          &lt;/tr&gt;</code>
+                              
+                    
+          <code>&lt;tr&gt;
+                                    
+            <code>&lt;td&gt;Boolean&lt;/td&gt;</code>
+            <code>&lt;td&gt;boolean&lt;/td&gt;</code>
+                                
+          &lt;/tr&gt;</code>
+                              
+                    
+          <code>&lt;tr&gt;
+                                    
+            <code>&lt;td&gt;Array&lt;/td&gt;</code>
+            <code>&lt;td&gt;Vector&lt;/td&gt;</code>
+                                
+          &lt;/tr&gt;</code>
+                              
+                    
+          <code>&lt;tr&gt;
+                                    
+            <code>&lt;td&gt;Object&lt;/td&gt;</code>
+            <code>&lt;td&gt;Hashtable&lt;/td&gt;</code>
+                                
+          &lt;/tr&gt;</code>
+                              
+                
+        &lt;/table&gt;</code>
+                        
+        <p>* Any floating point number with a zero decimal value is considered to be an
+                    integer, i.e., 1.0 is really 1. Use LzRPCDoubleWrapper to ensure a number is
+                    considered a double. For example:</p>
+                        
+        <pre><code>
+                    // assume myrpc is a javarpc object and myrpc.proxy.myMethod is a function
+                    // that expects a single double as a parameter
+                    var mydouble = new LzRPCDoubleWrapper(1.0);
+                    myrpc.proxy.myMethod([ mydouble ], new LzDelegate(...));
+                </code></pre>
+                        
+        <code>&lt;para&gt;
+                          See Also:
+                
+          <code>&lt;itemizedlist&gt;
+                            
+            <code>&lt;listitem&gt;
+              <code>&lt;rpc&gt;</code>
+            &lt;/listitem&gt;</code>
+                            
+            <code>&lt;listitem&gt;
+              <code>&lt;sessionrpc&gt;</code>
+            &lt;/listitem&gt;</code>
+                            
+            <code>&lt;listitem&gt;
+              <code>&lt;webapprpc&gt;</code>
+            &lt;/listitem&gt;</code>
+                            
+            <code>&lt;listitem&gt;
+              <code>&lt;soap&gt;</code>
+            &lt;/listitem&gt;</code>
+                            
+            <code>&lt;listitem&gt;
+              <code>&lt;xmlrpc&gt;</code>
+            &lt;/listitem&gt;</code>
+                            
+            <code>&lt;listitem&gt;
+              <code>&lt;remotecall&gt;</code>
+            &lt;/listitem&gt;</code>
+                            
+            <code>&lt;listitem&gt;
+              <code>&lt;security&gt;</code>
+            &lt;/listitem&gt;</code>
+                            
+            <code>&lt;listitem&gt;
+              Developer's Guide: RPC chapter
+            &lt;/listitem&gt;</code>
+                            
+            <code>&lt;listitem&gt;
+              Developer's Guide: JavaRPC chapter
+            &lt;/listitem&gt;</code>
+                            
+          &lt;/itemizedlist&gt;</code>
+                          
+        &lt;/para&gt;</code>
+                        
+            
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">attributename</td><td class="ty">string</td><td class="ty">this.name</td><td>Attribute name of server remote object. Name or attributename must
+              be set when scope is 'session' and 'webapp'. Default is the name
+              of this object.</td></tr><tr><td class="nm">createargs</td><td class="ty">expression</td><td class="ty">null</td><td>Used if loadoption='loadcreate' or loadoption='create'. Arguments
+              to construct remote object with. The value passed in must be an
+              array, e.g., [1, 'mystring', 1.45]. Default is null.</td></tr><tr><td class="nm">loadoption</td><td class="ty">string</td><td class="ty">loadcreate</td><td>One of 'loadcreate', 'loadonly', or 'create'. 'Loadcreate' tries
+              to load javarpc object if it exists in the server, else it creates
+              it before loading. 'Loadonly' will only load object if it exists,
+              else an error is returned. 'Create' will always create the object
+              in the server. Default is 'loadcreate'.</td></tr><tr><td class="nm">objectreturntype</td><td class="ty">string</td><td class="ty">pojo</td><td>Used to determine what server-side object member values are
+              returned to the client. One of 'pojo' (returns public member
+              values) or 'javabean' (returns members that have associated
+              getters). Default is 'pojo' (plain old java object).</td></tr><tr><td class="nm">remoteclassname</td><td class="ty">string</td><td class="ty"/><td>The remote class name associated with the remote object. This must
+              be set if creating the remote object. If loading the object, the
+              classname will be set during onload.</td></tr><tr><td class="nm">scope</td><td class="ty">string</td><td class="ty"/><td>One of 'session', 'webapp', or 'none' to set the scope of the
+              remote object. This attribute must be set before creating or
+              loading the object. If scope is 'session' or 'webapp', name or
+              attributename must be set.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

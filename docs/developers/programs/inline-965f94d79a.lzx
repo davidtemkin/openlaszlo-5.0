@@ -1,0 +1,7 @@
+{
+  status: 'error', 
+  errortype: ERROR_TYPE, 
+  message: ERROR_MESSAGE, 
+  error: ERROR_OBJECT,
+  opinfo: OPINFO
+}

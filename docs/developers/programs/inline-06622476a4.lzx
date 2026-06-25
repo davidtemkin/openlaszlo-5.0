@@ -1,0 +1,27 @@
+<soap:Envelope soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" ...>
+   <soap:Body> <n:getTypesResponse xmlns:n="http://arcweb.esri.com/v2">
+         <Result href="#id0" />
+      </n:getTypesResponse>
+      <id0 id="id0" soapenc:root="0" xsi:type="soapenc:Array" soapenc:arrayType="ns5:KeyValue[19]">
+         <i href="#id1" />
+         <i href="#id2" />
+         <i href="#id3" />
+         <i href="#id4" />
+         <!-- ... -->
+      </id0>
+      <id1 id="id1" soapenc:root="0" xsi:type="ns5:KeyValue">
+         <key xsi:type="xsd:string">A</key>
+         <value xsi:type="xsd:string">Countries</value>
+      </id1>
+      <id2 id="id2" soapenc:root="0" xsi:type="ns5:KeyValue">
+         <key xsi:type="xsd:string">B</key>
+         <value xsi:type="xsd:string">Large Non-U.S. Cities</value>
+      </id2>
+      <id3 id="id3" soapenc:root="0" xsi:type="ns5:KeyValue">
+         <key xsi:type="xsd:string">C</key>
+         <value xsi:type="xsd:string">Large U.S. Cities</value>
+      </id3>
+      <!-- ... -->
+
+   </soap:Body>
+</soap:Envelope>

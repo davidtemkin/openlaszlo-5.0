@@ -1,0 +1,134 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 5. OpenLaszlo Basics</title><link rel="stylesheet" type="text/css" href="../../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="../index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="../developers.tutorials.html" title="Part II. Tutorial Introduction"><link rel="prev" href="../developers.tutorials.html" title="Part II. Tutorial Introduction"><link rel="next" href="comp-intro.html" title="Chapter 6. Introduction to Components"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 5. OpenLaszlo Basics</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="../developers.tutorials.html">Prev</a> </td><th width="60%" align="center">Part II. Tutorial Introduction</th><td width="20%" align="right"> <a accesskey="n" href="comp-intro.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="laszlo_basics"></a>Chapter 5. OpenLaszlo Basics</h2></div></div></div><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>
+explain how tutorials relate to Laszlo in ten minutes
+</span></em></p><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>
+Rename this tutorial
+</span></em></p><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>
+Mention components and how to build apps by accreting components.
+</span></em></p><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1429"></a>1. Building a simple OpenLaszlo application</h2></div></div></div><p>The source code to an OpenLaszlo application is a set of XML files, and
+media asset files (such as image, sound, and font files).  Each
+application has a <a class="indexterm" name="id3566"></a><em class="glossterm">canvas file</em>, which is an XML file that
+contains the <a class="indexterm" name="id3569"></a><code class="sgmltag-element">&lt;canvas&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag.</p><p>By convention, LZX files end with the extension <code class="literal">.lzx</code>.
+Every LZX file is an XML file, so if your editor has an XML mode, set
+it to that for working with LZX files.</p><p>The enclosing tag of every OpenLaszlo application is the <a class="indexterm" name="id3576"></a><code class="sgmltag-element">&lt;canvas&gt;</code> tag.
+The canvas is a view (like every other displayable object on the screen) but it
+has some special properties. For instance, resources can't be attached directly
+to the canvas. </p><p>Here is a simple lzx file:</p><div class="example"><a name="id3580"></a><p class="title"><b>Example 5.1. Empty Canvas</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="100" bgcolor="green"&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007-2008 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+</pre></div></div><br class="example-break"><p>For this simple example we have set the background color to green, just to show that it's there.  If you don't set a background color for the
+canvas, it will be rendered white.  (Throughout the rest of this tutorial no background color will be specified for the canvas.) Now let's
+put a window on a white canvas. 
+</p><div class="example"><a name="id3584"></a><p class="title"><b>Example 5.2. Simple_window</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="100"&gt;
+  &lt;window/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007-2008 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+</pre></div></div><br class="example-break"><p>Note the XML 
+empty tag format we're using: <a class="indexterm" name="id3588"></a><code class="sgmltag-element">&lt;window&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+.</p><p> Using the
+attributes of that window, let's customize it a bit. Just as in HTML, 
+LZX tags can have attributes:</p><div class="example"><a name="id3593"></a><p class="title"><b>Example 5.3. Specifying window size</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="300"&gt;
+  &lt;window x="20" y="20" width="200" height="250"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>In these simple examples, all measurements are in <span class="i">pixels</span>. (A later <a class="xref" href="../views.html" title="Chapter 26. Views">Chapter 26, <i>Views</i></a> explains how units
+of measurement may vary in more complicated situations.)
+</p><p> Notice how the window is now <span class="i">absolutely</span>
+positioned relative to the top-left corner of the canvas.</p><div class="example"><a name="id3601"></a><p class="title"><b>Example 5.4. Window Title</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="350"&gt;
+  &lt;window x="20" y="20" width="200" height="250" 
+          title="Simple Window" resizable="true" /&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>Now we've got a window, which both has a title, and can be resized.</p><p>Notice how we're breaking the code up across lines to keep it neat. </p><p>Let's stick something in that window. </p><div class="example"><a name="id3607"></a><p class="title"><b>Example 5.5. Window Text</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="350"&gt;
+  &lt;window x="20" y="20" width="200" height="250" 
+          title="Simple Window" resizable="true"&gt;
+    &lt;text&gt;Here is some text.&lt;/text&gt;
+  &lt;/window&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>We've given the <a class="indexterm" name="id3611"></a><code class="sgmltag-element">&lt;window&gt;</code> element a child (<code class="literal">text</code>), which contains the text we want written out. 
+</p><p>Notice how the text gets put in the top-left hand corner. </p><p>Suppose we want to add another line of text? Why not just add another text tag, below the existing one:</p><div class="example"><a name="id3617"></a><p class="title"><b>Example 5.6. Overlapping text fields</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="350"&gt;
+  &lt;window x="20" y="20" width="200" height="250" 
+          title="Simple Window" resizable="true"&gt;
+    &lt;text&gt;Here is some text.&lt;/text&gt;
+    &lt;text&gt;I could ramble for hours.&lt;/text&gt;
+  &lt;/window&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>Eugh! The two text fields are sitting on top of each other. That's because the default place to put content
+is in the top-left hand corner. To correct this, we could position both text elements <span class="i">absolutely</span>, as we did 
+with the window:</p><div class="example"><a name="id3622"></a><p class="title"><b>Example 5.7. Manually positioning text</b></p><div class="example-contents"><pre class="programlisting">
+       
+&lt;canvas width="100%" height="250"&gt;
+  &lt;window x="20" y="20" width="200" height="250" 
+          title="Simple Window" resizable="true"&gt;
+    &lt;text x="10" y="10"&gt;Here is some text.&lt;/text&gt;
+    &lt;text x="10" y="50"&gt;I could ramble for hours.&lt;/text&gt;
+  &lt;/window&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+     </pre></div></div><br class="example-break"><p>Notice how the text is now positioned <span class="i">relative to its parent element</span>, the <a class="indexterm" name="id3627"></a><code class="sgmltag-element">&lt;window&gt;</code>.</p><p>This worked great, and is extremely useful for positioning elements all over the place. 
+But it's not very elegant when you think about the way elements flow relative to each other.</p><p>OpenLaszlo provides a solution to this:</p><div class="example"><a name="id3632"></a><p class="title"><b>Example 5.8. Simplelayout</b></p><div class="example-contents"><pre class="programlisting">
+       
+&lt;canvas width="100%" height="350"&gt;
+  &lt;window x="20" y="20" width="200" height="250" 
+          title="Simple Window" resizable="true"&gt;
+    &lt;simplelayout axis="y" spacing="10" /&gt;
+    &lt;text&gt;Here is some text.&lt;/text&gt;
+    &lt;text&gt;I could ramble for hours.&lt;/text&gt;
+  &lt;/window&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+     </pre></div></div><br class="example-break"><p>Now the first text field is positioned relative to the second. The <a class="indexterm" name="id3636"></a><code class="sgmltag-element">&lt;simplelayout&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+
+tag tells OpenLaszlo that everything in that <span class="i">view</span> (in this case the <a class="indexterm" name="id3641"></a><code class="sgmltag-element">&lt;window&gt;</code>) 
+will be positioned relative to its siblings. Here, the <code class="literal">axis</code> property makes
+everything align vertically, and the <code class="literal">spacing</code> specifies how far apart the
+elements should be.</p><p></p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="../developers.tutorials.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="../developers.tutorials.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="comp-intro.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Part II. Tutorial Introduction </td><td width="20%" align="center"><a accesskey="h" href="../index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 6. Introduction to Components</td></tr></table></div></body></html>

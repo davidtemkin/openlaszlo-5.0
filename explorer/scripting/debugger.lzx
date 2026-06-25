@@ -1,0 +1,32 @@
+<canvas debug="true">
+  <button
+      id="myButton"
+      onclick="Debug.format('You clicked %s\n',this)">
+    Click Me!
+  </button>
+
+  <view id="logo" x="10" y="20" resource="logo.png" visible="false"/>
+</canvas>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Copyright 2006 - 2007 Laszlo Systems, Inc.  All rights reserved.  Use subject to license terms. -->

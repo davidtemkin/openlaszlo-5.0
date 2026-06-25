@@ -1,0 +1,118 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;baselist&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>baselist<span class="ang">&gt;</span></h1><p class="short">An abstract class which all list components should subclass.</p><p class="meta">Extends <code>baseformitem</code></p>
+                    
+        <p>
+          This class is a container for a group of
+            
+          <code>baselistitem</code>
+          s.  To use
+            
+          <code>baselist</code>
+          , 
+          <code>baselistitem</code>
+                      must be subclassed to provide a visual representation of the list
+            item.  It supports single select by default.  Set
+            
+          <code>multiselect</code>
+           to true to allow multiple selection
+            (shift-click for a range, control-click for an arbitrary set).
+        </p>
+                    
+            
+        <p>Contained list items may be declared inside the list, such as:</p>
+                    
+            
+        <pre class="example">
+            &lt;canvas height="100"&gt;
+              &lt;baselist layout="axis:y;spacing:2"&gt;
+                &lt;baselistitem height="15" width="25" bgcolor="${selected ? 0xffff00 : 0x0000ff}"/&gt;
+                &lt;baselistitem height="15" width="50" bgcolor="${selected ? 0xffff00 : 0x0000ff}"/&gt;
+                &lt;baselistitem height="15" width="100" bgcolor="${selected ? 0xffff00 : 0x0000ff}"/&gt;
+              &lt;/baselist&gt;
+              &lt;text y="70"&gt;Click bar to select it.&lt;/text&gt;
+            &lt;/canvas&gt;
+            </pre>
+                    
+            
+        <p>or replicated from data: </p>
+                    
+            
+        <pre class="example">
+            &lt;canvas height="90"&gt;
+             &lt;dataset name="items"&gt;
+                &lt;item&gt;one&lt;/item&gt;
+                &lt;item&gt;two&lt;/item&gt;
+                &lt;item&gt;three&lt;/item&gt;
+              &lt;/dataset&gt;
+            
+              &lt;class name="myitem" extends="baselistitem"
+                     bgcolor="${selected ? 0xffff00 : 0xffffff}"&gt;
+                 &lt;text text="${parent.value}"/&gt;
+              &lt;/class&gt;
+            
+              &lt;baselist layout="axis:y; spacing:2"&gt;
+                &lt;myitem datapath="items:/item/text()"/&gt;
+              &lt;/baselist&gt;
+              &lt;text y="70" &gt;Click on a number to select it.&lt;/text&gt;
+             &lt;/canvas&gt;   
+            </pre>
+                    
+            
+        <code>&lt;h2&gt;Optimizing Lists&lt;/h2&gt;</code>
+                    
+            
+        <p>If your lists represent data from a datapath, there are two
+            optimizations that you may want to consider:</p>
+                    
+            
+        <dl>
+                      
+            
+          <dt>pooling</dt>
+                      
+          <dd>
+            If you will be changing the data that is represented by the list
+            after it has been created, you can set
+            
+            <code>dataoption="pooling"</code>
+            .  For more about pooling see the
+            datapath 
+            
+             attribute
+            and the example in 
+            <code>list</code>
+            .
+          </dd>
+                      
+            
+          <dt>lazy</dt>
+                      
+          <dd>
+            If there are more items in the list than will be visible and all
+            list items are the same size (for example, in a scrolling list or
+            combobox), you should set dataoption="lazy".  For more about lazy
+            replication see the datapath 
+            
+            
+             attribute,
+            
+            <code>LzLazyReplicationManager</code>
+            , and the example in
+            
+            <code>list</code>
+            .
+          </dd>
+                      
+        </dl>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">dataoption</td><td class="ty">string</td><td class="ty">none</td><td>One of "lazy", "resize", "pooling", "none".</td></tr><tr><td class="nm">defaultselection</td><td class="ty">expression</td><td class="ty">null</td><td>The index of the default selected item, if none is provided via
+              the selected="true" attribute on an item.</td></tr><tr><td class="nm">itemclassname</td><td class="ty">string</td><td class="ty"/><td>The name of the class for new items that will be created with
+              addItem().</td></tr><tr><td class="nm">multiselect</td><td class="ty">expression</td><td class="ty">false</td><td>If multiselect is true, multiple items may be selected. When the
+              shift key is down, a range of items is selected. When the control
+              key is down, any item may be added to the selection.</td></tr><tr><td class="nm">toggleselected</td><td class="ty">expression</td><td class="ty">false</td><td>When true, the first click on a list item selects it and the
+              second click deselects it.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

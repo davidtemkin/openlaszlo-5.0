@@ -1,0 +1,17 @@
+<!-- subnode: the child node to place         -->
+<!-- placement: the node to place the subnode -->
+<!-- args: init args of the child subnode     -->
+<method name="determinePlacement" args="subnode, placement, args">
+  // ignore placement if set
+  if ( args.ignoreplacement ){
+      return this;
+  }
+
+  if ( placement == null ){
+    var p = null;
+  } else {
+    var p = this.searchSubnodes( "name" , placement );
+  }
+
+  return p == null ? this : p;
+</method>

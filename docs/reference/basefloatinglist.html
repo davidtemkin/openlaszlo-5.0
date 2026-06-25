@@ -1,0 +1,29 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basefloatinglist&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basefloatinglist<span class="ang">&gt;</span></h1><p class="short">
+                base class for floatinglist
+            </p><p class="meta">Extends <code>list</code></p>
+                        
+        <p>
+                             This is a base component with no visible elements that implements 
+                   the functionality of a floating list. See 
+          
+                             and 
+          
+           for concrete extensions of this
+                   base class.
+                
+        </p>
+                    
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">attach</td><td class="ty">string</td><td class="ty">bottom</td><td>Where this floatinglist should attach to its owner. Possible
+              values: bottom, top, left, right.  In the event of a canvas
+              out-of-bounds, the floating list will attach in a visible
+              location.</td></tr><tr><td class="nm">attachoffset</td><td class="ty">expression</td><td class="ty">0</td><td>The distance from the attachtarget.</td></tr><tr><td class="nm">attachtarget</td><td class="ty">expression</td><td class="ty">null</td><td>The view to which this floatinglist will attach. By default, this
+              will be the lexical parent.  The style of the attachtarget will be
+              inherited.</td></tr><tr><td class="nm">owner</td><td class="ty">expression</td><td class="ty"/><td/></tr><tr><td class="nm">style</td><td class="ty">expression</td><td class="ty">attachtarget ? attachtarget['style'] : null</td><td>our style is contrained to the style of our attachtarget
+            TODO: [hqm 2006-09] LPP-2820 
+            attachtarget is sometimes null, should it be initialized with a sentinel?</td></tr><tr><td class="nm">wouldbename</td><td class="ty">string</td><td class="ty"/><td/></tr></table>
+</main><script src="_nav.js"></script></body></html>

@@ -1,0 +1,20 @@
+<canvas>
+  <dataset name="ds">
+    <record x="10" y="20" name="first" color="#00FF00"/>
+    <record x="5" y="5" name="second" color="#FF0000"/>
+    <record x="20" y="2" name="third" color="#0000FF"/>
+    <record x="15" y="40" name="fourth" color="#FF00FF"/>
+    <record x="30" y="10" name="fifth" color="#00FFFF"/>
+  </dataset>
+
+  <simplelayout axis="y"/>
+  <view datapath="ds:/record">
+    <text datapath="@name" bgcolor="$path{'@color'}"
+     onclick="animate('rotation', 360, 1000, true)"/>
+  </view>
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2008 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->

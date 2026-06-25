@@ -1,0 +1,22 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;splash view&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>splash view<span class="ang">&gt;</span></h1><p class="short">A view element within the splash element positions a resource on the canvas while the
+          application is loading.</p>
+        <p>A <code>view</code> tag within a <code>splash</code> element defines a view
+          that is used to present a resource while the application is loading.</p>
+
+        <p>Only a few attributes of the standard <code>view</code> element can be used on this
+          view, because it is displayed before most of the system is present.</p>
+
+        <p>See the <code>splash</code> documentation for examples.</p>
+
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">center</td><td class="ty">boolean</td><td class="ty">"false"</td><td>If true, this view is centered within the canvas. This overrides the x and y
+                attributes. </td></tr><tr><td class="nm">ratio</td><td class="ty">number</td><td class="ty"/><td>If this attribute is present, the resource is synchronized to loading progress.
+                Its value should be either a number between 0.0 and 1.0, or a percentage between 0%
+                and 100% (inclusive). If the resource is a multiframe resource, the value is the
+                proportion of the frames to play during the preload phase of application load; the
+                remainder is played during the initialization phase. </td></tr><tr><td class="nm">x</td><td class="ty">number</td><td class="ty">"0"</td><td>x position of this view relative to the canvas</td></tr><tr><td class="nm">y</td><td class="ty">number</td><td class="ty">"0"</td><td>y position of this view relative to the canvas</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

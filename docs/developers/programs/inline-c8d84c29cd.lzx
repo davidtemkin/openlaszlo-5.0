@@ -1,0 +1,6 @@
+{
+  status: 'ok',
+  message: 'ok',
+  data: DATA,
+  opinfo: OPINFO
+}

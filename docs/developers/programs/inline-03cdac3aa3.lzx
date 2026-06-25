@@ -1,0 +1,7 @@
+<class name="mediaWindow">
+  <view name="myView"/>
+</class>
+
+<mediaWindow name="myInstance">
+  <view name="myPlacedView" placement="myView"/>
+</mediaWindow>

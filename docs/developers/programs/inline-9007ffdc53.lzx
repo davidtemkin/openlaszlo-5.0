@@ -1,0 +1,16 @@
+<canvas>
+
+    <dataset name="resds" />
+
+    <soap name="lq" wsdl="file:ReservationService.wsdl" requestheaders="..." 
+          responseheaders="resds">
+          ...
+        <handler name="ondata">
+            // print out response headers whenever we get data.
+            Debug.debug("%w", resds.serialize());
+        </handler>
+
+    </soap>
+
+    <!-- ... -->
+</canvas>

@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1060">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Thai Island Lagoon</title>
+  <description>Thai Island Lagoon — from the OpenLaszlo sample image library.</description>
+  <dates posted="1495097600" />
+  <urls><url type="photopage">data/photos/1060.jpg</url></urls>
+  <tags><tag>thai</tag><tag>island</tag><tag>lagoon</tag></tags>
+</photo>
+</rsp>

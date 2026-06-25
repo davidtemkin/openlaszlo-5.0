@@ -1,0 +1,111 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 1. OpenLaszlo Architecture</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.overview.html" title="Part I. Overview"><link rel="prev" href="developers.overview.html" title="Part I. Overview"><link rel="next" href="language-preliminaries.html" title="Chapter 2. Language Preliminaries"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 1. OpenLaszlo Architecture</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="developers.overview.html">Prev</a> </td><th width="60%" align="center">Part I. Overview</th><td width="20%" align="right"> <a accesskey="n" href="language-preliminaries.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="architecture"></a>Chapter 1. OpenLaszlo Architecture</h2></div></div></div><p>
+OpenLaszlo is a platform for rich Internet applications that are easy to develop and deploy. 
+The OpenLaszlo system architecture combines the power and usability of client/server design with the 
+administrative advantages and cost effectiveness of web applications.
+</p><p>
+OpenLaszlo applications are written in the XML language LZX, which compiles to any of several runtime targets, including, as of OpenLaszlo 4.0, sw7, sw8, and native browser JavaScript, also sometimes called DHTML or Ajax. Applications compiled to SWF8 or SWF9 run in the Flash 9 player.</p><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1347"></a>1. Deployment Modes</h2></div></div></div><p>
+OpenLaszlo applications can be made available on the web, or <span class="i">deployed</span> in either of two ways:
+</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p><span class="em">Proxied.</span> The OpenLaszlo Server runs on your machine and 
+     </p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: circle; "><li class="listitem"><p>Compiles source programs as necessary and sends the resultant file to be executed on the client; and</p></li><li class="listitem"><p>Proxies interactions between the client and other servers on the Internet, performing data manipulation as necessary</p></li></ul></div><p>
+   </p></li><li class="listitem"><p><span class="em">SOLO</span> You use the OpenLaszlo compiler to "precompile" programs and make the resulting file (in SWF or JavaScript) available on your server. When executed on the
+        client, the application contacts other servers directly, without mediation by the OpenLaszlo Server. This "serverless", or
+<span class="i">Standalone OpenLaszlo Output</span> deployment is called SOLO.</p></li></ul></div><div class="figure"><a name="id2274"></a><p class="title"><b>Figure 1.1. Applications may be deployed either SOLO or proxied by the OpenLaszlo Server</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/deploy_options.png" alt="Applications may be deployed either SOLO or proxied by the OpenLaszlo Server"></div></div></div><br class="figure-break"><p>
+Later chapters explain in detail the differences between proxied and SOLO OpenLaszlo applications.  In general:
+</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p><span class="em">Proxied</span> applications can do a few things that SOLO applications cannot do, but they are more trouble to deploy 
+    and sometimes perform more slowly.</p></li><li class="listitem"><p><span class="em">SOLO</span> applications are easier to deploy and sometimes better-performing.</p></li></ul></div><p>
+In many cases you don't need to decide which deployment mode to use until you're ready to deploy, and the default choice is usually SOLO. In reading the discussions below,
+keep in mind that when you deploy your applications statically, the run-time capabilities of OpenLaszlo Server 
+(such as media transcoding) will not be available.
+</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1348"></a>2. Client and Server: Synopsis</h2></div></div></div><p>        
+The OpenLaszlo Server is a Java application that executes in a J2EE servlet
+container. The OpenLaszlo Server may communicate with <em class="glossterm">back end</em>
+servers and data sources using a variety of protocols. OpenLaszlo
+applications written in LZX are compiled by the OpenLaszlo Server and served either as bytecode
+to a plug-in that runs in the client's web browser (such as Flash or J2ME) or as JavaScript (DHTML) that is directly executed by the browser itself.  This constitutes
+the <a class="indexterm" name="id2292"></a><em class="glossterm">front end</em>.  OpenLaszlo applications run consistently and reliably on a variety of operating systems and device types, including Windows, Pocket PC, Mac OS, Linux, and Solaris, and a variety of mobile and set-top box platforms.
+</p><p>
+When compiling for execution by the Flashplayer, the OpenLaszlo Server outputs bytecode in the SWF ("shockwave format") file
+format recognized by the Macromedia Flash player (version 7 and
+higher). 
+</p><p>
+When compiled for execution natively in the browser, the OpenLaszlo Server outputs JavaScript. This script is human readable but optimized for size and execution speed, with comments removed, variable names shortened, etc. 
+</p><p>
+In the future, OpenLaszlo may support other run-time clients as
+they become widely available.</p><div class="figure"><a name="id2298"></a><p class="title"><b>Figure 1.2. OpenLaszlo Compiles to Different Runtimes</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/kernels.png" alt="OpenLaszlo Compiles to Different Runtimes"></div></div></div><br class="figure-break"><p>
+In the OpenLaszlo context, <a class="indexterm" name="id2304"></a><em class="glossterm">client</em> means an LZX application executing in user's web browser, and <a class="indexterm" name="id2307"></a><em class="glossterm">server</em> means
+ OpenLaszlo Server (which may, in turn, communicate with other servers).  The LZX client and OpenLaszlo Server server communicate over HTTP; the OpenLaszlo Server sends bytecode
+ and the LZX application sends XML.</p><p>All OpenLaszlo platform features, including streaming media and notification, are delivered over HTTP or HTTPS. OpenLaszlo-based applications 
+thus maintain compatibility with standard corporate firewalls. This is a critical capability for public Internet applications.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1352"></a>3. Laszlo Server Architecture</h2></div></div></div><p>
+The OpenLaszlo Server executes within a standard J2EE application server or Java servlet container running JRE 1.4 or higher. 
+These application server environments scale well, as does the OpenLaszlo Server itself. OpenLaszlo applications can run on any OS 
+supported by these server products. OpenLaszlo supports Windows, Solaris, Linux and Mac OS X server environments.</p><p>The OpenLaszlo Server consists of four main subsystems: </p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>the <em class="glossterm">Interface Compiler</em></p></li><li class="listitem"><p>the <em class="glossterm">Media Transcoder</em></p></li><li class="listitem"><p>the <em class="glossterm">Data Manager</em></p></li><li class="listitem"><p>the <em class="glossterm">Cache</em></p></li></ul></div><div class="figure"><a name="id2328"></a><p class="title"><b>Figure 1.3. OpenLaszlo Server Architecture</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/OLServer_services.png" alt="OpenLaszlo Server Architecture"></div></div></div><br class="figure-break"><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1349"></a>3.1. The Interface Compiler</h3></div></div></div><p>The <em class="glossterm">Interface Compiler</em> consists of an
+<em class="glossterm">LZX Tag Compiler</em>, and a <em class="glossterm">Script
+Compiler</em>.  The Interface Compiler additionally invokes the
+Media Compiler and the Data Manager to compile media and data sources
+that are <em class="glossterm">baked in</em> to the application.</p><p>The LZX tag and script compilers convert LZX application
+description tags and JavaScript into executable (swf) bytecode for
+transmission to the OpenLaszlo client environment. This code is placed into the cache, from which it is sent to the client. Depending on how
+the application is invoked, it is transmitted either as a SWF file, or as an HTML file with an embedded  SWF object.</p><p>        
+The Media Transcoder converts a full range of media assets into a single format for rendering by OpenLaszlo's target 
+client rendering engine. This enables an OpenLaszlo application to present supported media types in a unified manner on a 
+single canvas, without the distraction of multiple helper applications or supplemental playback software.</p><p>The Media Transcoder automatically transcodes the following media
+types: JPEG, GIF, PNG, MP3, TrueType, and SWF (art/animation
+only).</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1350"></a>3.2. The Data Manager</h3></div></div></div><p>
+The Data Manager is comprised of a data compiler that converts all data into a compressed binary format readable by OpenLaszlo 
+applications and a series of data connectors that enable OpenLaszlo applications to retrieve data via XML/HTTP. OpenLaszlo applications
+ can thus interface across the network with databases, XML Web Services, and Web-server based files or executables.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1351"></a>3.3. The Cache</h3></div></div></div><p>The cache contains the most recently compiled version of any application. The first time an OpenLaszlo application is 
+requested, it is compiled and the resultant SWF file is sent to the client. A copy is also cached on the server, so that subsequent
+requests do not require waiting for the compilation.</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1357"></a>4. OpenLaszlo Client Architecture</h2></div></div></div><p>
+OpenLaszlo's client architecture consists of the OpenLaszlo runtime library called the Laszlo Foundation Class, or LFC, a core library compiled into every OpenLaszlo application 
+that provides run-time services (such as, for example, a timer and an idling function) and a presentation renderer to
+ provide 2D graphics rendering and sound playback.  
+ None of these classes rely on Flash services or use the Flash object model. When compiled to .swf format, the Flash Player is used solely as a rendering engine.</p><div class="figure"><a name="id2352"></a><p class="title"><b>Figure 1.4. Laszlo Client Architecture</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/client_architecture.png" alt="Laszlo Client Architecture"></div></div></div><br class="figure-break"><div class="example"><a name="id2357"></a><p class="title"><b>Example 1.1. Empty Application</b></p><div class="example-contents"><pre class="programlisting">&lt;canvas/&gt;</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/inline-c575f18536.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/inline-c575f18536.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>        
+When this application is running, even though it isn't "doing anything," it is maintaining a connection 
+with the server, and all the capabilities necessary for running an LZX application have actually been downloaded.</p><p>
+There are four primary components within the LFC: the Event System, the Data Loader/Binder, the Layout &amp; 
+Animation system and a set of Application Services.</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1353"></a>4.1. The Event System</h3></div></div></div><p>The event system recognizes and handles application events such as
+user mouse clicks or server data pushes. This component permits
+standard event-based programming on the client. Relative to conventional Web implementations, OpenLaszlo applications typically  
+reduce the processing load placed on the host server, by enabling
+tasks such as client-side sorting, processing, validation, and dynamic
+display across all application states.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1354"></a>4.2. The Data Loader/Binder</h3></div></div></div><p>The data loader serves as a data traffic director, accepting data streams
+across the network from the OpenLaszlo Server and binding data to
+appropriate visual display elements such as text fields, forms, and
+menu items.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1355"></a>4.3. The Layout and Animation System</h3></div></div></div><p>The layout and animation system provides OpenLaszlo applications with a
+<em class="glossterm">constraint-based</em> screen layout of interface
+elements and <em class="glossterm">algorithmic animation</em> of interface
+state changes. This component enables you to build a dynamic
+application interface with minimal programming. It allows you to
+position a variable number of interface elements using either relative
+positioning or absolute pixel positioning. With the animation
+algorithms, screen interface updates are rendered in a visually
+continuous manner, clearly communicating the application's state
+changes to the user. </p><div class="figure"><a name="id2373"></a><p class="title"><b>Figure 1.5. Openlaszlo Application Software Stack</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/layercake.png" alt="Openlaszlo Application Software Stack"></div></div></div><br class="figure-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1356"></a>4.4. OpenLaszlo Services System</h3></div></div></div><p>        
+The OpenLaszlo runtime includes support 
+for timers, sound and modal dialogs.</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1358"></a>5. Data Flow of an OpenLaszlo Server-proxied OpenLaszlo Application</h2></div></div></div><p>This example uses an OpenLaszlo application stored on the server as <code class="literal">weather.lzx</code>. The following diagram
+illustrates how this application would be executed by the OpenLaszlo Server.</p><div class="figure"><a name="id2385"></a><p class="title"><b>Figure 1.6. OpenLaszlo Application Data Flow diagram for the Weather Application (proxied)</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/weather_dataflow.png" alt="OpenLaszlo Application Data Flow diagram for the Weather Application (proxied)"></div></div></div><br class="figure-break"><p>Starting with a user entering a URL that requests the Weather application, this diagram illustrates the data flow
+ sequence from client to server, integrating data from an XML Web service, and sending the result back to the client.</p><p>
+In OpenLaszlo applications, presentation-related logic is separated from business logic and executed locally on the client. The OpenLaszlo 
+server sends the client compressed binary data rather than text, reducing the amount of data transported in 
+comparison to HTML-based and other Web applications. Caching on both the server and client eliminates unnecessary code execution and
+ data transmission.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1359"></a>6. Security Model</h2></div></div></div><p>
+The OpenLaszlo application platform supports the SSL security model. Data transmissions across the Internet can 
+be encrypted using 
+SSL encryption over HTTPS.  When compiled for native execution by the browser, the security model is that of whichever  browser is used to execute the application.
+</p><p>
+The security model employed by OpenLaszlo applications differs slightly depending on the runtime target. OpenLaszlo applications compiled to swf format execute on the client computer within the secure "sandbox" environment of
+ the 
+Flash Player, and cannot write to the local file system or access the client's native environment.</p><p>
+Web services and databases used by an OpenLaszlo application are also secured using a per-user authentication model. This 
+mechanism prevents use of the OpenLaszlo Server as a proxy or gateway into insecure services or data.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1360"></a>7. Platform Support for Multiple Devices</h2></div></div></div><p>
+The OpenLaszlo architecture is designed to support multiple device types. Its dynamic layout mechanisms enable simple modifications to such properties as an application's overall 
+size to be intelligently applied by the platform. This simplifies adapting an application to work on screens and devices of different size.</p><p>All screen visualizations in OpenLaszlo applications use time-based rather than
+frame-based animation, and thus transparently accommodate the
+processor speed differences of various device types. An interface
+transition specified to take 500 milliseconds will take 500
+milliseconds regardless of the number of frames shown — faster
+processors result in more frames and smoother animation, but the same
+duration of transition.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1361"></a>8. Accessibility</h2></div></div></div><p>
+ OpenLaszlo provides partial support for the <a class="ulink" href="http://msdn.microsoft.com/en-us/library/ms697707(VS.85).aspx" target="_top">Microsoft Active Accessibility</a> specification, which states, "By using Active Accessibility and following accessible design practices, developers can make applications running on Windows more accessible to many people with vision, hearing, or motion disabilities."  For a discussion of this feature, see <a class="xref" href="program-structure.html" title="Chapter 15. Program Structure">Chapter 15, <i>Program Structure</i></a>.
+This support requires installation of third party software on the client machine, and is only available in the OpenLaszlo targets that run the Flash Player under Internet Explorer.
+</p><p></p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="developers.overview.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.overview.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="language-preliminaries.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Part I. Overview </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 2. Language Preliminaries</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

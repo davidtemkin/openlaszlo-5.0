@@ -1,0 +1,7 @@
+<canvas> 
+  <view name="john" id="grandfather"> 
+    <view name="john" id="father"> 
+      <view name="john" id="son"/> 
+    </view> 
+  </view> 
+</canvas>

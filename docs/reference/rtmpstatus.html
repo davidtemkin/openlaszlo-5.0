@@ -1,0 +1,34 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;rtmpstatus&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>rtmpstatus<span class="ang">&gt;</span></h1><p class="short">An indicator "light" that shows status of connection to a media server.</p><p class="meta">Extends <a href="view.html"><code>LzView</code></a></p>
+                        
+        <p>
+                    This element causes a small indicator "light" to show the status of the connection:</p>
+                            
+        <code>&lt;itemizedlist&gt;
+                              
+          <code>&lt;listitem&gt;
+            <code>&lt;para&gt;red: no connection&lt;/para&gt;</code>
+          &lt;/listitem&gt;</code>
+                              
+          <code>&lt;listitem&gt;
+            <code>&lt;para&gt;green: working connection&lt;/para&gt;</code>
+          &lt;/listitem&gt;</code>
+                              
+        &lt;/itemizedlist&gt;</code>
+                        
+        <p>The following example shows a trivial rtmpstatus example.</p>
+                        
+        <pre class="example">
+&lt;canvas height="40"&gt;
+    &lt;simplelayout spacing="5"/&gt;
+    &lt;text text="The indicator light is red because there is no rtmp connection."/&gt;
+    &lt;rtmpstatus/&gt;
+&lt;/canvas&gt;
+                </pre>
+                    
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">rtmpc</td><td class="ty">expression</td><td class="ty">null</td><td>rtmpconnection to monitor</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

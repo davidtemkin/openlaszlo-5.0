@@ -1,0 +1,103 @@
+<canvas width="770" height="430" bgcolor="0x1b1b1f">
+    <!-- htmlvideoview: the DHTML (HTML5 <video>) component. Canonical copy in
+         explorer-live/components/; copied here so includes resolve cleanly. -->
+    <include href="htmlvideoview.lzx"/>
+
+    <!-- The video library — media bundled with the app (media/), referenced relative to
+         the program so it works at any served-root with no /api proxy. -->
+    <dataset name="library">
+        <video title="Sintel (Trailer)"        desc="Blender Foundation, 2010"
+               file="media/sintel-trailer.mp4"     poster="media/posters/sintel-trailer.jpg"/>
+        <video title="Big Buck Bunny"           desc="Blender Foundation, 2008"
+               file="media/big-buck-bunny.mp4"     poster="media/posters/big-buck-bunny.jpg"/>
+        <video title="Elephants Dream"          desc="Blender Foundation, 2006"
+               file="media/elephants-dream.mp4"    poster="media/posters/elephants-dream.jpg"/>
+        <video title="For Bigger Joyrides"      desc="Google sample"
+               file="media/for-bigger-joyrides.mp4" poster="media/posters/for-bigger-joyrides.jpg"/>
+        <video title="For Bigger Fun"           desc="Google sample"
+               file="media/for-bigger-fun.mp4"     poster="media/posters/for-bigger-fun.jpg"/>
+        <video title="Popeye for President"     desc="Public domain, 1956"
+               file="media/popeye-president.mp4"   poster="media/posters/popeye-president.jpg"/>
+    </dataset>
+
+    <!--- format seconds as m:ss -->
+    <method name="fmtTime" args="s"><![CDATA[
+        s = Math.floor(s || 0);
+        var m = Math.floor(s / 60), ss = s % 60;
+        return m + ':' + (ss < 10 ? '0' : '') + ss;
+    ]]></method>
+
+    <!--- load a video into the player and start it -->
+    <method name="loadVideo" args="file, title"><![CDATA[
+        nowplaying.setAttribute('text', title);
+        player.setAttribute('url', file);
+        player.play();
+    ]]></method>
+
+    <handler name="oninit"><![CDATA[
+        // preselect the first library entry (shows its first frame; click Play to start)
+        var n = canvas.library.getFirstChild();
+        if (n) {
+            nowplaying.setAttribute('text', n.getAttr('title'));
+            player.setAttribute('url', n.getAttr('file'));
+        }
+    ]]></handler>
+
+    <text x="20" y="12" fgcolor="0xffffff" fontsize="16" fontstyle="bold"
+          resize="true" text="OpenLaszlo Video Library"/>
+    <text x="246" y="18" fgcolor="0x8a8aff" fontsize="11" resize="true"
+          text="HTML5 video via the htmlvideoview component"/>
+
+    <!-- ============ player ============ -->
+    <htmlvideoview id="player" x="20" y="44" width="496" height="279" muted="false"/>
+
+    <!-- now-playing label -->
+    <text id="nowplaying" x="20" y="328" width="496" fgcolor="0xdddddd" fontsize="12" fontstyle="bold"/>
+
+    <!-- scrubber -->
+    <view id="track" x="20" y="350" width="496" height="9" bgcolor="0x3a3a42"
+          clickable="true">
+        <handler name="onclick"><![CDATA[
+            if (player.totaltime > 0)
+                player.seek((this.getMouse('x') / this.width) * player.totaltime);
+        ]]></handler>
+        <view height="9" bgcolor="0x4aa3ff"
+              width="${ player.totaltime > 0 ? parent.width * player.playhead / player.totaltime : 0 }"/>
+    </view>
+    <text x="20" y="364" fgcolor="0x9a9aa2" fontsize="10"
+          text="${ canvas.fmtTime(player.playhead) + ' / ' + canvas.fmtTime(player.totaltime) }"/>
+
+    <!-- transport buttons -->
+    <view x="360" y="386" layout="axis:x; spacing:6">
+        <button text="Play"  onclick="player.play()"/>
+        <button text="Pause" onclick="player.pause()"/>
+        <button text="Stop"  onclick="player.stop()"/>
+    </view>
+
+    <!-- ============ playlist ============ -->
+    <text x="536" y="24" fgcolor="0x9a9aa2" fontsize="11" resize="true" text="LIBRARY"/>
+    <view x="536" y="44" width="218" height="372" clip="true">
+        <simplelayout axis="y" spacing="5"/>
+        <view datapath="library:/video" width="216" height="52" bgcolor="0x26262c"
+              clickable="true"
+              onmouseover="this.setAttribute('bgcolor', 0x33333b)"
+              onmouseout="this.setAttribute('bgcolor', 0x26262c)">
+            <handler name="onclick"><![CDATA[
+                canvas.loadVideo(this.datapath.xpathQuery('@file'),
+                                    this.datapath.xpathQuery('@title'));
+            ]]></handler>
+            <!-- poster thumbnail (runtime image via setSource; stretch 160px jpg to 80px) -->
+            <view x="3" y="3" width="80" height="46" bgcolor="0x000000"
+                  clip="true" stretches="both">
+                <attribute name="posterurl" value="$path{'@poster'}" type="string"/>
+                <handler name="onposterurl"><![CDATA[
+                    if (this.posterurl) this.setSource(this.posterurl);
+                ]]></handler>
+            </view>
+            <text x="92" y="6"  width="118" fgcolor="0xffffff" fontsize="11"
+                  fontstyle="bold" text="$path{'@title'}"/>
+            <text x="92" y="26" width="118" fgcolor="0x9a9aa2" fontsize="9"
+                  text="$path{'@desc'}"/>
+        </view>
+    </view>
+</canvas>

@@ -1,0 +1,27 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basecomponent&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basecomponent<span class="ang">&gt;</span></h1><p class="short">an abstract class which all components subclass</p><p class="meta">Extends <a href="view.html"><code>LzView</code></a></p>
+                    
+        <p>
+            An abstract base class that handles focus, the text attribute, and style.
+            </p>
+                  an abstract class which all components subclass
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">doesenter</td><td class="ty">boolean</td><td class="ty">false</td><td>if set to true, the component manager will call this component
+              with doEnterDown and doEnterUp when the enter key goes up or down
+              if it is focussed.</td></tr><tr><td class="nm">enabled</td><td class="ty">expression</td><td class="ty">true</td><td>when false the component should appear as its disabled state and
+              not respond to user events. The component is
+              automatically set to clickable when enabled, and not clickable
+              when disabled.</td></tr><tr><td class="nm">focusable</td><td class="ty">boolean</td><td class="ty">true</td><td>when true, the component can be focused.</td></tr><tr><td class="nm">hasdefault</td><td class="ty">expression</td><td class="ty">false</td><td>set to true when this component will receive enter key events</td></tr><tr><td class="nm">isdefault</td><td class="ty">expression</td><td class="ty"/><td>If set to true, this component will be the default (and will
+              therefore receive the enter key) if it is nearest to the focussed
+              view, and if that focussed view does not have doesenter set to
+              true. "Nearness" is defined to mean the closest common parent
+              with the focussed view that is not excluded from the mode, and
+              which is visible onscreen.</td></tr><tr><td class="nm">style</td><td class="ty">expression</td><td class="ty">null</td><td>if null, the style is set to the inherited style from the parent
+               component, if no parent component the style will be the canvas
+               'defaultstyle' attribute</td></tr><tr><td class="nm">styleable</td><td class="ty">expression</td><td class="ty">true</td><td>whether style should be applied to this component</td></tr><tr><td class="nm">text</td><td class="ty">html</td><td class="ty"/><td>the label or title of the component: instead of using this 
+              attribute text may instead be placed withing the tag, for
+              example: &lt;button&gt;OK&lt;/button&gt;</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

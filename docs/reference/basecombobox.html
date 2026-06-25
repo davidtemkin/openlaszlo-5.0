@@ -1,0 +1,71 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basecombobox&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basecombobox<span class="ang">&gt;</span></h1><p class="short">baseclass for a combobox</p><p class="meta">Extends <code>baseformitem</code></p>
+                    
+        <p>Extend this base class to create a combobox with a custom popup
+            control, and to change the size of the font.</p>
+                    
+            
+        <p>
+          The number of items shown in the combobox can be set using the
+            
+          <code>shownitems</code>
+           attribute.  If there are more items
+            available than are shown, a scrollbar will be created
+            automatically.
+        </p>
+                    
+            
+        <p>
+          The list of items in a combobox can be created explicity using the
+            
+          <code>textlistitem</code>
+           tags with assigned text and value
+            attributes.
+        </p>
+                    
+            
+        <pre class="example">
+            &lt;canvas height="100"&gt;
+              &lt;font name="smallfont" src="verity/verity9.ttf"/&gt;
+            
+              &lt;class name="minicombo" extends="basecombobox" font="smallfont"
+                     bgcolor="0xeaeaea" editable="false" height="14"&gt;
+                &lt;attribute name="text_y" value="-2"/&gt;
+                &lt;view bgcolor="green" x="${parent.width-10}"
+                      y="3" height="8" width="8"
+                      placement="bkgnd" onclick="parent.toggle()" /&gt;
+              &lt;/class&gt;
+            
+              &lt;class name="minilistitem" extends="textlistitem"
+                     font="smallfont" text_y="-2" height="12"/&gt;
+            
+              &lt;minicombo x="20" y="20"  &gt;
+                &lt;minilistitem value="1"&gt;one&lt;/minilistitem&gt;
+                &lt;minilistitem value="2"&gt;two&lt;/minilistitem&gt;
+                &lt;minilistitem value="3"&gt;three&lt;/minilistitem&gt;
+              &lt;/minicombo&gt;
+            &lt;/canvas&gt;
+            </pre>
+                    
+            
+        <p>
+          For more use cases of 
+          <code>basecombobox</code>
+          , see examples
+                in 
+          <a href="combobox.html">
+            <code>&lt;combobox&gt;</code>
+          </a>
+          .
+        </p>
+                  A dropdown list of selectable items. Can either be editable or
+          not.
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">attachoffset</td><td class="ty">number</td><td class="ty">-1</td><td>The vertical offset of the floatinglist attached to this
+              combobox.</td></tr><tr><td class="nm">autoscrollbar</td><td class="ty">expression</td><td class="ty">true</td><td>Whether a scrollbar should automatically show up when there are more
+              items than shownitems.</td></tr><tr><td class="nm">bordersize</td><td class="ty">expression</td><td class="ty">1</td><td>The border size ( in pixels ) of the popup list.</td></tr><tr><td class="nm">dataoption</td><td class="ty">string</td><td class="ty">none</td><td>One of "lazy", "resize", "pooling", "none".</td></tr><tr><td class="nm">defaultplacement</td><td class="ty">string</td><td class="ty">cblist</td><td/></tr><tr><td class="nm">defaultselection</td><td class="ty">number</td><td class="ty">null</td><td>The number of the item that is initially selected. This overrides
+              the value defined in the defaulttext attribute</td></tr><tr><td class="nm">defaulttext</td><td class="ty">string</td><td class="ty"/><td>The text that appears in the text field when no item is selected.</td></tr><tr><td class="nm">editable</td><td class="ty">expression</td><td class="ty">true</td><td>Make the text field of this combobox editable.</td></tr><tr><td class="nm">initcomplete</td><td class="ty">expression</td><td class="ty">0</td><td/></tr><tr><td class="nm">isopen</td><td class="ty">expression</td><td class="ty">false</td><td>Indicates whether or not the popup list is showing.</td></tr><tr><td class="nm">itemclassname</td><td class="ty">string</td><td class="ty"/><td>The class that is used to create an item in the list.</td></tr><tr><td class="nm">min_width</td><td class="ty">number</td><td class="ty">50</td><td>The minimum width this component is allowed to be.</td></tr><tr><td class="nm">mousedownintext</td><td class="ty">expression</td><td class="ty">false</td><td/></tr><tr><td class="nm">selected</td><td class="ty">expression</td><td class="ty">null</td><td>The initial selected item.</td></tr><tr><td class="nm">shownitems</td><td class="ty">expression</td><td class="ty">-1</td><td>Sets the height of the combobox to show 'n' items.</td></tr><tr><td class="nm">spacing</td><td class="ty">expression</td><td class="ty">0</td><td>The spacing size ( in pixels ) between items in the pop-up list.</td></tr><tr><td class="nm">text_width</td><td class="ty">number</td><td class="ty">this.width - 19</td><td>the width the text.</td></tr><tr><td class="nm">text_x</td><td class="ty">number</td><td class="ty">2</td><td>the x position of the text.</td></tr><tr><td class="nm">text_y</td><td class="ty">number</td><td class="ty">2</td><td>the y position of the text.</td></tr><tr><td class="nm">value</td><td class="ty">expression</td><td class="ty">cblist.value</td><td>The value of the combobox.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

@@ -1,0 +1,19 @@
+<!--- a slider component allowing for easy selection of a value within a range -->
+<class name="slider" extends="baseslider">
+  <<emphasis role="em">slidertrack</emphasis>/>
+
+  <<emphasis role="em">state apply="${classroot.showrange}"</emphasis>>
+      <text y="${classroot.track.y + classroot.track.height + 2}"
+            text="${classroot.minvalue}"/>
+      <text y="${classroot.track.y + classroot.track.height + 2}" resize="true"
+            x="${classroot.track.x+classroot.track.width-width}"
+            text="${classroot.maxvalue}"/>
+  </<emphasis role="em">state</emphasis>>
+
+  <!--- @keywords private -->
+  <method <emphasis role="em">name="_applystyle"</emphasis> args="s">
+    track.setbgcolor(s.bordercolor);
+    track.background.setbgcolor(s.basecolor);
+    track.filled.setbgcolor(s.selectedcolor);
+  </method>
+</class>

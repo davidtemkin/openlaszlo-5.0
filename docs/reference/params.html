@@ -1,0 +1,25 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;params&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>params<span class="ang">&gt;</span></h1><p class="short">A utility class for manipulating name-value pairs</p><p class="meta">Extends <a ><code>LzEventable</code></a></p>
+        <p>lz.Param provides utilities for manipulating name-value pairs. 
+   For example, lz.Param objects can be used to manage a name/value pairs for an 
+   HTTP request.</p>
+         
+ 
+        <pre><code>
+     &lt;method name="sendData" args="action"&gt;
+         var d=canvas.datasets.dsSendData;
+         var p=new lz.Param();
+         p.addValue( "action", action, true);
+         p.addValue( "firstName", "Bob", true);
+         p.addValue( "lastName", "Jones", true);
+         p.addValue( "phone", "415-255-2392", true);
+         p.addValue( "email", "bob@jones.com", true);
+         d.setQueryString( p );
+         d.doRequest();
+     &lt;/method&gt;
+ </code></pre>
+</main><script src="_nav.js"></script></body></html>

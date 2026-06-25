@@ -1,0 +1,2 @@
+<dataset name="myData"
+         <emphasis role="em">src="http://www.myServer.com/cgi-bin/myXMLDoc.cgi?return=addresses"</emphasis>/>

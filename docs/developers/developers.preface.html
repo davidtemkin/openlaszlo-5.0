@@ -1,0 +1,132 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Preface</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="prev" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="next" href="developers.overview.html" title="Part I. Overview"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Preface</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="index.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="developers.overview.html">Next</a></td></tr></table><hr></div><div class="preface"><div class="titlepage"><div><div><h1 class="title"><a name="developers.preface"></a>Preface</h1></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1346"></a>1. Preface</h2></div></div></div><p>We invented this technology to make it possible to create web
+applications that are delightful to use.</p><p>Every computer user knows the power of the Internet, and every web
+surfer has been awed at one time or another by the vast wealth of the
+Web. But at the same time everyone knows, even if they only know it
+subconsciously, that web-based applications running in a browser offer
+a user experience that is inherently inferior to that of
+locally-running programs. There is something almost retrograde about
+interacting with websites; they're anomalous, like rotary telephones
+in a touch-tone world.</p><p>The reason for this is clear. It's not because web designers don't
+know anything about usability or visual design or software
+engineering. It's because they have not had the tools they require to
+build the web experience they conceive.</p><p>HTML is a great thing; DHTML is a great thing. Adobe's
+Flash<span class="trademark"></span>™ is a great thing. But none of them allow
+developers to create astounding user experiences, because all of them
+are based on fundamentally limited models. The variants of HTML are
+based on the metaphor of a "page," which forces users to
+process information in arbitrary discrete chunks separated by jarring
+transitions and "page refreshes." Flash offers the
+possibility of a much more continuous user experience, but its
+"movie" metaphor forces developers to leave behind many
+essential tools and techniques of modern software development.</p><p>In contrast, the OpenLaszlo solution was built from the ground up for
+application development — not "page" development, not
+"movie" development — and is centered around standard
+development approaches. LZX applications are written in XML files with
+embedded JavaScript, which provide an ideal foundation for serious developers. OpenLaszlo supports standards-based object-oriented
+development and data binding, and enables rich interactivity without
+requiring complex, timeline-based visual authoring.</p><p>The result is applications that are delightful to use. Now,
+delightfulness is in the eye of the beholder, of course, and that's
+why we suggest that you right now click on  our <a class="ulink" href="../../examples/amazon/amazon.lzx" target="_top">e-commerce</a>
+application.
+ This program communicates with
+Amazon.com's data servers and allows you to browse their products,
+create a wish list, fill a shopping cart, and so forth. So in many
+ways it's just like any other similar e-commerce site. But notice that
+there are no screen refreshes, and that you can move items by dragging
+them with the mouse, that it's hard to get "lost." Now
+consider that this program was written in a few hours using a simple
+text editor.</p><p>We suggest that you play around with any of the dozens of other
+sample applications <a class="ulink" href="../../examples/" target="_top">here</a> or on the Laszlo Systems website   to get a feel for
+what a Laszlo application is like. One sometimes hears the phrase
+"Rich Internet Application" to describe programs like these,
+and their defining characteristic is that they make people smile. A
+growing body of empirical studies <em><span class="remark">source</span></em> shows that when
+people have a more pleasant experience on a website, the longer they
+stay there, and on commercial sites, the more commerce they
+transact.</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1338"></a>1.1. Audience and rationale for this book</h3></div></div></div><p>This book is written for software developers who have familiarity
+with the concepts of object-oriented programming as implemented in
+languages such as Java, C++, or JavaScript, and with the fundamentals
+of XML data formats.</p><p>We also hope that this guide will be accessible to web
+developers who know HTML and CSS but haven't yet worked with object
+oriented languages, and to developers and designers familiar with
+Flash or FlashMX. If this describes you, you may have a little
+homework to do outside the scope of this book, but in general you
+should have no trouble becoming a fluent LZX developer. A good place
+for you to start learning would be with the <a class="ulink" href="../developers/" target="_top">tutorials</a>.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1341"></a>1.2. On Runtimes and Deployment Modes and the "Core" API</h3></div></div></div><p>
+OpenLaszlo applications can be compiled to run in any of several runtimes, and in either of two deployment modes. Some capabilities are available in only a subset of these use cases. OpenLaszlo's "core" APIs run on all target runtimes, and they get the most attention in this <span class="i">Guide</span>. The "Core API" is kind of loose concept, since there's no formal definition, but what it means is that unless you see indication to the contrary, you can assume that the topic under discussion applies to all runtimes. Similarly the default deployment mode is assumed to be SOLO.
+</p><p>
+Nevertheless, as a developer you have to decide whether to:
+</p><div class="orderedlist"><ol class="orderedlist compact" type="1"><li class="listitem"><p>optimize for swf (employ swf-only APIs, (and maybe even touch Flash APIs))</p></li><li class="listitem"><p>optimize for dhtml (employ dhtml-only APIs)</p></li><li class="listitem"><p>code to lowest common denominator ("core" APIs only)</p></li><li class="listitem"><p>conditionalize (include both. An example would be including comma separated list of embedded and system fonts; when compiled to swf you get embedded font, to dhtml you get system font).</p></li></ol></div><p>
+The focus of the <span class="i">OpenLaszlo Application Developer's Guide</span> is (3), the lowest common denominator; runtime-specific APIs and engineering approaches are presented as adjuncts.  Graphic devices ("glyphs") in the margin call attention to non core/non SOLO information.
+</p><p class="fixme"><em><span class="remark"><span class="para-label">FIXME: </span>illustrate the glyphs here when they're ready</span></em></p><p>
+Depending on which approach you're taking, you'll make different engineering decisions and different approaches to reading the this <span class="i">Guide</span>.  For example, if you're determined to deploy SOLO, you can just skip all the chapters marked with the "Server Required" device, etc.
+</p><p>
+Finally, this <span class="i">Guide</span> does not address any browser-specific considerations.  If a thing does not run on all supported browsers for a given runtime, it's by definition not supported and thus should not be cluttering up our lovely <span class="i">Guide</span>. Nonstandard, browser-specific things are described in the release notes or the OpenLaszo Wiki.
+</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1339"></a>1.2.1. Learn by Doing</h4></div></div></div><p>This Guide contains hundreds of "live" examples, that is, 
+Laszlo Applications that are embedded in this page. You'll have more fun and get more out of this document if you "play with the code." To do so,
+simply click on the "Edit" link at the bottom left corner of each example. This will cause a new window to pop up that is a self-contained
+environment for modifying and executing Laszlo applications. Edit the sample code then click "update" and see the results displayed in the 
+right-hand side of the window. To return the sample code to its initial state, click "Reset." </p><p>
+If you would like to save a copy of the application for later use, click on the "Save As" button.
+</p><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1340"></a>1.2.2. Sequential and Random Access</h4></div></div></div><p><span class="i">Designing, Developing and Deploying Laszlo Applications</span> is intended for sequential and random
+access. In general, each chapter draws on the concepts covered in the chapters
+that precede it, but not (too much) on those in the chapters that follow it. If you start with Chapter One
+and read to the end, you won't get lost.</p><p>
+ At the same time, each
+chapter is designed to be encyclopedic: the chapter on Animation
+covers the entire subject of animation, and so forth.</p><p> 
+ Short, self-contained examples appear throughout. Links are provided to longer examples.</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1342"></a>1.3. Typographic Conventions</h3></div></div></div><p>Code is displayed thus: <code class="literal">var a = f(2)</code>. Tags are displayed thus: <code class="sgmltag-element">&lt;canvas&gt;</code> and their attributes are displayed like this: 
+<code class="sgmltag-attribute">height</code>. Function names are displayed like this: <code class="methodname">setAttribute()</code>.  Longer sections of code and other verbatim information is displayed in a separate paragraph:</p><pre class="programlisting">
+An example file
+that spans several
+lines
+</pre><p>Example programs are shown thus:</p><div class="informalexample"><pre class="programlisting">&lt;canvas height="20"&gt;
+  &lt;text&gt;Hello World!&lt;/text&gt;
+&lt;/canvas&gt;</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/inline-75bd45c930.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/inline-75bd45c930.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div><p>Some example programs are run within the page.  The running
+application is shown first, followed by the application source code,
+followed by an Edit button that allows you to try out the effect of
+making changes to the application source code.</p><div class="informalexample"><pre class="programlisting">
+    &lt;canvas height="20" width="100%"&gt;
+  &lt;text&gt;Hello World!&lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+  </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/developers_guide_preface-_2.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/developers_guide_preface-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>Material marked thus is only shown in the beta distributions of
+the documentation, and must be eliminated before the product is
+final.</span></em></p><p class="fixme"><em><span class="remark"><span class="para-label">FIXME: </span>Material in <code class="sgmltag-element">fixme</code> is only shown
+internally, and should not be present in beta or final
+distributions.</span></em></p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1343"></a>1.4. Related documentation</h3></div></div></div><p>In addition to this <span class="em">OpenLaszlo Application Developer's Guide</span>, please see also</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>The <a class="ulink" href="../reference/../reference/" target="_top"><span class="em">LZX Reference
+  Manual</span></a>. This online, hyperlinked, comprehensive reference
+  for LZX contains entries for each LZX tag and API. Its format will
+  be familiar to users of JavaDoc(tm) and similar systems. </p></li><li class="listitem"><p>The <a class="ulink" href="../developers/" target="_top">online tutorials</a> and sample
+  applications at http://www.laszlosystems.com/demos
+  provide a hands-on instructional overview of the LZX language.</p></li></ul></div><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1345"></a>1.5. Suggested reading paths</h3></div></div></div><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>
+This section, ideally, may be replaced with an interactive (lzx) map.
+</span></em></p><p>The best way to use the <span class="em">LZX Developer's Guide</span> depends on
+your experience.</p><p><span class="em">Experienced Object-Oriented programmers</span>: We suggest that
+you start by reading Chapters 1, 2 and 4 of this Guide. If you have
+never worked with JavaScript, you can learn the basics quickly at one
+of the JavaScript tutorials at <a class="ulink" href="http://www.w3schools.com/js/default.asp" target="_top">W3Schools</a>, <a class="ulink" href="http://www.wdvl.com/Authoring/JavaScript/Tutorial/" target="_top">WVDL</a>, or
+<a class="ulink" href="http://www.pageresource.com/jscript/" target="_top">PageResource.com</a>. Then visit
+the OpenLaszlo website and play around with the tutorials and sample programs; as you read the sample code be sure to
+look up appropriate entries in the <span class="em">Reference Manual.</span> At that
+point you'll know what further reading you need to do in this
+guide.</p><p><span class="em">Web/Flash developers with no Object-Oriented experience:</span>
+We suggest that you start with the <a class="ulink" href="../developers/" target="_top">tutorials</a> in order to get a general feel for
+LZX programming. Don't worry about mastering the subjects they cover;
+your goal is to begin to get comfortable with the language.</p><p>If you need to, learn the basics of 
+<a class="ulink" href="http://www.w3.org/XML/" target="_top">XML</a>.</p><p>Then read the rest of <a class="xref" href="program-development.html" title="Chapter 4. Overview of OpenLaszlo Application Development">Chapter 4, <i>Overview of OpenLaszlo Application Development</i></a>.</p><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>Work your way through a JavaScript tutorial
+<em><span class="remark">link</span></em>. Caution: it makes sense to read the first four
+chapters of this book before doing the JavaScript tutorial, because
+LZX employs JavaScript in a way that is quite distinct from the way it
+is used in web browsers.</span></em></p><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>Then read Chapters 4 through 12 of this manual, making sure that
+you edit the sample programs.  After you've done that you'll be
+an experienced Object Oriented programmer and able to decide for
+yourself how best to proceed from there.</span></em></p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1344"></a>1.5.1. Use the Forums</h4></div></div></div><p>The best way to learn any programming language is to draw upon the
+experience and goodwill of its development community (and to write
+code! as the saying goes, nobody learned to ride a bicycle by reading
+about it). The LZX developer community has a home at http://www.laszlosystems.com/developers/community/forums/. There
+you will find an active discussion of all aspects of the language, and
+a place to ask questions of your own.</p><p></p></div></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="index.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> <a accesskey="n" href="developers.overview.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">OpenLaszlo Application Developer's Guide </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Part I. Overview</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

@@ -1,0 +1,6 @@
+<class name="PopupWindow"
+       extends="windowpanel"
+       width="160"
+       height="160">
+  <attribute name="viewToAffect" type="expression"/>
+  —

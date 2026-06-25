@@ -1,0 +1,6 @@
+<html>
+  <frameset cols="128,*">
+    <frame name="navBar" src="myOpenLaszloNav.lzx?lzt=html"/>
+    <frame name="contentArea" src="myOpenLaszloContent.lzx?lzt=html"/>
+  </frameset>
+</html>

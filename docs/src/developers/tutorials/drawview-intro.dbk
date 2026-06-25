@@ -1,0 +1,190 @@
+<chapter id="drawview-intro">
+<?dbhtml dir="tutorials" ?>
+
+
+<title>Introduction to Drawing</title>
+<para>
+OpenLaszlo provides capability to do two-dimensional graphics. You use procedural code in a &lt;drawview&gt; element 
+to draw lines and fill in shapes. In this tutorial we'll look at some of the key parts of the API and show some interesting effects that you can get with a few
+lines of code. 
+</para>
+<para/><section><title>Background of the programming model</title>
+<para>
+The <ulink url="http://www.whatwg.org/">Web Hypertext Application Technology Working Group</ulink> ("WHATWG") is "a loose unofficial collaboration of Web browser manufacturers and interested parties 
+who wish to develop new technologies designed to allow authors to write and deploy Applications over the World Wide Web." This group recently published
+a specification for drawing (which can be found  <ulink url="http://www.whatwg.org/specs/web-apps/current-work/#graphics">here).</ulink>
+</para>
+<para>
+
+OpenLaszlo implements a subset of the <literal>whatwg</literal> drawing APIs. For a discussion of where OpenLaszlo differs from the full <literal>whatwg</literal> specification, 
+please see the <ulink url="../reference/index.html?drawview.html../reference/rawview.html" type="laszlo-reference">LZX Reference Manual</ulink>.
+ </para>
+<para/></section><section><title>The drawview </title>
+<para>
+The &lt;drawview&gt; class extends the &lt;view&gt; class. Thus, it inherits all the &lt;view&gt; properties; a &lt;drawview&gt; tag creates a rectangular view. At first
+glance a view seems like just another view:</para>
+
+<example role="live-example">
+   <title>view and drawview</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/drawview-intro-$1.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>
+<note>
+  <para>Previously, <literal>&lt;drawview&gt;</literal> auto-sized when OpenLaszlo only supported Flash. To make this work in DHTML and Flash consistently, <literal>size</literal> must now be explicitly set, because DHTML doesn't support autosize. <literal>size</literal> can be changed at runtime, but it may clear the canvas, in which case a new <literal>oncontext</literal> event is sent to signal a redraw is needed.  <literal>size</literal> need not be a fixed value; it can also be set to percentage values or constraint values.</para>
+</note>
+There are no additional tag attributes in the <literal>drawview</literal> class beyond those of <literal>view</literal>.  However, <literal>drawview</literal> has four attributes in addition to those it inherits:
+</para>
+<itemizedlist spacing="compact"><listitem><para>fillStyle</para></listitem><listitem><para>globalAlpha</para></listitem><listitem><para>lineWidth</para></listitem><listitem><para>strokeStyle</para></listitem></itemizedlist>
+<para>
+These attributes can be accessed and manipulated by procedural (script) code inside <literal>&lt;method&gt;</literal> tags inside a <literal>&lt;drawview&gt;</literal> element. The
+drawview class has ten methods associated with it. We'll take a look at them below, after explaining some more concepts.
+</para>
+<para/><section><title>Lines, shapes, fills</title>
+<para>
+To draw a line shape (or "path"), you position a logical pen at a starting point and then move it sequentially to x and y coordinates connecting points either by
+straight or quadratic lines.  This line remains invisible until you "stroke" it. When you stroke a path you apply to it the defined line width and style, thereby
+making it visible.
+</para>
+<para>
+For example, this code produces nothing visible:</para>
+<example role="live-example"><title>invisble drawing</title><programlisting>
+    &lt;canvas height="200" proxied="false"&gt;
+      &lt;drawview height="50" width="50"&gt;
+        &lt;handler name="oninit"&gt;
+         this.moveTo(100,100)
+         this.lineTo(200,100)
+         this.quadraticCurveTo(120, 200, 300, 100)
+        &lt;/handler&gt;
+      &lt;/drawview&gt;
+    &lt;/canvas&gt;
+</programlisting></example>
+<para>    
+But by adding the line <literal>this.stroke()</literal> we produce the following:
+</para>
+<example role="live-example">
+   <title>Stroking the line</title>
+   <programlistingco>
+     <programlisting language="lzx">
+     <textobject><textdata fileref="programs/drawview-intro-$3.lzx"/></textobject> 
+     </programlisting>
+     <areaspec>
+       <area units="other" otherunits="/canvas[1]/drawview[1]/handler[1]/text()"/>
+     </areaspec>
+   </programlistingco>
+</example>
+
+<para>
+The <methodname role="drawview.__ivars__.closePath">closePath</methodname> method draws a line back to the beginning of the current path:
+</para>
+<example role="live-example">
+   <title>Stroking the line</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/drawview-intro-$4.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>
+Now that we have a closed shape, we can fill it.  First we define a <literal>fillStyle</literal>, and then we fill the shape. 
+</para>
+<example role="live-example">
+   <title>fillstyle</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/drawview-intro-$5.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>
+Note that if you don't close a path but call the <literal>fill()</literal> method, the path will be closed implicitly.  Please consult the reference page for particulars.
+</para>
+<para/></section><section><title>Opacity and Gradients</title>
+<para>
+The <literal>globalAlpha</literal> attribute is used to set the opacity of lines and fills. It takes a value between zero (transparent) and one (opaque).
+</para>
+<example role="live-example">
+   <title>Using globalAlpha</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/drawview-intro-$6.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>
+Remember that the code here is procedural, so alpha values apply to
+<literal>fillStyles</literal> and <literal>lineStyles</literal> that are in effect at the time that a <literal>stroke()</literal> or <literal>fill()</literal> method is called. 
+In the above example, the <literal>globalAlpha</literal> value is 1 (the default) when the line is stroked and .3 when the color is filled in.
+</para>
+<para>
+A <literal>fillStyle</literal> can be a color gradient, that is, a pattern that blends colors over its area. To use a gradient, first create it using the appropriate (linear or radial) constructor function, then set the <literal>fillStyle</literal> to be the gradient.  A gradient is an object of the type <indexterm><primary>LzCanvasGradient</primary></indexterm><classname>lz.CanvasGradient</classname>; you define
+the parameters of the gradient by using methods such as <methodname role="drawview.prototype.addColorStop">addColorStop</methodname> on it. <methodname role="lz.drawview.prototype.addColorStop">addColorStop</methodname> takes two arguments: the number of the stop,
+and the color.  
+</para>
+<example role="live-example">
+   <title>Adding a gradient</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/drawview-intro-$7.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>
+To get a sense of what gradients look like, try varying the parameters of the ending x and y.
+</para>
+<para>
+Also, remember that <literal>drawview</literal>s have background colors.  You can use them in conjunction with gradients and alpha values:
+</para>
+<example role="live-example">
+   <title>Backgrounds and gradients</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/drawview-intro-$8.lzx"/></textobject> 
+   </programlisting>
+</example>
+ 
+<para>
+The gradient can be linear or radial (for details, see the Reference).
+</para>
+<para/></section><section><title>Starting Over</title>
+<para>
+We've said that drawing a line is like moving a pen. So, how do you pick up the pen in order to move it to another spot on the canvas? Use the <methodname role="lz.drawview.prototype.beginPath">beginPath</methodname>
+method.
+</para>
+<example role="live-example">
+   <title>beginPath</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/drawview-intro-$9.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>
+The <literal>clear</literal> method wipes the slate clean, so to speak.
+</para>
+<example role="live-example">
+   <title>Clearing the view</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/drawview-intro-$10.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para/></section></section><section><title>Integrating drawviews into OpenLaszlo applications</title>
+<para>
+Although the <indexterm><primary>drawview</primary></indexterm><sgmltag class="element">&lt;drawview&gt;</sgmltag><remark role="fixme">[unknown tag]</remark>
+<!--unknown tag: drawview-->
+ API is procedural, it's simple to blend the procedural drawing API with the declarative LZX style. The
+following little program illustrates this. The <literal>r</literal> attribute is modulated in by an <indexterm><primary>animator</primary></indexterm><sgmltag class="element">&lt;animator&gt;</sgmltag><remark role="fixme">[unknown tag]</remark>
+<!--unknown tag: animator-->
+ element; when <literal>r </literal>changes, the <methodname role="lz.drawview.prototype.redraw">redraw</methodname>
+method is evoked.
+</para>
+
+<example role="live-example">
+   <title>Drawview with animator</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/drawview-intro-$11.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>
+OpenLaszlo developers have already used the drawview API to create a color chooser and a paint program.  See what you can do. Have fun!
+</para>
+
+<para/></section></chapter>

@@ -1,0 +1,101 @@
+<!--=======================================================================-->
+<!--                                                                       -->
+<!-- music.lzx                                                             -->
+<!--                                                                       -->
+<!-- Laszlo Application Language (LZX) Example                             -->
+<!--                                                                       -->
+<!-- Copyright Laszlo Systems, Inc. 2002                                   -->
+<!-- All Rights Reserved.                                                  -->
+<!--                                                                       -->
+<!-- This software is the proprietary information of Laszlo Systems, Inc.  -->
+<!-- Use is subject to license terms.                                      -->
+<!--                                                                       -->
+<!--=======================================================================-->
+
+<canvas bgcolor="#EAEAEA" width="640" height="140" >
+    <switch>
+        <when runtime="dhtml">
+            <simplelayout/>
+            <text>Please run the example at <a href="../musicdhtml/">examples/musicdhtml/</a></text>
+        </when>
+    </switch>
+    
+    <view id="audioplayer" play="true" y="40" >
+        
+        <handler name="oninit" >
+            this.setAttribute("resource", "http:music.mp3");
+        </handler>
+        
+        <handler name="onload" >
+            var info:String;
+            var id3:Object = this.getID3();
+            if (!! id3) {
+                info = "Song: " + id3.TIT2 + "\nArtist: " + id3.TPE1 + "\nAlbum: " + id3.TALB;
+            } else {
+                info = "no id3 info available"
+            }
+            this.id3info.setAttribute("text", info );
+        </handler>
+        
+        <handler name="onlastframe" >
+            Debug.write("Got last");
+        </handler>
+        
+        <handler name="onstop" >
+            Debug.write("Got stopped");
+        </handler>
+        
+        <simplelayout axis="x" spacing="10"/>
+        
+        <view>
+            <simplelayout axis="x" spacing="-1" />
+            <button width="40" onclick="audioplayer.play(1);" >
+               <view resource="icons/rewind_all.png" y="7" align="center"/>
+            </button>
+            <button width="40" onclick="audioplayer.seek(-2);" >
+                <view resource="icons/rewind.png" y="7" align="center"/>
+            </button>        
+            <button width="40" onclick="audioplayer.stop()" >
+                <view resource="icons/stop.png" y="7" align="center"/>
+            </button>
+            <button width="40" onclick="audioplayer.play()" >
+                <view resource="icons/play.png" y="6" align="center"/>
+            </button>
+            <button width="40" onclick="audioplayer.seek(2);" >
+                <view resource="icons/fastfwd.png" y="7" align="center"/>
+            </button>
+        </view>
+        
+        <view>
+            <simplelayout axis="x" spacing="-1" />
+            <button width="40" onclick="audioplayer.setVolume(audioplayer.getVolume() - 10)">
+                <view resource="icons/quieter.png" y="7" align="center"/>
+            </button>
+            <button width="40" onclick="audioplayer.setVolume(audioplayer.getVolume() + 10)">
+                <view resource="icons/louder.png" y="7" align="center"/>
+            </button>
+            <button width="40" onclick="audioplayer.setPan(audioplayer.getPan() - 10);" >
+                <view resource="icons/pan_left.png" y="7" align="center"/>
+            </button>
+            <button width="40" onclick="audioplayer.setPan(audioplayer.getPan() + 10);" >
+                <view resource="icons/pan_right.png" y="7" align="center"/>
+            </button>
+        </view>
+        
+        <text name="id3info" y="-10" height="80" width="200"/>
+        
+        <view name="background" bgcolor="black" width="202" height="15" y="50" options="ignorelayout;">
+            <view name="loadbar" resource="icons/audio_scrubtrack.png"
+                  width="${audioplayer.loadratio * 200}" >
+            <view name="playbar" resource="icons/audio_scrubber.png" y="1"
+                  x="${Math.round(180 * audioplayer.frame/audioplayer.totalframes)}" />
+            </view>
+        </view>
+    </view>
+
+</canvas>    
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2009 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->

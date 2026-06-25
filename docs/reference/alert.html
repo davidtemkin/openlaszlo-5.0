@@ -1,0 +1,54 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;alert&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>alert<span class="ang">&gt;</span></h1><p class="short">
+              A simple alert.
+          </p><p class="meta">Extends <code>modaldialog</code></p>
+                      
+        <p>
+          A simple subclass of 
+          <code>modaldialog</code>
+          , 
+          <code>alert</code>
+           provides a modal alert box that displays its text attribute (or content) and an OK button. (If you need to display more than text in an alert, use 
+          <code>modaldialog</code>
+           itself).
+        </p>
+                    
+        <pre class="example">
+    &lt;canvas height="140"&gt;
+        &lt;alert name="myalert"&gt;
+            Danger! Danger, Will Robinson!
+        &lt;/alert&gt;
+        
+        &lt;button onclick="canvas.myalert.open()"&gt;Show Alert&lt;/button&gt;
+    &lt;/canvas&gt;
+            </pre>
+        
+        <p>
+          <strong>See also:</strong>
+        </p>
+                      
+        <ul>
+                            
+          <li>
+            <p>
+              <a href="modaldialog.html">
+                <code>modaldialog</code>
+              </a>
+            </p>
+          </li>
+                        
+        </ul>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">button1</td><td class="ty">string</td><td class="ty">OK</td><td>Alert shows only this button, if button2 isn't set.
+              You may specify a different string to change the text of the
+              button.</td></tr><tr><td class="nm">button2</td><td class="ty">string</td><td class="ty"/><td>If a string is set for this attribute, a second button will be
+              shown to the left of the first with this text.</td></tr><tr><td class="nm">maxtextwidth</td><td class="ty">expression</td><td class="ty">Math.round(parent.width/3) - inset_left - inset_right                     - content_inset_left - content_inset_right</td><td>The max length of a line of text before it wraps. Default: 1/3 of
+              the parent's width - width of window dressing and margin.</td></tr><tr><td class="nm">minwidth</td><td class="ty">expression</td><td class="ty">button2 == '' ? 100 : 170</td><td>Minimum width for the alert. Default: 100 for a 1 button alert,
+              170 for a 2 button alert.</td></tr><tr><td class="nm">result</td><td class="ty">expression</td><td class="ty">null</td><td>After the alert is closed, this is set to true if button1 ("OK")
+              is pressed or false if button2 is pressed. You can check for the
+              result value using the onresult event.</td></tr><tr><td class="nm">text_x</td><td class="ty">number</td><td class="ty">0</td><td>The x position of the button text.</td></tr><tr><td class="nm">text_y</td><td class="ty">number</td><td class="ty">0</td><td>The y position of the button text.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

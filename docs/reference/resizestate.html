@@ -1,0 +1,38 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;resizestate&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>resizestate<span class="ang">&gt;</span></h1><p class="short">A standard resize behavior.</p><p class="meta">Extends <code>state</code></p>
+                    
+        <p>
+          <code>resizestate</code>
+           can be used to change the
+            width and height of a view in response to the movement of the
+            mouse.
+        </p>
+                    
+            
+        <p>
+          In the example below, the 
+          <code>resizestate</code>
+           tracks
+            differences in the mouse position from after it is applied, so the
+            bottom right corner of the resizing view 
+          <em>does not</em>
+           snap to the
+            mouse position.
+        </p>
+                    
+            
+        <pre class="example">
+            &lt;canvas height="120"&gt;
+              &lt;view bgcolor="green" width="100" height="100"
+                    onmousedown="rs.setAttribute('applied', true)" onmouseup="rs.setAttribute('applied', false)"&gt;
+                &lt;resizestate name="rs"/&gt;
+              &lt;/view&gt;
+            &lt;/canvas&gt;
+            </pre>
+                  resizes its immediateparent in response to mouse events, when applied
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">height</td><td class="ty">expression</td><td class="ty">this.immediateparent.getMouse( 'y' )- this.__resize_yroffset</td><td/></tr><tr><td class="nm">width</td><td class="ty">expression</td><td class="ty">this.immediateparent.getMouse( 'x' )- this.__resize_xroffset</td><td/></tr></table>
+</main><script src="_nav.js"></script></body></html>

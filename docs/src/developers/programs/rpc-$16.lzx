@@ -1,0 +1,41 @@
+
+<canvas debug="true" width="100%">
+
+    <dataset name="myDataset" />
+
+    <soap name="geography" 
+          wsdl="http://arcweb.esri.com/services/v2/PlaceFinderSample.wsdl">
+
+        <attribute name="myDel" value="$once{new LzDelegate(this, 'handler')}" />
+
+        <method name="handler" args="ret">
+            Debug.debug('ret: %w', ret);
+            if (ret.status == 'ok') {
+                Debug.debug('myDataset childNodes: %w', myDataset.childNodes);
+            }
+        </method>
+
+        <handler name="onload">
+            Debug.debug('geography soap service stub loaded');
+
+            // Here we set data
+            this.myDel.dataobject = myDataset;
+
+            this.proxy.getTypes([], this.myDel);
+        </handler>
+
+    </soap>
+
+
+    <view datapath="myDataset:/" x="10" layout="inset: 10; spacing: 2">
+        <view datapath="i">
+            <text datapath="key/text()" resize="true"/>
+            <text x="20" datapath="value/text()" resize="true"/>
+        </view>
+    </view>
+
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

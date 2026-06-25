@@ -1,0 +1,7 @@
+<rsp stat="ok">
+<photos page="1" pages="1" perpage="3" total="3">
+<photo id="1004" owner="local" secret="x" server="0" title="Bamboo Forest Close-up" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1018" owner="local" secret="x" server="0" title="Farm Fields Divided" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1032" owner="local" secret="x" server="0" title="Kyoto Street Scene" ispublic="1" isfriend="0" isfamily="0"/>
+</photos>
+</rsp>

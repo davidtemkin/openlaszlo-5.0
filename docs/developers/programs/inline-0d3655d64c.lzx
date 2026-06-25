@@ -1,0 +1,3 @@
+<button text="clickme">
+    <attribute name="mydel" type="expression"
+               value="$once{new lz.Delegate(this, 'handler')}"

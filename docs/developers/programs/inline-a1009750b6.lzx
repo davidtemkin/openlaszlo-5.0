@@ -1,0 +1,21 @@
+<view name="nugget">
+<view name="dotty" .... />
+<method name="init">
+this.update();
+super.init();
+....
+</method>
+
+<method name="update">
+this.setAttribute("width", thingy.width);
+this.dotty.setX( 5 );
+this.dotty.setAttribute( thingy.width - 10 );
+...
+</method>
+
+<!-- Update positioning whenever thingy's width changes -->
+<handler name="onwidth" target="thingy">
+this.update();
+</handler>
+....
+</view>

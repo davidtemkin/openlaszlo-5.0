@@ -1,0 +1,74 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basetabpane&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basetabpane<span class="ang">&gt;</span></h1><p class="short">A non-visual tabpane for the basetabs component.</p><p class="meta">Extends <code>basecomponent</code></p>
+                    
+        <p>
+          A 
+          <code>basetabpane</code>
+           is the non-visual container
+            for content in 
+          <code>basetabs</code>
+          . Each
+            
+          <code>basetabpane</code>
+           has a corresponding
+            
+          <code>basetab</code>
+           created. Normally, you won't want to
+            extend this class. If you want a consistent background across all
+            
+          <code>basetabpane</code>
+          s, you can add a background to your
+            
+          <code>basetabscontent</code>
+           component. If you want a
+            different background for each 
+          <code>basetabpane</code>
+          , you
+            could do that in the content placed inside of your
+            
+          <code>basetabpane</code>
+          .
+        </p>
+                    
+            
+        <p>
+          Be aware that the content of 
+          <code>basetabpane</code>
+           is
+            
+          <code>initstage="late"</code>
+          
+          . You can override this by
+            declaring an 
+          <code>initstage</code>
+           on a specific subclass
+            or instance of 
+          <code>basetabpane</code>
+          .
+        </p>
+                    
+            
+        <pre><code>
+            &lt;basetabpane initstage="normal"&gt;
+              &lt;!-- ..content... --&gt;
+            &lt;/basetabpane&gt;
+            </code></pre>
+                    
+        <div class="note">
+          The parent of a 
+          <code>basetabpane</code>
+           is
+            
+          <code>basetabs</code>
+          , but its 
+          <em>immediate parent</em>
+           is the
+            default placement of the
+            
+          <code>basetabscontent</code>
+          .
+</main><script src="_nav.js"></script></body></html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;list&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>list<span class="ang">&gt;</span></h1><p class="short">
+              contains listitems and provides selection capabilities.
+          </p><p class="meta">Extends <code>baselist</code></p>
+                    
+        <p>
+          The 
+          <code>list</code>
+           tag creates a list which may contain
+              
+          <code>listitem</code>
+          s.  Subclasses of
+              
+          <code>listitem</code>
+          , such as
+              
+          <code>textlistitem</code>
+          , may be used as well.
+              
+          <code>list</code>
+           provides basic layout and a selection API
+              
+          
+          .  If there are more items than specified in the
+              
+          <code>shownitems</code>
+           attribute, a
+              
+          <code>scrollbar</code>
+           will be provided.
+        </p>
+                    
+        <pre class="example">
+              &lt;canvas height="100"&gt;
+              &lt;list x="10" y="10"&gt;
+              &lt;textlistitem text="item 1" value="1" selected="true"/&gt;
+              &lt;textlistitem text="item 2" value="2"/&gt;
+              &lt;textlistitem text="item 3" value="3"/&gt;
+              &lt;/list&gt;
+              &lt;/canvas&gt;
+            </pre>
+                    
+        <code>&lt;h2&gt;Optimizing performance with lazy replication and data pooling&lt;/h2&gt;</code>
+                    
+        <p>
+          When you have more items on your list than appear to the user, or if you are creating a list from data and then changing 
+              the data that is represented by the list, you should use "lazy replication" and data pooling, respectively, to 
+              optimize performance of your lists. See 
+          <a href="../developers/performance-tuning.html">Performance Tuning</a>
+           for a discussion.
+        </p>
+                    
+        <p>
+          See the 
+          <a >list_example.lzx</a>
+           for
+              more list use cases.
+        </p>
+                  A list containing listitems and providing selection capabilities.
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">autoscrollbar</td><td class="ty">expression</td><td class="ty">true</td><td>If true, a scrollbar will show up automatically when there are
+              more items than shownitems.</td></tr><tr><td class="nm">border_bottom</td><td class="ty">expression</td><td class="ty">this.bordersize</td><td>The size of the bottom border.</td></tr><tr><td class="nm">border_left</td><td class="ty">expression</td><td class="ty">this.bordersize</td><td>The size of the left border.</td></tr><tr><td class="nm">border_right</td><td class="ty">expression</td><td class="ty">this.bordersize</td><td>The size of the right border.</td></tr><tr><td class="nm">border_top</td><td class="ty">expression</td><td class="ty">this.bordersize</td><td>The size of the top border.</td></tr><tr><td class="nm">bordersize</td><td class="ty">expression</td><td class="ty">1</td><td>The size in pixels for this list.</td></tr><tr><td class="nm">defaultplacement</td><td class="ty">string</td><td class="ty">content</td><td/></tr><tr><td class="nm">minheight</td><td class="ty">number</td><td class="ty">24</td><td>minumum height of the list</td></tr><tr><td class="nm">rightinset</td><td class="ty">expression</td><td class="ty">0</td><td>used to adjust the width of the content when a scrollbar is present</td></tr><tr><td class="nm">scrollable</td><td class="ty">expression</td><td class="ty">false</td><td/></tr><tr><td class="nm">scrollbarclassname</td><td class="ty">string</td><td class="ty">vscrollbar</td><td>The name of the class to instantiate as our scrollbar.</td></tr><tr><td class="nm">shownitems</td><td class="ty">expression</td><td class="ty">-1</td><td>The number of items that are displayed. This value will ignored if
+              this view attempts to draw past the canvas boundary.</td></tr><tr><td class="nm">spacing</td><td class="ty">expression</td><td class="ty">0</td><td>The number of pixels that items should be spaced from one another.</td></tr><tr><td class="nm">tracking</td><td class="ty">expression</td><td class="ty">false</td><td>Toggles the mousedown tracking.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

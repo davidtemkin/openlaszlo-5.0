@@ -1,0 +1,22 @@
+<!--- the inner track on which the sliderthumb rides -->
+<class name="slidertrack" <emphasis role="em">extends="baseslidertrack"</emphasis>>
+  <!--- @keywords private -->
+  <attribute <emphasis role="em">name="showfill"</emphasis> value="${parent.showfill}" type="number"/>
+
+  <view name="background" bgcolor="red"
+        height="${parent.height-(2*parent.classroot.bordersize)}"
+        width="${parent.width-(2*parent.classroot.bordersize)}"
+        x="${parent.classroot.bordersize}"
+        y="${(parent.height-height)/2}"
+  />
+  <!-- the filled area -->
+  <view name="filled" bgcolor="0xff9933" opacity=".8" visible="${classroot.showfill}"
+        height="${parent.height-(2*parent.classroot.bordersize)}"
+        width="${Math.max(0,Math.min(classroot.thumb.x+classroot.thumb.width,parent.width)-
+                                     (2*parent.classroot.bordersize))}"
+        y="${(parent.height-height)/2}"
+        x="${parent.classroot.bordersize}"
+  />
+
+  <sliderthumb name="thumb"/>
+</class>

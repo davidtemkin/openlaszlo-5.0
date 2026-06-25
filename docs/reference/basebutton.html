@@ -1,0 +1,148 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basebutton&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basebutton<span class="ang">&gt;</span></h1><p class="short">Abstract class for making buttons with up-over-down states.</p><p class="meta">Extends <code>basecomponent</code></p>
+                    
+        <p>
+          A 
+          <code>basebutton</code>
+           is a view that encapsulates the
+            basic event mechanisms of a button (
+          <code>&lt;event&gt;onclick&lt;/event&gt;</code>
+          ,
+            
+          <code>&lt;event&gt;onmousedown&lt;/event&gt;</code>
+          ,
+            
+          <code>&lt;event&gt;onmouseover&lt;/event&gt;</code>
+          ).
+        </p>
+                    
+            
+        <p>
+          There are no visual elements to a 
+          <code>basebutton</code>
+                      so it requires a multi-frame resource
+          
+           to work
+            correctly.
+        </p>
+                    
+            
+        <p>
+          The example below shows how to construct a
+            
+          <code>basebutton</code>
+           and how to respond to its
+            events. 
+        </p>
+                    
+            
+        <p>First, the images that will be used are shown below:</p>
+                    
+            
+        <code>&lt;inlinemediaobject&gt;
+          <code>&lt;imageobject&gt;
+            <code>&lt;imagedata&gt;&lt;/imagedata&gt;</code>
+          &lt;/imageobject&gt;</code>
+        &lt;/inlinemediaobject&gt;</code>
+                    
+        <code>&lt;inlinemediaobject&gt;
+          <code>&lt;imageobject&gt;
+            <code>&lt;imagedata&gt;&lt;/imagedata&gt;</code>
+          &lt;/imageobject&gt;</code>
+        &lt;/inlinemediaobject&gt;</code>
+                    
+        <code>&lt;inlinemediaobject&gt;
+          <code>&lt;imageobject&gt;
+            <code>&lt;imagedata&gt;&lt;/imagedata&gt;</code>
+          &lt;/imageobject&gt;</code>
+        &lt;/inlinemediaobject&gt;</code>
+                    
+            
+        <pre class="example">
+            &lt;canvas height="150"&gt;
+              &lt;!-- first create the multi-frame resource and give it a name --&gt;
+              &lt;resource name="mybutton_rsrc"&gt;
+               &lt;!-- first frame MUST be the mouseup state of the button --&gt;  
+                &lt;frame src="resources/basebutton/button-up.png"/&gt;
+                &lt;!-- second frame MUST be the mouseover state of the button --&gt;
+                &lt;frame src="resources/basebutton/button-over.png"/&gt;
+                &lt;!-- third frame MUST be the mousedown state of the button --&gt;
+                &lt;frame src="resources/basebutton/button-down.png"/&gt;
+              &lt;/resource&gt;
+              
+              &lt;!-- Second, assign the resource to a basebutton tag --&gt;
+              &lt;basebutton resource="mybutton_rsrc"/&gt;
+            &lt;/canvas&gt;
+            </pre>
+                    
+            
+        <p>Using the example above, the basebutton will appear initially on screen in the 'mouseup' state and it will respond to the mouse
+            events by showing the correct images associated with each event. In order to have the button do more than just switch images, a
+            script needs to be added. There are three basic approaches for creating scripts to be executed by a basebutton once it has been
+            clicked, and these approaches are shown below.</p>
+                    
+            
+            
+        <pre class="example">
+                      &lt;canvas&gt;
+              &lt;resource name="mybutton_rsrc"&gt;
+                &lt;frame src="resources/basebutton/button-up.png"/&gt;
+                &lt;!-- first frame MUST be the mouseup state of the button --&gt;     
+                &lt;frame src="resources/basebutton/button-over.png"/&gt;
+                &lt;!-- second frame MUST be the mouseover state of the button --&gt;     
+                &lt;frame src="resources/basebutton/button-down.png"/&gt;
+                &lt;!-- third frame MUST be the mousedown state of the button --&gt;     
+              &lt;/resource&gt;
+              
+              &lt;!-- APPROACH 1: include a script in the event attribute, onclick --&gt;
+              &lt;basebutton resource="mybutton_rsrc" onclick="this.animate('x', 100, 1000, true)"/&gt;
+              
+              &lt;!-- APPROACH 2: include a script in the onclick attribute that calls a method --&gt;
+              &lt;basebutton resource="mybutton_rsrc" onclick="this.doMyMethod()"&gt;
+                &lt;method 
+          <em>name</em>
+          ="doMyMethod"&gt;
+                  this.animate('x', 100, 1000, true, {motion: 'easeout'}); 
+                  this.animate('x', -100, 1000, true, {motion: 'easein'}); 
+                &lt;/method&gt;
+              &lt;/basebutton&gt;
+              
+              
+              &lt;!-- APPROACH 3: have the handler respond to the onclick event directly --&gt;
+              &lt;basebutton resource="mybutton_rsrc"&gt;
+                &lt;handler 
+          <em>name</em>
+          ="onclick"&gt;
+                  this.animate('x', 100, 1000, true, {motion: 'easeout'}); 
+                  this.animate('x', -100, 1000, true, {motion: 'easein'}); 
+                &lt;/handler&gt;
+              &lt;/basebutton&gt;
+              
+              &lt;simplelayout axis="y" spacing="20"/&gt;
+            &lt;/canvas&gt;
+            
+        </pre>
+                    
+            
+            
+        <p>You can also use these approaches to respond to the other mouse
+            events as well, if there is a need to do more then just switch
+            images.</p>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">disabledResourceNumber</td><td class="ty">number</td><td class="ty">4</td><td>The resource for the disabled state.
+              Use 0 if the resource has at least 4 frames, but there
+              is no disabled state.</td></tr><tr><td class="nm">downResourceNumber</td><td class="ty">number</td><td class="ty">3</td><td>The resource for the mouse down state.
+              Use 0 if the resources has at least 3 frames, but there is no down
+              state.</td></tr><tr><td class="nm">focusable</td><td class="ty">expression</td><td class="ty">false</td><td>Since basebutton is frequently used as part of another component.</td></tr><tr><td class="nm">maxframes</td><td class="ty">number</td><td class="ty">this.totalframes</td><td>The maximum number of frames to use, defaults to the number of
+              frames for the resource associated with this view. This is useful
+              for a subclass that has no resource for this view.</td></tr><tr><td class="nm">normalResourceNumber</td><td class="ty">number</td><td class="ty">1</td><td>The resource for the mouse up state, and initial state of the
+              button.</td></tr><tr><td class="nm">overResourceNumber</td><td class="ty">number</td><td class="ty">2</td><td>The resource for the mouse over state. 
+              Use 0 if the resource has at least 2 frames, but there is no over
+              state.</td></tr><tr><td class="nm">reference</td><td class="ty">expression</td><td class="ty">this</td><td>Where to send mouse events (the view that will be "clickable").</td></tr><tr><td class="nm">resourceviewcount</td><td class="ty">number</td><td class="ty">0</td><td>The first 'n' subviews that will respond to mouseevents by
+              changing the frame number of their resource.</td></tr><tr><td class="nm">respondtomouseout</td><td class="ty">expression</td><td class="ty">true</td><td>If this button does not respond to onmouseout or onmousedragout
+              events, set this flag to false.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

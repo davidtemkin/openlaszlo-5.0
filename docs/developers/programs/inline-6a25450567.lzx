@@ -1,0 +1,2 @@
+myobject = object()
+myobject.f = lambda f: 100

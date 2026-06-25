@@ -1,0 +1,22 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;Test&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>Test<span class="ang">&gt;</span></h1><p class="short"/><p class="meta">Extends <code>DebugObject</code></p>
+        Test is the abstract interface class for all LZUnit tests.
+
+  It accumulates the results of the test and defines the various
+  assert methods that can be used to implement each test.
+
+  
+        
+         and 
+        
+         extend this class to provide
+  functionality.
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">debugLZUnit</td><td class="ty">expression</td><td class="ty">false</td><td>whether to emit debugging statements about the execution of
+      tests</td></tr><tr><td class="nm">formatter</td><td class="ty">expression</td><td class="ty">new lz.text()</td><td/></tr><tr><td class="nm">result</td><td class="ty">expression</td><td class="ty"/><td>Used to accumulate test results in the absence of exceptions</td></tr><tr><td class="nm">semantics</td><td class="ty">expression</td><td class="ty">'actionscript'</td><td>one of "javascript" or "actionscript", defaults to
+      "actionscript".  Sets the semantics of condition (assertTrue,
+      assertFalse) and identity (assertSame, assertNotSame) assertions</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

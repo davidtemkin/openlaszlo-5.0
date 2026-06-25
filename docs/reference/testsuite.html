@@ -1,0 +1,79 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;TestSuite&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>TestSuite<span class="ang">&gt;</span></h1><p class="short">A view that comprises a suite of LZUnit tests.</p><p class="meta">Extends <code>Test</code></p>
+                    
+        <p>
+                          This is the LZUnit library.  LZUnit is an implementation of the
+                xUnit testing framework for 
+          <code>LZX</code>
+           programs (cf., 
+          <a >JUnit
+                    A Cook's Tour</a>
+          ).
+            
+        </p>
+                    
+        <p>
+                          Each of the xUnit components is implemented as an LZX tag with the
+                corresponding name.  Tests can be written by defining a subclass of
+                
+          <code>TestCase</code>
+           and defining 
+          <code>
+            test
+            <em>...</em>
+          </code>
+                          methods.  A test suite can be created by enclosing any number of
+                
+          <code>TestCases</code>
+           in a 
+          <code>TestSuite</code>
+          .
+            
+        </p>
+                    
+        <p>
+                          The usual helper methods, 
+          <code>assertTrue</code>
+          ,
+                
+          <code>assertEquals</code>
+          , 
+          <code>assertWithin</code>
+          ,
+                
+          <code>assertSame</code>
+          , etc. are available for implementing the
+                tests.  (See the documentation of 
+          <code>Test</code>
+           for a full
+                list.)
+            
+        </p>
+                    
+        <p>
+                          An 
+          <code>LZX</code>
+           program that consists of a
+                
+          <code>TestSuite</code>
+           will, when loaded, automatically run all of
+                its child 
+          <code>TestCases</code>
+           and report the number of test cases
+                run, the number of failures, and the number of errors.  If any error
+                occurs, an obvious error message is presented.
+            
+        </p>
+                    
+        <p>
+                Below is a simple example of the use of LZUnit demonstrating a
+                successful test, a failed test, and a test that causes an error.
+            </p>
+                    
+        <div class="note">
+          <code>&lt;para&gt;You must run LZUnit with debugging on for it to detect errors.&lt;/para&gt;</code>
+</main><script src="_nav.js"></script></body></html>

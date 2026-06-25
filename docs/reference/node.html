@@ -1,0 +1,147 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;node&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>node<span class="ang">&gt;</span></h1><p class="short">The base class for all Laszlo classes.</p><p class="meta">Extends <a ><code>LzEventable</code></a></p>
+        The 
+        <code>lz.node</code>
+         class provides the basic interface for OpenLaszlo objects:
+ parent/child hierarchy, setters, interaction with the instantiator, and
+ reference resolution. New nodes (and subclasses thereof) can be created by
+ new-ing the class, like this:
+ 
+        <code> var mynode= new LzNode( parent , args );</code>
+         where 
+        <code>parent</code>
+         is the parent for the new node, and args is an
+ Object whose name/value pairs are attributes to be set on the new node.
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">clonenumber</td><td class="ty">number</td><td class="ty"/><td>If replicated, the index of this clone</td></tr><tr><td class="nm">datapath</td><td class="ty">string</td><td class="ty"/><td>
+                A shorthand version of 
+                <code>&lt;datapath&gt;</code>
+                , specifies the data source for this node and its children.
+ You write a string to 
+                <code>datapath</code>
+                ; reading 
+                <code>datapath</code>
+                 will yield a 
+                <code>lz.datapath</code>
+                .
+ If the value begins with an identifier followed by a colon, the
+ identifier names a dataset, and the portion of the string after
+ the colon is an XPath description of a portion of the data.
+ Otherwise the entire attribute value is an XPath description of
+ the data, relative to the data source of this node's parent element.
+ Examples: "mydata:", "mydata:/a/b", "/a/b".
+              </td></tr><tr><td class="nm">defaultplacement</td><td class="ty">token</td><td class="ty"/><td>An attribute used in container classes. If
+ set to a non-null value, this forces this node to run its determinePlacement
+ method for any node whose parent is this node. If the subnode has its own
+ placement attribute, determinePlacement will be called with that value,
+ otherwise it will be called with this value. Note that a class's
+ defaultplacement attribute only applies to children in subclasses or in
+ instances, not to the children of the class itself. This means that if a
+ class and its subclass both define a defaultplacement attribute, the
+ attribute will be set to one value before the subclass children are created
+ and to a different one after they are created. See the
+ determinePlacement method.</td></tr><tr><td class="nm">id</td><td class="ty">ID</td><td class="ty"/><td>A unique identifier for this element.  Can be used as a global
+ variable name in JavaScript code.</td></tr><tr><td class="nm">initstage</td><td class="ty">"early" | "normal" | "late" | "immediate" | "defer"</td><td class="ty">"normal"</td><td>
+                The execution of a 
+                <code>&lt;class&gt;node&lt;/class&gt;</code>
+                's 
+                <code>&lt;method&gt;init&lt;/method&gt;</code>
+                 method and
+ sending of the 
+                <code>&lt;event&gt;oninit&lt;/event&gt;</code>
+                 event is under the control
+ of its 
+                <code>initstage</code>
+                 attribute, as follows:
+ 
+                <dl>
+                   
+                  <dt>
+                    <code>immediate</code>
+                  </dt>
+                  <dd>
+                    The 
+                    <code>&lt;method&gt;init&lt;/method&gt;</code>
+                     method is called immediately as the
+ last stage of instantiation.
+ 
+                  </dd>
+                   
+                  <dt>
+                    <code>early</code>
+                  </dt>
+                  <dd>
+                    The 
+                    <code>&lt;method&gt;init&lt;/method&gt;</code>
+                     method is called immediately after the
+ view and its children have been instantiated.
+ 
+                  </dd>
+                   
+                  <dt>
+                    <code>normal</code>
+                  </dt>
+                  <dd>
+                    The 
+                    <code>&lt;method&gt;init&lt;/method&gt;</code>
+                     method is called when the parent
+ is initialized.
+ 
+                  </dd>
+                   
+                  <dt>
+                    <code>late</code>
+                  </dt>
+                  <dd>
+                    The 
+                    <code>&lt;method&gt;init&lt;/method&gt;</code>
+                     method is called during idle time.
+ To check whether 
+                    <code>&lt;method&gt;init&lt;/method&gt;</code>
+                     has been called, check the 
+                    <code>inited</code>
+                     property.  Force calling 
+                    <code>&lt;method&gt;init&lt;/method&gt;</code>
+                     using the 
+                    <code>&lt;method&gt;completeInstantiation&lt;/method&gt;</code>
+                     method.
+ 
+                  </dd>
+                   
+                  <dt>
+                    <code>defer</code>
+                  </dt>
+                  <dd>
+                    The 
+                    <code>&lt;method&gt;init&lt;/method&gt;</code>
+                     method will not be called unless
+ explicitly requested by the 
+                    <code>&lt;method&gt;completeInstantiation&lt;/method&gt;</code>
+                     method.
+ 
+                  </dd>
+                   
+                </dl>
+              </td></tr><tr><td class="nm">name</td><td class="ty">token</td><td class="ty"/><td>The name for this subnode. If given, then this node's
+ parent and immediate parent will store a pointer to this node as the
+ given name value.</td></tr><tr><td class="nm">options</td><td class="ty">css</td><td class="ty"/><td>
+                A CSS declaration of 
+                <code>property:</code>
+                 
+                <code>value</code>
+                 pairs that modify the
+ interaction of this node with controllers such as replicators and
+ layouts.
+
+ For example, setting 
+                <code>options="ignorelayout: true"</code>
+                 on
+ a view will cause the view to not be controlled by any layout.
+
+ 
+                <div class="note">The options that affect particular controllers and replicators
+ are documented with each controller and replicator.
+</main><script src="_nav.js"></script></body></html>

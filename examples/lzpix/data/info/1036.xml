@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1036">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Matterhorn Peak</title>
+  <description>Matterhorn Peak — from the OpenLaszlo sample image library.</description>
+  <dates posted="1493024000" />
+  <urls><url type="photopage">data/photos/1036.jpg</url></urls>
+  <tags><tag>matterhorn</tag><tag>peak</tag></tags>
+</photo>
+</rsp>

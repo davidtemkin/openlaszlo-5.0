@@ -1,0 +1,7 @@
+<class name="stringText">
+  <attribute name="text" type="string"/>
+</class>
+
+<class name="textText">
+  <attribute name="text" type="text"/>
+</class>

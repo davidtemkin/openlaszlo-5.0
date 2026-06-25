@@ -1,0 +1,832 @@
+<chapter id="class-inheritance">
+
+<title>Extending Classes</title>
+ 
+<para>This section assumes you're familiar with basic LZX concepts such
+as <glossterm baseform="view">views</glossterm>, <glossterm baseform="method">methods</glossterm>, and <glossterm baseform="attribute">attributes</glossterm>. Familiarity
+with <glossterm>objected-oriented programming</glossterm> (OOP) concepts is helpful, but not
+required. For a primer on classes in LZX see <xref linkend="introductory-classes"/>.
+</para>
+<para/><section><title>Overview</title>
+
+<para>Inheritance allows you to create custom classes from other
+predefined classes. The advantage is that much of the logic doesn't have to be
+rewritten every time you want to create a class that does something similar, but
+in a slightly different way.</para>
+
+<para>A <indexterm significance="preferred"><primary>subclass</primary></indexterm><glossterm>subclass</glossterm> is a class derived from another class. The class
+from which it is derived is referred to as its <indexterm significance="preferred"><primary>superclass</primary></indexterm><glossterm>superclass</glossterm>. A
+subclass is said to <indexterm significance="preferred"><primary>inherit</primary></indexterm><glossterm>inherit</glossterm> methods and attributes from its
+superclass. Visual elements of a superclass, such as
+<indexterm><primary>view</primary></indexterm><sgmltag class="element">&lt;view&gt;</sgmltag><remark role="fixme">[unknown tag]</remark>
+<!--unknown tag: view-->
+, are also inherited by each subclass. In LZX,
+you use the <indexterm><primary>extends</primary></indexterm><sgmltag class="attribute">extends</sgmltag> attribute to the <indexterm><primary>class</primary></indexterm><sgmltag class="element">&lt;class&gt;</sgmltag><remark role="fixme">[unknown tag]</remark>
+<!--unknown tag: class-->
+ tag to create subclasses.</para>
+
+<programlisting>
+&lt;class name="myclass" extends="mysuperclass"&gt;
+   ...
+&lt;/class&gt;
+</programlisting>
+
+<para>Any class that you create without using the
+<indexterm><primary>extends</primary></indexterm><sgmltag class="attribute">extends</sgmltag> attribute is assumed to be a subclass
+of <indexterm><primary>view</primary></indexterm><sgmltag class="element">&lt;view&gt;</sgmltag>. All methods and properties from
+<indexterm><primary>view</primary></indexterm><sgmltag class="element">&lt;view&gt;</sgmltag> are inherited by the subclass. These two
+declarations are equivalent:</para>
+
+<programlisting>
+&lt;class name="myclass"/&gt;
+&lt;class name="myclass" extends="view"/&gt;
+</programlisting>
+<para role="fixme"><remark role="fixme"><emphasis role="para-label">FIXME: </emphasis> explicitly explain multiple inheritance ‚ or rather, define single inheritance ‚superclass and subclass, etc
+</remark></para>
+<para>You can only extend one class per class declaration, though the inheritance
+chain can be arbitrarily deep. Multiple inheritance is not supported; that is to say you cannot create a new class
+that extends more than one existing classes. Methods, handlers,
+attributes, and views inside a class are inherited down through each level.</para>
+
+<example role="live-example">
+   <title>Inheritance chain</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$1.lzx"/></textobject> 
+   </programlisting>
+</example>
+<!-- remove this and other commented out code which the build ignores. IORIO 31 oct 2007 -->
+
+<para>Class definitions can include default values for attributes. For example, a class that <emphasis>extends</emphasis> view can have default
+<indexterm><primary>width</primary></indexterm><sgmltag class="attribute">width</sgmltag> and <indexterm><primary>height</primary></indexterm><sgmltag class="attribute">height</sgmltag>
+attributes:</para>
+
+<informalexample role="live-example"><programlisting>
+&lt;class name="myClass" width="50" height="50"/&gt; <co id="N1006E"/>
+&lt;myClass/&gt; <co id="N10074"/>
+&lt;myClass width="100"/&gt; <co id="N1007B"/>
+</programlisting></informalexample><calloutlist><callout arearefs="N1006E"><para>Defines a class and tag named <literal>myClass</literal></para></callout><callout arearefs="N10074"><para>Creates an instance of <literal>myClass</literal> with height and width of 50</para></callout><callout arearefs="N1007B"><para>Creates an instance of <literal>myClass</literal> with height 50 and width 100</para></callout></calloutlist>
+
+ 
+
+ 
+<para/></section><section><title>Overriding methods, handlers and attributes</title>
+<para>A subclass can <indexterm significance="preferred"><primary>override</primary></indexterm><glossterm>override</glossterm>, that is, provide a different implementation from, a
+superclass method, but not for a handler.</para>
+   <para>When a subclass defines a method with the same name as the super class, it <emphasis>overrides</emphasis> or replaces the superclass method.  If the superclass method's effect is desired the subclass method must invoke it using a super call. You cannot change the arguments when you override a method: they must match.</para>
+   
+   <para>When a subclass defines a handler with the same name as the superclass, it <emphasis>adds</emphasis> to the superclass handler. Both will be invoked when the named event is sent.</para>
+   
+<para>
+LZX does not support
+ <glossterm>overloading</glossterm> methods. That means that you cannot have different methods, within one class, that have the same name. 
+The runtime only "cares about"
+the name of the calling method. You will receive a compilation warning if you
+define two or more methods with the same name in a class definition.</para>
+<para>
+You can, however, have more than one handler for an event, as described in <xref linkend="methods-events-attributes"/>
+</para>
+
+<para>You can modify inherited attributes by defining a new value using
+the <indexterm><primary>attribute</primary></indexterm><sgmltag class="element">&lt;attribute&gt;</sgmltag><remark role="fixme">[unknown tag]</remark>
+<!--unknown tag: attribute-->
+ tag or by declaring it as
+an attribute in the <indexterm><primary>class</primary></indexterm><sgmltag class="element">&lt;class&gt;</sgmltag> declaration itself.</para>
+
+<example role="live-example">
+   <title>Inheriting properties</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$3.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+
+<para>You can use the <literal>super</literal> keyword to invoke a superclass's
+method. The <literal>super</literal> keyword is useful in instances where you want to
+extend the superclass's method without rewriting the same logic. A
+method can only use <literal>super</literal> to call the method that it
+overrides.  That is, a subclass's <indexterm><primary><literal>myfunc()</literal></primary></indexterm><methodname>myfunc()</methodname> can only call <literal>super.myfunc()</literal>, <literal>super.myotherfunc()</literal>.</para>
+
+<example role="live-example">
+   <title>The super keyword</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$4.lzx"/></textobject> 
+   </programlisting>
+</example>
+<para/><section><title>Handlers cannot be overridden</title>
+<para>
+In order to override the behavior of an event handler, you would have the handler call a method, and then override the method in the subclass or instance. For example, let's say that you wanted to write a handler for the <literal>onclick</literal> event that you could override in an instance. In your class definition, you would use this syntax:</para>
+<programlisting>
+    &lt;handler name="onclick" method="handleClick"&gt;
+</programlisting>
+<para>
+Then in the instance you would define <indexterm><primary><literal>handleClick()</literal></primary></indexterm><methodname>handleClick()</methodname>.
+</para>
+
+<para>
+Remember, you can call the original click code in the new method by using the super method:
+</para>
+
+<informalexample role="live-example"><programlisting>
+     &lt;method name="handleClick"&gt;
+         super.handleClick();
+         Debug.debug('new click');
+     &lt;/method&gt;
+</programlisting></informalexample>
+
+ 
+
+ 
+<para/></section>
+<section id="settertag">
+   <title>Attribute setters defined with <literal>&lt;setter/&gt;</literal></title>
+   <para>Use the <literal>&lt;setter&gt;</literal> tag to declare or override 
+      attribute setter methods. Note that this functionality is new, and you may have to
+      change your code written for OpenLaszlo 4.1 and earlier. For example, this 4.1.x code:</para>
+   
+   <programlisting class="code">
+      &lt;method name=&quot;setY&quot; args=&quot;y&quot; &gt; 
+         super.setY( Math.max(parent.arrowbuttonheight-1 , Math.min( y , parent.height - (parent.thumbheight + parent.arrowbuttonheight)))); 
+      &lt;/method&gt;    
+   </programlisting>
+   
+   <para>Would need to be changed to:</para>
+   <programlisting class="code">
+      &lt;setter name=&quot;y&quot; args=&quot;y&quot; &gt;
+         super.setAttribute(&apos;y&apos;, Math.max(parent.arrowbuttonheight-1 , Math.min( y , parent.height - (parent.thumbheight + parent.arrowbuttonheight))));
+      &lt;/setter&gt;
+   </programlisting>
+   <para>Here's another example. If you had this code in OpenLaszlo 4.1 or earlier:</para>
+   
+   <programlisting class="code">
+      &lt;text x=&quot;${Math.round((parent.width-this.width)/2)}&quot; font=&quot;vera_super_bold&quot; fgcolor=&quot;0x4d4d4d&quot; datapath=&quot;@username&quot; resize=&quot;true&quot;&gt;
+         &lt;method name=&quot;setText&quot;&gt;
+            if (typeof(this.datapath.data) != &apos;undefined&apos;) {
+               super.setText(this.datapath.data + &quot;&apos;s information&quot;);
+            }
+         &lt;/method&gt;
+      &lt;/text&gt;
+   </programlisting>
+   
+   <para>You would change it to:</para>
+   <programlisting class="code">
+      &lt;text x=&quot;${Math.round((parent.width-this.width)/2)}&quot; font=&quot;vera_super_bold&quot; fgcolor=&quot;0x4d4d4d&quot; datapath=&quot;@username&quot; resize=&quot;true&quot;&gt;
+         &lt;setter name=&quot;text&quot;&gt;
+            if (typeof(this.datapath.data) != &apos;undefined&apos;) {
+               super.setAttribute(&apos;text&apos;, this.datapath.data + &quot;&apos;s information&quot;);
+            }
+         &lt;/setter&gt;
+      &lt;/text&gt;
+   </programlisting>
+   <para>LFC setter methods like <literal>setWidth()</literal>, <literal>setHeight()</literal>, 
+      and <literal>setBGColor()</literal> are now deprecated. They continue to 
+      work but if you use them, a warning message is displayed in the debugging console. </para>
+<section><title>Attribute Setters for Component Developers</title>
+   <para>Some LFC components mimic text objects. For example, <literal>&lt;edittext&gt;</literal> is similar to <literal>&lt;inputtext&gt;</literal> but it does not extend a text object.</para>
+   
+   <para>This is what the text attribute used to look like in <literal>&lt;edittext&gt;</literal>:</para> 
+   <programlisting class="code">
+      &lt;attribute name=&quot;text&quot; type=&quot;text&quot; setter=&quot;setText(text)&quot;/&gt;
+      ...
+      &lt;method name=&quot;setText&quot; args=&quot;t&quot;&gt;
+         this.text = t;
+         if (this._initcomplete) {
+            this.setValue(t, true);
+            this.field.setAttribute(&apos;text&apos;, this.value);
+            if (this[&apos;ontext&apos;]) this.ontext.sendEvent();
+            } 
+         else {
+            this._initialtext = t;
+         }
+      &lt;/method&gt;
+   </programlisting>
+   <para>As you can see, this allows setting the text object via <literal>setAttribute('text',...)</literal> and <literal>setText()</literal>. To make this code run a little faster (by removing a call to <literal>setText()</literal> from the setter), and follow how the LFC does it, this was rewritten to use the <literal>&lt;setter&gt;</literal> tag:</para>
+   <programlisting class="code">
+      &lt;attribute name=&quot;text&quot; type=&quot;text&quot;/&gt;
+      ...
+      &lt;method name=&quot;setText&quot; args=&quot;t&quot;&gt;
+         Debug.warn(&quot;edittext.setText is deprecated. Use setAttribute instead&quot;);
+         this.setAttribute(&apos;text&apos;, t);
+      &lt;/method&gt;
+      
+      &lt;setter name=&quot;text&quot; args=&quot;t&quot;&gt;
+         this.text = t;
+         if (this._initcomplete) {
+            this.setValue(t, true);
+            this.field.setAttribute(&apos;text&apos;, this.value);
+            if (this[&apos;ontext&apos;]) this.ontext.sendEvent();
+            } 
+         else {
+            this._initialtext = t;
+         }
+      &lt;/setter&gt;
+   </programlisting></section>
+</section>
+</section>
+   <section><title>Classroot</title>
+
+<para>The <literal>classroot</literal> property is a convenient short-hand that
+refers to the root node of a class instance. It's often used by a
+deeply nested view or method that needs access to something near the
+root of the class. Though you can equivalently use
+<literal>parent</literal>, <literal>parent.parent</literal>,
+<literal>parent.parent.parent</literal>, etc. (depending on how deep the
+view that contains the reference is nested), using classroot is
+usually more readable.
+</para>
+
+<example role="live-example">
+   <title>Classroot</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$6.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>Be careful when using <literal>classroot</literal> from the root of the
+class. If there is no surrounding class, <literal>classroot</literal> will
+be undefined. Use the <literal>this</literal> keyword in code attached to
+the root of the class. On the other hand, if an instance of a class
+appears inside another class, the <literal>classroot</literal> for the
+instance will be the root of the surrounding class. Use this feature
+as a short-cut to refer to the root of outer classes.</para>
+
+<example role="live-example">
+   <title>Referring to outer class's root using classroot</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$7.lzx"/></textobject> 
+   </programlisting>
+</example>
+<para>
+At the risk of belaboring the topic, here's one more example that demonstrates that top level instances of a class have no defined classroot. Notice that even though "bar" is a child of "foo", it does not have a defined classroot, because it is a toplevel instance of the bar class. </para>
+
+<example role="live-example">
+   <title>Classroot and top level instance</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$8.lzx"/></textobject> 
+   </programlisting>
+</example>
+<para/><section><title>Classroot not available in &lt;state&gt;</title>
+<para>
+The <indexterm><primary>state</primary></indexterm><sgmltag class="element">&lt;state&gt;</sgmltag><remark role="fixme">[unknown tag]</remark>
+<!--unknown tag: state-->
+ tag does not define classroot.  Therefore, its sublasses don't have it either.
+If you subclass state you don't get classroot.</para>
+<programlisting>
+&lt;class name="redState" extends="state" /&gt;
+</programlisting>
+<para>
+will not have classroot defined.</para>
+
+<para/></section></section>
+   <section id="mixins">
+      <title><literal>&lt;mixin&gt;</literal>s</title>
+      <para>This page describes a basic usage of <literal>&lt;mixin&gt;</literal>. For a more advanced usage, see the <ulink url="http://localhost:8080/trunk/docs/reference/lz.mixin.html">Reference</ulink>.</para>
+         
+      <para><literal>&lt;mixin&gt;</literal> is like <literal>&lt;class&gt;</literal>
+         but rather than creating something you can instantiate, <literal>&lt;mixin&gt;</literal> creates a template that can be
+         <emphasis>mixed in</emphasis> (added to) more than one other class. A
+         <literal>&lt;mixin&gt;</literal> is like an interface, but it is allowed to have
+         state and implementation. </para>
+      
+      <para><literal>&lt;mixin&gt;</literal> is an advanced feature. To add a
+         <literal>&lt;mixin&gt;</literal> to a class you say: </para>
+      
+<programlisting>
+   &lt;class name=&quot;icecream&quot; ... /&gt; 
+   &lt;class name=&quot;walnuts&quot; ... /&gt; 
+   
+   &lt;mixin name=&quot;toppings&quot;&gt; 
+      &lt;attribute name=&quot;sauce&quot; type=&quot;color&quot; value=&quot;lavender&quot; /&gt; 
+      &lt;attribute name=&quot;whippedcream&quot; type=&quot;boolean&quot; value=&quot;true&quot; /&gt; 
+      &lt;attribute name=&quot;cherry&quot; type=&quot;boolean&quot; value=&quot;true&quot; /&gt; 
+      ... 
+   &lt;/mixin&gt; 
+   
+   &lt;class name=&quot;sundae&quot; extends=&quot;icecream&quot; with=&quot;toppings /&gt; 
+   
+   &lt;sundae name=&quot;chocfulla&quot; 
+      flavor=&quot;honeydew&quot; 
+      sauce=&quot;lemonchiffon&quot;&gt; 
+      &lt;walnuts ground=&quot;true&quot; /&gt; 
+   &lt;/sundae&gt; </programlisting>
+      
+      <para>See <literal>tests/mixins.lzx</literal> for a more complete example.</para>
+   </section>
+
+<section><title>Declared text</title>
+
+<para>The <indexterm><primary>text</primary></indexterm><sgmltag class="element">&lt;text&gt;</sgmltag><remark role="fixme">[unknown tag]</remark>
+<!--unknown tag: text-->
+ and <indexterm><primary>inputtext</primary></indexterm><sgmltag class="element">&lt;inputtext&gt;</sgmltag><remark role="fixme">[unknown tag]</remark>
+<!--unknown tag: inputtext-->
+ tags are unique among the built in
+classes in that they can hold textual content:</para>
+
+<informalexample role="live-example"><programlisting>
+&lt;canvas height="50" layout="y"&gt;
+  &lt;inputtext&gt;plain text&lt;/inputtext&gt;
+  &lt;text&gt;&lt;i&gt;styled&lt;/i&gt; text&lt;/text&gt;
+&lt;/canvas&gt;
+</programlisting></informalexample>
+
+<para>The text may contain character text, as well as certain XHTML markup
+tags. The inputtext tag may contain character text.</para>
+
+<para>Classes that extend the text and inputtext classes may contain XHTML and
+plain text, respectively. The text content is available as the text attribute of
+such a class.</para>
+
+<example role="live-example">
+   <title>Extending text classes</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$10.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>A user-defined class can also handle text content by defining an
+attribute named <indexterm><primary>text</primary></indexterm><sgmltag class="attribute">text</sgmltag> with a type of
+<literal>text</literal> (for plain text) or <literal>html</literal> (for XHTML
+text), like <literal>&lt;attribute name="text"
+type="text"&gt;</literal>. There is another text type available called
+<literal>string</literal> which allows you set a text string as an
+attribute, but does not allow text content.</para>
+
+<para>Consider these two classes, where the first is defined using
+<literal>type="string"</literal> and the second with <literal>type="text"</literal>:</para>
+
+<informalexample role="live-example"><programlisting>
+&lt;class name="stringText"&gt;
+  &lt;attribute name="text" type="string"/&gt;
+&lt;/class&gt;
+
+&lt;class name="textText"&gt;
+  &lt;attribute name="text" type="text"/&gt;
+&lt;/class&gt;
+</programlisting></informalexample>
+
+<para>Both classes can be used with a text attribute:</para>
+
+<programlisting>
+&lt;stringText text="some text"/&gt;
+&lt;textText text="some text"/&gt;
+</programlisting>
+
+<para>Only <varname>textText</varname> can be used with text content. The
+use of stringText below is invalid, and will produce a compilation
+warning.</para>
+
+<programlisting>
+&lt;stringText&gt;some text&lt;/stringText&gt; &lt;!-- This is invalid --&gt;
+&lt;textText&gt;some text&lt;/textText&gt;     &lt;!-- This is valid --&gt;
+</programlisting>
+
+<para>Using the <literal>html</literal> type declares that the class can accept
+html text content, or set through the <indexterm><primary>text</primary></indexterm><sgmltag class="attribute">text</sgmltag>
+attribute. The text may contain XHTML tags such as <indexterm><primary>b</primary></indexterm><sgmltag class="element">&lt;b&gt;</sgmltag><remark role="fixme">[unknown tag]</remark>
+<!--unknown tag: b-->
+ and
+<indexterm><primary>a</primary></indexterm><sgmltag class="element">&lt;a&gt;</sgmltag><remark role="fixme">[unknown tag]</remark>
+<!--unknown tag: a-->
+, as in the following program:</para>
+
+<example role="live-example">
+   <title>Text type: HTML</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$12.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>Note that XHTML markup within a class that is declared with
+<literal>type="text"</literal>, instead of <literal>type="html"</literal>, is
+invalid:</para>
+
+<informalexample role="live-example"><programlisting>
+&lt;textText&gt;some text&lt;/textText&gt; &lt;!-- valid --&gt;
+&lt;textText&gt;some &lt;i&gt;fancy&lt;/i&gt; text&lt;/textText&gt; &lt;!-- invalid --&gt;
+&lt;htmlText&gt;some text&lt;/htmlText&gt; &lt;!-- valid --&gt;
+&lt;htmlText&gt;some &lt;i&gt;fancy&lt;/i&gt; text&lt;/htmlText&gt; &lt;!-- valid --&gt;
+</programlisting></informalexample>
+
+<para>Any text content with a class that is declared without a text
+attribute whose type is <literal>text</literal> or <literal>html</literal> is
+invalid:</para>
+
+<informalexample role="live-example"><programlisting>
+&lt;class name="noText"/&gt;
+&lt;noText&gt;some text&lt;/noText&gt; &lt;!-- invalid --&gt;
+&lt;noText&gt;some &lt;i&gt;fancy&lt;/i&gt; text&lt;/noText&gt; &lt;!-- invalid --&gt;
+</programlisting></informalexample>
+
+<para>The attribute name must be <literal>text</literal>.  It is an error to
+use <literal>text</literal> and <literal>html</literal> as the type of any other
+attribute:</para>
+
+<informalexample role="live-example"><programlisting>
+&lt;class name="invalidClass"&gt;
+ &lt;attribute name="label" type="text"/&gt; &lt;!-- invalid --&gt;
+&lt;/class&gt;
+</programlisting></informalexample>
+
+ 
+
+ 
+<para/></section><section><title>Font inheritance</title>
+
+<para>Classes and views enclosed in classes inherit their font and font
+properties (such as <indexterm><primary>fontstyle</primary></indexterm><sgmltag class="attribute">fontstyle</sgmltag> and
+<indexterm><primary>fontsize</primary></indexterm><sgmltag class="attribute">fontsize</sgmltag>) from their superclass. Also, any
+class instance will inherit its font from its enclosing view. A font
+can be overridden at any point in a view hierarchy and any subview
+from there on will inherit that font.</para>
+
+<example role="live-example">
+   <title>Inheriting fonts</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$16.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+ 
+<para/></section><section id="class-inheritance.instantiating_through_script"><title>Instantiating classes through script</title>
+
+<para>In general, <glossterm>instantiation</glossterm> of objects happen using tags. For
+instance, assuming <literal>&lt;class name="myclass"&gt;</literal> is
+declared, you can create an instance of that class by writing
+<literal>&lt;myclass/&gt;</literal>. However, there may be times when you
+will need to instantiate an object using script. The script
+instantiation syntax for classes looks like:</para>
+
+<programlisting>
+var myobject = new lz.myclass(<replaceable>parent</replaceable>, <replaceable>attributes</replaceable>, <replaceable>children</replaceable>, <replaceable>instcall</replaceable>)
+</programlisting>
+
+<para>where:</para>
+
+<itemizedlist spacing="compact"><listitem><para><varname>parent</varname> is where your object will be
+    placed in the node hierarchy.  If it doesn't matter, then you
+    can pass <literal>null</literal>. If you are creating a subclass of
+    <literal>view</literal> and the parent is <literal>null</literal>, the
+    <literal>canvas</literal> will be the parent of this object.</para></listitem><listitem><para><varname>attributes</varname> is a hash of attribute values
+    that get passed into the object. For example, if you wanted to
+    instantiate a new <literal>view</literal> with a different bgcolor,
+    width, and height, you could pass in <literal>{bgcolor: 0xff0000, width:
+    50, height: 50}</literal>.
+    </para></listitem><listitem><para><varname>children</varname> is the array of child views this object
+    encapsulates. The OpenLaszlo Runtime instantiator is responsible for passing in the
+    children of this <literal>object</literal> based on the LZX hierarchy. You will
+    generally set this to null.
+    </para></listitem><listitem><para><varname>instcall</varname> is a Boolean value that determines
+    when this object will be instantiated. If false, the instantiation
+    of this object will be immediate, otherwise, its instantiation
+    will be synchronized with the rest of the view system. See <xref linkend="initialization-and-instantiation"/>.
+    </para></listitem></itemizedlist>
+
+   <para>All parameters are optional. Not setting any of these arguments (for example, <literal>new lz.myclass()</literal>) 
+      is equivalent to <literal>new lz.myclass(null, null, null, 0)</literal>.</para>
+
+<para>The following example shows you how to instantiate a new object through script and
+add it to another view.</para>
+
+<example role="live-example">
+   <title>Script instantiation</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$17.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+
+<para/><section id="class-inheritance.procedural_and_replicated"><title>Be careful of mixing replication and classes declared procedurally</title>
+<para>
+Views that you create procedurally are not the same as "clones" created by data replication. In fact, data replication overrides procedurally created views. For example:
+</para>
+<orderedlist spacing="compact"><listitem><para>Declare a view.</para></listitem><listitem><para>Add subviews to it (procedurally), and alter its properties.</para></listitem><listitem><para>Set a datapath on the view (from step 1) that would make it replicate.</para></listitem></orderedlist>
+<para>
+Changes made in step 2 will be ignored after replication.
+</para>
+<para/></section></section>
+
+<para/><section><title>Mapping Class and Tag Names</title>
+
+<para>Be aware that names for tag classes are not the same as their
+JavaScript counterpart; rather, the JavaScript name is <literal>lz[<emphasis>tagname</emphasis>]</literal>. For example, you can create and instantiate a class <literal>someclass</literal> like this:</para>
+   
+   <programlisting>
+// create the class
+&lt;class name=&quot;someclass&quot;&gt;
+   //class definition
+&lt;/class&gt;
+      
+// make one
+new lz.someclass;
+   
+//or
+new lz['someclass'];</programlisting>
+   
+   <para>You can instantiate a variable class like this:</para>
+   <programlisting>
+var theclass = 'someclass'; 
+
+// make one
+new lz[theclass]; 
+   </programlisting>
+
+<note><para>
+In earlier versions of OpenLaszlo, there was an idiosyncratic mapping between class names and tag names, and classes in the LFC were handled differently than user defined classes. For example, the tagname <indexterm><primary>view</primary></indexterm><sgmltag class="element">&lt;view&gt;</sgmltag> mapped to JavaScript class <literal>LzView</literal>. With OpenLaszlo 4.0, the <literal>lz[tagname]</literal> mapping is universal, and the old mappings are deprecated. </para></note>
+
+
+ 
+
+ 
+<para/></section><section><title>Using LZX classes</title>
+
+
+
+
+<para/><section><title>Basic approach to implementing classes</title>
+
+<para>An approach you can take to writing classes is just to declare the class tags
+and have an instance of that class on the canvas. This will give you the
+framework to see what it looks like while you're building up your class, for
+example:</para>
+
+<informalexample role="live-example"><programlisting>
+&lt;canvas&gt;
+  &lt;class name="myclass"&gt;
+    ...
+  &lt;/class&gt;
+  
+  &lt;myclass/&gt;
+&lt;/canvas&gt;
+</programlisting></informalexample>
+
+<para>Optionally, you can sketch out a class by writing a view first and then
+transforming it into a class. The drawbacks of this approach are that you can't use the
+<literal>classroot</literal> keyword and attributes can't be declared.</para>
+
+ 
+
+ 
+<para/></section><section><title>Inherited views</title>
+<para>Top-level views inherited from a superclass are placed in the top-level of a
+subclass. The inherited views from the superclass will be placed first in
+order. This can be verified by examining the subviews array.</para>
+
+<example role="live-example">
+   <title>Inheriting views</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$19.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>Views declared in an instance of a class will be placed in the
+top-level of the class unless otherwise declared with the
+<indexterm><primary>defaultplacement</primary></indexterm><sgmltag class="attribute">defaultplacement</sgmltag> attribute. Those views will be
+placed with a later order in the subviews array. The
+<indexterm><primary>defaultplacement</primary></indexterm><sgmltag class="attribute">defaultplacement</sgmltag> attribute tells a class where
+declared views should be placed in the hierarchy of the class and is
+explained in more detail in the next section.</para>
+
+<example role="live-example">
+   <title>Inherited view order</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$20.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>Notice how view <varname>yellow</varname> follows view
+<varname>red</varname> in its subviews array. If a
+<indexterm><primary>simplelayout</primary></indexterm><sgmltag class="element">&lt;simplelayout&gt;</sgmltag><remark role="fixme">[unknown tag]</remark>
+<!--unknown tag: simplelayout-->
+ is placed in view
+<varname>myfoo</varname>, they will be displayed in order of
+<varname>r</varname> followed by <varname>y</varname>.</para>
+
+<example role="live-example">
+   <title>Inherited view order with simplelayout</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$21.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para/></section><section><title>Placement</title>
+
+<para>The internal structure of a class is generally not visible to its
+hierarchical children. By default, instances which appear inside a class are
+made children of the top level instance of the class. This is generally not
+desirable for container classes. For example:</para>
+
+<example role="live-example">
+   <title>Undesired placement</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$22.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>This behavior can be changed using the
+<indexterm><primary>defaultplacement</primary></indexterm><sgmltag class="attribute">defaultplacement</sgmltag> attribute or the
+<indexterm><primary><literal>determinePlacement()</literal></primary></indexterm><methodname>determinePlacement()</methodname> method. Using
+<indexterm><primary>defaultplacement</primary></indexterm><sgmltag class="attribute">defaultplacement</sgmltag> is simple — this is a
+class attribute that identifies by name the subview where a child
+should be attached. The child will be attached to the first subview
+with a matching name. If none is found, the child is placed as a
+subview in the top-level node of the class, as would have happened if
+no <indexterm><primary>defaultplacement</primary></indexterm><sgmltag class="attribute">defaultplacement</sgmltag> had been specified.</para>
+
+<para>Be aware that the <indexterm><primary>defaultplacement</primary></indexterm><sgmltag class="attribute">defaultplacement</sgmltag> attribute
+should always be declared in an attribute with
+<literal>type="string"</literal>.</para>
+
+<example role="live-example">
+   <title>Placing a child in the desired subview</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$23.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>Elements declared in a class are not considered for placement, but children in
+subclasses or class instances will be.</para>
+
+<example role="live-example">
+   <title>Defaultplacement</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$24.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+
+<para/><section><title>Placing layouts</title>
+
+<para>A layout declared as an attribute will be considered for
+placement. This is often the desired behavior because it makes it easy
+for subclasses and class instances to modify the layout for views
+inside the default placement. To override this behavior, a
+<indexterm><primary>layout</primary></indexterm><sgmltag class="attribute">layout</sgmltag> attribute can be set with a non-existing
+<literal>placement</literal> (e.g., <literal>placement: null</literal>). The
+<indexterm><primary>placement</primary></indexterm><sgmltag class="attribute">placement</sgmltag> attribute tells an element's
+container where it should go within the container's internal
+hierarchy. If the container has a
+<indexterm><primary>defaultplacement</primary></indexterm><sgmltag class="attribute">defaultplacement</sgmltag>, the <literal>placement</literal>
+value has precedence. Alternatively, you can make sure that a layout
+isn't handled by defaultplacement by declaring it as a tag element in
+the class.</para>
+
+<example role="live-example">
+   <title>Layout placement</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$25.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+
+
+<para/></section><section><title>ImmediateParent</title>
+
+<para>A child placed using <indexterm><primary>defaultplacement</primary></indexterm><sgmltag class="attribute">defaultplacement</sgmltag> or
+<indexterm><primary>placement</primary></indexterm><sgmltag class="attribute">placement</sgmltag> will often have two parent types. The
+<structfield>parent</structfield> is the reference to the node that was passed as
+the child's ancestor in the constructor, e.g., <literal>new
+childClass(parent, args)</literal>. If the child was created by declaring
+it in a tag, the parent will be its lexical parent. (Its lexical parent
+is the tag that encloses it.)</para>
+
+<para>The <structfield>immediateparent</structfield> refers to the node where the
+child is actually placed at runtime. Its value will be the same as
+<structfield>parent</structfield> if no value is assigned to the <indexterm><primary>placement</primary></indexterm><sgmltag class="attribute">placement</sgmltag> attribute.</para>
+
+<example role="live-example">
+   <title>Parent vs. Imediateparent</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$26.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para/></section><section><title>Obtaining a reference to the defaultPlacement node</title>
+
+<para>There may be instances where a class needs a reference to the default placement
+node. A good trick is to search the subnodes of the class until it's found.</para>
+
+<example role="live-example">
+   <title>Obtaining reference to the defaultplacment node</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$27.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+
+<para/></section><section><title>Overriding placement behavior using <indexterm><primary><literal>determinePlacement()</literal></primary></indexterm><methodname>determinePlacement()</methodname></title>
+
+<para>A node calls its <indexterm><primary><literal>determinePlacement()</literal></primary></indexterm><methodname>determinePlacement()</methodname> method to
+determine the <structfield>immediateparent</structfield> of a child. This method
+will only be called for subnodes which have a placement attribute, or
+for all subnodes if this node has a non-null
+<indexterm><primary>defaultplacement</primary></indexterm><sgmltag class="attribute">defaultplacement</sgmltag>. The
+<indexterm><primary>placement</primary></indexterm><sgmltag class="attribute">placement</sgmltag> attribute of a subnode overrides a
+parent's <indexterm><primary>defaultplacement</primary></indexterm><sgmltag class="attribute">defaultplacement</sgmltag>. This method looks
+for a subnode with the name given in the <varname>placement</varname>
+parameter, and returns that node. If no such named node exists, it
+returns <varname>this</varname>. The code essentially looks like:</para>
+
+<informalexample role="live-example"><programlisting>
+&lt;!-- subnode: the child node to place         --&gt;
+&lt;!-- placement: the node to place the subnode --&gt;
+&lt;!-- args: init args of the child subnode     --&gt;
+&lt;method name="determinePlacement" args="subnode, placement, args"&gt;
+  // ignore placement if set
+  if ( args.ignoreplacement ){
+      return this;
+  }
+
+  if ( placement == null ){
+    var p = null;
+  } else {
+    var p = this.searchSubnodes( "name" , placement );
+  }
+
+  return p == null ? this : p;
+&lt;/method&gt;
+</programlisting></informalexample>
+
+<para>A subclass might implement this method to cause the
+<varname>placement</varname> parameter to have a different behavior or
+additional effects. For instance, a subnode could have
+<structfield>parent</structfield> and <structfield>immediateparent</structfield> be the
+same.</para>
+
+<example role="live-example">
+   <title>Overriding determineplacement</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$29.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+
+
+
+
+<para/></section></section><section><title>Construction and initialization</title>
+
+<para>When writing complex classes, a deep understanding of how classes
+are constructed and initialized is essential. Several steps are
+involved before a class instance is fully initialized. Describing this
+process is out of the scope of this chapter, but important methods and
+events that are involved, and the sequence in which they are invoked,
+will be discussed here. See <xref linkend="initialization-and-instantiation"/> for a more in-depth discussion.</para>
+
+<para>The <indexterm><primary><literal>construct()</literal></primary></indexterm><methodname>construct()</methodname> method is called as early as
+possible in constructing the view system. It is invoked before any arguments have been applied. This is the method to override in lieu of writing a
+class constructor for your LZX class. If you do override the construct method, be sure to invoke,
+the superclass method, or results will be extremely
+unpredictable. Among other things, the construct method is the method where the class being constructed places itself in its container by calling its parent's
+<indexterm><primary><literal>determinePlacement()</literal></primary></indexterm><methodname>determinePlacement()</methodname> method. If the superclass
+construct method isn't called, the class instance may not be placed
+correctly.</para>
+
+<para>Alternatively, you can use the <indexterm><primary>onconstruct event</primary></indexterm><literal>onconstruct</literal> event,
+which is sent out by the instantiator after <indexterm><primary><literal>construct()</literal></primary></indexterm><methodname>construct()</methodname>
+has been called. The <indexterm><primary>onconstruct event</primary></indexterm><literal>onconstruct</literal> happens right at the end of
+the instantiation process, but before any subnodes have been created
+or references resolved.</para>
+
+<para>Keep in mind that construction happens top-down (parent to subviews),
+whereas initialization happens bottom-up (subviews to ancestor).</para>
+
+<example role="live-example">
+   <title>Construction and initialization</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$30.lzx"/></textobject> 
+   </programlisting>
+</example>
+<para>Following instantiation (i.e., after the <indexterm><primary>onconstruct event</primary></indexterm><literal>onconstruct</literal>
+is sent) and if there are child nodes, the
+<indexterm><primary><literal>createChildren()</literal></primary></indexterm><methodname>createChildren()</methodname> method is called. This method takes an
+array of child objects as a parameter. Each child object has three
+properties:</para>
+
+<variablelist><varlistentry><term><structfield>name</structfield></term><listitem><para>The class name of the child to instantiate</para></listitem></varlistentry><varlistentry><term><structfield>attrs</structfield></term><listitem><para>The attributes to initialize the child with,
+  e.g. <indexterm><primary>name</primary></indexterm><sgmltag class="attribute">name</sgmltag>, <indexterm><primary>height</primary></indexterm><sgmltag class="attribute">height</sgmltag></para></listitem></varlistentry><varlistentry><term><structfield>children</structfield></term><listitem><para>An array of child objects. This can be undefined if none
+  exist.</para></listitem></varlistentry></variablelist>
+
+<example role="live-example">
+   <title>createChildren()</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/class-inheritance-$31.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>In summary, you can expect the basic timing order of method and event calls to look
+like:</para>
+
+<orderedlist spacing="compact"><listitem><para>The <indexterm><primary><literal>construct()</literal></primary></indexterm><methodname>construct()</methodname> method is called.</para></listitem><listitem><para>The <indexterm><primary><literal>determinePlacement()</literal></primary></indexterm><methodname>determinePlacement()</methodname> method is called.  (The parent's method is called
+  so parent knows where to place this object.)</para></listitem><listitem><para>The <indexterm><primary>onconstruct event</primary></indexterm><literal>onconstruct</literal> event is sent.</para></listitem><listitem><para>The <indexterm><primary><literal>createChildren()</literal></primary></indexterm><methodname>createChildren()</methodname> is called.  (Each child is instantiated
+  and initialized)</para></listitem><listitem><para>The <indexterm><primary><literal>init()</literal></primary></indexterm><methodname>init()</methodname> is called.</para></listitem><listitem><para>The <indexterm><primary>oninit event</primary></indexterm><literal>oninit</literal> is called.</para></listitem></orderedlist>
+
+<para role="fixme"><remark role="fixme"><emphasis role="para-label">FIXME: </emphasis>Is this the same information as in <xref linkend="initialization-and-instantiation"/>?  Should it be consolidated?</remark></para>
+
+<para/></section></section><section><title>Glossary</title>
+
+<variablelist><varlistentry><term><literal>classroot</literal></term><listitem><para>a short-hand that refers to the root node of the instance of a
+  class.</para></listitem></varlistentry><varlistentry><term><indexterm><primary>extends</primary></indexterm><sgmltag class="attribute">extends</sgmltag></term><listitem><para>the keyword used in a class declaration to create a subclass.</para></listitem></varlistentry><varlistentry><term>inheritance</term><listitem><para>the concept of classes automatically containing the variables
+  and methods defined in their superclass.</para></listitem></varlistentry><varlistentry><term>instantiation</term><listitem><para>the action that creates an instance of a class or object.</para></listitem></varlistentry><varlistentry><term>overloading</term><listitem><para>using one identifier to refer to multiple functions.</para></listitem></varlistentry><varlistentry><term>overriding</term><listitem><para>to provide a different method implementation in the
+  subclass from its superclass.</para></listitem></varlistentry><varlistentry><term>subclass</term><listitem><para>the class that derives from another class.</para></listitem></varlistentry><varlistentry><term><literal>super</literal></term><listitem><para>keyword operator that allows a subclass to
+  invoke it's superclass's method.</para></listitem></varlistentry><varlistentry><term>superclass</term><listitem><para>the class that a subclass derives its attributes and
+  methods from.</para></listitem></varlistentry></variablelist>
+<para/></section></chapter>

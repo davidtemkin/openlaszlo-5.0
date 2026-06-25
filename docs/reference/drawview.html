@@ -1,0 +1,88 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;drawview&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>drawview<span class="ang">&gt;</span></h1><p class="short">Adds procedural drawing APIs to view.</p><p class="meta">Extends <code>view</code></p>
+                
+        <p>
+          <code>drawview</code>
+           adds procedural drawing APIs to 
+          <code>&lt;view&gt;</code>
+        </p>
+                
+        <p>
+          <code>drawview</code>
+           implements a subset of the WHATWG drawing APIs, which can be found at:
+        
+          <a >http://www.whatwg.org/specs/web-apps/current-work/#the-canvas-element</a>
+                  
+        </p>
+                
+        
+          <pre><code>
+        &lt;canvas&gt;
+            &lt;drawview width="200" height="300"&gt;
+                &lt;handler name="oncontext"&gt;
+                    this.moveTo(100, 100);
+                    this.lineTo(100, 200);
+                    this.quadraticCurveTo(150, 250, 200, 200);
+                    this.closePath();
+
+                    this.fillStyle = 0x0000ff;
+                    this.globalAlpha = .5;
+                    this.fill();
+
+                    this.strokeStyle = 0xffff00;
+                    this.lineWidth = 5;
+                    this.stroke();
+
+                    var g = this.createRadialGradient(75, 75, .7, 300, 300, 0)
+                    this.globalAlpha = 0;
+                    g.addColorStop(0, 0x000000);
+                    this.globalAlpha = 1;
+                    g.addColorStop(1, 0xffffff);
+                    this.fillStyle = g;
+                    this.fill();
+
+                    this.strokeStyle = 0x000000;
+                    this.lineWidth = 0;
+                    this.stroke();
+
+                    this.beginPath();
+                    this.lineTo(75, 0);
+                    this.lineTo(75, 75);
+                    this.lineTo(0, 75);
+                    this.lineTo(0, 0);
+                    this.closePath();
+
+                    var g = this.createLinearGradient(0, 0, 75, 75)
+                    this.globalAlpha = 0;
+                    g.addColorStop(0, 0x000000);
+                    this.globalAlpha = 1;
+                    g.addColorStop(1, 0xffffff);
+                    this.fillStyle = g;
+                    this.fill();
+                &lt;/handler&gt;
+            &lt;/drawview&gt;
+        &lt;/canvas&gt;
+        </code></pre>
+        
+                
+        <p>
+          <code>drawview</code>
+           extends 
+          <code>&lt;view&gt;</code>
+          ,
+        which is the fundamental visual class of LZX.
+        </p>
+              
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">aliaslines</td><td class="ty">boolean</td><td class="ty">false</td><td>If true, lines will be offset by lineWidth / 2 to appear aliased (dhtml-only)</td></tr><tr><td class="nm">cachebitmap</td><td class="ty">boolean</td><td class="ty">true</td><td>If true, the bitmap result will be cached where possible. (swf-only)</td></tr><tr><td class="nm">fillStyle</td><td class="ty">string</td><td class="ty">#000000</td><td>Represents the colour or style to use for the fill inside the shapes. Can be either a hexadecimal number (0xffffff), a CSS string ('#ff00ff' or '#f0f'), or a CanvasGradient/LzCanvasGradient.</td></tr><tr><td class="nm">globalAlpha</td><td class="ty">number</td><td class="ty">1</td><td>Gives an alpha value that is applied to shapes and images
+          before they are composited onto the canvas. The valid range of
+          values is from 0.0 (fully transparent) to 1.0 (no additional
+          transparency). If the attribute is set to values outside this range,
+          it is ignored. When the context is created, the globalAlpha
+          attribute initially has the value 1.0.</td></tr><tr><td class="nm">lineCap</td><td class="ty">string</td><td class="ty">butt</td><td>Gives the default lineCap value for lines. Round for consistency between swf and dhtml.</td></tr><tr><td class="nm">lineJoin</td><td class="ty">string</td><td class="ty">miter</td><td>Gives the default lineJoin value for lines. Round for consistency between swf and dhtml.</td></tr><tr><td class="nm">lineWidth</td><td class="ty">number</td><td class="ty">1</td><td>Gives the default width of lines, in coordinate space units.
+          Negative values are ignored.  0 draws hairlines in swf - lines that
+          are always 1 pixel wide even when scaled.</td></tr><tr><td class="nm">measuresize</td><td class="ty">boolean</td><td class="ty">true</td><td>If true, the size of the drawview will be set dynamically based on its contents, where possible. (swf-only)</td></tr><tr><td class="nm">miterLimit</td><td class="ty">number</td><td class="ty">10</td><td>Gives the default miterLimit value for lines.</td></tr><tr><td class="nm">strokeStyle</td><td class="ty">string</td><td class="ty">#000000</td><td>Represents the colour to use for the lines around shapes.  Specified as a hexadecimal number (0xffffff) or a CSS string ('#ff00ff' or '#f0f').</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

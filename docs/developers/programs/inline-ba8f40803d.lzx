@@ -1,0 +1,5 @@
+  <class name="myDragState" extends="state">
+    <attribute name="dragMin" value="2"/>
+    <attribute name="dragMax" value="20"/>
+    <!-- ... -->
+  </class>

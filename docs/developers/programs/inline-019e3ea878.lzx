@@ -1,0 +1,7 @@
+<canvas>
+  <?lzc class="c1" inline="true"?>
+  <include href="lib1.lzx"/>
+  <view name="v1">
+    <c1/>
+  </view>
+</canvas>

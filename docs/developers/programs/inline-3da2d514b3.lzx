@@ -1,0 +1,4 @@
+<canvas height="50" layout="y">
+  <inputtext>plain text</inputtext>
+  <text><i>styled</i> text</text>
+</canvas>

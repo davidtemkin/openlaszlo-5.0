@@ -1,0 +1,127 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;animatorgroup&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>animatorgroup<span class="ang">&gt;</span></h1><p class="short">Coordinates the behavior of several animators.</p><p class="meta">Extends <a href="node.html"><code>LzNode</code></a></p>
+        <p>
+          An 
+          <code>lz.animatorgroup</code>
+           wraps several
+ 
+          <code>&lt;animator&gt;</code>
+          s or
+ 
+          <code>animatorgroup</code>
+          s, and runs them in sequence or
+ simultaneously. As an example, the code below animates a view first
+ along the x-axis and then the y.
+        </p>
+         
+        
+          <pre><code>
+ &lt;canvas height="225"&gt;
+   &lt;view bgcolor="red" width="100" height="100"&gt;
+     &lt;animatorgroup process="sequential"&gt;
+       &lt;animator attribute="x" to="100" duration="1000"/&gt;
+       &lt;animator attribute="y" to="100" duration="1000"/&gt;
+     &lt;/animatorgroup&gt;
+   &lt;/view&gt;
+ &lt;/canvas&gt;
+ </code></pre>
+        
+         
+        <p>
+          The attributes 
+          <code>attribute</code>
+          ,
+ 
+          <code>duration</code>
+          , 
+          <code>from</code>
+          ,
+ 
+          <code>indirect</code>
+          , 
+          <code>motion</code>
+          ,
+ 
+          <code>process</code>
+          , 
+          <code>relative</code>
+          ,
+ 
+          <code>started</code>
+          , 
+          <code>target</code>
+          , and
+ 
+          <code>to</code>
+           are cascaded to enclosed 
+          <code>&lt;animator&gt;</code>
+          s and
+ 
+          <code>animatorgroup</code>
+          s.  Events (such as 
+          <code>&lt;event&gt;onstart&lt;/event&gt;</code>
+          , 
+          <code>&lt;event&gt;onstop&lt;/event&gt;</code>
+          ,
+ etc.) and the 
+          <code>name</code>
+           and
+ 
+          <code>id</code>
+           attributes, however, are not cascaded.
+        </p>
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">attribute</td><td class="ty">token</td><td class="ty"/><td>The name of the attribute whose value is animated.  This
+ attribute is required on an animator, unless the animator is
+ inside an animatorgroup that specifies an attribute.</td></tr><tr><td class="nm">duration</td><td class="ty">number</td><td class="ty"/><td>The duration of the animation, in milliseconds (1000 = 1 second).</td></tr><tr><td class="nm">from</td><td class="ty">number</td><td class="ty"/><td>The start value for the animation.  Defaults to the
+ targeted attribute's current value.</td></tr><tr><td class="nm">indirect</td><td class="ty">boolean</td><td class="ty"/><td>
+                Controls the direction of the animation.  A value of
+ 
+                <code>true</code>
+                 will cause the animation to go in the "other"
+ direction.
+              </td></tr><tr><td class="nm">isactive</td><td class="ty">boolean</td><td class="ty"/><td>The active-state of the animator. If true, the animator is
+ currently processing its animation.</td></tr><tr><td class="nm">motion</td><td class="ty">linear | easein | easeout | easeboth</td><td class="ty">easeboth</td><td>Whether and how the animation accelerates and decelerates</td></tr><tr><td class="nm">paused</td><td class="ty">boolean</td><td class="ty">false</td><td>The paused state of the animator. If true, the animator will pause. When
+ changed to false, the animator will resume from its current
+ location.</td></tr><tr><td class="nm">process</td><td class="ty">simultaneous | sequential</td><td class="ty">sequential</td><td>
+                In an 
+                <code>animatorgroup</code>
+                , whether to process the
+ individual 
+                <code>animator</code>
+                s simultaneously or
+ sequentially.  Has no effect on an individual
+ 
+                <code>animator</code>
+                .
+              </td></tr><tr><td class="nm">relative</td><td class="ty">boolean</td><td class="ty">false</td><td>
+                Whether the 
+                <code>to</code>
+                 value is relative to the
+ initial value of the attribute (
+                <code>true</code>
+                ), or
+ is an absolute value (
+                <code>false</code>
+                ).
+              </td></tr><tr><td class="nm">repeat</td><td class="ty">number</td><td class="ty">1</td><td>
+                The number of times to repeat the animation.  This should be a
+ positive integer or 
+                <code>Infinity</code>
+                .  Changes to
+ the repeat value while the animator is running will only take
+ effect, after the animation is finished and then restarted.
+
+ 
+                <div class="note">
+                  For historical reasons, setting this value does not send
+ the event 
+                  <code>onrepeat</code>
+                  ; see
+ 
+                  <code>onrepeat</code>
+                  .
+</main><script src="_nav.js"></script></body></html>

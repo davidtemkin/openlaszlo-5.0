@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ItemLookupResponse><Items>
+  <Request><IsValid>True</IsValid></Request>
+  <Item>
+    <ASIN>B000069HKH</ASIN>
+    <SmallImage><URL>data/covers/B000069HKH.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B000069HKH.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B000069HKH.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>Claude Helffer</Artist>
+      <Manufacturer>Harmonia Mundi</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>2000-07-25</ReleaseDate>
+      <Title>Clair de Lune</Title>
+      <ListPrice><Amount>1398</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$13.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$7.50</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$3.75</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$10.99</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Debussy’s impressionist piano masterpieces, all light and color.</Content></EditorialReview></EditorialReviews>
+  </Item>
+</Items></ItemLookupResponse>

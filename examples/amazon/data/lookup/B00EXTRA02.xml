@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ItemLookupResponse><Items>
+  <Request><IsValid>True</IsValid></Request>
+  <Item>
+    <ASIN>B00EXTRA02</ASIN>
+    <SmallImage><URL>data/covers/B00EXTRA02.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B00EXTRA02.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B00EXTRA02.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>Academy of St Martin in the Fields</Artist>
+      <Manufacturer>Philips</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>2002-10-29</ReleaseDate>
+      <Title>Requiem</Title>
+      <ListPrice><Amount>1898</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$18.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$10.50</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$5.25</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$14.99</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Mozart’s unfinished Requiem, sung with hushed intensity — his haunting farewell.</Content></EditorialReview></EditorialReviews>
+  </Item>
+</Items></ItemLookupResponse>

@@ -1,0 +1,47 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;grid&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>grid<span class="ang">&gt;</span></h1><p class="short">
+              Presents a grid backed by a datasource.
+          </p><p class="meta">Extends <code>basegrid</code></p>
+                    
+        <p>
+          A 
+          <code>grid</code>
+           is used to present data in a
+              dataset. Although it can be configured using
+              
+          <code>gridcolumn</code>
+           and 
+          <code>gridtext</code>
+          , by
+              default it will present one editable field for each attribute in
+              the first data node in the grid. If no attributes are found, a column
+              will be presented for the each of the 
+          <code>name()</code>
+           and
+              
+          <code>text()</code>
+           fields of the nodes using
+              
+          <code>gridtext</code>
+           columns.
+        </p>
+                    
+        <pre class="example">
+              &lt;canvas height="250"&gt;
+              &lt;dataset name="weatherdata" request="true"
+              src="http://www.laszlosystems.com/cgi-pub/weather.cgi?zip=10022"/&gt;
+
+              &lt;grid datapath="weatherdata:/weather" contentdatapath="forecast/day"/&gt;
+              &lt;/canvas&gt;
+            </pre>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">layout</td><td class="ty">expression</td><td class="ty">placement : 'hcontent';axis:'x' ; spacing:-1</td><td>The layout of attribute of the grid is set up to control
+              the way that the header columns are situated. Changing this 
+              property changes the header column layout.</td></tr><tr><td class="nm">needshscroll</td><td class="ty">expression</td><td class="ty"> header.width &lt; header.hcontent.width </td><td/></tr><tr><td class="nm">showhscroll</td><td class="ty">expression</td><td class="ty">true</td><td>If false, the grid will never show a horizontal scrollbar,
+              even if the rows are wider than the grid.</td></tr><tr><td class="nm">showvscroll</td><td class="ty">expression</td><td class="ty">true</td><td>If false, the grid will never show a vertical scrollbar,
+            even if the rows are wider than the grid.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

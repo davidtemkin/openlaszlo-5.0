@@ -1,0 +1,114 @@
+<!-- For complete WSDL go to
+        http://soap.amazon.com/schemas3/AmazonWebServices.wsdl -->
+
+<wsdl:definitions name="AmazonSearch"
+                  xmlns:typens="http://soap.amazon.com"
+                  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+                  xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+                  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+                  xmlns="http://schemas.xmlsoap.org/wsdl/"
+                  targetNamespace="http://soap.amazon.com">
+
+  <wsdl:types>
+
+    <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+                targetNamespace="http://soap.amazon.com">
+
+      <xsd:complexType name="KeywordRequest">
+        <xsd:all>
+          <xsd:element name="keyword" type="xsd:string"/>
+          <xsd:element name="page" type="xsd:string"/>
+          <xsd:element name="mode" type="xsd:string"/>
+          <xsd:element name="tag" type="xsd:string"/>
+          <xsd:element name="type" type="xsd:string"/>
+          <xsd:element name="devtag" type="xsd:string"/>
+          <xsd:element name="sort" type="xsd:string" minOccurs="0"/>
+          <xsd:element name="locale" type="xsd:string" minOccurs="0"/>
+          <xsd:element name="price" type="xsd:string" minOccurs="0"/>
+        </xsd:all>
+      </xsd:complexType>
+
+      <xsd:complexType name="ProductInfo">
+
+        <xsd:all>
+          <xsd:element name="TotalResults" type="xsd:string" minOccurs="0"/>
+          <!-- Total number of Search Results -->
+          <xsd:element name="TotalPages" type="xsd:string" minOccurs="0"/>
+          <!-- Total number of Pages of Search Results -->
+          <xsd:element name="ListName" type="xsd:string" minOccurs="0"/>
+          <!-- Listmania list name -->
+          <xsd:element name="Details" type="typens:DetailsArray" minOccurs="0"/>
+        </xsd:all>
+
+      </xsd:complexType>
+
+      <!-- OTHER SCHEMA TYPES HERE -->
+
+    </xsd:schema>
+
+  </wsdl:types>
+
+  <message name="KeywordSearchRequest">
+    <!-- Messages for Amazon Web APIs -->
+    <!-- KeywordSearchRequest message contains only one part and is of type
+         typens:KeywordRequest -->
+    <part name="KeywordSearchRequest" type="typens:KeywordRequest"/>
+  </message>
+
+  <message name="KeywordSearchResponse">
+    <part name="return" type="typens:ProductInfo"/>
+  </message>
+
+  <portType name="AmazonSearchPort">
+    <!-- Port for Amazon Web APIs -->
+    <operation name="KeywordSearchRequest">
+      <!-- The KeywordSearchRequest message element (above) describes input. -->
+      <input message="typens:KeywordSearchRequest"/>
+      <!-- The KeywordSearchResponse message element (above) describes
+           input. -->
+      <output message="typens:KeywordSearchResponse"/>
+    </operation>
+
+    <!-- OTHER OPERATIONS HERE -->
+
+  </portType>
+
+  <binding name="AmazonSearchBinding" type="typens:AmazonSearchPort">
+
+    <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+    <!-- Binding for Amazon Web APIs - RPC, SOAP over HTTP -->
+    <!-- This binds to the AmazonSearchPort portType operation above. --> 
+    <operation name="KeywordSearchRequest">
+
+      <soap:operation soapAction="http://soap.amazon.com"/>
+
+      <input>
+        <soap:body use="encoded" 
+                   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+                   namespace="http://soap.amazon.com"/>
+      </input>
+      <output>
+        <soap:body use="encoded" 
+                   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+                   namespace="http://soap.amazon.com"/>
+      </output>
+
+    </operation>
+
+    <!-- OTHER OPERATIONS HERE -->
+
+  </binding>
+
+  <service name="AmazonSearchService">
+
+    <port name="AmazonSearchPort" binding="typens:AmazonSearchBinding">
+
+      <soap:address location="http://soap.amazon.com/onca/soap3"/>
+
+    </port>
+
+  </service>
+
+</wsdl:definitions>

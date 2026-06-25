@@ -1,0 +1,7 @@
+<button name="framitzbutton" onclick="sendframitz()">
+     Send framitz event
+     <event name="framitz"/>
+     <method name="sendframitz">
+      framitz.sendEvent()
+     </method>
+ </button>

@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1005">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Beach Pier Pavilion Silhouette</title>
+  <description>Beach Pier Pavilion Silhouette — from the OpenLaszlo sample image library.</description>
+  <dates posted="1490345600" />
+  <urls><url type="photopage">data/photos/1005.jpg</url></urls>
+  <tags><tag>beach</tag><tag>pier</tag><tag>pavilion</tag><tag>silhouette</tag></tags>
+</photo>
+</rsp>

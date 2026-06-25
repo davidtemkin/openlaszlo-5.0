@@ -1,0 +1,63 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;attribute&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>attribute<span class="ang">&gt;</span></h1><p class="short">Sets an attribute of the object that contains it.</p>
+        <p>The <code>attribute</code> tag has two uses:</p>
+
+        <ol>
+
+          <li>
+            <p>In a class definiiton, the <code>attribute</code> tag defines an attribute that
+              can be set in instances of the class.</p>
+
+            <pre class="example"> &lt;canvas height="30"&gt; &lt;class name="mybutton"
+              extends="button"&gt; <em> &lt;attribute name="myattr" type="string"
+                value="after"/&gt;</em> &lt;/class&gt; &lt;mybutton text="before"
+              myattr="after" onclick="setAttribute('text', this.myattr)"/&gt;
+              &lt;/canvas&gt; </pre>
+          </li>
+
+          <li>
+            <p>In an instance, the <code>attribute</code> tag attaches an attribute to the
+              instance. The attribute can be accessed from script.</p>
+
+            <pre class="example"> &lt;canvas height="30"&gt; &lt;class name="mybutton"
+              extends="button"&gt; &lt;attribute name="myattr" type="string"
+              value="after"/&gt; &lt;/class&gt; &lt;mybutton text="before"
+              onclick="setAttribute('text', this.myattr)"&gt; <em>&lt;attribute
+                name="myattr" value="perhaps later"/&gt;</em> &lt;/mybutton&gt;
+              &lt;/canvas&gt; </pre>
+
+          </li>
+        </ol>
+
+        <p>See the Developer's Guide
+          for a complete discussion. </p>
+
+        <p> Also see the documentation for <code>&lt;class&gt;</code>. The <a href="../developers/tutorials/classes-tutorial.html">Classes</a> tutorial describes how to use attributes to define a class. </p>
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">allocation</td><td class="ty">"instance" | "class"</td><td class="ty">"instance"</td><td>One of: <dl>
+                  <dt>
+                    <code>class</code>
+                  </dt>
+                  <dd>The attribute will be an attribute of the class; to refer to it, you say
+                      <code>lz.classname.attributename</code>.</dd>
+                  <dt>
+                    <code>instance</code>
+                  </dt>
+                  <dd>Each instance will have an attribute with the specified properties
+                      (<code>name</code>, <code>type</code>, <code>value</code>,
+                    etc.).</dd>
+                </dl>
+                <p>You can set <code>allocation</code> to <code>class</code> to get
+                  static attributes. Static properties are attached to the class itself, for example
+                    <code>lz.classname</code>.</p>
+                <pre><code>&lt;attribute name="allowed" value="false" type="boolean" allocation="class" /&gt;</code></pre>
+              </td></tr><tr><td class="nm">setter</td><td class="ty">script</td><td class="ty"/><td>Code that is executed when setAttribute is used to set the value of this
+                attribute. This code is executed within a context in which the variable with this
+                attribute's name is bound to the value passed to setAttribute. </td></tr><tr><td class="nm">type</td><td class="ty">"boolean" | "color" | "expression" | "number" | "size" | "string" | "text" |
+                  "html"</td><td class="ty">"expression"</td><td>The type of the attribute. This determines how the value is parsed. Attributes
+                of type string are automatically quoted if when="immediate", for any other value of
+                when, a literal string would have to be quoted to be used as a value. </td></tr></table>
+</main><script src="_nav.js"></script></body></html>

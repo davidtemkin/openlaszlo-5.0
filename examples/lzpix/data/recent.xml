@@ -1,0 +1,28 @@
+<rsp stat="ok">
+<photos page="1" pages="1" perpage="24" total="24">
+<photo id="1025" owner="local" secret="x" server="0" title="Golden Wheat Field" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1026" owner="local" secret="x" server="0" title="Green Maple Leaf Backlit" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1027" owner="local" secret="x" server="0" title="Hand on Rainy Window (2)" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1028" owner="local" secret="x" server="0" title="Highway Light Trails" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1029" owner="local" secret="x" server="0" title="Himalayan Peak Under Stars" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1030" owner="local" secret="x" server="0" title="Hot Air Balloon From Below" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1031" owner="local" secret="x" server="0" title="Industrial Bridge Structure" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1032" owner="local" secret="x" server="0" title="Kyoto Street Scene" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1033" owner="local" secret="x" server="0" title="Lighthouse at Night with Stars" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1034" owner="local" secret="x" server="0" title="Lone Island in Blue Sea" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1035" owner="local" secret="x" server="0" title="Man and Dog in Tall Grass" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1036" owner="local" secret="x" server="0" title="Matterhorn Peak" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1037" owner="local" secret="x" server="0" title="Minimalist Staircase" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1038" owner="local" secret="x" server="0" title="Misty Mountain Gorge" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1039" owner="local" secret="x" server="0" title="Modern Skyscraper Looking Up" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1040" owner="local" secret="x" server="0" title="Mossy Log with Autumn Leaves" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1041" owner="local" secret="x" server="0" title="Mountain Ridge Panorama" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1042" owner="local" secret="x" server="0" title="NYC Viewfinder Skyline" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1043" owner="local" secret="x" server="0" title="Ocean Water Texture" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1044" owner="local" secret="x" server="0" title="One World Trade Center" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1045" owner="local" secret="x" server="0" title="Palm Trees and High Rise" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1046" owner="local" secret="x" server="0" title="Pelicans on Wooden Pier" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1047" owner="local" secret="x" server="0" title="Pier Weather Vane" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1048" owner="local" secret="x" server="0" title="Preikestolen Over the Fjord" ispublic="1" isfriend="0" isfamily="0"/>
+</photos>
+</rsp>

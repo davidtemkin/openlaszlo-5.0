@@ -1,0 +1,18 @@
+<canvas debug="true">
+<debug y="150"/>
+<include href="lzunit"/>
+<simplelayout axis="y" spacing="10"/>
+
+<TestSuite>
+    <TestCase>
+        <method name="test">
+        
+        </method>
+        <method name="addTests">
+            this.addTest("test");
+        </method>
+
+    </TestCase>   
+</TestSuite>
+
+</canvas>

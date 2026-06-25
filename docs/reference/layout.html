@@ -1,0 +1,91 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;layout&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>layout<span class="ang">&gt;</span></h1><p class="short">Abstract layout base class.</p><p class="meta">Extends <code>node</code></p>
+                
+        <p>A layout is used to automatically distribute, align, or
+        otherwise arrange the subviews of the view that contains it (it
+        arranges the views that are it's siblings). Using a layout
+        obviates the need to precisely position the views of an
+        application and allows an application to resize or reconfigure
+        gracefully according to the constraints of its container.</p>
+            
+        
+        <p>
+          The layout class is a null layout — it does not arrange
+        it's siblings. It is the base class that other layouts extend.
+        
+          <code>simplelayout</code>
+           is a basic extension of the
+        layout class. The example below illustrates using a simple
+        layout to distribute views along the y axis.
+        </p>
+            
+        
+        
+          <pre><code>
+        &lt;canvas height="60"&gt;
+        &lt;view bgcolor="#DDFFFF"&gt;
+            &lt;text&gt;Without a layout, it can be difficult&lt;/text&gt;
+            &lt;text x="2" y="5"&gt;to manually position your views&lt;/text&gt;
+        &lt;/view&gt;
+        &lt;view y="25" bgcolor="#FFDDFF"&gt;
+            &lt;simplelayout axis="y" /&gt;
+            &lt;text&gt;A layout makes&lt;/text&gt;
+            &lt;text&gt;positioning simple and automatic&lt;/text&gt;
+        &lt;/view&gt;
+        &lt;/canvas&gt;
+        </code></pre>
+        
+            
+        
+        <p>
+          Layouts are so important, there is a shorthand for specifying them
+        using the 
+          
+           attribute
+        of 
+          
+          .  The previous example could be more
+        compactly specified:
+        </p>
+            
+        
+        
+          <pre><code>
+        &lt;canvas height="35"&gt;
+        &lt;view layout="class: simplelayout; axis: y"&gt;
+            &lt;text&gt;A layout makes&lt;/text&gt;
+            &lt;text&gt;positioning simple and automatic&lt;/text&gt;
+        &lt;/view&gt;
+        &lt;/canvas&gt;
+        </code></pre>
+        
+            
+        
+        <p>
+          Because 
+          
+           is the default
+        layout, the above example could also have used just 
+          <code>layout="axis:
+        y"</code>
+          .
+        </p>
+                
+        
+        <p>Layouts, like constraints and animators, affect specific
+        attributes of a view. Views can have more than one layout, as long
+        as each set of attributes associated with a layout does not
+        overlap with any of the other sets.</p>
+                layout.lzx
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">locked</td><td class="ty">expression</td><td class="ty">2</td><td>Set to true if layout is locked from updates.</td></tr><tr><td class="nm">subviews</td><td class="ty">expression</td><td class="ty"/><td>
+                Array of the views this layout controls. Used by subclasses of
+     
+                <code>layout</code>
+                 to implement their arrangement algorithm by
+     adjusting the appropriate attribute of each view.
+              </td></tr><tr><td class="nm">updateDelegate</td><td class="ty">expression</td><td class="ty"/><td>A delegate used to update the layout.</td></tr><tr><td class="nm">vip</td><td class="ty">expression</td><td class="ty"/><td/></tr></table><h3>Methods</h3><ul class="methods"><li><code>addSubview()</code></li><li><code>ignore()</code></li><li><code>removeSubview()</code></li><li><code>reset()</code></li><li><code>setLayoutOrder()</code></li><li><code>swapSubviewOrder()</code></li><li><code>update()</code></li></ul>
+</main><script src="_nav.js"></script></body></html>

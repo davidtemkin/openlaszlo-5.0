@@ -1,0 +1,55 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;checkdragstate&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>checkdragstate<span class="ang">&gt;</span></h1><p class="short"/><p class="meta">Extends <code>state</code></p>
+        This should be declared as a child of the thing for which you want to
+        enable dragging.  You will need to define a view (an instance of a
+        subclass of 
+        
+        )
+        to define the visual look of the thing while its being dragged.
+        
+        <pre class="example">
+        &lt;class name="dragger" &gt;
+            ...
+            &lt;handler name="onmousedown"&gt;
+                checkdrag.setAttribute('applied', true);
+            &lt;/handler&gt;
+            &lt;handler name="onmouseup"&gt;
+                canvas.dragimage.stopdrag(this);
+                checkdrag.setAttribute('applied', false);
+            &lt;/handler&gt;
+
+            &lt;checkdragstate name="checkdrag" draggername="dragimage"/&gt;
+        &lt;/class&gt;
+        </pre>
+                The object that you want to accept a drop action, needs to register with
+        lz.Track using the same group as is declared in the dragimage.
+
+        
+        <pre class="example">
+        &lt;class name="droptarget"&gt;
+            ...
+            &lt;method name="init"&gt;
+                super.init();
+                lz.Track.register(this, 'target');
+            &lt;/method&gt;
+
+            &lt;handler name="onmousetrackover"&gt;
+               setAttribute('bgcolor', 0xffff00); // hilite
+            &lt;/handler&gt;
+            &lt;handler name="onmousetrackout"&gt;
+               setAttribute('bgcolor', null); // normal
+            &lt;/handler&gt;
+            &lt;handler name="onmousetrackup"&gt;
+               setAttribute('bgcolor', null); // normal
+               canvas.dragimage.dropcomplete(this);
+               Debug.write('dropped: '+dragimage.source.text);
+            &lt;/handler&gt;
+        &lt;/class&gt;
+        </pre>
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">draggername</td><td class="ty">string</td><td class="ty">dragimage</td><td>an instance subclass of basedragimage that defines the
+         visual representation of the item while it is being dragged</td></tr><tr><td class="nm">dragging</td><td class="ty">expression</td><td class="ty">false</td><td/></tr><tr><td class="nm">firsttime</td><td class="ty">expression</td><td class="ty">true</td><td/></tr><tr><td class="nm">startx</td><td class="ty">expression</td><td class="ty">this.x</td><td/></tr><tr><td class="nm">starty</td><td class="ty">expression</td><td class="ty">this.y</td><td/></tr><tr><td class="nm">xdoffset</td><td class="ty">expression</td><td class="ty">this.getMouse( 'x' )</td><td/></tr><tr><td class="nm">xdrag</td><td class="ty">expression</td><td class="ty">checkDragPos('x', this.immediateparent.getMouse( 'x' ))</td><td/></tr><tr><td class="nm">ydoffset</td><td class="ty">expression</td><td class="ty">this.getMouse( 'y' )</td><td/></tr><tr><td class="nm">ydrag</td><td class="ty">expression</td><td class="ty">checkDragPos('y', this.immediateparent.getMouse( 'y' ))</td><td/></tr></table>
+</main><script src="_nav.js"></script></body></html>

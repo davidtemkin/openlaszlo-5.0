@@ -1,0 +1,78 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;selectionmanager&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>selectionmanager<span class="ang">&gt;</span></h1><p class="short">Manages selection among a series of objects.</p><p class="meta">Extends <code>node</code></p>
+                
+        <p>Selection managers manage selection among a series of objects. They
+    enable standard control and shift click modifiers to aid range
+    selection. Selection managers provide methods to manipulate, add to
+    and clear the selection.  For example:</p>
+           
+    
+        <pre class="example">
+    &lt;canvas&gt;
+   
+      &lt;dataset name="fruits"&gt;
+        &lt;fruit&gt;Oranges&lt;/fruit&gt;
+        &lt;fruit&gt;Apples&lt;/fruit&gt;
+        &lt;fruit&gt;Bananas&lt;/fruit&gt;
+        &lt;fruit&gt;Grapes&lt;/fruit&gt;
+        &lt;fruit&gt;Kiwis&lt;/fruit&gt;
+        &lt;fruit&gt;Papayas&lt;/fruit&gt;
+        &lt;fruit&gt;Watermelon&lt;/fruit&gt;
+        &lt;fruit&gt;Strawberries&lt;/fruit&gt;
+        &lt;fruit&gt;Cherries&lt;/fruit&gt;
+      &lt;/dataset&gt;
+   
+      &lt;simplelayout/&gt;
+   
+      &lt;text&gt;Select a series of items below. The control and shift-click modifiers
+      help select ranges.&lt;/text&gt;
+   
+      &lt;view name="fruitlist"&gt;
+        &lt;selectionmanager name="selector" toggle="true"/&gt;
+        &lt;simplelayout/&gt;
+   
+        &lt;view name="listitem"
+              datapath="fruits:/fruit"
+              onclick="parent.selector.select(this);"&gt;
+          &lt;text name="txt" datapath="text()"/&gt;
+   
+          &lt;method name="setSelected" args="amselected"&gt;
+            if (amselected) {
+              var txtColor = 0xFFFFFF;
+              var bgcolor = 0x999999;
+            } else {
+              var txtColor = 0x000000;
+              var bgcolor = 0xFFFFFF;
+            }
+            this.setAttribute('bgcolor', bgcolor);
+            this.txt.setAttribute('fgcolor', txtColor);
+          &lt;/method&gt;
+        &lt;/view&gt;
+   
+        &lt;method name="deleteSelected"&gt;
+          var csel = this.selector.getSelection();
+          for (var i = csel.length - 1; i &gt;= 0; i = i - 1) {
+            csel[i].destroy();
+          }
+          this.selector.clearSelection();
+        &lt;/method&gt;
+      &lt;/view&gt;
+      &lt;button onclick="fruitlist.deleteSelected();"&gt;Delete selection&lt;/button&gt;
+    &lt;/canvas&gt;
+    </pre>
+            
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">lastRangeStart</td><td class="ty">expression</td><td class="ty"/><td/></tr><tr><td class="nm">sel</td><td class="ty">string</td><td class="ty">setSelected</td><td>
+                The name of the method to call on an object when an object's
+        selectedness changes. The method is called with a single Boolean
+        argument. The default value for this field is 
+                <code>setSelected</code>
+                .
+        (This feature is not available for 
+                <code>dataselectionmanager</code>
+                .)
+              </td></tr><tr><td class="nm">selected</td><td class="ty">expression</td><td class="ty"/><td/></tr><tr><td class="nm">selectedHash</td><td class="ty">expression</td><td class="ty"/><td/></tr><tr><td class="nm">toggle</td><td class="ty">boolean</td><td class="ty"/><td/></tr></table>
+</main><script src="_nav.js"></script></body></html>

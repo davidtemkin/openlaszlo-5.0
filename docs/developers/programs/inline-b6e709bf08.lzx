@@ -1,0 +1,6 @@
+{
+  status: 'ok',
+  message: 'void', 
+  data: lz.rpc.t_void, 
+  opinfo: OPINFO 
+}

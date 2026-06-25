@@ -1,0 +1,45 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;command&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>command<span class="ang">&gt;</span></h1><p class="short">An element that sends events in response to keyboard input.</p><p class="meta">Extends <code>node</code></p>
+                    
+        <pre class="example">
+            &lt;canvas height="130" debug="true"&gt;
+            &lt;command onselect="Debug.debug('the enter key was pressed');" 
+                        key="['Enter']" /&gt;
+            
+            &lt;/canvas&gt;
+            </pre>
+                    
+            
+        <p>
+          Sample applications that use the 
+          <code>command</code>
+           tag:
+        </p>
+                    
+        <ul>
+                          
+          <li>
+             
+            <a >Weather</a>
+          </li>
+                      
+            
+        </ul>
+                    Also, see 
+        lz.KeysService.LzKeys
+        .
+        
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">active</td><td class="ty">boolean</td><td class="ty">true</td><td>
+                true if the command is currently active.
+    The default is 
+                <em>true</em>
+                .
+              </td></tr><tr><td class="nm">key</td><td class="ty">expression</td><td class="ty"/><td>WTF?  See LPP-4982, LPP-7814
+  Necessary to add "key" to the schema</td></tr><tr><td class="nm">keys</td><td class="ty">expression</td><td class="ty">null</td><td>array of keys (strings) that, when pressed together,
+    cause the onselect event of the command to be sent. For example:
+    setAttribute('key', ['a', 'shift'])</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

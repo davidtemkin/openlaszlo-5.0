@@ -1,0 +1,92 @@
+<canvas width="520" height="460" bgcolor="0xe8e8ec" title="OpenLaszlo Chat">
+    <!-- the DHTML persistent-connection component (canonical copy in components/) -->
+    <include href="connection.lzx"/>
+
+    <!-- chat message log + online list (populated via addNode) -->
+    <dataset name="chatDset"/>
+
+    <lzconnection id="conn" app="chat" receiveuserdisconnect="true">
+        <handler name="onlogin" args="status"><![CDATA[
+            if (status === 'success') conn.connect();
+            else { canvas.note('login failed: ' + status); }
+        ]]></handler>
+        <handler name="onconnect"><![CDATA[
+            canvas.note('...connected as ' + conn.username + '...');
+            conn.sendMessage('*', '', 'userconnect');     // announce presence
+            conn.getList('*');
+            loginView.setAttribute('visible', false);
+            chatView.setAttribute('visible', true);
+        ]]></handler>
+        <handler name="ondisconnect"> canvas.note('...disconnected...'); </handler>
+        <handler name="onerror" args="m"> canvas.note('...connection error...'); </handler>
+        <handler name="onmessage" args="m"><![CDATA[
+            if (m.operation === 'message') canvas.note(m.from + ': ' + m.body);
+        ]]></handler>
+        <handler name="onuserconnect" args="from"><![CDATA[
+            canvas.note('User ' + from + ' connected!');
+            conn.getList('*');
+        ]]></handler>
+        <handler name="onuserdisconnect" args="user"><![CDATA[
+            canvas.note('user ' + user + ' disconnected');
+            conn.getList('*');
+        ]]></handler>
+        <handler name="onlist" args="users"><![CDATA[
+            onlineText.setAttribute('text', 'Online (' + users.length + '): ' + users.join(', '));
+        ]]></handler>
+    </lzconnection>
+
+    <datapointer name="chatPtr" xpath="chatDset:/"/>
+    <!--- append a line to the chat log + autoscroll -->
+    <method name="note" args="str"><![CDATA[
+        chatPtr.addNode('line', null, { text: str });
+        if (chatView.visible) msgs.scrollToBottom();
+    ]]></method>
+
+    <text x="16" y="10" fontsize="15" fontstyle="bold" resize="true" fgcolor="0x222244"
+          text="OpenLaszlo Chat — over WebSocket"/>
+
+    <!-- ===== login ===== -->
+    <view name="loginView" x="16" y="44">
+        <text fgcolor="0x444444">Pick a name and join the room:</text>
+        <edittext id="nameField" x="0" y="22" width="160" height="22" text="guest"
+                  doesenter="true">
+            <method name="doEnterDown"> classroot.join(); </method>
+        </edittext>
+        <button x="170" y="22" text="Join" onclick="classroot.join()"/>
+    </view>
+    <method name="join"><![CDATA[
+        var n = nameField.getText();
+        if (n) conn.login(n, n);
+    ]]></method>
+
+    <!-- ===== chat ===== -->
+    <view name="chatView" x="16" y="44" width="488" visible="false">
+        <text id="onlineText" width="488" fgcolor="0x335533" fontstyle="bold" text="Online: "/>
+
+        <view y="22" width="488" height="320" bgcolor="0xffffff" clip="true">
+            <view id="msgs" width="470" x="6" y="4">
+                <simplelayout axis="y" spacing="2"/>
+                <method name="scrollToBottom"><![CDATA[
+                    var over = this.height - this.parent.height + 8;
+                    this.setAttribute('y', over > 0 ? (4 - over) : 4);
+                ]]></method>
+                <view datapath="chatDset:/line" width="460" height="${this.label.height}">
+                    <text name="label" width="460" multiline="true" fontsize="12"
+                          datapath="@text" fgcolor="0x222222"/>
+                </view>
+            </view>
+            <scrollbar/>
+        </view>
+
+        <edittext id="msgField" y="350" width="400" height="24" doesenter="true">
+            <method name="doEnterDown"> classroot.say(); </method>
+        </edittext>
+        <button x="410" y="350" width="78" height="26" text="Send" onclick="classroot.say()"/>
+        <button y="384" text="Leave" onclick="conn.disconnect(); chatView.setAttribute('visible',false); loginView.setAttribute('visible',true);"/>
+    </view>
+
+    <method name="say"><![CDATA[
+        var t = msgField.getText();
+        if (t) { conn.sendMessage('*', t, 'message'); msgField.setAttribute('text', ''); }
+    ]]></method>
+</canvas>

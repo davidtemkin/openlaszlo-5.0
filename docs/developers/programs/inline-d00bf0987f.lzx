@@ -1,0 +1,10 @@
+   <rtmpconnection src="rtmp://mysite.com/myapp/" autoconnect="true"/>
+   <videoview id="v" url="test.flv" type="rtmp">
+       <camera show="true"/>
+       <microphone capturing="true"/>
+   </videoview>
+   <!-- a progress indicator bar proportional to stream time-->
+   <view bgcolor="black" width="${v.stream.time/180*v.width}"/>
+   <!--methods on the stream automatically created by the videoview -->
+   <button text="record" onclick="v.stream.record()"/>
+   <button text="stop" onclick="v.stream.stop()"/>

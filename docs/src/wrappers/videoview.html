@@ -1,0 +1,81 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+</head>
+<body>
+
+<!-- ===================================================================== -->
+<!-- = XML information goes here                                         = -->
+<!-- ===================================================================== -->
+<lzelement title="videoview">
+    <lztier>Audio Video</lztier>
+    <lzcategory>audio video</lzcategory>
+    <lzshortdesc>
+       A subclass of view that can be used to show video from a video server.
+    </lzshortdesc>
+    <lztag>extensions/av/videoview.xml</lztag>
+</lzelement>
+
+<p>
+See the Developer's Guide for a more complete description.
+<fixme>
+Introductory paragraph
+</fixme>
+
+</p>
+
+<example title="A simple videowview" extract="false">
+&lt;canvas&gt;
+
+    &lt;simplelayout
+        axis="y"
+        inset="10"
+        spacing="10"
+    /&gt;
+
+    &lt;button
+        text="shrink width then height" 
+        onclick="v.shrink.doStart()"
+    /&gt;
+
+    &lt;button
+        text="grow"
+        onclick="v.grow.doStart()"
+    /&gt;
+
+    &lt;videoview id="v" 
+        bgcolor="red" 
+        width="200" 
+        height="200"
+    &gt;
+
+        &lt;animatorgroup name="grow" 
+            duration="1000" 
+            start="false"
+            process="simultaneous"
+        &gt;
+            &lt;animator attribute="width" to="400"/&gt;
+            &lt;animator attribute="height" to="400"/&gt;
+        &lt;/animatorgroup&gt;
+
+        &lt;animatorgroup name="shrink" 
+            duration="1000" 
+            start="false"
+        &gt;
+            &lt;animator attribute="width" to="40"/&gt;
+            &lt;animator attribute="height" to="40"/&gt;
+        &lt;/animatorgroup&gt;
+
+        &lt;camera id="c" 
+            show="true"
+        /&gt;
+
+    &lt;/videoview&gt;
+
+&lt;/canvas&gt;
+</example>
+</body>
+</html>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2006 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

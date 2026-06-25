@@ -1,0 +1,148 @@
+<!--
+* X_LZ_COPYRIGHT_BEGIN ****************************************************
+* Copyright 2001-2008 Laszlo Systems, Inc.  All Rights Reserved.          *
+* Use is subject to license terms.                                        *
+* X_LZ_COPYRIGHT_END ******************************************************-->
+<library> 
+    <class name="hintedlayout" extends="layout" >
+        <!--- The primary axis for wrapping. -->
+        <attribute name="axis" value="x" setter="this.setAxis( axis )"
+                type="string" />
+        <!--- A pixel amount to use between the views controlled by the layout in
+            both axes. By default, both xspacing and yspacing are set to this
+            value. -->
+        <attribute name="spacing" value="1"/>
+        <!--- A pixel amount to offset the first view controlled by the layout in x
+            axis -->
+        <attribute name="xinset" value="0"/>
+        <!--- A pixel amount to offset the first view controlled by the layout in y
+            axis -->
+        <attribute name="yinset" value="0"/>
+        <!--- A pixel amount to use between the views controlled by the layout in
+            the x axis. -->
+        <attribute name="xspacing" value="${this.spacing}" />
+        <!--- A pixel amount to use between the views controlled by the layout in
+            the y axis. -->
+        <attribute name="yspacing" value="${this.spacing}" />
+        <!--- If given, a number of miliseconds to use to animate the views in to
+            place.-->
+        <attribute name="duration"     value="0"/>
+        <!--- The first view.  Set by the layout.-->
+        <attribute name="first"     value="null"/>
+        <!--- The last view.  Set by the layout.-->
+        <attribute name="last"     value="null"/>
+
+
+        <!--- @keywords private -->
+        <method name="construct" args="parent, args">
+            super.construct(parent, args);
+            this.doupdateDelegate = new lz.Delegate(this, "doupdate");
+        </method>
+
+        <!--- @keywords private -->
+        <method name="setAxis" args="a" >
+            <!-- CURRENTLY THIS METHOD IS NOT USED -->
+            this.axis = a;
+            this.otherAxis =  a == "x" ? "y" : "x"
+            this.sizeAxis = a == "x" ? "width" : "height"
+            this.otherSizeAxis = a == "x" ? "height" : "width"
+        </method>
+
+        <!--- @keywords private -->
+        <method name="addSubview" args="newsub">
+            this.doupdateDelegate.register( newsub,  'onwidth');
+            this.doupdateDelegate.register( newsub,  'onheight');
+            this.doupdateDelegate.register( newsub,  'onvisible');
+            this.doupdateDelegate.register( this.immediateparent,  'onwidth');
+            super.addSubview( newsub );
+            this.doupdate(null);
+        </method>
+
+        <!--- This method is usually called automatically when any of the views
+            controlled by the layout change their size , or when the size of
+            layout's immediateparent changes. However it can be called directly
+            to force the layout to update -->
+        <method name="doupdate" args="v">
+            <![CDATA[
+            if ( this.locked ) return;
+            var l = this.subviews.length;
+
+            // Only consider views that are visible
+            var inuse = 0;
+            for (var i = 0; i < l; i++ ) {
+                var s = this.subviews[i];
+                if (s.visible) inuse++;
+            }
+
+            var limit = this.immediateparent[this.sizeAxis];
+
+            // position along this.axis
+            var pos = this[this.axis + 'inset'];
+            // position along this.otherAxis
+            var otherpos = this[this.otherAxis + 'inset'];
+            var maxdimension = 0;
+            var space = this[this.axis + 'spacing'];    // spacing in axis dimension
+            var otherspace = this[this.otherAxis + 'spacing'];    // spacing in other axis dimension
+
+            // i is the view counter, j = visible view counter
+            var j = 0;
+            var firstv = null;
+            for (var i = 0; i < l; i++ ) {
+                var s = this.subviews[i];
+                // set for directional nav
+                s.lastview = false;
+                s.firstview = false;
+                if ( !s.visible ) continue;
+                if (! firstv) firstv = s;
+                s.animate(this.axis, pos, this.duration,false);
+                s.animate(this.otherAxis, otherpos, this.duration,false);
+                pos += s[this.sizeAxis];
+                if ( j < (inuse - 1)) {
+                    pos += space;
+                    maxdimension = Math.max(maxdimension,s[this.otherSizeAxis]);
+                    var next = i + 1;
+                    while (this.subviews[next] && !this.subviews[next].visible) next++;
+                    // reset prev value for directional nav
+                    this.subviews[next].prev = null;
+
+                    if ((pos + this.subviews[next][this.sizeAxis] > limit)) { 
+                        // set prev and next values for directional navi
+                        this.subviews[next].prev = s;
+                        s.next = this.subviews[next];
+                        pos = this[this.axis + 'inset'];
+                        otherpos += maxdimension + otherspace;
+                        maxdimension = 0;   // Reset the height/width after every row/column                    
+                    } else {
+                        // reset next value for directional nav
+                        s.next = null
+                    }
+                }
+                j++;
+            }
+            // set for directional nav
+            if (firstv) {
+                firstv.firstview = true;
+                this.setAttribute('first', firstv);
+            }
+            if (s) {
+                // Sets the last view appropriately when in 2x2 view.
+                if (typeof this.parent.id != 'undefined' && this.parent.id ==
+                    'gContent' && gContent.pagesize == 4){
+                    if(typeof this.subviews[3] != 'undefined'){
+                        this.subviews[3].lastview = true;
+                        this.setAttribute('last', this.subviews[3]);
+                    }
+                } else {
+                    if (s) s.lastview = true;
+                    this.setAttribute('last', s);
+                }
+            }
+            super.update();
+            ]]>
+        </method>
+        <!--- @keywords private -->
+        <method name="toString">
+            return 'wrappinglayout for ' + this.immediateparent;
+        </method>
+    </class>
+</library>

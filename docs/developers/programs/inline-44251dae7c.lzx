@@ -1,0 +1,9 @@
+    <dataset name="surveydataset" type="http" src="http:survey.jsp"/>
+
+    <node id="resultdata">
+        <attribute name="hawaii" value="$path{'surveydataset:/response/summary/option[1]/text()'}"/>
+        <attribute name="paris" value="$path{'surveydataset:/response/summary/option[2]/text()'}"/>
+        <attribute name="jamaica" value="$path{'surveydataset:/response/summary/option[3]/text()'}"/>
+        <attribute name="total" value="$path{'surveydataset:/response/summary/@total'}"/>
+        <attribute name="vote" value="$path{'surveydataset:/response/vote/text()'}"/>
+    </node>

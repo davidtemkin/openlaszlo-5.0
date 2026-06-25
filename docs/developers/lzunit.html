@@ -1,0 +1,655 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 52. Unit Testing</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.methodology.html" title="Part VIII. Development Methodology"><link rel="prev" href="debugging.html" title="Chapter 51. Debugging"><link rel="next" href="developers.doctools.html" title="Part IX. Contributor's Guide"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 52. Unit Testing</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="debugging.html">Prev</a> </td><th width="60%" align="center">Part VIII. Development Methodology</th><td width="20%" align="right"> <a accesskey="n" href="developers.doctools.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="lzunit"></a>Chapter 52. Unit Testing</h2></div></div></div><p><a class="indexterm" name="id17742"></a><code class="classname">LzUnit</code> is OpenLaszlo's implementation of the xUnit testing framework, enabling automated unit testing of OpenLaszlo applications and libraries.</p><p>The functionality provided by the LzUnit framework is essentially comprised of two public classes — 
+  <a class="indexterm" name="id17746"></a><code class="classname">TestCase</code> and <a class="indexterm" name="id17749"></a><code class="classname">TestSuite</code>. Each <a class="indexterm" name="id17752"></a><code class="classname">TestSuite</code>
+  contains one or more children that are instances of <a class="indexterm" name="id17755"></a><code class="classname">TestCase</code>. An LZX program that 
+  includes a <a class="indexterm" name="id17758"></a><code class="classname">TestCase</code> 
+ will run all of its child <a class="indexterm" name="id17761"></a><code class="classname">TestCase</code>s, then report the number of test cases run, the number of failures (plus error messages), and the number of runtime errors.</p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2088"></a>1. Including the lzunit component</h2></div></div></div><p>
+The unit testing code is not a part of the OpenLaszlo Runtime Library; you must explicitly include it using   &lt;include href="lzunit"/&gt;.
+ The <a class="indexterm" name="id17766"></a><code class="sgmltag-element">&lt;lzunit&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ library has a &lt;debug 
+ y="500"/&gt; in it; if you would like to see the debugger elsewhere (as in the examples below), assign it a different "y" value. Put the &lt;debug&gt; before the include statement -- the compiler ignores all but the first occurrence of &lt;debug&gt;.
+</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="lzunit.TestCases"></a>2. Writing test cases</h2></div></div></div><p>An LzUnit test case is generally defined as an instance of <a class="indexterm" name="id17774"></a><code class="classname">TestCase</code> or its subclass. 
+LzUnit test cases contain one or more logical tests that are represented by corresponding methods on the 
+<a class="indexterm" name="id17777"></a><code class="sgmltag-element">&lt;TestCase&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+. In order for a test to be recognized by and added to the enclosing 
+<a class="indexterm" name="id17781"></a><code class="sgmltag-element">&lt;TestSuite&gt;</code>, the test method must be registered to the test case via a call to <code class="methodname">addTest</code>. You must place all the calls to <code class="methodname">addTest</code> in a method named <code class="methodname">addTests</code>. The <code class="methodname">addTests</code> method is called by the <code class="classname">TestSuite</code> when it runs the TestCase. Within each test, you use the standard 
+<code class="literal">assert<em class="replaceable"><code>XXX</code></em>()</code> methods of the xUnit API to define the checkpoints that will form the basis of your test.
+Below is an example of typical usage of the LzUnit framework that shows a success, a failure, and a runtime error.</p><div class="example"><a name="id17791"></a><p class="title"><b>Example 52.1. LzUnit simple case</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas debug="true" width="100%"&gt;
+  &lt;debug y="150"/&gt;
+  &lt;include href="lzunit"/&gt;
+
+  &lt;TestSuite&gt;
+    &lt;TestCase&gt;
+      &lt;attribute name="prop1" value="'foo'" when="once"/&gt;
+      &lt;text name="mytext" width="200" bgcolor="blue" text="LzUnit example"/&gt;
+
+      &lt;method name="testsuccess"&gt;
+        assertEquals(prop1, 'foo')
+      &lt;/method&gt;
+      &lt;method name="testfailure"&gt;
+        assertFalse(mytext.multiline, "This is not a multiline text field")
+      &lt;/method&gt;
+      &lt;method name="addTests"&gt; 
+          this.addTest("testsuccess");
+          this.addTest("testfailure");
+          this.addTest("testerror");
+      &lt;/method&gt; 
+    &lt;/TestCase&gt;
+  &lt;/TestSuite&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/lzunit-_1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/lzunit-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>In this example, as is the case with any tests that include visual elements, you do not see the text field because it was 
+positioned below the test status panel by the layout which controls them.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>You must explicitly tell the compiler to include the LzUnit library in your code by using the 
+<a class="indexterm" name="id17797"></a><code class="sgmltag-element">&lt;include&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag.</p></div><p>Also, when writing a test suite, remember to enable the debugger, as is done in the example above, in order for runtime 
+errors to be detected. If you would like to see debugger warnings, but do not want them to affect results of the test run, 
+you should set a global flag <code class="varname">catchErrors</code> to <code class="literal">false</code> in a <a class="indexterm" name="id17804"></a><code class="sgmltag-element">&lt;script&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="lzunit.advanced"></a>3. Advanced techniques</h2></div></div></div><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="lzunit.syncexec"></a>3.1. Sequential execution of tests</h3></div></div></div><p>By default, the order of execution of individual tests within a test case is not guaranteed. That is, every test
+is executed at the next idle event (see the <a class="indexterm" name="id17815"></a><code class="classname">lz.Idle</code> documentation for details), and thus
+tests that take longer to execute may finish after those tests that were started later but do not need as much time to complete.
+If it is important that tests are run in the order they are written, set the global flag <code class="varname">asynchronousTests</code> to <code class="literal">false</code>,
+as in the following example.</p><div class="example"><a name="id17820"></a><p class="title"><b>Example 52.2. Sequential execution of tests</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas debug="true" width="100%"&gt;
+  &lt;debug y="150"/&gt;
+  &lt;include href="lzunit"/&gt;
+
+  &lt;script&gt;
+    asynchronousTests = false
+  &lt;/script&gt;
+
+  &lt;class name="syncrun" extends="TestCase"&gt;
+    &lt;attribute name="counter" value="1" when="once"/&gt;
+    &lt;method name="testfirst"&gt;
+      assertEquals(1, counter++)
+    &lt;/method&gt;
+
+    &lt;method name="testsecond"&gt;
+      assertEquals(2, counter++)
+    &lt;/method&gt;
+
+    &lt;method name="testthird"&gt;
+      assertEquals(3, counter++)
+    &lt;/method&gt;
+    &lt;method name="addTests"&gt; 
+        this.addTest("testfirst");
+        this.addTest("testsecond");
+        this.addTest("testthird");
+    &lt;/method&gt; 
+  &lt;/class&gt;
+
+  &lt;TestSuite&gt;
+    &lt;syncrun/&gt;
+  &lt;/TestSuite&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/lzunit-_2.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/lzunit-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="lzunit.defertest"></a>3.2. Deferred test execution</h3></div></div></div><p>In many cases, you will encounter that the objects that your test case incorporates are not ready for 
+inspection by the time it runs. Some of the common examples of this scenario are tests that include animation, 
+loading of remote data or media, and instantiation of classes declared with deferred initialization stages. The 
+approach illustrated by the example below involves waiting for the event that signals completion of a specific 
+action, and putting the checkpoint in the event handler method.</p><div class="example"><a name="id17827"></a><p class="title"><b>Example 52.3. Deferred execution of tests</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas debug="true" width="100%"&gt;
+    &lt;debug x="100" y="150"/&gt;
+    &lt;include href="lzunit"/&gt;
+    
+    &lt;TestSuite&gt;
+        &lt;TestCase&gt;
+            &lt;view name="redbox" bgcolor="red" width="50" height="50"&gt;
+                &lt;animator name="anm" attribute="y" from="200" to="-400" duration="1000" start="false" 
+                relative="false" onstop="parent.parent.checkStatus()"/&gt;
+            &lt;/view&gt;
+            &lt;method name="testanim"&gt;
+                redbox.anm.doStart()
+            &lt;/method&gt;
+            &lt;method name="checkStatus"&gt;
+                assertEquals(-400, redbox.y)
+            &lt;/method&gt;
+            &lt;method name="addTests"&gt; 
+                this.addTest("testanim");
+            &lt;/method&gt; 
+        &lt;/TestCase&gt;
+    &lt;/TestSuite&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/lzunit-_3.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/lzunit-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="lzunit.preposttest"></a>3.3. Test setup and cleanup</h3></div></div></div><p>Sometimes it is necessary to reset execution environment to its initial state before running every test in a single
+test case. The way to do so is to override the <a class="indexterm" name="id17834"></a><code class="methodname">setUp()</code> and, optionally,
+<a class="indexterm" name="id17838"></a><code class="methodname">tearDown()</code> methods of <a class="indexterm" name="id17842"></a><code class="classname">TestCase</code> (the default
+implementation of these methods is a no-op). These methods are called before and after each of the test methods are 
+invoked. Here's an example of their use.</p><div class="example"><a name="id17845"></a><p class="title"><b>Example 52.4. setUp and tearDown</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas debug="true" width="100%"&gt;
+ &lt;debug y="150" /&gt;
+  &lt;include href="lzunit"/&gt;
+
+  &lt;dataset name="places"&gt;
+    &lt;country name="U.S."&gt;
+      &lt;state code="CA" capitol="Sacramento"&gt;
+        &lt;city&gt;San Francisco&lt;/city&gt;
+        &lt;city&gt;Los Angeles&lt;/city&gt;
+        &lt;city&gt;San Diego&lt;/city&gt;
+      &lt;/state&gt;
+      &lt;state code="NJ" capitol="Trenton"&gt;
+        &lt;city&gt;Newark&lt;/city&gt;
+      &lt;/state&gt;
+      &lt;state code="NY" capitol="Albany"&gt;
+        &lt;city&gt;Buffalo&lt;/city&gt;
+        &lt;city&gt;New York City&lt;/city&gt;
+      &lt;/state&gt;
+    &lt;/country&gt;
+  &lt;/dataset&gt;
+    
+  &lt;TestSuite&gt;
+    &lt;TestCase&gt;
+      &lt;attribute name="start" value="'places:/country[1]'"/&gt;
+      &lt;datapointer name="nav" xpath="$once{parent.start}"/&gt;
+      &lt;method name="setUp"&gt;
+        // Move pointer to first state in selected country
+        nav.selectChild()
+      &lt;/method&gt;
+
+      &lt;method name="tearDown"&gt;
+        // Reset pointer to starting position
+        nav.setAttribute("xpath", start)
+      &lt;/method&gt;
+
+      &lt;method name="testsettext"&gt;
+        assertTrue(nav.selectChild())
+        assertTrue(nav.selectNext())
+
+        var oldText = nav.getNodeText()
+        nav.setNodeText('Oakland')
+        assertEquals('Oakland', nav.xpathQuery('text()'))
+        nav.setNodeText(oldText)
+        assertEquals(oldText, nav.getNodeText())
+      &lt;/method&gt;
+
+      &lt;method name="testBumpChild"&gt;
+        assertTrue(nav.selectNext(2))
+        assertEquals(2, nav.getNodeCount())
+        assertTrue(nav.selectChild())
+        nav.deleteNode()
+        assertFalse('Buffalo'==nav.getNodeText())
+        assertTrue(nav.selectParent())
+        assertEquals(1, nav.getNodeCount())
+      &lt;/method&gt;
+      &lt;method name="addTests"&gt; 
+          this.addTest("testsettext");
+          this.addTest("testBumpChild");
+      &lt;/method&gt; 
+    &lt;/TestCase&gt;
+  &lt;/TestSuite&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/lzunit-_4.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/lzunit-_4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2089"></a>4. Chaining tests</h2></div></div></div><p>
+Consider the case of a testSuite that has two tests for animation.  The test will report that it hasn't failed *before* the test is complete. This is to be expected, since the animator's <a class="indexterm" name="id17851"></a><code class="methodname">doStart()</code> returns right away, and the test progress bar fills up as soon as the test method returns. But that does not invalidate the test results, since failures will still be clearly reported. To see that this is so, try inserting <code class="literal">assertTrue(false)</code> after the first assertion and see what happens.
+</p><p>If you are testing animation you need to start your second test from the callback of the first.  Results are often different when you run animations sequentially or simultaneously.
+</p><p>
+If you declare a sequential animatorgroup around the animators, you can chain the checkpoints, without having to start the individual animators, as shown below.</p><div class="example"><a name="id17858"></a><p class="title"><b>Example 52.5. Chaining tests</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height ="300" width="100%" debug="true"&gt;
+  &lt;debug y="80"/&gt;
+ &lt;include href="lzunit"/&gt;
+  &lt;view&gt;
+    &lt;view id="bluebox" bgcolor="blue" width="30" height="30"&gt;
+      &lt;animatorgroup name="AG1" attribute="x" process="sequential" start="false" relative="false"&gt;
+        &lt;animator from="0" to="100" duration="2000"
+            onstop="canvas.animatorsuite.animatorcase.checkSimpleXAnim()"/&gt;
+        &lt;animator from="0" to="200" duration="3000"
+            onstop="canvas.animatorsuite.animatorcase.checkSimpleXAnim2()"/&gt;
+      &lt;/animatorgroup&gt;
+    &lt;/view&gt;
+  &lt;/view&gt;
+  
+  &lt;TestSuite name="animatorsuite"&gt;
+   &lt;TestCase name="animatorcase"&gt;
+     &lt;method name="testSimpleXAnim"&gt;
+       bluebox.AG1.doStart()
+     &lt;/method&gt;
+     &lt;method name="checkSimpleXAnim"&gt;
+       assertEquals(100, bluebox.x);
+     &lt;/method&gt;
+     &lt;method name="checkSimpleXAnim2"&gt;
+       assertEquals(200, bluebox.x);
+       Debug.debug('--- test complete ---');
+     &lt;/method&gt;
+     &lt;method name="addTests"&gt; 
+         this.addTest("testSimpleXAnim");
+     &lt;/method&gt; 
+   &lt;/TestCase&gt;
+  &lt;/TestSuite&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/lzunit-_5.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/lzunit-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
+Of course, running both animators simultaneously will superimpose the effect of each on the other and the tests will fail; this is true of any simultaneous animators applied to the same attribute of the same object.
+</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="lzunit.testdriven"></a>5. An Introduction to Test-Driven Development in OpenLaszlo</h2></div></div></div><p>In the late '80s, the Talking Moose on my Macintosh SE recited at startup the "waterfall" development model taught in a first-year computer science class: "Problem statement. Analysis. Algorithm. Implementation. Testing." From that model, I learned the frustration of perpetual coding and debugging, and returned to journalism school for good.</p><p>Somehow I ended up at a software company as a tester (which I still think is odder than fiction). I often wonder when my lack of skill and experience will catch up with me, but a co-worker suggested some reading that changed my thinking, helped me become a more useful colleague, and even served to get me out of bed earlier in the morning: <span class="i">Test-Driven Development by Example</span> by Kent Beck, in which Beck teaches this development cycle:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p> Write a failing automated test before writing any code</p></li><li class="listitem"><p>Pass the test by any means necessary</p></li><li class="listitem"><p>Remove duplication</p></li></ul></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="lzunit.think"></a>5.1. Think Like a Grandmaster</h3></div></div></div><p>According to Beck, test-driven development gives a programmer courage. When the end of a difficult programming task is nowhere in sight, bringing one failing or "red" test to "green" signifies one concrete step forward.</p><p>Test-driven development demands thoughtful design. In the "waterfall" model, testing is the last phase, so programmers stumble through the implementation phase, not certain that the code will fulfill the requirements <span class="i">because it is untested</span>. In test-first development, the programmer must be accurate and specific about what the code is meant to accomplish, and design a test for that before going further.</p><p>The strongest chess players play their best moves at the end of the game. The players who study the opening find that they drift into fearful territory, while the players proficient at endgames grow in confidence. Those endgame-savvy chess players are like "test-infected" developers who worked on the <span class="i">last phase first</span>: they always know where they're headed.</p><p>A similar analogy: A well-trained chess student should be coached to play moves that are foolish at the start -- as practice for difficult situations in the future. Beck instructs that at the start of the TDD cycle to write a test that <span class="i">fails</span>.  Red in the opening, green in the endgame.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="lzunit.doc"></a>5.2. Test-Driven Documentation</h3></div></div></div><p>The computer science instructors who stress the "Big Design Up Front" methodology would probably require that I understand TDD at a professional level before I write this. The test-driven methodology, on the other hand, says that if each code example takes a tiny step while adhering to test-driven principles, I can write with confidence.</p><p>The aim of this work is fourfold:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>To demonstrate test-driven development through the construction of simple OpenLaszlo applications;</p></li><li class="listitem"><p>To build upon the OpenLaszlo developers' guide section about LzUnit, the XUnit framework for OpenLaszlo;</p></li><li class="listitem"><p>To complete the LzUnit-related documentation tasks assigned to me in the OpenLaszlo bug reporting database, so I can think of this as actual work;</p></li><li class="listitem"><p>To learn.</p></li></ul></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="lzunit.tiny"></a>5.3. Teeny Tiny Steps</h3></div></div></div><p>Many folks seem to be certain that a writer's life is mystical and arcane, but Beck, a software engineer, understands it completely. I knew Beck was speaking my language when he wrote in <span class="i">JUnit Pocket Guide</span>: "Writers write. Testers test."  In <span class="i">Test-Driven Development</span>, Beck cut through the knot that has buried my programming education since the beginning. "Take teeny tiny steps," he said.</p><p>By taking the smallest steps possible in program development, it is easier to step backward if necessary. Experienced developers, said Beck, benefit from taking small steps because they can always increase their size, but if they began with large steps, they wouldn't know if smaller steps were appropriate.</p><p>The smallest step possible in OpenLaszlo is initializing the <code class="literal">canvas</code>, the <code class="literal">view</code> at the foundation of every OpenLaszlo application. Many programming tutorials start by demonstrating a stub application that compiles and runs successfully, but doesn't actually do anything. In OpenLaszlo, that would be:</p><div class="example"><a name="id17905"></a><p class="title"><b>Example 52.6. Canvas</b></p><div class="example-contents"><pre class="programlisting">
+&lt;canvas/&gt;
+</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/inline-c575f18536.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/inline-c575f18536.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>However, that stub is too simple to break, so it can't be a useful example in the test-driven development model.</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>Red -- Write a test that doesn't compile (the LzUnit console runs red);</p></li><li class="listitem"><p>Green -- Make the test green by any means, no matter how inelegant or distasteful (Beck recommends faking it, if necessary);</p></li><li class="listitem"><p>Refactor -- Bring the test to respectability by removing duplication.</p></li></ul></div><p>I tried a beginning programming problem in a test-driven manner:  <span class="i">1. Display series of numbers in an infinite loop. The program should quit if someone hits a specific key.</span></p><p>We need two things: a while loop to display numbers in the debugger, and a button to terminate the loop. If we make the infinite loop first, we'll have to pull the plug to stop it, so we should make the button first.</p><div class="example"><a name="id17919"></a><p class="title"><b>Example 52.7. Go button</b></p><div class="example-contents"><pre class="programlisting">
+&lt;can
+</pre></div></div><br class="example-break"><p>Stop!</p><p><span class="b">Before writing any code, write a failing test.</span></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="lzunit.intro"></a>5.4. Introducing LzUnit</h3></div></div></div><p>XUnit is a testing framework that Beck created in 1994, which evolved first into SUnit for Smalltalk. He and Erich Gamma (author of <span class="i">Design Patterns</span>) modified XUnit for Java while sharing a flight to a developers' conference three years later. JUnit became the best known of the XUnit family; there are XUnit frameworks for C++, C#, Python, Fortran, Perl, Visual Basic, and others, including OpenLaszlo.</p><p>The lightweight XUnit contains three classes and 12 methods. "Never in the field of software development was so much owed by so many to so few lines of code," said object-oriented design authority Martin Fowler. </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="lzunit.count"></a>5.5. Counting Infinitely</h3></div></div></div><p>In test-driven development, we devise a successful test case first, and then we fail it (because we wrote the test first). We want the first button click to change "stop" to "go", and the second click to "stop". The easiest solution, I think, is to give the button a "go" attribute which is a Boolean, where its initial state is "false".</p><p>Sometimes I think I most often revisit the OpenLaszlo developers' guide <a class="xref" href="methods-events-attributes.html" title="Chapter 29. Methods, Events, Handlers, and Attributes">Chapter 29, <i>Methods, Events, Handlers, and Attributes</i></a>. This attribute is a simple one, though: we'll instantiate an instance of the button class, and assign it an attribute named "go", of the type boolean, with two values: "go" or "stop" according to the boolean expression "true" or "false".</p><p>The first test is to check for the button's initial state. I am a lazy bum; every programming task I do starts with this LzUnit test template (I even use the antiquated trick of putting a space at the start of its filename so it shows up at the top of the Open... dialog):</p><div class="example"><a name="id17936"></a><p class="title"><b>Example 52.8. Test stub</b></p><div class="example-contents"><pre class="programlisting">
+&lt;canvas debug="true"&gt;
+&lt;debug y="150"/&gt;
+&lt;include href="lzunit"/&gt;
+&lt;simplelayout axis="y" spacing="10"/&gt;
+
+&lt;TestSuite&gt;
+    &lt;TestCase&gt;
+        &lt;method name="test"&gt;
+        
+        &lt;/method&gt;
+        &lt;method name="addTests"&gt;
+            this.addTest("test");
+        &lt;/method&gt;
+
+    &lt;/TestCase&gt;   
+&lt;/TestSuite&gt;
+
+&lt;/canvas&gt;
+</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/inline-8aa7206945.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/inline-8aa7206945.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>This is an empty canvas (it will compile and run, resulting in a blank canvas plus the debugger window and the LzUnit output console; the <code class="literal">simplelayout</code> tag separates the LzUnit console from the visual objects). The script's inclusion of the LzUnit directory enables us to create instances of the <code class="literal">TestSuite</code> class, which binds any number of instances of <code class="literal">TestCase</code>. TestCases include the <code class="literal">Assert</code> classes, which are the basis for unit testing in the XUnit framework. The TestCase method that makes the assertions must have "test" at the start of its name, so I make that part of the template.</p><div class="example"><a name="id17944"></a><p class="title"><b>Example 52.9. testGoButtonTrue</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas debug="true" width="100%"&gt;
+&lt;debug y="150"/&gt;
+&lt;include href="lzunit"/&gt;
+&lt;simplelayout axis="y" spacing="10"/&gt;
+
+&lt;TestSuite&gt;
+    &lt;TestCase&gt;
+        &lt;method name="testGoButtonTrue"&gt;
+            assertTrue(goButton.go);
+        &lt;/method&gt;
+        &lt;method name="addTests"&gt; 
+            this.addTest("testGoButtonTrue");
+        &lt;/method&gt; 
+    &lt;/TestCase&gt;   
+&lt;/TestSuite&gt;
+
+&lt;/canvas&gt;
+&lt;!-- Copyright 2001-2008 Laszlo Systems, Inc. --&gt; 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/testdriven-1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/testdriven-1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>When we compile and run that, it's red, of course, because there's no code to test, but the test-driven cycle of red-green-remove_duplication becomes an addiction; the programmer's confidence and courage is bolstered every time each small step goes from red to green.</p><p>The TestCase method name must be descriptive. If a test applies to a numbered bug in the Laszlo bug database, I'll name the file LPP-nnnn accordingly, but the TestCase method should always describe the basis of the test.</p><p><code class="literal">AssertTrue(goButton.go)</code> asks, "Is the 'go' attribute of the 'goButton' instance true?". We could also <code class="literal">assertEquals(true, goButton.go)</code>, which asks the same question, but here I want to stress the boolean nature of goButton.go.</p><p>The button code:</p><div class="example"><a name="id17953"></a><p class="title"><b>Example 52.10. testGoButtonTrue</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas debug="true" width="100%"&gt;
+&lt;debug y="150"/&gt;
+&lt;include href="lzunit"/&gt;
+&lt;simplelayout axis="y" spacing="10"/&gt;
+
+&lt;button name="goButton" width="100" text="Go"&gt;
+
+    &lt;attribute name="go" type="boolean" value="true"/&gt;
+
+&lt;/button&gt;
+
+&lt;TestSuite&gt;
+    &lt;TestCase&gt;
+        &lt;method name="testGoButtonTrue"&gt;
+            assertTrue(goButton.go);
+        &lt;/method&gt;
+        &lt;method name="addTests"&gt; 
+            this.addTest("testGoButtonTrue");
+        &lt;/method&gt; 
+    &lt;/TestCase&gt;   
+&lt;/TestSuite&gt;
+
+&lt;/canvas&gt;
+&lt;!-- Copyright 2001-2008 Laszlo Systems, Inc. --&gt; 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/testdriven-2.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/testdriven-2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>When this compiles, the test runs green, and that is an accomplishment.</p><p>Our button is set to "go". Now we need an <code class="literal">onclick</code> method for "stop" -- that is, to set the "go" attribute to false. The LzUnit testing framework doesn't enable us to test the mouseclick; <span class="i">integration testing</span> tests functionality, which comes after the unit testing phase.</p><p>On a whim, I thought to enable the button to stop and start the loop. Without an LzUnit option to test the button's function, I tested the button method in the debugger window:</p><div class="example"><a name="id17961"></a><p class="title"><b>Example 52.11. testGoButtonTrueFalse</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas debug="true" width="100%"&gt;
+&lt;debug y="150"/&gt;
+&lt;include href="lzunit"/&gt;
+&lt;simplelayout axis="y" spacing="10"/&gt;
+
+&lt;button name="goButton" width="100" text="Go"&gt;
+
+&lt;attribute name="go" type="boolean" value="true"/&gt;
+
+&lt;handler name="onclick"&gt;
+    if (goButton.go==true) {
+        this.setAttribute('text', 'Stop');
+        this.setAttribute('go', false);
+        Debug.debug("%w should be 'false'", this.go);
+        }
+    else {
+    this.setAttribute('text', 'Go');
+    this.setAttribute('go', true);
+    Debug.debug("%w should be 'true'", this.go);
+    }
+&lt;/handler&gt;
+
+&lt;/button&gt;
+
+&lt;TestSuite&gt;
+    &lt;TestCase&gt;
+        &lt;method name="testGoButtonTrue"&gt;
+            assertTrue(goButton.go);
+        &lt;/method&gt;
+        &lt;method name="addTests"&gt; 
+            this.addTest("testGoButtonTrue");
+        &lt;/method&gt; 
+    &lt;/TestCase&gt;   
+&lt;/TestSuite&gt;
+
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/testdriven-3.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/testdriven-3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>A while statement attached to (goButton.go==true) would loop infinitely, or until a buttonclick set the "go" attribute to false, but how to test for infinity? Maybe it's something the developer has to take on faith, but JavaScript does have its limit: <code class="literal">Number.MAX_VALUE</code> is the largest number JavaScript can represent. The while statement is <code class="literal">while (goButton.counter &lt; Number.MAX_VALUE)</code>.</p><p>I am not sure if it is good style to declare "counter" as a button attribute, but I think that must be better than initializing the counter variable on the canvas (with the script <code class="literal">&lt;handler name="oninit"&gt;var goButton.counter=1;&lt;/handler&gt;</code>). Before adding the code for the while loop and the code for the button attribute, there's a test to write: Does the goButton have a attribute "displayed" that equals 1?</p><div class="example"><a name="id17969"></a><p class="title"><b>Example 52.12. testGoButtonCounter</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas debug="true" width="100%"&gt;
+&lt;debug y="150"/&gt;
+&lt;include href="lzunit"/&gt;
+&lt;simplelayout axis="y" spacing="10"/&gt;
+
+&lt;button name="goButton" width="100" text="Go"&gt;
+
+&lt;attribute name="go" type="boolean" value="true"/&gt;
+
+&lt;handler name="onclick"&gt;
+    if (goButton.go==true) {
+        this.setAttribute('text', 'Stop');
+        this.setAttribute('go', false);
+        }
+    else {
+    this.setAttribute('text', 'Go');
+    this.setAttribute('go', true);
+    }
+&lt;/handler&gt;
+
+&lt;/button&gt;
+
+&lt;TestSuite&gt;
+    &lt;TestCase&gt;
+        &lt;method name="testGoButtonTrue"&gt;
+            assertEquals(1, goButton.counter);
+            assertTrue(goButton.go);
+        &lt;/method&gt;
+        &lt;method name="addTests"&gt; 
+            this.addTest("testGoButtonTrue");
+        &lt;/method&gt; 
+    &lt;/TestCase&gt;   
+&lt;/TestSuite&gt;
+
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/testdriven-4.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/testdriven-4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>The test runs red because the counter attribute hasn't been written. (Also, the button's test for true/false was removed because it served its purpose).</p><div class="example"><a name="id17973"></a><p class="title"><b>Example 52.13. testGoButtonCounter</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas debug="true" width="100%"&gt;
+&lt;debug y="150"/&gt;
+&lt;include href="lzunit"/&gt;
+&lt;simplelayout axis="y" spacing="10"/&gt;
+
+&lt;button name="goButton" width="100" text="Go"&gt;
+
+&lt;attribute name="go" type="boolean" value="true"/&gt;
+&lt;attribute name="counter" type="number" value="1" when="once"/&gt;
+
+&lt;handler name="onclick"&gt;
+    if (goButton.go==true) {
+        this.setAttribute('text', 'Stop');
+        this.setAttribute('go', false);
+        }
+    else {
+    this.setAttribute('text', 'Go');
+    this.setAttribute('go', true);
+    }
+&lt;/handler&gt;
+
+&lt;/button&gt;
+
+&lt;TestSuite&gt;
+    &lt;TestCase&gt;
+        &lt;method name="testGoButtonTrue"&gt;
+            assertEquals(1, goButton.counter);
+            assertTrue(goButton.go);
+        &lt;/method&gt;
+        &lt;method name="addTests"&gt; 
+            this.addTest("testGoButtonTrue");
+        &lt;/method&gt; 
+    &lt;/TestCase&gt;   
+&lt;/TestSuite&gt;
+
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/testdriven-5.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/testdriven-5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>That runs green. Here's the while loop:</p><div class="example"><a name="id17977"></a><p class="title"><b>Example 52.14. testGoButtonWhile</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas debug="true" width="100%"&gt;
+&lt;debug y="150"/&gt;
+&lt;include href="lzunit"/&gt;
+&lt;simplelayout axis="y" spacing="10"/&gt;
+
+&lt;button name="goButton" width="100" text="Go"&gt;
+
+&lt;attribute name="go" type="boolean" value="true"/&gt;
+&lt;attribute name="counter" type="number" value="1" when="once"/&gt;
+
+&lt;handler name="onclick"&gt;
+    if (goButton.go==true) {
+        this.setAttribute('text', 'Stop');
+        this.setAttribute('go', false);
+        while (goButton.counter&amp;lt;Number.MAX_VALUE) {
+            Debug.debug("%w", goButton.counter);
+            counter=counter+1;
+            }
+        }
+    else {
+    this.setAttribute('text', 'Go');
+    this.setAttribute('go', true);
+    }
+&lt;/handler&gt;
+
+&lt;/button&gt;
+
+&lt;TestSuite&gt;
+    &lt;TestCase&gt;
+        &lt;method name="testGoButtonTrue"&gt;
+            assertEquals(1, goButton.counter);
+            assertTrue(goButton.go);
+        &lt;/method&gt;
+        &lt;method name="addTests"&gt; 
+            this.addTest("testGoButtonTrue");
+        &lt;/method&gt; 
+    &lt;/TestCase&gt;   
+&lt;/TestSuite&gt;
+
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>One of the maxims of test-driven development is "do the simplest thing that works". This LZX script satisfies the programming problem "display numbers infinitely", but the compiled application does not work! An infinitely looping <code class="literal">Debug.debug</code> statement fills up memory, and results in the browser choking. We need the script to <code class="literal">Debug.debug</code>, pause for breath, <code class="literal">Debug.debug</code>, pause for breath, and so on. The answer is in the global object <code class="literal">lz.Idle</code>, which I have never used. The problem now presents a challenge to learn something new about the language!</p><p>How do you test for the idle state? Doesn't the testing itself mean the universe isn't idle?</p><p>Writing the test first, my best guess is that we're checking for <code class="literal">this.idle</code>:</p><div class="example"><a name="id17988"></a><p class="title"><b>Example 52.15. testIdle</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas debug="true" width="100%"&gt;
+&lt;debug y="150"/&gt;
+&lt;include href="lzunit"/&gt;
+&lt;simplelayout axis="y" spacing="10"/&gt;
+
+&lt;TestSuite&gt;
+    &lt;TestCase&gt;
+        &lt;method name="testIdle"&gt;
+            assertTrue(this.idle);
+        &lt;/method&gt;
+        &lt;method name="addTests"&gt; 
+            this.addTest("testIdle");
+        &lt;/method&gt; 
+    &lt;/TestCase&gt;
+&lt;/TestSuite&gt;
+
+&lt;/canvas&gt;
+&lt;!-- Copyright 2001-2008 Laszlo Systems, Inc. --&gt; 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/testdriven-7.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/testdriven-7.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>We expect a newly-written test to fail, but in this instance, I don't know if it'll ever pass, or how to make it pass in the red-green-refactor cycle.</p><p>I copied some code out the developers' guide <a class="xref" href="layout-and-design.html" title="Chapter 17. Layout and Design">Chapter 17, <i>Layout and Design</i></a> from the example <code class="literal">Building a 'floating view'</code>:</p><div class="example"><a name="id17995"></a><p class="title"><b>Example 52.16. startDraggingFloater method</b></p><div class="example-contents"><pre class="programlisting">
+&lt;method name="startDraggingFloater"&gt;
+  this.d = new LzDelegate(this, "adjustFloaterPosition", lz.Idle, "onidle");
+  this.gm = new LzDelegate(this, "cancelFloater", lz.GlobalMouse, "onmouseup");
+&lt;/method&gt;
+    
+&lt;method name="adjustFloaterPosition"&gt;
+  this.f.setX(canvas.getMouse("x")-this.x_offset);
+  this.f.setY(canvas.getMouse("y")-this.y_offset);
+&lt;/method&gt;
+</pre></div></div><br class="example-break"><p>Then modified it for simplicity and our purpose:</p><div class="example"><a name="id17999"></a><p class="title"><b>Example 52.17. testIdle</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas debug="true" width="100%"&gt;
+&lt;debug y="150"/&gt;
+&lt;include href="lzunit"/&gt;
+&lt;simplelayout axis="y" spacing="10"/&gt;
+
+    &lt;handler name="oninit"&gt;
+        this.wake();
+    &lt;/handler&gt;
+
+    &lt;method name="wake"&gt;
+        foo = new LzDelegate(this, "sleep", lz.Idle, "onidle");
+    &lt;/method&gt;
+    
+    &lt;method name="sleep" args="v"&gt;
+        Debug.debug("Sleeping");
+    &lt;/method&gt;
+
+&lt;TestSuite&gt;
+    &lt;TestCase&gt;
+        &lt;method name="testIdle"&gt;
+            assertTrue(this.idle);
+        &lt;/method&gt;
+        &lt;method name="addTests"&gt; 
+            this.addTest("testIdle");
+        &lt;/method&gt; 
+    &lt;/TestCase&gt;   
+&lt;/TestSuite&gt;
+
+&lt;/canvas&gt;
+&lt;!-- Copyright 2001-2008 Laszlo Systems, Inc. --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/testdriven-8.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/testdriven-8.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>I wasn't surprised to find that the assertion failed, but I was delighted to discover that after the TestSuite ran, the universe went to an idle state, causing the <code class="literal">sleep</code> method to write "Sleeping" repeatedly. The idle state itself is an "infinite loop"! </p><p>Here's a problem. The test-driven development routine says "no new code without a new test", but I still don't know how to test for the idle state, and since the <code class="literal">wake</code> and <code class="literal">sleep</code> methods will be folded into goButton's onclick method, that still falls under the integration testing umbrella.  </p><p>If we break the rules and plow ahead, the while loop is removed (because the idle state replaces it) and the <code class="literal">&amp;&amp; goButton.counter&lt;Number.MAX_VALUE</code> condition moves into the <code class="literal">if</code> statement:</p><div class="example"><a name="id18010"></a><p class="title"><b>Example 52.18. testGoButtonCount</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas debug="true" width="100%"&gt;
+&lt;debug y="150"/&gt;
+&lt;include href="lzunit"/&gt;
+&lt;simplelayout axis="y" spacing="10"/&gt;
+
+&lt;button name="goButton" width="100" text="Go"&gt;
+
+&lt;attribute name="go" type="boolean" value="true"/&gt;
+&lt;attribute name="counter" type="number" value="1" when="once"/&gt;
+
+&lt;handler name="onclick"&gt;
+    if (goButton.go==true) {
+        if (goButton.counter&amp;lt;Number.MAX_VALUE) {
+            foo = new LzDelegate(this, "count", lz.Idle, "onidle");
+            this.setAttribute('text', 'Stop');
+            this.setAttribute('go', false);
+        }
+    }
+    else {
+        Debug.debug("Paused");
+        this.setAttribute('text', 'Go');
+        this.setAttribute('go', true);
+    }
+&lt;/handler&gt;
+
+&lt;method name="count" args="v"&gt;
+    Debug.debug("%w", counter);
+    counter=counter+1;
+&lt;/method&gt;
+
+&lt;/button&gt;
+
+&lt;TestSuite&gt;
+    &lt;TestCase&gt;
+        &lt;method name="testGoButtonTrue"&gt;
+          assertEquals(1, goButton.counter);
+          assertTrue(goButton.go);
+        &lt;/method&gt;
+        &lt;method name="addTests"&gt; 
+            this.addTest("testGoButtonTrue");
+        &lt;/method&gt; 
+    &lt;/TestCase&gt;   
+&lt;/TestSuite&gt;
+
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>It almost works! The problem now is that even though the "Stop" button sets goButton.go to false, the lz.Idle function is still active, and triggers the <code class="literal">count</code> method. </p><p>The solution is also found in the Layout and Design example. Idling calls the method <code class="literal">startDraggingFloater</code>, and its terminating condition is <code class="literal">cancelFloater</code>:</p><div class="example"><a name="id18018"></a><p class="title"><b>Example 52.19. cancelFloater method</b></p><div class="example-contents"><pre class="programlisting">
+&lt;method name="cancelFloater"&gt;
+    this.gm.unregisterAll();
+    this.d.unregisterAll();
+    this.f.destroy();
+&lt;/method&gt;
+</pre></div></div><br class="example-break"><p>The cancelFloater method demonstrates how to unregister the lz.Idle delegate with <code class="literal">unregisterAll()</code>. In our application, we will unregister the idle method when goButton is set to false:</p><div class="example"><a name="id18023"></a><p class="title"><b>Example 52.20. testGoButtonCount</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas debug="true" width="100%"&gt;
+&lt;debug y="150"/&gt;
+&lt;include href="lzunit"/&gt;
+&lt;simplelayout axis="y" spacing="10"/&gt;
+
+&lt;button name="goButton" width="100" text="Go"&gt;
+
+&lt;attribute name="go" type="boolean" value="true"/&gt;
+&lt;attribute name="counter" type="number" value="1" when="once"/&gt;
+
+&lt;handler name="onclick"&gt;
+    if (goButton.go==true) {
+        if (goButton.counter&amp;lt;Number.MAX_VALUE) {
+            foo = new LzDelegate(this, "count", lz.Idle, "onidle");
+            this.setAttribute('text', 'Stop');
+            this.setAttribute('go', false);
+        }
+    }
+    else {
+        foo.unregisterAll();
+        Debug.debug("Paused");
+        this.setAttribute('text', 'Go');
+        this.setAttribute('go', true);
+    }
+&lt;/handler&gt;
+
+&lt;method name="count" args="v"&gt;
+    Debug.debug("%w", counter);
+    counter=counter+1;
+&lt;/method&gt;
+
+&lt;/button&gt;
+
+&lt;TestSuite&gt;
+    &lt;TestCase&gt;
+        &lt;method name="testGoButtonTrue"&gt;
+            assertEquals(1, goButton.counter);
+            assertTrue(goButton.go);
+        &lt;/method&gt;
+        &lt;method name="addTests"&gt; 
+            this.addTest("testGoButtonTrue");
+        &lt;/method&gt; 
+    &lt;/TestCase&gt;   
+&lt;/TestSuite&gt;
+
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>The application works! I won't call this a complete success, though, because the development was not wholly test-driven. Perhaps the next example will be.</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="debugging.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.methodology.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="developers.doctools.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 51. Debugging </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Part IX. Contributor's Guide</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

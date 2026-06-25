@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1015">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Desert Safari Adventure</title>
+  <description>Desert Safari Adventure — from the OpenLaszlo sample image library.</description>
+  <dates posted="1491209600" />
+  <urls><url type="photopage">data/photos/1015.jpg</url></urls>
+  <tags><tag>desert</tag><tag>safari</tag><tag>adventure</tag></tags>
+</photo>
+</rsp>

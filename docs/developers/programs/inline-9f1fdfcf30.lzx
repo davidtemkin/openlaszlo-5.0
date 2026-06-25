@@ -1,0 +1,8 @@
+<security>
+    <allow>
+        <pattern>CLASS1</pattern>
+        <pattern>CLASS2</pattern>
+        ...
+        <pattern>CLASSN</pattern>
+    </allow>
+</security>

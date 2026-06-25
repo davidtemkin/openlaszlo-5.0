@@ -1,0 +1,94 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;radiogroup&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>radiogroup<span class="ang">&gt;</span></h1><p class="short">Enables a one-of-many selection of its children.</p><p class="meta">Extends <code>baselist</code></p>
+                    
+        <p>
+          The 
+          <code>radiogroup</code>
+           component encloses a list of
+            
+          <code>radiobutton</code>
+          s.  It ensures that a single
+            item is selected at a time. Initially it will select the first item in
+            a group if none is set to be selected.  By default the radio buttons
+            are spaced vertically.
+        </p>
+                    
+            
+        <p>
+                      In the following example, the second radio button is selected.  The text
+            that appears is separate from the value that is represented by each item.
+            In this example, 
+          <code>&lt;tt&gt;group1.value&lt;/tt&gt;</code>
+           is 2.
+            
+        </p>
+                    
+            
+        <pre class="example">
+            &lt;canvas height="100"&gt;
+              &lt;radiogroup id="group1"&gt;
+                &lt;radiobutton value="1" text="one"/&gt;
+                &lt;radiobutton value="2" text="two" selected="true"/&gt;
+                &lt;radiobutton value="3" text="three"/&gt;
+              &lt;/radiogroup&gt;
+            &lt;/canvas&gt;
+            </pre>
+                    
+            
+        <p>
+                      You can use radio group with your own layout attribute, by overriding the
+            
+          <code>view</code>
+           layout attribute. The example below uses a wrapping layout
+            to create two columns of radio buttons.  Note that a height must be given to
+            indicate to the layout where to wrap.
+            
+        </p>
+                    
+            
+        <pre class="example">
+            &lt;canvas height="100"&gt;
+              &lt;radiogroup height="60" layout="class:wrappinglayout; axis:y"&gt;
+                &lt;radiobutton value="1" text="one"/&gt;
+                &lt;radiobutton value="2" text="two"/&gt;
+                &lt;radiobutton value="3" text="three"/&gt;
+                &lt;radiobutton value="4" text="four"/&gt;
+                &lt;radiobutton value="5" text="five"/&gt;
+                &lt;radiobutton value="6" text="six"/&gt;
+              &lt;/radiogroup&gt;
+            &lt;/canvas&gt;
+            </pre>
+                    
+            
+        <p>
+                      A 
+          <code>&lt;tt&gt;radiogroup&lt;/tt&gt;</code>
+           can contain a set of any 
+          <code>baselistitem</code>
+          .
+            To make radio buttons with
+            a different look and feel, create a subclass of 
+          <code>baselistitem</code>
+           to use instead
+            of the 
+          <code>radiobutton</code>
+           class.
+            
+        </p>
+                    
+            
+        <p class="meta">See also: 
+                      
+          <code>&lt;tags&gt;radiobutton baselistitem&lt;/tags&gt;</code>
+                      
+          
+                      
+        </p>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">layout</td><td class="ty">expression</td><td class="ty">class: simplelayout; axis: y; spacing:5</td><td>The layout to use for the radiogroup. Note: if you use a different layout,
+              be sure to include the layout library file.</td></tr><tr><td class="nm">value</td><td class="ty">expression</td><td class="ty">null</td><td/></tr></table>
+</main><script src="_nav.js"></script></body></html>

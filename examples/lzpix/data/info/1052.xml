@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1052">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>San Francisco Golden Hour</title>
+  <description>San Francisco Golden Hour — from the OpenLaszlo sample image library.</description>
+  <dates posted="1494406400" />
+  <urls><url type="photopage">data/photos/1052.jpg</url></urls>
+  <tags><tag>san</tag><tag>francisco</tag><tag>golden</tag><tag>hour</tag></tags>
+</photo>
+</rsp>

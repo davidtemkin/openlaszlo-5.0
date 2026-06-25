@@ -1,0 +1,5 @@
+var b = new lz.window(canvas, {height:80,width:80});
+var c = new lz.PopupWindow(canvas, {title:'popupbutton',
+                                 height:200,
+                                 width:200,
+                                 viewToAffect: b}); 

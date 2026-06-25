@@ -1,0 +1,23 @@
+<canvas height="200" width="100%">
+  <class name="deep">
+    <attribute name="mytext" value="hello, world" type="string"/>   
+    <view bgcolor="red" width="250" height="150">
+      <view bgcolor="green" width="75%" height="75%">
+        <button text="clickme" width="75%" height="75%">
+          <!-- classroot is a convenient way to access mytext -->
+          <handler name="onclick">
+            message.addText("\nclassroot.mytext: " + classroot.mytext);
+            message.addText("\nparent.parent.parent.mytext: " + 
+            parent.parent.parent.mytext);
+          </handler>
+        </button>       
+      </view>     
+    </view>
+    <text id="message" y="140" multiline="true" />
+  </class>
+  <deep/>
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

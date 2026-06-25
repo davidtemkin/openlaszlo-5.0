@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ItemLookupResponse><Items>
+  <Request><IsValid>True</IsValid></Request>
+  <Item>
+    <ASIN>B00006JP29</ASIN>
+    <SmallImage><URL>data/covers/B00006JP29.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B00006JP29.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B00006JP29.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>Orchestre de Paris</Artist>
+      <Manufacturer>Erato</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>2001-05-14</ReleaseDate>
+      <Title>Boléro</Title>
+      <ListPrice><Amount>1198</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$11.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$5.99</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$2.50</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$8.49</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Ravel’s hypnotic crescendo — one unbroken accelerando to a shattering climax.</Content></EditorialReview></EditorialReviews>
+  </Item>
+</Items></ItemLookupResponse>

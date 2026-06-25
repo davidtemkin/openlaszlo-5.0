@@ -1,0 +1,26 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basetabelement&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basetabelement<span class="ang">&gt;</span></h1><p class="short">Base class for the contents of a basetabslider.</p><p class="meta">Extends <code>baselistitem</code></p>
+                    
+        <p>
+          <code>basetabelement</code>
+           is the base class for the
+            contents of a 
+          <code>basetabslider</code>
+          . The
+            
+          <code>basetabelement</code>
+           is focusable
+            if it is closed, and not focusable when it is open.
+        </p>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">contentvisible</td><td class="ty">expression</td><td class="ty">! hideonclose</td><td>This is set to true when a basetabelement begins to open and is
+              set to false when it finishes its close. Default is the inverse of
+              hideonclose.</td></tr><tr><td class="nm">dlc</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">dlo</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">headerheight</td><td class="ty">number</td><td class="ty">minheight</td><td>The height of the header.</td></tr><tr><td class="nm">height</td><td class="ty">expression</td><td class="ty">minheight</td><td>The height of the tabelement.</td></tr><tr><td class="nm">hideonclose</td><td class="ty">expression</td><td class="ty">true</td><td>Content is automatically hidden when tabelement is closed. To
+              override, set this attribute to false.</td></tr><tr><td class="nm">isopening</td><td class="ty">expression</td><td class="ty">0</td><td/></tr><tr><td class="nm">itemclassname</td><td class="ty">string</td><td class="ty"/><td>When creating tabelements via additem, this is the class that gets
+              created. The default value is the class of the first tabelement or
+              its descendant.</td></tr><tr><td class="nm">minheight</td><td class="ty">number</td><td class="ty">22</td><td>The height the tab will close to.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

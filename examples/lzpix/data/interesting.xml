@@ -1,0 +1,28 @@
+<rsp stat="ok">
+<photos page="1" pages="1" perpage="24" total="24">
+<photo id="1001" owner="local" secret="x" server="0" title="Abandoned Truck Interior" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1002" owner="local" secret="x" server="0" title="Almond Cookies and Daffodils" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1003" owner="local" secret="x" server="0" title="Arc de Triomphe Looking Up" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1004" owner="local" secret="x" server="0" title="Bamboo Forest Close-up" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1005" owner="local" secret="x" server="0" title="Beach Pier Pavilion Silhouette" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1006" owner="local" secret="x" server="0" title="Blue Wall Still Life" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1007" owner="local" secret="x" server="0" title="Bryce Canyon Hoodoos" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1008" owner="local" secret="x" server="0" title="California Coastal Hills" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1009" owner="local" secret="x" server="0" title="Chambord Castle Approach" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1010" owner="local" secret="x" server="0" title="Cinque Terre Village" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1011" owner="local" secret="x" server="0" title="Coastal Resort View" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1012" owner="local" secret="x" server="0" title="Coffee Beans on Wood" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1013" owner="local" secret="x" server="0" title="Converse in the Park" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1014" owner="local" secret="x" server="0" title="Cupped Hands with Pine Sprigs" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1015" owner="local" secret="x" server="0" title="Desert Safari Adventure" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1016" owner="local" secret="x" server="0" title="Dock Into the Fog" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1017" owner="local" secret="x" server="0" title="Dutch Countryside at Sunset" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1018" owner="local" secret="x" server="0" title="Farm Fields Divided" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1019" owner="local" secret="x" server="0" title="Fish Swimming in Blue Water" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1020" owner="local" secret="x" server="0" title="Foggy Harbor Dock" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1021" owner="local" secret="x" server="0" title="Forest Canopy From Above" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1022" owner="local" secret="x" server="0" title="Fort Point and Golden Gate Bridge" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1023" owner="local" secret="x" server="0" title="Garden View of Cairo" ispublic="1" isfriend="0" isfamily="0"/>
+<photo id="1024" owner="local" secret="x" server="0" title="Golden Gate Tower Looking Up" ispublic="1" isfriend="0" isfamily="0"/>
+</photos>
+</rsp>

@@ -1,0 +1,3 @@
+<!--- the visual thumb the user drags to select a value -->
+<class name="sliderthumb" <emphasis role="em">extends="basesliderthumb"</emphasis>>
+</class>

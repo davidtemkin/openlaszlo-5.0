@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ItemSearchResponse><Items>
+  <Item>
+    <ASIN>B00005YW4H</ASIN>
+    <SmallImage><URL>data/covers/B00005YW4H.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B00005YW4H.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B00005YW4H.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes><Artist>Berlin Philharmonic</Artist><Title>Symphony No. 9 “Choral”</Title><ProductGroup>Music</ProductGroup></ItemAttributes>
+    <Keywords>symphony no. 9 “choral” berlin philharmonic deutsche grammophon beethoven</Keywords>
+  </Item>
+  <Item>
+    <ASIN>B00006IX86</ASIN>
+    <SmallImage><URL>data/covers/B00006IX86.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B00006IX86.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B00006IX86.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes><Artist>Academy of Ancient Music</Artist><Title>The Four Seasons</Title><ProductGroup>Music</ProductGroup></ItemAttributes>
+    <Keywords>the four seasons academy of ancient music decca vivaldi</Keywords>
+  </Item>
+  <Item>
+    <ASIN>B000005J56</ASIN>
+    <SmallImage><URL>data/covers/B000005J56.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B000005J56.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B000005J56.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes><Artist>English Chamber Orchestra</Artist><Title>Brandenburg Concertos</Title><ProductGroup>Music</ProductGroup></ItemAttributes>
+    <Keywords>brandenburg concertos english chamber orchestra emi classics bach</Keywords>
+  </Item>
+  <Item>
+    <ASIN>B00006AAJF</ASIN>
+    <SmallImage><URL>data/covers/B00006AAJF.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B00006AAJF.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B00006AAJF.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes><Artist>Vienna Philharmonic</Artist><Title>Eine kleine Nachtmusik</Title><ProductGroup>Music</ProductGroup></ItemAttributes>
+    <Keywords>eine kleine nachtmusik vienna philharmonic sony classical mozart</Keywords>
+  </Item>
+  <Item>
+    <ASIN>B0002RUPH4</ASIN>
+    <SmallImage><URL>data/covers/B0002RUPH4.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B0002RUPH4.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B0002RUPH4.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes><Artist>Arthur Rubinstein</Artist><Title>Nocturnes</Title><ProductGroup>Music</ProductGroup></ItemAttributes>
+    <Keywords>nocturnes arthur rubinstein rca victor chopin</Keywords>
+  </Item>
+  <Item>
+    <ASIN>B00006IX6E</ASIN>
+    <SmallImage><URL>data/covers/B00006IX6E.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B00006IX6E.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B00006IX6E.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes><Artist>Bolshoi Theatre Orchestra</Artist><Title>Swan Lake Suite</Title><ProductGroup>Music</ProductGroup></ItemAttributes>
+    <Keywords>swan lake suite bolshoi theatre orchestra melodiya tchaikovsky</Keywords>
+  </Item>
+  <Item>
+    <ASIN>B000069HKH</ASIN>
+    <SmallImage><URL>data/covers/B000069HKH.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B000069HKH.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B000069HKH.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes><Artist>Claude Helffer</Artist><Title>Clair de Lune</Title><ProductGroup>Music</ProductGroup></ItemAttributes>
+    <Keywords>clair de lune claude helffer harmonia mundi debussy</Keywords>
+  </Item>
+  <Item>
+    <ASIN>B00006JP29</ASIN>
+    <SmallImage><URL>data/covers/B00006JP29.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B00006JP29.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B00006JP29.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes><Artist>Orchestre de Paris</Artist><Title>Boléro</Title><ProductGroup>Music</ProductGroup></ItemAttributes>
+    <Keywords>boléro orchestre de paris erato ravel</Keywords>
+  </Item>
+  <Item>
+    <ASIN>B000000QFU</ASIN>
+    <SmallImage><URL>data/covers/B000000QFU.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B000000QFU.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B000000QFU.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes><Artist>New York Philharmonic</Artist><Title>Rhapsody in Blue</Title><ProductGroup>Music</ProductGroup></ItemAttributes>
+    <Keywords>rhapsody in blue new york philharmonic columbia gershwin</Keywords>
+  </Item>
+  <Item>
+    <ASIN>B000002L2Z</ASIN>
+    <SmallImage><URL>data/covers/B000002L2Z.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B000002L2Z.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B000002L2Z.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes><Artist>Scott Joplin</Artist><Title>The Entertainer: Ragtime Classics</Title><ProductGroup>Music</ProductGroup></ItemAttributes>
+    <Keywords>the entertainer: ragtime classics scott joplin nonesuch joplin</Keywords>
+  </Item>
+  <Item>
+    <ASIN>B00EXTRA01</ASIN>
+    <SmallImage><URL>data/covers/B00EXTRA01.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B00EXTRA01.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B00EXTRA01.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes><Artist>Vienna Philharmonic</Artist><Title>Symphony No. 5</Title><ProductGroup>Music</ProductGroup></ItemAttributes>
+    <Keywords>symphony no. 5 vienna philharmonic deutsche grammophon beethoven</Keywords>
+  </Item>
+  <Item>
+    <ASIN>B00EXTRA02</ASIN>
+    <SmallImage><URL>data/covers/B00EXTRA02.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B00EXTRA02.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B00EXTRA02.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes><Artist>Academy of St Martin in the Fields</Artist><Title>Requiem</Title><ProductGroup>Music</ProductGroup></ItemAttributes>
+    <Keywords>requiem academy of st martin in the fields philips mozart</Keywords>
+  </Item>
+</Items></ItemSearchResponse>

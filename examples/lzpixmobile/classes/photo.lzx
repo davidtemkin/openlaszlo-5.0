@@ -1,0 +1,243 @@
+<!-- Copyright 2001-2008 Laszlo Systems, Inc.  All Rights Reserved. -->
+<library>
+
+    <class name="photo" width="54" height="54" focusable="${clips.visible ? (this.parent.parent != clips ? false : true) : true}">
+        <attribute name="defaultplacement" value="interior" type="text" />
+        <attribute name="text" value="title" type="text" />   
+        <attribute name="imagelink"  value="" type="text" />   
+        <attribute name="clipfactor" value="0"
+                   setter="this.setClipFactor( clipfactor )"/>
+
+        <attribute name="loaded" value="false"/>
+        <attribute name="aspect" value="1"/>
+
+        <attribute name="_wmult" value="0"/>
+        <attribute name="_hmult" value="0"/>
+        <attribute name="_iwmult" value="0"/>
+        <attribute name="_ihmult" value="0"/>
+        <attribute name="_diwmult" value="0"/>
+        <attribute name="_dihmult" value="0"/>
+
+        <attribute name="intwidth" value="${ this._wmult * this.width }"/>
+        <attribute name="intheight" value="${ this._hmult * this.height }"/>
+
+        <attribute name="border" value="1"/>
+
+        <event name="onfocused"/>
+        <event name="lasturl"/>
+        <method name="getThumbnailURL">
+            return gDataMan.getPhotoURL(this.datapath, 't');
+        </method>
+        <method name="getPhotoURL">
+            return gDataMan.getPhotoURL(this.datapath, 'm');
+        </method>
+        
+        <handler name="ondata" args="d" >
+            <![CDATA[
+            // set last photo
+            //Debug.write("photo; ondata........");
+            if ( !d ) return;
+            var dp = this.datapath;
+            //Debug.write("this.text",this.text);
+            var url = this.getThumbnailURL();
+            if (url != this.lasturl) {
+                this.lasturl = url;
+                this.setAttribute('text', dp.xpathQuery('@title') );
+                this.setImage(url);
+            }
+            ]]>
+        </handler>
+        <handler name="onloaded" args="l">
+            if (l) {
+                if(this.id == "fullview"){
+                    if(gContent.showimage == false){
+                        navmanager.focus(si, false);
+                    } else {
+                        navmanager.refocus();
+                    }
+                } else {
+                    if (navmanager.focused == this) navmanager.refocus();
+                }
+            }
+        </handler>
+
+        
+        <method name="setImage" args="s">
+            //Debug.write("set source s=",s);
+            // TODO: [mc 7-31-2006] Reversing these two lines causes IE image loading bugs - see lps/includes/lfc/test/resourceload.lzx.  Fix here for now. 
+            this.intparent.setAttribute('visible', false);
+            this.setAttribute('opacity', 0);
+            this.intparent.interior.unload();
+            this.intparent.interior.setSource(s);
+        </method>
+   
+        <attribute name="_lastw" value="null"/>
+        <handler name="onwidth" method="updateX"/>
+        <method name="updateX" args="force">
+            <![CDATA[
+            //Debug.write("updateX called");
+            if ( !this.isinited ) return;
+            if ( height != width ) this.setAttribute('height', width );
+            if ( _lastw == width && force != true ) {
+                return;
+            } 
+            this._lastw = width;
+            var wm = _wmult + clipfactor * ( _diwmult );
+            var iwidth = wm * ( this.width - 2*this.border );
+            var ix = this.width/2 - iwidth/2;
+
+            var ipwidth = iwidth + clipfactor * ( width - iwidth - 2*border);
+            var ipx = this.width/2 - ipwidth/2;
+            intparent.setAttribute('x', ipx);
+            intparent.setAttribute('width', ipwidth);
+            borderbg.setAttribute('x', ipx  - this.border );
+            borderbg.setAttribute('width', ipwidth  + 2*this.border );
+            intparent.interior.setAttribute('x', ix - ipx );
+            intparent.interior.setAttribute('width', iwidth );
+            //shadow.setAttribute('x', border + ipx );
+            //shadow.setAttribute('width', ipwidth + this.border );
+            ]]>
+        </method>
+
+        <attribute name="_lasth" value="null"/>
+        <handler name="onheight" method="updateY"/>
+        <method name="updateY" args="force">
+            <![CDATA[
+            if ( !this.isinited ) return;
+            if ( width != height ) this.setAttribute('width', height );
+            if ( _lasth == height && force != true ) {
+                return;
+            } 
+            this._lasth = height;
+            var hm = _hmult + clipfactor * ( _dihmult );
+            var iheight = hm * ( this.height - 2*this.border );
+            var iy = this.height/2 - iheight/2;
+
+            var ipheight = iheight + clipfactor * ( height - iheight - 2*border);
+            var ipy = this.height/2 - ipheight/2;
+
+            intparent.setAttribute('y', ipy);
+            intparent.setAttribute('height', ipheight );
+            borderbg.setAttribute('y', ipy  - this.border );
+            borderbg.setAttribute('height', ipheight  + 2*this.border );
+            intparent.interior.setAttribute('height', iheight );
+            intparent.interior.setAttribute('y', iy - ipy );
+            //shadow.setAttribute('y', border + ipy );
+            //shadow.setAttribute('height', ipheight + this.border );
+            ]]>
+        </method>
+
+        <handler name="onload" reference="intparent.interior">
+            <![CDATA[
+            //Debug.write("onload");
+            var irw = intparent.interior.resourcewidth;
+            var irh = intparent.interior.resourceheight;
+            if ( irw > irh ){
+                this.setAttribute( "_wmult" , 1 );
+                this.setAttribute( "_hmult" , irh/ irw );
+                this.setAttribute( "_iwmult" , irw/irh);
+                this.setAttribute( "_ihmult" , 1);
+            } else {
+                this.setAttribute( "_wmult" , irw/ irh );
+                this.setAttribute( "_hmult" , 1 );
+                this.setAttribute( "_iwmult" , 1);
+                this.setAttribute( "_ihmult" , irh/irw);
+            }
+            this.setAttribute( "_diwmult" , _iwmult - _wmult );
+            this.setAttribute( "_dihmult" , _ihmult - _hmult );
+            this.updateX( true );
+            this.updateY( true );
+            this.setAttribute( "loaded", true );
+            if(typeof this.id != 'undefined' && this.id != "clipdrop"){
+                this.setAttribute("opacity", 0);
+                this.intparent.setAttribute('visible', true);
+                this.animate('opacity', 1, 200);
+            }
+            ]]>
+        </handler>
+             
+        <!-- border -->
+        <view name="borderbg" bgcolor="white" />
+        
+        <!-- interior -->
+        <view name="intparent" 
+              x="$once{ classroot.border }" 
+              y="$once{ classroot.border }" 
+              width="${parent.width - 2*classroot.border}"
+              height="${parent.height - 2*classroot.border}" >             
+
+            <view name="interior" stretches="both"/> <!-- 0xd9d9d9 -->
+
+        </view>
+
+        <method name="getCanvasFocusRect">
+            <![CDATA[
+            if(typeof this.intparent != 'undefined' && typeof this.intparent.x != 'undefined'){
+                var rect = [ this.intparent.getAttributeRelative('x', canvas) -4,
+                         this.intparent.getAttributeRelative('y', canvas) - 4,
+                         this.intparent.getAttributeRelative('width', canvas) + 8,
+                         this.intparent.getAttributeRelative('height', canvas) + 8];
+            } else {
+                var rect = [7, 51, 60, 60];
+            }
+            return rect;
+            ]]>
+        </method>
+
+        <handler name="onmouseup">
+            <![CDATA[
+            if(this.id != "fullview"){
+                canvas.highlight.show(si, 0);
+                navmanager.focus(si, false);
+            } else {
+                canvas.highlight.show(container.lastphoto, 0);
+                navmanager.focus(si, false);
+            }
+            ]]>
+        </handler>
+
+        <method name="setClipFactor" args="cf">
+            this.clipfactor = cf;
+            this.updateX( true );
+            this.updateY( true );
+        </method>
+
+        <method name="handlekeydown" args="k">
+            <![CDATA[
+            if (this['lastview'] && k == 39) { // Right arrow
+                container.content.forward();
+                // cancel spatial navigation
+                return true;
+            } else if (this['firstview'] && k == 37 && container.content.start > 0) { // Left arrow
+                container.content.back();
+                // cancel spatial navigation
+                return true;
+            }
+            ]]>
+        </method>
+        
+        <method name="findnext">
+            <![CDATA[
+            if(this['next'] && this['next'].visible){
+                return this.next;
+            }
+            ]]>
+        </method>
+        <method name="findprev">
+            if(this['prev']){
+                return this.prev;
+            }
+        </method>
+        <method name="handlekeyup" args="k">
+            if(k == 13){
+                this.onmouseup.sendEvent();
+                this.onclick.sendEvent();
+            }
+        </method>
+        <method name="construct" args="parent, args">
+            this.focusable = true;
+            super.construct(parent, args);
+            if(navmanager) navmanager.add(this);
+        </method>
+    </class>
+</library>

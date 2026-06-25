@@ -1,0 +1,3 @@
+<class name="invalidClass">
+ <attribute name="label" type="text"/> <!-- invalid -->
+</class>

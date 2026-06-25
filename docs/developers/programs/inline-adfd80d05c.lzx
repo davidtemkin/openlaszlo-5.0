@@ -1,0 +1,11 @@
+fee fi {
+    property: "car";
+}
+
+fee fi foo {
+    property: "cart";
+}
+
+fee fi foo fum {
+    property: "cartman";
+}

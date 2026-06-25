@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1023">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Garden View of Cairo</title>
+  <description>Garden View of Cairo — from the OpenLaszlo sample image library.</description>
+  <dates posted="1491900800" />
+  <urls><url type="photopage">data/photos/1023.jpg</url></urls>
+  <tags><tag>garden</tag><tag>cairo</tag></tags>
+</photo>
+</rsp>

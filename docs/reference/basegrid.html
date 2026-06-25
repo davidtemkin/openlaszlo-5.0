@@ -1,0 +1,62 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basegrid&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basegrid<span class="ang">&gt;</span></h1><p class="short">An abstract row-based container for data elements.</p><p class="meta">Extends <code>basecomponent</code></p>
+                    
+        <p>
+          <code>basegrid</code>
+           is an abstract container for
+            row-based data stored in a dataset.  Because
+            
+          <code>basegrid</code>
+           uses 
+          <a href="lazyreplicator.html">lazy replication</a>
+          , it is an efficient way to
+            present large datasets, and it abstracts some of the complications
+            involved in maintaining a selection within a dataset.
+        </p>
+                    
+            
+        <pre class="example">
+            &lt;canvas height="150"&gt;
+              &lt;dataset name="contacts" request="true"
+                  src="http:resources/contactsdata.xml"/&gt;
+            
+              &lt;basegrid datapath="contacts:/resultset" width="200"
+                           height="150"&gt;
+                &lt;basegridcolumn&gt;
+                  &lt;text placement="header"&gt;Check 'em off&lt;/text&gt;
+                  &lt;checkbox text="$path{ '@displayname'}" 
+                            value="$path{'@checked'}"&gt;
+                    &lt;handler name="onvalue"&gt;
+                      this.parent.parent.datapath.updateData();
+                    &lt;/handler&gt;
+                  &lt;/checkbox&gt;
+                &lt;/basegridcolumn&gt;
+                &lt;scrollbar placement="content"/&gt;
+              &lt;/basegrid&gt;
+            &lt;/canvas&gt;
+            </pre>
+                  An abstract container for data rows, relying on lazy replication
+          to make it possible to display large datasets.
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">bgcolor0</td><td class="ty">color</td><td class="ty">null</td><td>If given, sets the bgcolor for even numbered rows. If not given,
+              the bgcolor for these rows is taken from the style's bgcolor.</td></tr><tr><td class="nm">bgcolor1</td><td class="ty">color</td><td class="ty">null</td><td>If given, sets the bgcolor for odd numbered rows. If not given,
+              the bgcolor for these rows is taken from the style's bgcolor.</td></tr><tr><td class="nm">columns</td><td class="ty">expression</td><td class="ty">null</td><td>An array holding the basegridcolumns used by this grid</td></tr><tr><td class="nm">contentdatapath</td><td class="ty">string</td><td class="ty">*</td><td>The datapath to use for the contents of the grid. By
+              default, this is set to "*", meaning all of the nodes underneath
+              the datacontext of the grid.</td></tr><tr><td class="nm">focusable</td><td class="ty">expression</td><td class="ty">true</td><td/></tr><tr><td class="nm">hilite</td><td class="ty">expression</td><td class="ty">null</td><td>The view which is currently hilited.</td></tr><tr><td class="nm">multiselect</td><td class="ty">expression</td><td class="ty">true</td><td>If true, the list will allow for multiple selection, and the 
+              getSelection method will always return a list. If false, only
+              single selection is allowed.</td></tr><tr><td class="nm">rowheight</td><td class="ty">number</td><td class="ty">null</td><td>Optional height for the rows contained by the grid. If no
+              value is given for this attribute, it will be set to the
+              calculated height of rows.</td></tr><tr><td class="nm">selectable</td><td class="ty">expression</td><td class="ty">true</td><td>If false, the rows are not clickable and the grid does not support selection.</td></tr><tr><td class="nm">showhlines</td><td class="ty">boolean</td><td class="ty">false</td><td>If true, lines will be drawn (in component's style's bordercolor)
+              vertically at each at each column division. This attribute can be
+              set after instantiation.</td></tr><tr><td class="nm">shownitems</td><td class="ty">expression</td><td class="ty">-1</td><td>Sets the height of the grid to show a maximum of 'n' items.</td></tr><tr><td class="nm">showvlines</td><td class="ty">boolean</td><td class="ty">false</td><td>If true, lines will be drawn (in component's style's bordercolor)
+              horizontally at each at each row division. This attribute cannot
+              be set after instantiation.</td></tr><tr><td class="nm">sizetoheader</td><td class="ty">expression</td><td class="ty">null</td><td>A boolean. If true, the grid will keep its width set to the size
+              of the header. This is automatically set to true for grids that
+              do not have a set width.  This is initially set to 0, which means
+              that it is not true, but if it is explicitly set to false, the
+              automatic behavior will be disabled for grids with no set
+              width.</td></tr><tr><td class="nm">spacing</td><td class="ty">number</td><td class="ty">0</td><td>Spacing between the rows.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

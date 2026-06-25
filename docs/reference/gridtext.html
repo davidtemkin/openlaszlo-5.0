@@ -1,0 +1,39 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;gridtext&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>gridtext<span class="ang">&gt;</span></h1><p class="short">
+              Declares a text column in a grid.
+          </p><p class="meta">Extends <code>gridcolumn</code></p>
+                    
+        <p>
+          The 
+          <code>gridtext</code>
+           class can be used to present
+              editable column data. This is the default class used by
+              
+          <code>grid</code>
+           when it infers columns.
+        </p>
+                    
+        <pre class="example">
+              &lt;canvas height="250"&gt;
+              &lt;dataset name="contacts" request="true"
+              src="http:resources/contactsdata.xml"/&gt;
+
+              &lt;grid datapath="contacts:/resultset"&gt;
+              &lt;gridtext editable="false" datapath="@id" datatype="number"&gt;ID
+              &lt;/gridtext&gt;
+              &lt;gridtext datapath="@displayname" width="200"&gt; Name
+              &lt;/gridtext&gt;
+              &lt;/grid&gt;
+              &lt;/canvas&gt;
+            </pre>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">datapath</td><td class="ty">expression</td><td class="ty"/><td>The datapath attribute for a grid text is used for the text that
+              is displayed in the rows.</td></tr><tr><td class="nm">editable</td><td class="ty">boolean</td><td class="ty">true</td><td>If set to false, the field will not be editable.</td></tr><tr><td class="nm">rowdp</td><td class="ty">string</td><td class="ty"/><td/></tr><tr><td class="nm">selectable</td><td class="ty">boolean</td><td class="ty">false</td><td>Whether one is able to select the text.  (Only applies
+            if the grid isn't editable, because when it's editable,
+            the text is automatically selectable.)</td></tr><tr><td class="nm">textalign</td><td class="ty">string</td><td class="ty">left</td><td>Type of content's alignment.
+              Possible values are: left, center, right</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

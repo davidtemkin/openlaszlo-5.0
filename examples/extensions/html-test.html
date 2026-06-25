@@ -1,0 +1,125 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2009 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+		<title>DHTML Component Test</title>
+        <script src="../../lps/includes/iframestub.js"></script>
+        
+        <script>
+            function func1() {
+                return "return from func1";
+            }
+            
+            function func3(color, arg2, arg3) {
+                document.bgColor = color;
+                return "func3 called with color: " + color + ", arg2: " + arg2 + ", arg3: " + arg3;
+            }
+            
+            function func4() {
+                alert('func4 called');
+            }
+            
+            function AClass() {
+                this.func2 = function() {
+                    return "return from AClass.func2";
+                }
+            }
+
+            function setBGColor(color) {
+                document.bgColor = color;
+                return color;
+            }
+            
+            var anObject = new AClass();
+
+            // register func3 for callback
+            pmrpc.register( {
+                publicProcedureName: "func3",
+                procedure: func3
+            } );
+        </script>
+	</head>
+    
+	<body>
+        <form>
+            <button onclick="lz.sendEvent('message', [navigator.userAgent, navigator.language, {foo:1, bar:2}]); return false" value="">Send event to LZX</button>
+        </form>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	    DHTML Component<br/>
+	</body>
+</html>

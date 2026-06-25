@@ -1,0 +1,23 @@
+
+<canvas height="40" width="100%">
+  <view bgcolor="red" clickable="true"
+         x="10" y="10"
+         width="20" height="20">
+    <handler name="onmousedown">
+      this.setAttribute('width', 30);
+      this.setAttribute('height', 30);
+      this.setAttribute('x', 5);
+      this.setAttribute('y', 5);
+    </handler>
+    <handler name="onmouseup">
+      this.setAttribute('width', 20);
+      this.setAttribute('height', 20);
+      this.setAttribute('x', 10);
+      this.setAttribute('y', 10);
+    </handler>
+  </view>
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

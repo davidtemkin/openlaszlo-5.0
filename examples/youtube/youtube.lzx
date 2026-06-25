@@ -1,0 +1,63 @@
+<!-- X_LZ_COPYRIGHT_BEGIN ************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.        *
+* Use is subject to license terms.                                       *
+* X_LZ_COPYRIGHT_END ************************************************** -->
+
+
+<canvas
+  width="100%"
+  height="100%"
+>
+    
+    <include href="av/videotogglebutton.lzx"/>
+    <include href="av/videoscreen.lzx"/>
+    <include href="av/videoslider.lzx"/>
+    <include href="av/videoplayer.lzx"/>
+    <include href="av/videolibraryicon.lzx"/>
+    <include href="av/videolibrarypopup.lzx"/>
+    <include href="youtubeplayer.lzx"/>
+
+
+    <dataset name="ds_videoList"
+         src="http:youtube.jsp"
+    />
+
+
+    <dataset name="ds_videoGetFlvUrl"
+         src="http:youtube.jsp"
+    />
+
+
+    <handler name="oninit"><![CDATA[
+        var url =
+          lz.Browser.getLoadURLAsLzURL()
+
+        var param;
+        if ((param = lz.Browser.getInitArg('empty')) &&
+            (param != "")) {
+            // Start up empty.
+        } else if ((param = lz.Browser.getInitArg('featured')) &&
+            (param != "")) {
+            canvas.videosListFeatured();
+        } else if ((param = lz.Browser.getInitArg('tag')) &&
+            (param != "")) {
+            canvas.videosListByTag(param);
+        } else if ((param = lz.Browser.getInitArg('user')) &&
+            (param != "")) {
+            canvas.videosListByUser(param);
+        } else {
+            canvas.videosListByTag("guitar");
+        }
+      ]]>
+    </handler>
+
+
+    <youtubeplayer
+        id="vp"
+        name="vp"
+        width="${immediateparent.width}"
+        height="${immediateparent.height}"
+    />
+
+
+</canvas>

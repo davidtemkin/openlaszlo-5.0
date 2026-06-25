@@ -1,0 +1,58 @@
+<!--
+* X_LZ_COPYRIGHT_BEGIN ****************************************************
+* Copyright 2001-2008 Laszlo Systems, Inc.  All Rights Reserved.          *
+* Use is subject to license terms.                                        *
+* X_LZ_COPYRIGHT_END ******************************************************-->
+<library>
+    <class name="mobilepage" width="4" height="4"
+        bgcolor="${parent.parent.currentpage == this.valnum ? 0xDDDDDD : 0x5e5e5e}">
+        <attribute name="valnum" type="number" value="0"/>
+        <handler name="oninit">
+            this.setAttribute('focusable', false);
+        </handler>
+    </class>
+    
+    <class name="mobilescroller" width="240"  clip="true"  >
+        <attribute name="currentpage" type="number" value="0"/>
+        <attribute name="totalpages" type="number" value="0"/>
+        <attribute name="defaultplacement" value="content" type="string" />
+ 
+        <view name="content" x="8" width="${parent.width - parent.controller.width - x}" >
+            <handler name="onheight" >
+                parent.controller.update();
+            </handler>
+        </view>
+
+        <view name="controller" width="10" x="${parent.width - width}" y="3" >
+            <attribute name="pages" value="0" />
+            <simplelayout axis="y" spacing="6" />
+            
+            <!-- first mobilepage requires special handling -->
+            <mobilepage id="mobilepage1" valnum="0"/>
+            <mobilepage valnum="1"/>
+            <mobilepage valnum="2"/>
+            <mobilepage valnum="3"/>
+            <mobilepage valnum="4"/>
+            <mobilepage valnum="5"/>
+            <mobilepage valnum="6"/>
+            <mobilepage valnum="7"/>
+            <mobilepage valnum="8"/>
+            <mobilepage valnum="9"/>
+            <mobilepage valnum="10"/>
+
+            <method name="update" > <![CDATA[
+                var np = Math.ceil( parent.content.height/parent.height );
+                for (var i = 0; i < this.subviews.length; i++) {
+                    this.subviews[i].setAttribute('visible', i < np );
+                }
+                parent.setAttribute('totalpages', np - 1); //Zero is the first page.
+            ]]></method>   
+        </view>
+        
+       
+        <method name="scrollToPage" args="n" >
+            this.content.animate('y',-n*height,300);
+        </method>
+        
+    </class>
+</library>

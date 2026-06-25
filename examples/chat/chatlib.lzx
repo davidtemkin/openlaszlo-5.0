@@ -1,0 +1,115 @@
+<!-- chatlib.lzx — chat UI (migrated 3.4.x -> OL4). Datasets/methods + the name picker
+     and the chat view. Connection events are handled in chat.lzx on <lzconnection>. -->
+<library>
+
+    <alert name="dialog" title="connection error" width="${canvas.width}"/>
+
+    <!-- chat transcript + live online list (populated at runtime) -->
+    <dataset name="chatDset"/>
+    <dataset name="onlineDset"/>
+    <!-- preset login names (the original demo's picker) -->
+    <dataset name="userlist">
+        <user name="max"/>
+        <user name="eric"/>
+        <user name="pablo"/>
+        <user name="david"/>
+        <user name="guest"/>
+    </dataset>
+
+    <datapointer name="chatPtr" xpath="chatDset:/"/>
+    <datapointer name="onlinePtr" xpath="onlineDset:/"/>
+
+    <!--- append a line to the transcript + autoscroll -->
+    <method name="myprint" args="str"><![CDATA[
+        chatPtr.addNode('message', null, { text: str });
+        if (viewChat.visible && global['chatScroller']) chatScroller.scrollToBottom();
+    ]]></method>
+
+    <!--- rebuild the online-users list from a getList result -->
+    <method name="setUsers" args="users"><![CDATA[
+        var ds = canvas.onlineDset, kids = ds.childNodes;
+        for (var i = kids.length - 1; i >= 0; i--) ds.removeChild(kids[i]);
+        for (var j = 0; j < users.length; j++) onlinePtr.addNode('user', null, { name: users[j] });
+    ]]></method>
+
+    <text x="20" y="8" fontsize="15" fontstyle="bold" fgcolor="0x222244" resize="true"
+          text="OpenLaszlo Chat"/>
+
+    <!-- ===================== chat view ===================== -->
+    <view name="viewChat" x="20" y="34" width="600" visible="false">
+
+        <!-- transcript -->
+        <view width="470" height="290" bgcolor="0x000000">
+            <view name="transcript" width="468" height="288" x="1" y="1" bgcolor="0xffffff" clip="true">
+                <view name="scroller" id="chatScroller" width="450" x="6" y="4">
+                    <simplelayout axis="y" spacing="2"/>
+                    <method name="scrollToBottom"><![CDATA[
+                        var over = this.height - this.parent.height + 8;
+                        this.setAttribute('y', over > 0 ? (4 - over) : 4);
+                    ]]></method>
+                    <view datapath="chatDset:/message" width="440" height="${this.t.height}">
+                        <text name="t" width="440" multiline="true" fontsize="12"
+                              datapath="@text" fgcolor="0x222222"/>
+                    </view>
+                </view>
+                <scrollbar axis="y"/>
+            </view>
+        </view>
+
+        <!-- online users -->
+        <view x="486" y="0" width="114">
+            <text fontstyle="bold" fgcolor="0x335533">Online</text>
+            <view y="18" width="114" height="244" bgcolor="0x000000">
+                <view width="112" height="242" x="1" y="1" bgcolor="0xffffff" clip="true">
+                    <view width="104" x="4" y="2">
+                        <simplelayout axis="y" spacing="2"/>
+                        <view datapath="onlineDset:/user" width="104" height="14">
+                            <text width="104" datapath="@name" fgcolor="0x224422"/>
+                        </view>
+                    </view>
+                </view>
+            </view>
+            <button y="270" width="114" height="26" text="Logout"
+                    onclick="connection.disconnect()"/>
+        </view>
+
+        <!-- send box -->
+        <view x="0" y="300" layout="axis:x; spacing:6">
+            <text y="6">msg:</text>
+            <edittext id="msgField" width="360" height="24" doesenter="true">
+                <method name="doEnterDown"> canvas.say(); </method>
+            </edittext>
+            <button width="60" height="26" text="Send" onclick="canvas.say()"/>
+        </view>
+    </view>
+
+    <method name="say"><![CDATA[
+        var m = msgField.getText();
+        if (m != null && m != '') { connection.sendMessage('*', m, 'message'); msgField.setAttribute('text', ''); }
+    ]]></method>
+
+    <!-- ===================== name picker ===================== -->
+    <view name="viewPicker" x="20" y="34">
+        <text fontstyle="bold">Chat name</text>
+        <view name="line" bgcolor="0x000000" x="${parent.list.x-1}" y="${parent.list.y-1}"
+              width="${parent.list.width+2}" height="${parent.list.height+2}"/>
+        <view name="list" width="90" height="110" x="1" y="21" bgcolor="0xffffff" clip="true">
+            <view x="4" y="2" width="84">
+                <simplelayout axis="y" spacing="3"/>
+                <view datapath="userlist:/user" width="84" height="14" clickable="true"
+                      onmouseover="t.setAttribute('fgcolor', 0x3366cc)"
+                      onmouseout="t.setAttribute('fgcolor', 0x224488)">
+                    <handler name="onclick"><![CDATA[
+                        var usr = this.datapath.getNodeAttribute('name');
+                        connection.login(usr, usr);
+                    ]]></handler>
+                    <text name="t" width="84" datapath="@name" fgcolor="0x224488"/>
+                </view>
+            </view>
+        </view>
+        <text x="${parent.list.x + parent.list.width + 16}" y="40" width="380" multiline="true"
+              selectable="true" fgcolor="0x444444"
+              text="Pick a name to join the chat room.&#10;&#10;Open this same page in another browser window (or share the URL) to chat between them."/>
+    </view>
+
+</library>

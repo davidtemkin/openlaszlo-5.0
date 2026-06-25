@@ -1,0 +1,398 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 31. Input Devices and Gestures</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.power.html" title="Part IV. In Depth"><link rel="prev" href="delegates.html" title="Chapter 30. Delegates"><link rel="next" href="states.html" title="Chapter 32.  States"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 31. Input Devices and Gestures</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="delegates.html">Prev</a> </td><th width="60%" align="center">Part IV. In Depth</th><td width="20%" align="right"> <a accesskey="n" href="states.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="input-devices"></a>Chapter 31. Input Devices and Gestures</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1734"></a>1. Overview</h2></div></div></div><p> This chapter explains how to incorporate mouse and keyboard input into an OpenLaszlo
+         application. It covers the basic concepts as well as more advanced topics such as tracking
+         the mouse across multiple views while the mouse is down, and how to implement the "right
+         click" context menu in OpenLaszlo applications. </p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1743"></a>2. The Mouse</h2></div></div></div><p> Interaction with a view via the mouse is fundamental to all applications. These
+         sections will explore the basic concepts as well some more advanced topics. </p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1735"></a>2.1. Basic Mouse Events</h3></div></div></div><p> Interacting with the example below displays the five basic mouse events that can be
+            recognized by a view: <code class="literal">onmouseover</code>, <code class="literal">onmouseout</code>,
+               <code class="literal">onmousedown</code>, <code class="literal">onmouseup</code>, and
+            <code class="literal">onclick</code>
+         </p><p>Although <code class="literal">onmouseup</code> and <code class="literal">onclick</code> are similar,
+               <code class="literal">onmouseup</code> is sent whenever the user lets up on the mouse, while
+               <code class="literal">onclick</code> is only sent when the user lets up on the mouse while the
+            cursor is still contained within the boundary of the view. </p><div class="example"><a name="id10909"></a><p class="title"><b>Example 31.1. The basic mouse events</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="40" width="100%"&gt;
+  &lt;view bgcolor="red"
+        onmouseover="txt.setAttribute('text', 'onmouseover')"
+        onmouseout="txt.setAttribute('text', 'onmouseout')"
+        onmousedown="txt.setAttribute('text', 'onmousedown')"
+        onmouseup="txt.setAttribute('text', 'onmouseup')"
+        onclick="txt.setAttribute('text', 'onmouseup, onclick')"
+        x="10" y="10" width="20" height="20"/&gt;
+
+  &lt;text id="txt"
+        x="40" y="11" width="150"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/input-devices-_1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/input-devices-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1736"></a>2.2. Making Views Clickable</h3></div></div></div><p> A view will only respond to mouse events when its attribute
+               <code class="literal">clickable="true"</code>. Views, by default, are not clickable. If,
+            however, any of the mouse events are included in a view's tag (like above) then
+               <code class="literal">clickable</code> will be set to true automatically. In the example below,
+            there are no mouse events declared within the tag itself, only in its methods. In this
+            case it becomes necessary to explicitly define <code class="literal">clickable="true"</code> for
+            the view. </p><div class="example"><a name="id10918"></a><p class="title"><b>Example 31.2. Making views clickable</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="40" width="100%"&gt;
+  &lt;view bgcolor="red" clickable="true"
+         x="10" y="10"
+         width="20" height="20"&gt;
+    &lt;handler name="onmousedown"&gt;
+      this.setAttribute('width', 30);
+      this.setAttribute('height', 30);
+      this.setAttribute('x', 5);
+      this.setAttribute('y', 5);
+    &lt;/handler&gt;
+    &lt;handler name="onmouseup"&gt;
+      this.setAttribute('width', 20);
+      this.setAttribute('height', 20);
+      this.setAttribute('x', 10);
+      this.setAttribute('y', 10);
+    &lt;/handler&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/input-devices-_2.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/input-devices-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1737"></a>2.3. ClickRegion</h3></div></div></div><p> Setting <code class="literal">clickregion</code> to a vector-based SWF turns the SWF shape
+            into a clickable hotspot. </p><div class="example"><a name="id10925"></a><p class="title"><b>Example 31.3. Setting a clickregion</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas width="100%" height="300"&gt;
+  &lt;view height="150" width="100" bgcolor="red" 
+    clickable="true" resource="resources/lzwaitcursor_rsc.swf" 
+    stretches="both" clickregion="resources/lzwaitcursor_rsc.swf" 
+    onclick="message.addText('\nclick')" /&gt;
+  &lt;text id="message" y="140" multiline="true" /&gt;
+&lt;/canvas&gt; 
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2008 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/clickregion.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/clickregion.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1739"></a>2.4. Cursor Management</h3></div></div></div><p> The cursor automatically changes to a hand when it is over a clickable view, but if
+            a custom cursor is desired, then this can be accomplished by defining a custom resource
+            for the cursor and using it with <code class="literal">lz.Cursor</code> service as shown below. </p><div class="example"><a name="id10932"></a><p class="title"><b>Example 31.4. Changing the cursor</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="30" width="100%"&gt;
+  &lt;resource name="waitcursor" src="resources/lzwaitcursor_rsc.swf"/&gt;
+  &lt;button onclick="setCursor()" text="Click me to change the cursor for 1/2 second"&gt;
+    &lt;method name="setCursor" args="cursor=null"&gt;
+      lz.Cursor.setCursorGlobal('waitcursor');
+      // call lz.Cursor.restoreCursor() after 1/2 second
+      var del= new LzDelegate(lz.Cursor, 'restoreCursor');
+      lz.Timer.addTimer(del, 500);
+    &lt;/method&gt;
+  &lt;/button&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/input-devices-_3.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/input-devices-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1738"></a>2.4.1. Disabling the "hand" cursor</h4></div></div></div><p>By setting <a class="indexterm" name="id10938"></a><code class="methodname">lz.Cursor.showHandCursor()</code> to true or false, you
+               show or hide the hand cursor for all clickable views. This means that you can, for
+               example, prevent clicks from traveling through windows, without the hand cursor
+               appearing.</p><p>Here is an example showing the hand cursor turned on and off.</p><div class="example"><a name="id10943"></a><p class="title"><b>Example 31.5. Enabling and disabling the hand cursor</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas width="100%" height="110"&gt;
+    &lt;view width="100" height="100" bgcolor="green"&gt;
+        &lt;handler name="onclick"&gt;
+            lz.Cursor.showHandCursor(true);
+        &lt;/handler&gt;
+    &lt;/view&gt;
+    &lt;view x="110" width="100" height="100" bgcolor="yellow"&gt;
+        &lt;handler name="onmouseover"&gt;
+            lz.Cursor.showHandCursor(true);
+        &lt;/handler&gt;
+        &lt;handler name="onmouseout"&gt;
+            lz.Cursor.showHandCursor(false);
+        &lt;/handler&gt;
+    &lt;/view&gt;
+    &lt;view x="220" width="100" height="100" bgcolor="red"&gt;
+        &lt;handler name="onclick"&gt;
+            lz.Cursor.showHandCursor(false);
+        &lt;/handler&gt;
+    &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/input-devices-_4.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/input-devices-_4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1740"></a>2.5. Custom Cursors for multiple runtimes</h3></div></div></div><p> With OpenLaszlo 4, you can set custom cursors in DHTML and SWF. If you plan to use
+            custom cursors across DHTML and SWF, be sure you're using appropriate cursor IDs for
+            DHTML (see <a class="ulink" href="http://www.quirksmode.org/css/cursor.html" target="_top">http://www.quirksmode.org/css/cursor.html</a> for more info), and make sure
+            you've included resources named after those IDs for SWF.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>Cursor IDs with hypens work fine in DHTML
+            but are not valid SWF names. For example, you should change the cursor ID col-resize, to colResize.</p></div><p>Note that global cursors currently only work for clickable items in DHTML. </p><div class="example"><a name="id10953"></a><p class="title"><b>Example 31.6. Using custom cursors</b></p><div class="example-contents"><pre class="programlisting">
+               &lt;canvas width="100%" height="260"&gt;
+    &lt;resource name="crosshair" src="resources/cursor_crosshair.png"/&gt;
+    &lt;resource name="wait" src="resources/cursor_wait.png"/&gt;
+    &lt;simplelayout spacing="10"/&gt;
+    &lt;button onclick="lz.Cursor.showHandCursor(true)"&gt;Change default cursor for all buttons to hand
+        (on by default)&lt;/button&gt;
+    &lt;button onclick="lz.Cursor.showHandCursor(false)"&gt;Change default cursor for all buttons to
+        default&lt;/button&gt;
+    &lt;button onclick="lz.Cursor.setCursorGlobal('crosshair')"&gt;Turn on crosshairs&lt;/button&gt;
+    &lt;button onclick="lz.Cursor.unlock()"&gt;Turn off crosshairs&lt;/button&gt;
+
+    &lt;view bgcolor="red" showhandcursor="false" clickable="true"&gt;
+        &lt;text&gt;showhandcursor is false&lt;/text&gt;
+    &lt;/view&gt;
+    &lt;view bgcolor="green" showhandcursor="true" clickable="true"&gt;
+        &lt;text&gt;showhandcursor is true&lt;/text&gt;
+    &lt;/view&gt;
+    &lt;view bgcolor="yellow" cursor="wait" clickable="true"&gt;
+        &lt;text&gt;cursor is 'wait'&lt;/text&gt;
+    &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2009 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+            </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/cursors.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/cursors.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1741"></a>2.6. Custom buttons</h3></div></div></div><p>Creating a custom button that changes its images with onmouseup, onmouseover, and
+            onmousedown is a common practice. Here is an example using the <a class="indexterm" name="id10958"></a><code class="sgmltag-element">&lt;basebutton&gt;</code><em><span class="remark">[unknown tag]</span></em>
+             tag: </p><div class="example"><a name="id10962"></a><p class="title"><b>Example 31.7. Creating a custom button using basebutton</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="150" width="100%"&gt;
+  &lt;!-- first create the multi-frame resource and give it a name --&gt;
+  &lt;resource name="mybutton_rsrc"&gt;
+    &lt;!-- first frame MUST be the mouseup state of the button --&gt;     
+    &lt;frame src="resources/button-up.png"/&gt;
+    &lt;!-- second frame MUST be the mouseover state of the button --&gt;
+    &lt;frame src="resources/button-over.png"/&gt;
+    &lt;!-- third frame MUST be the mousedown state of the button --&gt;
+    &lt;frame src="resources/button-down.png"/&gt;
+  &lt;/resource&gt;
+  
+  &lt;!-- Second, assign the resource to a basebutton tag --&gt;
+  &lt;basebutton resource="mybutton_rsrc"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/input-devices-_5.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/input-devices-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1742"></a>2.7. Dragging Views</h3></div></div></div><p>Dragging a view can be accomplished with the use of a <code class="literal">dragstate</code>.
+            When a <code class="literal">dragstate</code> is applied, views can be dragged freely or
+            constrained to a boundary as well as an axis. The example below shows the use of a
+               <code class="literal">dragstate</code> with its <code class="literal">max</code>, <code class="literal">min</code>,
+            and <code class="literal">axis</code> attributes.</p><div class="example"><a name="id10974"></a><p class="title"><b>Example 31.8. Dragging a view</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="120" width="100%"&gt;
+  &lt;simplelayout spacing="3"/&gt;
+  
+  &lt;text&gt;dragging within a bounded area&lt;/text&gt;
+  &lt;view bgcolor="yellow" height="40" width="160"&gt;
+    &lt;view bgcolor="red" width="20" height="20" 
+          onmousedown="this.dragger.apply()"
+          onmouseup="this.dragger.remove()"&gt;
+      &lt;dragstate name="dragger"
+          drag_min_x="0"
+          drag_max_x="$once{parent.width - this.width}"
+          drag_min_y="0"
+          drag_max_y="$once{parent.height - this.height}"
+          drag_axis="both"/&gt;
+    &lt;/view&gt;
+  &lt;/view&gt;
+  
+  &lt;text&gt;dragging along the x-axis&lt;/text&gt;
+  &lt;view bgcolor="yellow" height="40" width="160"&gt;
+    &lt;view bgcolor="red" width="20" height="20" 
+          onmousedown="this.dragger.apply()"
+          onmouseup="this.dragger.remove()"&gt;
+      &lt;dragstate name="dragger"
+          drag_min_x="0"
+          drag_max_x="$once{parent.width - this.width}"
+          drag_min_y="0"
+          drag_max_y="$once{parent.height - this.height}"
+          drag_axis="x"/&gt;
+    &lt;/view&gt;
+  &lt;/view&gt;
+ &lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/input-devices-_6.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/input-devices-_6.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1746"></a>3. Tracking the Mouse</h2></div></div></div><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1744"></a>3.1. Tracking the mouse within a single view</h3></div></div></div><p> This simple program shows how to do basic mouse tracking in a view: </p><div class="example"><a name="id10982"></a><p class="title"><b>Example 31.9. Simple mouse tracking</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="500" width="100%" debug="true"&gt;
+    &lt;debug y="300"/&gt;
+    &lt;view width="300" height="300" bgcolor="red" clickable="true" &gt;
+        &lt;attribute name="moustracker_del" value="$once{ new LzDelegate( this, 'trackmouse' )}" /&gt;
+        &lt;handler name="onmousedown" &gt;
+            moustracker_del.register(lz.Idle,'onidle');
+        &lt;/handler&gt;
+        
+        &lt;handler name="onmouseup" &gt;
+            moustracker_del.unregisterAll();
+        &lt;/handler&gt;
+        
+        &lt;method name="trackmouse" args="v"&gt;
+            Debug.debug("%s %d %d", "mousex, mousey:", this.getMouse('x'),this.getMouse('y'));
+        &lt;/method&gt;
+    &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/input-devices-_7.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/input-devices-_7.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> This generates a lot of points, but you can decide how much data to filter or not in
+            the trackmouse method. </p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1745"></a>3.2. Tracking the Mouse in overlapping views</h3></div></div></div><p> Once the mouse is down in relation to a specific view,
+            <code class="literal">onmouseover</code> and <code class="literal">onmouseout</code> events are only sent to
+            that view. This makes it difficult to track the mouse over other views. This section
+            explains how to accomplish this, first by using a base component called
+               <code class="literal">&lt;basetrackgroup&gt;</code>, and then with the low level APIs
+            that basetrackgroup is built upon. </p><p> In the example below, notice that the <code class="literal">onmouseover</code> and
+               <code class="literal">onmouseout</code> events change the size of the view while the
+               <code class="literal">onmousetrackover</code> and <code class="literal">onmousetrackout</code> events
+            change the color of the view. As you drag the mouse, the first view will continue to
+            change its size and color while the other views will only change their color. Again,
+            this is because the basic <code class="literal">onmouseover</code> and
+            <code class="literal">onmouseout</code> events are only being sent to the first view that was
+            clicked. However, <code class="literal">onmousetrackover</code> and
+            <code class="literal">onmousetrackout</code> are sent to all views while the mouse is down. </p><div class="example"><a name="id11001"></a><p class="title"><b>Example 31.10. Using basetrackgroup</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="160" width="100%"&gt;
+  &lt;class name="myTrackableView" bgcolor="red"
+         onmouseover="setAttribute('width', 70)" 
+         onmouseout="setAttribute('width', 60)"
+         onmouseup="setAttribute('bgcolor', 0xFF0000)"
+         width="60" height="30"&gt;
+
+    &lt;!-- Use methods for mouse-tracking events --&gt;
+    &lt;handler name="onmousetrackover"&gt;
+      setAttribute('bgcolor', 0x0000FF); //blue
+    &lt;/handler&gt;
+
+    &lt;handler name="onmousetrackout"&gt;
+      setAttribute('bgcolor', 0xFF0000); //red
+    &lt;/handler&gt;
+
+    &lt;handler name="onmousetrackup"&gt;
+      setAttribute('bgcolor', 0xFF0000); //red
+    &lt;/handler&gt;
+  &lt;/class&gt;
+
+  &lt;text&gt;Click on any red view and drag the mouse. &lt;/text&gt;
+  &lt;basetrackgroup bgcolor="yellow"
+                  x="20" y="40"&gt;
+    &lt;myTrackableView/&gt;
+    &lt;myTrackableView/&gt;
+    &lt;myTrackableView/&gt;
+    &lt;simplelayout axis="y" spacing="5"/&gt;
+  &lt;/basetrackgroup&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/input-devices-_8.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/input-devices-_8.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><a name="input-devices.view_source"></a><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1747"></a>4. "View Source" right click menu item </h2></div></div></div><p> The default canvas context (right click) menu has a "view source" item, available in
+         Flash player Version 7 and later. By default this menu includes an "About OpenLaszlo"
+         entry, which links to the OpenLaszlo
+         website, and an option to view source. </p><p> For an application <code class="literal">framitz.lzx</code> that is deployed proxied (using the
+         OpenLaszlo Server), clicking on View Source will fetch
+         <code class="literal">framitz.lzx?lzt=source</code> in a new browser window. If you don't wish to
+         make source visible, set <code class="literal">allowRequestSOURCE=false </code>in
+            <code class="literal">WEB-INF/lps/config/lps.properties</code>. </p><p> Starting with Flash 8, you can control the content of the menu using the class <a class="indexterm" name="id11015"></a><code class="classname">lz.contextmenu</code>, which you instantiate using <code class="literal">new
+            lz.contextmenu()</code>. The method <a class="indexterm" name="id11019"></a><code class="methodname">lz.contextmenu.makeMenuItem ()</code>instantiates an
+            <code class="literal">lz.contextmenuitem</code>. </p><p> To make a new menu, first you create the menu, then you create a menu item, and then
+         you add the menu item to the menu. The data type of the menu item is
+            <code class="literal">lz.contextmenuitem</code>; you supply the text that you want to appear in
+         the menu (the word 'Delete' may not be used as context menu text) and a delegate that
+         specifies how you want that menu item to be handled. <a class="indexterm" name="id11026"></a><code class="methodname">lz.contextmenu.addItem()</code> adds an item to that menu.
+         So, to create a new menu you would do: </p><div class="example"><a name="id11030"></a><p class="title"><b>Example 31.11. Creating a context menu</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="200" width="100%"&gt;
+  &lt;view width="350" height="100" bgcolor="#cccccc"&gt;
+    &lt;text text="Right click in the gray area (but not on this text)"/&gt; 
+    &lt;handler name="oninit"&gt;
+      var cmenu = new lz.contextmenu(); // create the menu
+      var item1 = cmenu.makeMenuItem('hello', new LzDelegate(this, "handlerightclick")); // create the menu item, and set up an LzDelegate as a callback
+      cmenu.addItem(item1); //add the item to the menu
+      this.setAttribute("contextmenu", cmenu);
+    &lt;/handler&gt;   
+    &lt;method name="handlerightclick" args="val"&gt;
+      message.addText("\nhello world");
+    &lt;/method&gt;
+  &lt;/view&gt;
+  &lt;text id="message" y="100" multiline="true" /&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/input-devices-_9.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/input-devices-_9.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> There is no method to clear the menu (Settings and About Flash Player are always
+         there), but you can erase one with something like </p><pre class="programlisting">
+var cmenu = new lz.contextmenu();
+canvas.setDefaultContextMenu(cmenu)
+</pre><p> That would give you an empty context menu. </p><p> SOLO deployed applications, say, <code class="literal">framitz.lzx.swf</code>,
+         will attempt to fetch <code class="literal">"framitz.lzx.swf.zip"</code>.This assumes that a copy of
+         the source will be placed there if you desire to make your source visible. If you don't
+         wish to share code of your SOLO application, use the method above. </p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1753"></a>5. Keyboard Input</h2></div></div></div><p> In OpenLaszlo applications, the keyboard input can be accepted by the view which has
+         the keyboard "focus". The <a class="indexterm" name="id11042"></a><code class="classname">lz.Focus</code> service allows you to set and control the
+         focus. The opposite of focus is "blur", as discussed below. </p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1748"></a>5.1. Focus and the lz.Focus service</h3></div></div></div><p>A focusable view is a view whose <a class="indexterm" name="id11048"></a><code class="sgmltag-attribute">focusable</code> attribute is true (the
+            default value). When the user clicks on a focusable view, the focus is set to that view.
+            If the view is different from the previously focused view, an <a class="indexterm" name="id11051"></a><code class="literal">onblur</code> is sent to the previously focused view, and an <a class="indexterm" name="id11054"></a><code class="literal">onfocus</code> is sent to the newly focused view.</p><p> To prevent a view from taking keyboard input, you can set its
+            <code class="literal">focusable</code> attribute to "false".</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1751"></a>5.2. Focus trap and the focus group</h3></div></div></div><p><a class="indexterm" name="id11062"></a><em class="glossterm">Focus trap</em>: A view's focus trap is its most direct
+            ancestor whose <a class="indexterm" name="id11065"></a><code class="sgmltag-attribute">focustrap</code> attribute is true, or the
+            canvas. A view's <a class="indexterm" name="id11068"></a><em class="glossterm">focus group</em> is the set of focusable views that are
+            descendants of the focus trap, and are not descendants of any more immediate ancestor
+            whose <a class="indexterm" name="id11071"></a><code class="sgmltag-attribute">focustrap</code> attribute is also true.</p><p>The effect of this definition is that tabbing within the children of a view that has
+            a true <a class="indexterm" name="id11075"></a><code class="sgmltag-attribute">focustrap</code>, such as a window, will tab
+            to another child of the same view, but won't tab to a view within another window.</p><p>The <a class="ulink" href="../../examples/contacts/contacts.lzx" target="_top">Contacts demo</a>
+            demonstrates the use of keyboard focus. Double-click on a name to open the details
+            window. Click in a text, and then press tab and shift-tab to move to other text fields
+            within the same focus group.</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1749"></a>5.2.1. Using Tab key to move within a focus group</h4></div></div></div><p>When the tab key is pressed, the focus moves to the next focusable view within the
+               current <span class="i">focus group</span>. If there is no next view, the
+               first view within the current focus group is selected. Similarly, shift-tab selects
+               the previous focusable view. If there is no previous view, the last view within the
+               current focus group is selected.</p><p>A view can override the <a class="indexterm" name="id11085"></a><code class="methodname">getNextSelection()</code> and <a class="indexterm" name="id11089"></a><code class="methodname">getPrevSelection()</code> methods to change this
+               default behavior. The tab and shift tab keys select the view returned by calling <a class="indexterm" name="id11093"></a><code class="methodname">getNextSelection()</code> and <a class="indexterm" name="id11097"></a><code class="methodname">getPrevSelection()</code>, respectively, on the view
+               that currently has the keyboard focus.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1750"></a>5.2.2. Programmatic control of focus group</h4></div></div></div><p>In addition to the tab key, focus within a focus group can also be set under
+               programmatic control, by calling the <a class="indexterm" name="id11104"></a><code class="methodname">lz.Focus.setFocus()</code>, <a class="indexterm" name="id11108"></a><code class="methodname">lz.Focus.next()</code>, and <a class="indexterm" name="id11112"></a><code class="methodname">lz.Focus.prev()</code> methods.</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1752"></a>5.3. Reading Key Values </h3></div></div></div><p> One way of integrating keyboard input into your application is to have a focusable
+            view capture pressed key codes. Only one view can be focusable at any one time. In this
+            example, we're making that view focused oninit (although in a larger application, you
+            could bring focus to that view using the tab key, or you could write an onclick method
+            to tell it to focus).</p><p> The example below illustrates use of <a class="indexterm" name="id11120"></a><code class="sgmltag-element">&lt;lz.Focus&gt;</code> to make a view
+            able to accept keyboard input.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3>The actual character that corresponds to a particular key depends on the operating
+            system and locale, so the character returned by <code class="literal">String.fromCharCode()</code>
+            may be different on your system.</div><div class="example"><a name="id11125"></a><p class="title"><b>Example 31.12. Reading key values</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas width="100%" height="200" debug="true"&gt;
+    &lt;debug x="110" y="15" /&gt;   
+    &lt;!-- NOTE: Even though the view below takes focus oninit,
+        in some browsers you might still need to click on the
+        application itself, to take the focus away from the 
+        browser itself and to the Flash Player. --&gt;
+    &lt;view width="100" height="100" bgcolor="0x333399"
+        focusable="true"
+        oninit="lz.Focus.setFocus(this)"&gt;    
+        &lt;handler name="oninit"&gt;
+            this.keyCodes = new Array()
+            this.keyCodes[65] = "A for Apple";
+            this.keyCodes[76] = "L for Laszlo";
+            this.keyCodes[79] = "O for Optometrist";
+            this.keyCodes[83] = "S for Sammy";
+            this.keyCodes[90] = "Z for Zebra";
+        &lt;/handler&gt;     
+        &lt;handler name="onkeydown" args="akeycode"&gt;
+            // respond here    
+            Debug.debug("Key pressed: %w", akeycode);
+            if ( this.keyCodes[akeycode] != undefined ) {
+            Debug.debug("%s", this.keyCodes[akeycode] );
+            } else {
+            Debug.debug("You pressed: %w", String.fromCharCode(akeycode));
+            }
+        &lt;/handler&gt;
+    &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/input-devices-_10.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/input-devices-_10.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="delegates.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.power.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="states.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 30. Delegates </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 32.  States </td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

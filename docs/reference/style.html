@@ -1,0 +1,135 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;style&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>style<span class="ang">&gt;</span></h1><p class="short">specifies colors used by components</p><p class="meta">Extends <code>node</code></p>
+                  
+        <code>&lt;para&gt;
+              SWF only: The features described in this section only work in applications compiled to SWF. They do not work in applications compiled to other runtimes. 
+          &lt;/para&gt;</code>
+                
+        <p>
+          Styles may be defined to establish a consistent "look" for a group
+        of components.  There are a number of pre-defined styles.  If you
+        don't declare a default style, the OpenLaszlo components will use
+        
+          <code>whitestyle</code>
+          . To specify a different default style,
+        define a style with 
+          <code>isdefault="true"</code>
+          .
+        </p>
+                
+        
+        <pre class="example">
+        &lt;canvas height="60"&gt;
+          &lt;greenstyle name="mystyle" isdefault="true"/&gt;
+          &lt;checkbox&gt;Tell me more&lt;/checkbox&gt;
+          &lt;button&gt;Submit&lt;/button&gt;
+          &lt;simplelayout spacing="10" inset="10"/&gt;
+        &lt;/canvas&gt;
+        </pre>
+                
+        
+        <p>
+          There are several styles defined as classes
+        (
+          <code>whitestyle</code>
+          , 
+          <code>silverstyle</code>
+          ,
+        
+          <code>bluestyle</code>
+          , 
+          <code>greenstyle</code>
+          ,
+        
+          <code>goldstyle</code>
+          , and 
+          <code>purplestyle</code>
+          ).
+        You may create an instance of one of these, create a new lz.style, or
+        create an instance with one or more modified attributes.
+        </p>
+                
+        
+        <p>Different styles may be used in different parts of an application,
+        to highlight a single component or to distinguish a group of
+        components.  The style of a component applies to itself and any
+        component within it.</p>
+                
+        
+        <p>In the example below, section one and two of the tabslider and the
+        checkboxes inside them appear gold.  Section Three and the components
+        inside it appear green.</p>
+                
+        
+        <pre class="example">
+        &lt;canvas height="250"&gt;
+          &lt;goldstyle name="defaultstyle" isdefault="true"/&gt;
+          &lt;greenstyle name="specialstyle"/&gt;
+          &lt;tabslider id="ts1" x="50" y="20"
+                     width="300" height="180"&gt;
+        
+            &lt;tabelement text="Section One" selected="true"&gt;
+              &lt;checkbox&gt;option one&lt;/checkbox&gt;
+            &lt;/tabelement&gt;
+        
+            &lt;tabelement text="Section Two"&gt;
+              &lt;checkbox&gt;option two&lt;/checkbox&gt;
+            &lt;/tabelement&gt;
+        
+            &lt;tabelement text="Section Three" style="$once{specialstyle}"&gt;
+              &lt;radiogroup&gt;
+                &lt;radiobutton&gt;Yes, I want to know more&lt;/radiobutton&gt;
+                &lt;radiobutton&gt;No, I prefer to remain blissfully unaware&lt;/radiobutton&gt;
+                &lt;radiobutton&gt;Please tell my neighbor, who may tell me&lt;/radiobutton&gt;
+              &lt;/radiogroup&gt;
+              &lt;button align="right"&gt;Submit&lt;/button&gt;
+              &lt;simplelayout axis="y" spacing="10"/&gt;
+            &lt;/tabelement&gt;
+          &lt;/tabslider&gt;
+        &lt;/canvas&gt;
+        </pre>
+                
+        
+        <p>
+          You may define your own style by declaring values for various style
+        attributes described in the attribute reference below.  For example,
+        the following style uses the default values for most style attributes,
+        but provides custom values for the 
+          <code>basecolor</code>
+                  (overall shade of the components) and the
+        
+          <code>textcolor</code>
+          .
+        </p>
+                
+        
+        <pre>
+        &lt;style name="customstyle" basecolor="0xddddff" textcolor="blue"/&gt;
+        </pre>
+                
+        
+        <p>
+          <strong>Further reading</strong>
+        </p>
+                
+        <p>
+        You can see the definitions of the pre-defined styles
+        in:  lps/components/base/defaultstyles.lzx  </p>
+                
+        <p>
+        Named colors are defined in:  lps/components/base/colors.lzx
+        </p>
+              contains style attributes which are applied to components to modify their look
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">basecolor</td><td class="ty">color</td><td class="ty">offwhite</td><td>used for colorizing a component, components will typically use
+        varying shades of this color</td></tr><tr><td class="nm">bgcolor</td><td class="ty">color</td><td class="ty">white</td><td>used for colorizing the backgrounds of content areas, such
+          as the background in tabslider's content, and window's content</td></tr><tr><td class="nm">bordercolor</td><td class="ty">color</td><td class="ty">gray40</td><td>used to color the frame of a component for those that have a visual
+        border</td></tr><tr><td class="nm">bordersize</td><td class="ty">number</td><td class="ty">1</td><td>the line width used in those components that have a visual border</td></tr><tr><td class="nm">canvascolor</td><td class="ty">color</td><td class="ty">null</td><td>canvas color, default: null (will use whatever is specified
+        as the canvas bgcolor, default: white)</td></tr><tr><td class="nm">disabledcolor</td><td class="ty">color</td><td class="ty">gray30</td><td>used when an item is disabled</td></tr><tr><td class="nm">hilitecolor</td><td class="ty">color</td><td class="ty">iceblue4</td><td>used when the background color changes to highlight an item,
+        such as when mouse is over a menu item</td></tr><tr><td class="nm">isdefault</td><td class="ty">boolean</td><td class="ty">false</td><td>if true, this style is the default style for components</td></tr><tr><td class="nm">isstyle</td><td class="ty">expression</td><td class="ty">true</td><td>this is a style object</td></tr><tr><td class="nm">menuitembgcolor</td><td class="ty">color</td><td class="ty">textfieldcolor</td><td>background color for menu items, defaults to the 'textfieldcolor'</td></tr><tr><td class="nm">selectedcolor</td><td class="ty">color</td><td class="ty">iceblue3</td><td>used when an item is selected, such as in a list</td></tr><tr><td class="nm">textcolor</td><td class="ty">color</td><td class="ty">gray10</td><td>color for text</td></tr><tr><td class="nm">textdisabledcolor</td><td class="ty">color</td><td class="ty">gray60</td><td>used as the text color when a component is disabled</td></tr><tr><td class="nm">textfieldcolor</td><td class="ty">color</td><td class="ty">white</td><td>background color for text areas</td></tr><tr><td class="nm">texthilitecolor</td><td class="ty">color</td><td class="ty">iceblue1</td><td>used as the text color with 'hilitecolor' to highlight an item,
+        such as when mouse is over a menu item</td></tr><tr><td class="nm">textselectedcolor</td><td class="ty">color</td><td class="ty">black</td><td>used as the text color with 'selectedcolor' to color the
+        selected item</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

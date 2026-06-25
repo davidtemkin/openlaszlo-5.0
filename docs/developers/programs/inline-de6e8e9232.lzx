@@ -1,0 +1,2 @@
+<canvas debug="true"
+    oninit="Debug.debug("%w", lz.Browser.getInitArg('myData'))"/>

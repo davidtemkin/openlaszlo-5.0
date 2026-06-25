@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1025">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Golden Wheat Field</title>
+  <description>Golden Wheat Field — from the OpenLaszlo sample image library.</description>
+  <dates posted="1492073600" />
+  <urls><url type="photopage">data/photos/1025.jpg</url></urls>
+  <tags><tag>golden</tag><tag>wheat</tag><tag>field</tag></tags>
+</photo>
+</rsp>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ItemLookupResponse><Items>
+  <Request><IsValid>True</IsValid></Request>
+  <Item>
+    <ASIN>B0002RUPH4</ASIN>
+    <SmallImage><URL>data/covers/B0002RUPH4.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B0002RUPH4.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B0002RUPH4.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>Arthur Rubinstein</Artist>
+      <Manufacturer>RCA Victor</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>2002-11-05</ReleaseDate>
+      <Title>Nocturnes</Title>
+      <ListPrice><Amount>1498</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$14.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$8.25</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$4.00</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$11.49</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Chopin’s nocturnes from a legendary pianist — poetry at the keyboard.</Content></EditorialReview></EditorialReviews>
+  </Item>
+</Items></ItemLookupResponse>

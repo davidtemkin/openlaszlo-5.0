@@ -1,0 +1,231 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "login": "laszlo",
+      "realName": "Laszlo Moholy-Nagy",
+      "email": "laszlo@openlaszlo.org",
+      "pass": "E439796B953BB9FB06970325219E2940",
+      "lastLogin": "2026-06-23T03:02:14.875Z"
+    },
+    {
+      "id": 2,
+      "login": "david",
+      "realName": "David Temkin",
+      "email": "david@openlaszlo.org",
+      "pass": "E439796B953BB9FB06970325219E2940",
+      "lastLogin": "2026-06-20T17:30:00Z"
+    },
+    {
+      "id": 3,
+      "login": "john",
+      "realName": "John Sundman",
+      "email": "john@openlaszlo.org",
+      "pass": "E439796B953BB9FB06970325219E2940",
+      "lastLogin": "2026-06-20T17:30:00Z"
+    },
+    {
+      "id": 4,
+      "login": "helena",
+      "realName": "Helena Kimball",
+      "email": "helena@openlaszlo.org",
+      "pass": "E439796B953BB9FB06970325219E2940",
+      "lastLogin": "2026-06-20T17:30:00Z"
+    },
+    {
+      "id": 5,
+      "login": "bret",
+      "realName": "Bret Simister",
+      "email": "bret@openlaszlo.org",
+      "pass": "E439796B953BB9FB06970325219E2940",
+      "lastLogin": "2026-06-20T17:30:00Z"
+    },
+    {
+      "id": 6,
+      "login": "max",
+      "realName": "Max Carlson",
+      "email": "max@openlaszlo.org",
+      "pass": "E439796B953BB9FB06970325219E2940",
+      "lastLogin": "2026-06-20T17:30:00Z"
+    },
+    {
+      "id": 7,
+      "login": "henry",
+      "realName": "Henry Minsky",
+      "email": "henry@openlaszlo.org",
+      "pass": "E439796B953BB9FB06970325219E2940",
+      "lastLogin": "2026-06-20T17:30:00Z"
+    },
+    {
+      "id": 8,
+      "login": "tucker",
+      "realName": "PT Withington",
+      "email": "tucker@openlaszlo.org",
+      "pass": "E439796B953BB9FB06970325219E2940",
+      "lastLogin": "2026-06-20T17:30:00Z"
+    },
+    {
+      "id": 9,
+      "login": "ben",
+      "realName": "Ben Shine",
+      "email": "ben@openlaszlo.org",
+      "pass": "E439796B953BB9FB06970325219E2940",
+      "lastLogin": "2026-06-20T17:30:00Z"
+    },
+    {
+      "id": 10,
+      "login": "mayme",
+      "realName": "Mayme Kratt",
+      "email": "mayme@openlaszlo.org",
+      "pass": "E439796B953BB9FB06970325219E2940",
+      "lastLogin": "2026-06-20T17:30:00Z"
+    },
+    {
+      "id": 11,
+      "login": "amy",
+      "realName": "Amy Muntz",
+      "email": "amy@openlaszlo.org",
+      "pass": "E439796B953BB9FB06970325219E2940",
+      "lastLogin": "2026-06-20T17:30:00Z"
+    },
+    {
+      "id": 12,
+      "login": "josh",
+      "realName": "Josh Crowley",
+      "email": "josh@openlaszlo.org",
+      "pass": "E439796B953BB9FB06970325219E2940",
+      "lastLogin": "2026-06-20T17:30:00Z"
+    },
+    {
+      "id": 13,
+      "login": "phil",
+      "realName": "Philip Romanik",
+      "email": "phil@openlaszlo.org",
+      "pass": "E439796B953BB9FB06970325219E2940",
+      "lastLogin": "2026-06-20T17:30:00Z"
+    }
+  ],
+  "projects": [
+    {
+      "id": 1,
+      "name": "OpenLaszlo 4.1 Release",
+      "description": "The release of the next minor version of the OpenLaszlo Server",
+      "started": "2006-12-20"
+    },
+    {
+      "id": 2,
+      "name": "Project Orbit",
+      "description": "J2ME player for OpenLaszlo DHTML runtime.",
+      "started": "2006-10-03"
+    },
+    {
+      "id": 3,
+      "name": "OpenLaszlo iPhone example app",
+      "description": "Development of an iPhone example app at <a href=\"http://barcamp.org/iPhoneDevCamp\">iPhoneDevCamp</a>.",
+      "started": "2007-04-10"
+    },
+    {
+      "id": 4,
+      "name": "OpenLaszlo 4.0 Release",
+      "description": "Release of OpenLaszlo 4.0, the first release with multiple runtime support around Ajax World in New York",
+      "started": "2006-03-01"
+    }
+  ],
+  "tasks": [
+    {
+      "id": 1,
+      "projectId": 1,
+      "title": "OL 4.1 Website changes",
+      "description": "All the changes on the OpenLaszlo.org website for OpenLaszlo 4.1",
+      "created": "2026-06-01",
+      "deadline": "2026-07-15",
+      "finished": 0
+    },
+    {
+      "id": 2,
+      "projectId": 1,
+      "title": "DHTML Performance Optimization",
+      "description": "DHTML runtime performance optimization.",
+      "created": "2026-06-01",
+      "deadline": "2007-10-03",
+      "finished": 0
+    },
+    {
+      "id": 3,
+      "projectId": 1,
+      "title": "Flash Performance Optimization",
+      "description": "Here can be a more complex description of the task in the future.",
+      "created": "2026-06-01",
+      "deadline": "2007-09-13",
+      "finished": 0
+    },
+    {
+      "id": 4,
+      "projectId": 2,
+      "title": "Update Build Instructions",
+      "description": "Update the Wiki page with the build instruction",
+      "created": "2026-06-01",
+      "deadline": "2026-07-20",
+      "finished": 0
+    },
+    {
+      "id": 5,
+      "projectId": 2,
+      "title": "Java bytecode requirements",
+      "description": "Discuss the technical requirements of a Java bytecode runtime.",
+      "created": "2026-06-01",
+      "deadline": "2007-06-25",
+      "finished": 0
+    },
+    {
+      "id": 6,
+      "projectId": 3,
+      "title": "Interface prototypes",
+      "description": "Develop interface prototypes/dummies for the mobile Laszlo Webtop.",
+      "created": "2026-06-01",
+      "deadline": "2007-12-01",
+      "finished": 0
+    },
+    {
+      "id": 7,
+      "projectId": 4,
+      "title": "Website changes for 4.0",
+      "description": "OpenLaszlo.org website changes for the 4.0 release on March 20th.",
+      "created": "2026-06-01",
+      "deadline": "2007-03-01",
+      "finished": 1
+    },
+    {
+      "id": 8,
+      "projectId": 4,
+      "title": "Community announcements",
+      "description": "Community announcements for Webtop and OpenLaszlo 4.0.",
+      "created": "2026-06-01",
+      "deadline": "2007-03-18",
+      "finished": 1
+    },
+    {
+      "id": 9,
+      "projectId": 4,
+      "title": "Wiki Updates",
+      "description": "Check the Wiki for content not up-to-date",
+      "created": "2026-06-01",
+      "deadline": "2007-03-28",
+      "finished": 0
+    },
+    {
+      "id": 10,
+      "projectId": 4,
+      "title": "Release party",
+      "description": "A huge OL 4.0 release party with Pizza, Beer and the OL team.",
+      "created": "2026-06-01",
+      "deadline": "2007-03-30",
+      "finished": 1
+    }
+  ],
+  "seq": {
+    "user": 14,
+    "project": 5,
+    "task": 11
+  }
+}

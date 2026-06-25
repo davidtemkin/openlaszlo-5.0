@@ -1,0 +1,14 @@
+<canvas height="30" width="100%">
+  <text id="message"> 
+    <method name="myMethod">
+      this.setAttribute('text', 'Nice day if it doesn\'t rain.');         
+    </method>
+  </text> 
+  <script>
+    message.myMethod()
+  </script>
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

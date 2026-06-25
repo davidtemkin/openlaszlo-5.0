@@ -1,0 +1,85 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;form&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>form<span class="ang">&gt;</span></h1><p class="short">
+              web form with standard layout
+          </p><p class="meta">Extends <code>baseform</code></p>
+                    
+        <p>
+          The 
+          <code>form</code>
+           tag allows you to create a web form and
+              provides automatic layout.  Most components are laid out vertically
+              with buttons at the lower right.  The data represented by components
+              that are enclosed in the form tag can be sent to the server using the
+              
+          <code>submit</code>
+           tag.  Each form component, such as
+              
+          <code>checkbox</code>
+          , 
+          <code>combobox</code>
+           or
+              
+          <code>radiogroup</code>
+           must have a name.  The data is
+              submitted as name-value pairs, using the name and value of the
+              component.
+        </p>
+                    
+        <pre class="example">
+              &lt;canvas height="200"&gt;
+              &lt;dataset name="echoer" type="http" src="/@WEBAPP@/examples/components/echo.jsp" /&gt;
+              &lt;window id="win" &gt;
+              &lt;form&gt;
+              &lt;submit name="survey" dataset="${echoer}"/&gt;
+              &lt;statictext&gt;What is your favorite vacation spot?&lt;/statictext&gt;
+              &lt;radiogroup name="place"&gt;
+              &lt;radiobutton&gt;Hawaii&lt;/radiobutton&gt;
+              &lt;radiobutton&gt;Paris&lt;/radiobutton&gt;
+              &lt;radiobutton&gt;Jamaica&lt;/radiobutton&gt;
+              &lt;/radiogroup&gt;
+              &lt;button isdefault="true"
+              onclick="parent.survey.submit()"&gt;submit&lt;/button&gt;
+              &lt;/form&gt;
+              &lt;/window&gt;
+              
+              &lt;view x="260" y="20" 
+              layout="class: simplelayout" datapath="echoer:/response"&gt;
+              &lt;text text="Data received" /&gt;
+              &lt;view layout="axis: y" &gt;
+              &lt;view datapath="formcomponent" layout="axis:x" &gt;
+              &lt;text resize="true" datapath="@name"/&gt;
+              &lt;text text=":"/&gt;
+              &lt;text resize="true" datapath="text()"/&gt;
+              &lt;/view&gt;
+              &lt;/view&gt;
+              &lt;/view&gt;
+              &lt;/canvas&gt;
+            </pre>
+                    
+        <p>
+          If you want to include buttons in the form that are not placed in
+              the lower-right, you can specify 
+          <code>placement="content"</code>
+           in
+              the button tag.  To use a custom layout with a form, use the
+              
+          <code>baseform</code>
+           tag.
+        </p>
+                    
+        <p class="meta">See also: 
+                        
+          <code>baseform submit</code> 
+                        
+          <code>checkbox radiogroup combobox button edittext list</code> 
+                      
+        </p>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">defaultplacement</td><td class="ty">string</td><td class="ty">content</td><td>The default placement view for subviews that go in this form.</td></tr><tr><td class="nm">inset_bottom</td><td class="ty">expression</td><td class="ty">10</td><td>The bottom inset for content appearing within form.</td></tr><tr><td class="nm">inset_left</td><td class="ty">expression</td><td class="ty">10</td><td>The left inset for content appearing within form.</td></tr><tr><td class="nm">inset_right</td><td class="ty">expression</td><td class="ty">10</td><td>The right inset for content appearing within form.</td></tr><tr><td class="nm">inset_top</td><td class="ty">expression</td><td class="ty">10</td><td>The top inset for content appearing within form.</td></tr><tr><td class="nm">spacing</td><td class="ty">expression</td><td class="ty">10</td><td>Vertical space between content and button area. If forms height is
+              specified, the button area will be flush against the form's bottom
+              right corner (adjusted by any layout that the form has).</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

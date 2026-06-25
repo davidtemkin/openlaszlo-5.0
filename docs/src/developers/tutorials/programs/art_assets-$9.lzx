@@ -1,0 +1,9 @@
+
+<canvas width="100%" height="100">
+  <view resource="resources/still_swf.png"/>
+  <view x="150" y="20" resource="resources/anim_swf0001.png"/>
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

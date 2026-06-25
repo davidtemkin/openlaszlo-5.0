@@ -1,0 +1,9 @@
+    <canvas height="200" proxied="false">
+      <drawview height="50" width="50">
+        <handler name="oninit">
+         this.moveTo(100,100)
+         this.lineTo(200,100)
+         this.quadraticCurveTo(120, 200, 300, 100)
+        </handler>
+      </drawview>
+    </canvas>

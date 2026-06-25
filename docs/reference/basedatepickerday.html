@@ -1,0 +1,30 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basedatepickerday&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basedatepickerday<span class="ang">&gt;</span></h1><p class="short">
+          An abstract class representing a day for use with 
+          basedatepicker
+        </p><p class="meta">Extends <a href="view.html"><code>LzView</code></a></p>
+                    
+        <p>
+           
+               Basedatepickerday is an abstract class representing a day for use with the 
+               basedatepicker. When creating an implementation of basedatepickerday, it is expected that certain methods from basedatepicker,
+                basedatepickerday and basedatepickerweek will be overridden to provide full
+                functionality of a datepicker.  For basedatepickerday, these methods include
+                buttonpush(), buttonrelease(), gotFocus(), and removeFocus().  See the source code of
+                datepicker for a more extensive example. 
+               See also 
+          
+           and 
+          
+                      
+            
+        </p>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">daynum</td><td class="ty">expression</td><td class="ty">null</td><td>The day of the month to be displayed</td></tr><tr><td class="nm">disabled</td><td class="ty">boolean</td><td class="ty">false</td><td>Indicates if this day should be enabled or disabled.  The day 
+              would be disbled if it should not show its daynum.</td></tr><tr><td class="nm">selectable</td><td class="ty">boolean</td><td class="ty">null</td><td>Indicates if this day is selectable.  The day is selectable if 
+              it is within the range of possible selected dates</td></tr><tr><td class="nm">selected</td><td class="ty">boolean</td><td class="ty">false</td><td>Indicates if this day is currently selected</td></tr></table><h3>Methods</h3><ul class="methods"><li><code>buttonpush()</code></li><li><code>buttonrelease()</code></li><li><code>gotFocus()</code></li><li><code>removeFocus()</code></li></ul>
+</main><script src="_nav.js"></script></body></html>

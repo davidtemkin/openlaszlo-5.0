@@ -1,0 +1,2 @@
+<videoview url="http://mysite.com/myvideo.flv" autoplay="true"/>
+<videoview url="myvideo.flv" autoplay="true"/>  

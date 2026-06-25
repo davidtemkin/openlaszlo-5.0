@@ -1,0 +1,25 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basewindow&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basewindow<span class="ang">&gt;</span></h1><p class="short">base window class</p><p class="meta">Extends <code>basecomponent</code></p>
+                    
+        <p>
+            This abstract class provides useful methods and states for a view that is moveable
+            and resizeable.
+            </p>
+                    
+            
+        <p class="meta">See also: 
+                      
+          <code>window windowpanel modaldialog alert</code>
+                      
+        </p>
+                  The basewindow class defines methods, attributes that are used by window
+      subclasses.
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">allowdrag</td><td class="ty">boolean</td><td class="ty">true</td><td>Attribute handles whether window can be dragged or not</td></tr><tr><td class="nm">defaultbuttongroup</td><td class="ty">expression</td><td class="ty">true</td><td/></tr><tr><td class="nm">haswindowfocus</td><td class="ty">expression</td><td class="ty">false</td><td>True if the window is frontmost. Set this
+              attribute to bring the window to the fore of its sibling
+              windows, and bring window focus.</td></tr><tr><td class="nm">minheight</td><td class="ty">expression</td><td class="ty">50</td><td>Minimum height for the window.</td></tr><tr><td class="nm">minwidth</td><td class="ty">expression</td><td class="ty">60</td><td>Minimum width for the window.</td></tr><tr><td class="nm">mousedel</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">state</td><td class="ty">expression</td><td class="ty">1</td><td>The state of the window: 1=selected (frontmost) window,
+              2=not-selected window, 3=dragging, 4=disabled, 5=resizing.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

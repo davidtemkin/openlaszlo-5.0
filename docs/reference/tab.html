@@ -1,0 +1,45 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;tab&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>tab<span class="ang">&gt;</span></h1><p class="short">
+                The lz tab is used by tabs.
+            </p><p class="meta">Extends <code>basetab</code></p>
+                        
+        <p>
+                              A 
+          <code>tab</code>
+           is an LZ tab within 
+          <code>&lt;basetabsbar&gt;</code>
+                              or any object that extends this (such as 
+          <code>&lt;tabsbar&gt;</code>
+          ).
+                
+        </p>
+                        
+        <pre class="example">
+                    
+&lt;canvas height="100"&gt;
+  &lt;include  /&gt;
+
+  &lt;basetabs x="10" y="10" tabclass="tab"&gt;
+    &lt;basetabpane text="one"&gt;
+      &lt;text&gt;one&lt;/text&gt;
+    &lt;/basetabpane&gt;
+    &lt;basetabpane text="two"&gt;
+      &lt;text&gt;two&lt;/text&gt;
+    &lt;/basetabpane&gt;
+  &lt;/basetabs&gt;
+&lt;/canvas&gt;
+                    
+                </pre>
+                        
+        <p class="meta">See also: 
+                              
+          <code>tabsbar tabpane tabs basetab</code> 
+                          
+        </p>
+                    
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">MIN_TEXT_BORDER</td><td class="ty">number</td><td class="ty">2</td><td/></tr><tr><td class="nm">padding</td><td class="ty">expression</td><td class="ty">20</td><td>Text padding.</td></tr><tr><td class="nm">tabstate</td><td class="ty">number</td><td class="ty">2</td><td/></tr><tr><td class="nm">titleshift</td><td class="ty">number</td><td class="ty">this.tabstate == 4 ? 4 : 0</td><td/></tr><tr><td class="nm">width</td><td class="ty">expression</td><td class="ty">tabview.labeltext.getTextWidth() + 2*padding</td><td/></tr></table>
+</main><script src="_nav.js"></script></body></html>

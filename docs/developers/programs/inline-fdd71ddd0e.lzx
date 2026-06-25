@@ -1,0 +1,5 @@
+  <rtmpconnection src="rtmp://mysite.com/myapp/" autoconnect="true"/>
+  <videoview id="v" url="http://mysite.com/myvideo.flv"/>
+  <!--should stream be streamname?-->
+  <button text="play" onclick="v.stream.play()"/>
+  <button text="stop" onclick="v.stream.stop()"/>

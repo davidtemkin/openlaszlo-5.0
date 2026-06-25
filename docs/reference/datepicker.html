@@ -1,0 +1,43 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;datepicker&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>datepicker<span class="ang">&gt;</span></h1><p class="short">
+              A simple date picker
+          </p><p class="meta">Extends <code>basedatepicker</code></p>
+                    
+        <p>
+              Datepicker is a simple component that makes it easy for users to select dates.  
+            </p>
+                    
+        <pre class="example"> 
+              &lt;canvas height="200"&gt; 
+              &lt;datepicker showingdate="new Date()"
+              earliestdate="new Date( 2007, 1, 1)" 
+              latestdate="new Date( 2008, 11, 31)"
+              selecteddate="new Date()"&gt;
+              &lt;handler name="onselecteddate"&gt;
+              if( this.selecteddate != null ) {
+              display.year.setAttribute('text', this.selecteddate.getFullYear() );
+              display.month.datapath.setXPath(
+              "datepicker_strings_en:/months/month[@index='" + 
+              this.selecteddate.getMonth() + "']/@full" ); 
+              display.date.setAttribute('text', this.selecteddate.getDate() );
+              } 
+              &lt;/handler&gt;
+              &lt;/datepicker&gt; 
+
+              &lt;view id="display"&gt;
+              &lt;text name="month" resize="true" datapath="."/&gt;
+              &lt;text name="date" resize="true"/&gt;
+              &lt;text name="year" resize="true"/&gt; 
+              &lt;simplelayout axis="x" spacing="2"/&gt;
+              &lt;/view&gt;
+              &lt;simplelayout axis="y" spacing="10"/&gt;
+              &lt;/canvas&gt;
+            </pre>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">allowdrag</td><td class="ty">boolean</td><td class="ty">true</td><td/></tr><tr><td class="nm">dayclass</td><td class="ty">expression</td><td class="ty">lz.datepickerday</td><td/></tr><tr><td class="nm">firstDaySelected</td><td class="ty">boolean</td><td class="ty">false</td><td/></tr><tr><td class="nm">startAsIcon</td><td class="ty">boolean</td><td class="ty">true</td><td>Set to true to initially show the datepicker as an
+              icon, otherwise set to false.</td></tr><tr><td class="nm">weekclass</td><td class="ty">expression</td><td class="ty">lz.datepickerweek</td><td/></tr></table><h3>Methods</h3><ul class="methods"><li><code>setMonthToShow()</code></li></ul>
+</main><script src="_nav.js"></script></body></html>

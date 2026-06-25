@@ -1,0 +1,94 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;tabscontent&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>tabscontent<span class="ang">&gt;</span></h1><p class="short">
+                The tabs content container for tabpanes.
+            </p><p class="meta">Extends <code>basetabscontent</code></p>
+                        
+        <p>
+                              
+          <code>tabscontent</code>
+           houses a stack of 
+                    
+          
+          s for 
+          
+          , 
+                    which has a visual border and uses the default style's 
+                    background color. When a 
+          <code>tabspane</code>
+           
+                    is added to a 
+          <code>tabs</code>
+          , its content 
+                    are actually placed in 
+          <code>tabscontent</code>
+          .
+                
+        </p>
+                        
+        <p>
+                              Said another way, 
+          <code>tabscontent</code>
+           is the 
+                    class used by tabs to place tabpanes. Visually, it contains 
+                    a border. The size of the border is constrained by its parent's 
+                    (tabs) bordersize attribute value. You can pass the name of 
+                    this class in the 'contentclass' attribute of basetabs and 
+                    tabs. Tabs uses this class as its default 'contentclass'. 
+                
+        </p>
+                        
+        <pre class="example">
+                    
+&lt;canvas height="100"&gt;
+  &lt;include /&gt;
+  &lt;simplelayout axis="x" spacing="10"/&gt;
+  
+  &lt;view layout="class: simplelayout; axis: y; spacing: 5"
+        bgcolor="red"&gt;
+    &lt;text&gt;contentclass=basetabscontent&lt;/text&gt;
+    &lt;basetabs y="10" bordersize="5"
+              tabclass="tab" contentclass="basetabscontent"&gt;
+      &lt;basetabpane text="one" bgcolor="teal"&gt;
+        &lt;text&gt;one&lt;/text&gt;
+      &lt;/basetabpane&gt;
+      &lt;basetabpane text="two" bgcolor="green"&gt;
+        &lt;text&gt;two&lt;/text&gt;
+      &lt;/basetabpane&gt;
+      &lt;basetabpane text="three" bgcolor="blue"&gt;
+        &lt;text&gt;three&lt;/text&gt;
+      &lt;/basetabpane&gt;
+    &lt;/basetabs&gt;
+  &lt;/view&gt;
+
+  &lt;view layout="class: simplelayout; axis: y; spacing: 5"
+        bgcolor="yellow"&gt;
+    &lt;text&gt;contentclass=tabscontent&lt;/text&gt;
+    &lt;basetabs y="10" bordersize="5"
+              tabclass="tab" contentclass="tabscontent"&gt;
+      &lt;basetabpane text="one" bgcolor="teal"&gt;
+        &lt;text&gt;one&lt;/text&gt;
+      &lt;/basetabpane&gt;
+      &lt;basetabpane text="two" bgcolor="green"&gt;
+        &lt;text&gt;two&lt;/text&gt;
+      &lt;/basetabpane&gt;
+      &lt;basetabpane text="three" bgcolor="blue"&gt;
+        &lt;text&gt;three&lt;/text&gt;
+      &lt;/basetabpane&gt;
+    &lt;/basetabs&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+                    
+                </pre>
+                        
+        <p class="meta">See also: 
+                              
+          <code>tabs tabpane basetabscontent</code> 
+                          
+        </p>
+                    
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">defaultplacement</td><td class="ty">string</td><td class="ty">borderedcontent</td><td/></tr></table>
+</main><script src="_nav.js"></script></body></html>

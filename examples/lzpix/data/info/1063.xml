@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1063">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Venice Beach Skatepark</title>
+  <description>Venice Beach Skatepark — from the OpenLaszlo sample image library.</description>
+  <dates posted="1495356800" />
+  <urls><url type="photopage">data/photos/1063.jpg</url></urls>
+  <tags><tag>venice</tag><tag>beach</tag><tag>skatepark</tag></tags>
+</photo>
+</rsp>

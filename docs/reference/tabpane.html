@@ -1,0 +1,82 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;tabpane&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>tabpane<span class="ang">&gt;</span></h1><p class="short">
+                A tabpane houses content to be shown within a tabs component when its 
+                correlated tab is selected.
+            </p><p class="meta">Extends <code>basetabpane</code></p>
+                        
+        <p>
+                              
+          <code>tabpane</code>
+           is the visual container for content in 
+                    
+          
+          . The difference between this class and 
+                    
+          
+           is that 
+          <code>tabpane</code>
+                              has a background 
+          
+           that is set by whatever
+                    the default style is.
+                
+        </p>
+                        
+        <p>
+                              Note that the content of tabpane is 
+          <code>initstage="late"</code>
+          .
+                    You can override this by explicitly setting your 
+          <code>initstage</code>
+                              preference on tabpane.
+                
+        </p>
+                        
+        <pre><code>
+&lt;tabpane initstage="normal"&gt;
+  &lt;!-- ...content... --&gt;
+  &lt;/tabpane&gt;
+&lt;/tabpane&gt;
+                </code></pre>
+                        
+        <p>
+                              For every 
+          <code>tabpane</code>
+           declared, a corresponding 
+                    
+          
+           is created.
+                
+        </p>
+                        
+        <pre class="example">
+                    
+&lt;canvas height="150" &gt;
+  &lt;include /&gt;
+
+  &lt;simplelayout axis="y" spacing="5"/&gt;
+  &lt;text x="10" multiline="true" width="200"&gt;
+      First two are tabpanes, the last one is a basetabpane
+  &lt;/text&gt;
+  &lt;basetabs x="10" tabclass="tab" bgcolor="green"&gt;
+    &lt;tabpane&gt;
+      &lt;text&gt;one&lt;/text&gt;
+    &lt;/tabpane&gt;
+    &lt;tabpane&gt;
+      &lt;text&gt;two&lt;/text&gt;
+    &lt;/tabpane&gt;
+    &lt;basetabpane&gt;
+      &lt;text&gt;three&lt;/text&gt;
+    &lt;/basetabpane&gt;
+  &lt;/basetabs&gt;
+&lt;/canvas&gt;
+                    
+                </pre>
+                    
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">tabwidth</td><td class="ty">number</td><td class="ty">-1</td><td>Width of the tab associated with this tabpane. If not set, the tab
+              will resize itself to fit.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

@@ -1,0 +1,30 @@
+<!--
+* X_LZ_COPYRIGHT_BEGIN ****************************************************
+* Copyright 2001-2008 Laszlo Systems, Inc.  All Rights Reserved.          *
+* Use is subject to license terms.                                        *
+* X_LZ_COPYRIGHT_END ******************************************************-->
+<library>
+    <!-- explicit frames (was src="../assets/spinner/" — a directory resource the
+         sheet-free browser resolver can't enumerate; explicit <frame>s resolve the
+         same in Node and in-browser, in sorted order). -->
+    <resource name="spinner_rsc">
+        <frame src="../assets/spinner/pict1.png"/>
+        <frame src="../assets/spinner/pict2.png"/>
+        <frame src="../assets/spinner/pict3.png"/>
+        <frame src="../assets/spinner/pict4.png"/>
+        <frame src="../assets/spinner/pict5.png"/>
+        <frame src="../assets/spinner/pict6.png"/>
+    </resource>
+   
+   <class name="spinner" resource="spinner_rsc" onclick="this.play()" visible="false" >
+        <attribute name="counter" value="1" />
+        <handler name="onidle" reference="lz.Idle" >
+            if (! this.visible ) return;
+            this.setAttribute('counter', ( this.counter + 1)%6);
+            if ( this.counter == 0 ) {
+                var f = (this.frame + 1)%6;
+                this.setAttribute('frame', f == 0 ? 6 : f);
+            }
+        </handler>
+   </class>
+</library>

@@ -1,0 +1,72 @@
+<definitions xmlns:http="http://schemas.xmlsoap.org/wsdl/http/"
+             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+             xmlns:s="http://www.w3.org/2001/XMLSchema"
+             xmlns:s0="http://tempuri.org/"
+             xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+             xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/"
+             xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/"
+             targetNamespace="http://tempuri.org/"
+             xmlns="http://schemas.xmlsoap.org/wsdl/">
+
+  <types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://tempuri.org/">
+      <s:element name="Add">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="A" type="s:float" />
+            <s:element minOccurs="1" maxOccurs="1" name="B" type="s:float" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+
+      <s:element name="AddResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="AddResult" type="s:float" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+
+      <!-- MORE SCHEMA DECLARATION (for Subtract, Multiply, Divide) HERE -->
+
+    </s:schema>
+  </types>
+
+  <message name="AddSoapIn">
+    <part name="parameters" element="s0:Add" />
+  </message>
+  <message name="AddSoapOut">
+    <part name="parameters" element="s0:AddResponse" />
+  </message>
+
+  <!-- OTHER MESSAGES (for Subtract, Multiply, Divide) HERE -->
+
+  <portType name="MathServiceSoap">
+    <operation name="Add">
+      <input message="s0:AddSoapIn" />
+      <output message="s0:AddSoapOut" />
+    </operation>
+    <!-- OTHER PORT TYPE OPERATIONS (for Subtract, Multiply, Divide) HERE -->
+  </portType>
+
+  <binding name="MathServiceSoap" type="s0:MathServiceSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document" />
+    <operation name="Add">
+      <soap:operation soapAction="http://tempuri.org/Add" style="document" />
+      <input>
+        <soap:body use="literal" />
+      </input>
+      <output>
+        <soap:body use="literal" />
+      </output>
+    </operation>
+    <!-- OTHER SOAP BINDING OPERATIONS (for Subtract, Multiply, Divide) HERE -->
+  </binding>
+
+  <service name="MathService">
+    <port name="MathServiceSoap" binding="s0:MathServiceSoap">
+      <soap:address location="http://www.dotnetjunkies.com/quickstart/aspplus/samples/services/MathService/VB/MathService.asmx" />
+    </port>
+  </service>
+
+</definitions>

@@ -1,0 +1,4 @@
+<soap name="calendar" wsdl="http://www.mycompany.com/Calendar.wsdl">  
+    <attribute name="requestheaders" value='<usr>name</usr><pwd>secret</pwd>' />  
+<!-- ... --> 
+</soap>  

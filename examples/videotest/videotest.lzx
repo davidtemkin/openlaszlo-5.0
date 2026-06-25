@@ -1,0 +1,16 @@
+<canvas height="280" width="340" bgcolor="0x222222">
+    <include href="htmlvideoview.lzx"/>
+
+    <htmlvideoview id="vv" x="10" y="10" width="320" height="180"
+                   url="/media/sintel-trailer.mp4" autoplay="true" muted="true"/>
+
+    <view x="10" y="198" layout="axis:x; spacing:6">
+        <button text="Play"  onclick="vv.play()"/>
+        <button text="Pause" onclick="vv.pause()"/>
+        <button text="Stop"  onclick="vv.stop()"/>
+        <button text="+15s"  onclick="vv.seek(vv.playhead + 15)"/>
+    </view>
+
+    <text x="10" y="232" width="320" fgcolor="0xffffff" fontsize="12"
+          text="${'playing=' + vv.playing + '   ' + Math.round(vv.playhead) + ' / ' + Math.round(vv.totaltime) + ' s'}"/>
+</canvas>

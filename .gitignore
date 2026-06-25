@@ -1,0 +1,17 @@
+# compiler build dependencies (rebuilt via `npm install` in compiler/)
+compiler/node_modules/
+# compiled-output caches (server-side compile + closure caches)
+server/.cache/
+server/.cache-ts/
+server/.cache-ts-sites/
+# in-place oracle compile artifacts (phase A — the Java oracle compiles apps in place)
+**/*.lzx.js
+**/*.sprite.png
+**/*.wgt
+**/.tmp_relay_*
+# the oracle bundles a runtime resource tree into each app dir on compile
+examples/**/lps/
+explorer/**/lps/
+explorer/lps/
+# editor/backup cruft
+*.bak

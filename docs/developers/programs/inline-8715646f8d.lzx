@@ -1,0 +1,7 @@
+<canvas>
+  <class name="myclass">
+    ...
+  </class>
+  
+  <myclass/>
+</canvas>

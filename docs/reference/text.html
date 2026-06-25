@@ -1,0 +1,210 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;text&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>text<span class="ang">&gt;</span></h1><p class="short">The basic text display element.</p><p class="meta">Extends <a href="view.html"><code>LzView</code></a></p>
+        <p>
+          This class is used for non-editable text fields (as opposed to
+ 
+          <code>&lt;inputtext&gt;</code>
+          ).  A text field can be initalized
+ with text content at compile time.
+        </p>
+         
+        <pre class="example">
+
+ &lt;canvas height="30"&gt;
+   &lt;text&gt;Hello world!&lt;/text&gt;
+ &lt;/canvas&gt;
+ </pre>
+         
+        <p>Text objects can also display text that is computed at
+ runtime.</p>
+         
+        <pre class="example">
+     &lt;canvas height="30"&gt;
+       &lt;class name="clickClock" extends="text"&gt;
+         &lt;attribute name="dayTable"
+                    value='["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]'
+                    /&gt;
+         &lt;handler name="onclick"&gt;
+           var now = new Date;
+           this.format("You clicked me at %02d:%02d:%02d on %s",
+                       now.getHours(),
+                       now.getMinutes(),
+                       now.getSeconds(),
+                       dayTable[now.getDay()]);
+         &lt;/handler&gt;
+       &lt;/class&gt;
+       &lt;clickClock&gt;
+         Click Me!
+       &lt;/clickClock&gt;
+     &lt;/canvas&gt;
+ </pre>
+         
+        <p>
+ Note that certain attributes on text objects, such as opacity and rotation, only work on
+ embedded fonts. They do not work on client fonts (also called platform fonts, native fonts,
+ platform fonts, etc). See the Developer's Guide for details.
+ </p>
+         
+        <p>
+          <em>See Also:</em>
+        </p>
+         
+        <code>&lt;itemizedlist&gt;
+           
+          <code>&lt;listitem&gt;
+            The 
+            <a href="../developers/text.html">Text Views</a>
+             chapter of the 
+            <a >Developer's Guide</a>
+             for a discussion of how to include and manipulate text
+          &lt;/listitem&gt;</code>
+           
+          <code>&lt;listitem&gt;
+            The 
+            <code>canvas.maxtextheight</code>
+             and 
+            <code>canvas.maxtextwidth</code>
+             attributes
+          &lt;/listitem&gt;</code>
+           
+        &lt;/itemizedlist&gt;</code>
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">antiAliasType</td><td class="ty">string</td><td class="ty"/><td>antialias type for this text</td></tr><tr><td class="nm">direction</td><td class="ty">String</td><td class="ty"/><td>Text direction, either "ltr" (default) or "rtl"</td></tr><tr><td class="nm">gridFit</td><td class="ty">string</td><td class="ty"/><td>Grid fit for this text</td></tr><tr><td class="nm">hasdirectionallayout</td><td class="ty">booleanLiteral</td><td class="ty"/><td>If true, sprite will use TLF text framework class that supports bidirectional text layout.</td></tr><tr><td class="nm">hscroll</td><td class="ty">Number</td><td class="ty"/><td>The horizontal scroll position in pixels.  Default 0.
+
+ NOTE: A constraint or handler on onhscroll will automatically enable 
+ updating the attribute.</td></tr><tr><td class="nm">letterspacing</td><td class="ty">number</td><td class="ty"/><td>letterspacing accepts any number which is interpreted as a px value</td></tr><tr><td class="nm">lineheight</td><td class="ty">Number</td><td class="ty"/><td>The height of a line of text in the current style</td></tr><tr><td class="nm">maxhscroll</td><td class="ty">Number</td><td class="ty"/><td>
+                The maximum horizontal scroll position in pixels.
+ 
+                <code>this.setAttribute('hscroll', this.maxhscroll)</code>
+                 will
+ cause the end of content to be visible at the edge of
+ the view.  (The rightmost content will appear at the right edge
+ of the view for left-to-right scripts, hence this is the pixel
+ position of the leftmost pixel that will appear in the view when
+ scrolled all the way to the right.)
+
+ NOTE: A constraint or handler on onmaxhscroll will automatically enable 
+ updating the attribute.
+              </td></tr><tr><td class="nm">maxlength</td><td class="ty">numberExpression</td><td class="ty"/><td>Maximum number of characters allowed in this field</td></tr><tr><td class="nm">maxscroll</td><td class="ty">Number</td><td class="ty"/><td>
+                The maximum vertical scroll position (in lines, 1-based).
+ 
+                <code>this.setAttribute('scroll', this.maxscroll)</code>
+                 will
+ cause the last line of the content to be visible at the bottom of
+ the view (hence this is the line number of the line that will
+ appear at the top of the view when scrolled all the way to the
+ bottom).
+
+ NOTE: A constraint or handler on onmaxscroll will automatically enable 
+ updating the attribute.
+              </td></tr><tr><td class="nm">multiline</td><td class="ty">boolean</td><td class="ty">"false"</td><td>
+                If true, the lines of text are wrapped to fit within the text
+ width.  (The name 
+                <code>multiline</code>
+                 is a misnomer.  Unwrapped text
+ can be multiple lines if it contains a 
+                <code>&lt;br /&gt;</code>
+                 or 
+                <code>&lt;p&gt;</code>
+                 element, or a line break within a 
+                <code>&lt;pre&gt;</code>
+                 element.
+
+ This attribute defaults to true if width and height are
+ explicitly specified.
+
+ If you set multiline=true, you probably want to explicitly a
+ width for the text also; if multiline=true and you do not specify
+ a width, the system will pick an arbitrary width (100 pixels at
+ the moment).
+
+ When multiline=true, the text is automatially re-wrapped whenever
+ the content is modified by calls to 
+                <code>&lt;method&gt;setText&lt;/method&gt;</code>
+                , or whenever the
+ width of the text view is modified.
+              </td></tr><tr><td class="nm">pattern</td><td class="ty">string</td><td class="ty"/><td>regexp describing set of characters allowed in this field Restrict the characters that can be entered to a pattern specified by a regular expression.
+ Currently only the expression [ ]* enclosing a set of characters or character ranges, preceded by an optional "^", is supported. examples: [0-9]* , [a-zA-Z0-9]*, [^0-9]*</td></tr><tr><td class="nm">resize</td><td class="ty">booleanLiteral</td><td class="ty"/><td>
+                If true, the width of the text field will be recomputed each time
+ 
+                <code>text</code>
+                 is changed, so that the text view is exactly as wide as
+ the width of the widest line.  Defaults to true.
+              </td></tr><tr><td class="nm">scroll</td><td class="ty">Number</td><td class="ty"/><td>The vertical scroll position (in lines, 1-based). Default 1.</td></tr><tr><td class="nm">scrollevents</td><td class="ty">Boolean</td><td class="ty"/><td>Use setAttribute('scrollevents', true) to cause scroll events to be sent.
+
+ NOTE: A constraint or handler on onyscroll, onscroll, onxscroll, 
+ onhscroll, onscrollheight, onmaxscroll, onscrollwidth or onmaxhscroll 
+ will automatically enable scrollevents.</td></tr><tr><td class="nm">scrollheight</td><td class="ty">Number</td><td class="ty"/><td>
+                The total height of the content in pixels.
+
+ 
+                <code>this.setAttribute('height', this.scrollheight)</code>
+                 is
+ equivalent to 
+                <code>this.setAttribute('height', null)</code>
+                 (for
+ the current content: the former will not follow content changes
+ as the latter does). If 
+                <code>this.scrollheight &gt;
+ this.height</code>
+                , 
+                <code>this.setAttribute('yscroll',
+ this.height - this.scrollheight)</code>
+                 will scroll the content
+ so that the bottom of the content appears in the bottom of the
+ view.
+ 
+ NOTE: A constraint or handler on onscrollheight will automatically enable 
+ updating the attribute.
+              </td></tr><tr><td class="nm">scrollwidth</td><td class="ty">Number</td><td class="ty"/><td>
+                The total width of the content in pixels.
+
+ 
+                <code>this.setAttribute('width', this.scrollwidth)</code>
+                 is
+ equivalent to 
+                <code>this.setAttribute('width', null)</code>
+                 (for
+ the current content: the former will not follow content changes
+ as the latter does). If 
+                <code>this.scrollwidth &gt;
+ this.width</code>
+                , 
+                <code>this.setAttribute('yscroll', this.width
+ - this.scrollwidth)</code>
+                 will cause the end of content to be
+ visible at the edge of the view.  (The rightmost content will
+ appear at the right edge of the view for left-to-right scripts.)
+ 
+ NOTE: A constraint or handler on onscrollwidth will automatically enable 
+ updating the attribute.
+              </td></tr><tr><td class="nm">selectable</td><td class="ty">booleanLiteral</td><td class="ty"/><td>If true, the text is selectable</td></tr><tr><td class="nm">sharpness</td><td class="ty">number</td><td class="ty"/><td>text sharpness for this text</td></tr><tr><td class="nm">text</td><td class="ty">text</td><td class="ty"/><td>
+                The text to display in this text field.  If set to a value that is
+ not a string, the value will first be converted to a string as if
+ by 
+                <code>String(value)</code>
+                .  To display nothing, set the value
+ to the empty string 
+                <code>""</code>
+                .
+              </td></tr><tr><td class="nm">textalign</td><td class="ty">string</td><td class="ty"/><td>textalign accepts one of [left, right, center, justify]</td></tr><tr><td class="nm">textdecoration</td><td class="ty">string</td><td class="ty"/><td>text-decoration for this text, either 'none' or 'underline'.</td></tr><tr><td class="nm">textindent</td><td class="ty">number</td><td class="ty"/><td>textindent accepts any number which is interpreted as a px value</td></tr><tr><td class="nm">thickness</td><td class="ty">number</td><td class="ty"/><td>text-thickness for this text</td></tr><tr><td class="nm">xscroll</td><td class="ty">Number</td><td class="ty"/><td>The x scroll offset of the content in pixels (a negative number
+ specifying how many pixels the content should be scrolled
+ horizontally). Default 0.
+ 
+ NOTE: A constraint or handler on onxscroll will automatically enable 
+ updating the attribute.</td></tr><tr><td class="nm">yscroll</td><td class="ty">Number</td><td class="ty"/><td>The y scroll offset of the content in pixels (a negative number
+ specifying how many pixels the content should be scrolled
+ vertically).  Default 0.
+ 
+ NOTE: A constraint or handler on onyscroll will automatically enable 
+ updating the attribute.</td></tr></table><h3>Events</h3><ul class="events"><li><code>ondirection</code> — </li><li><code>onhscroll</code> — </li><li><code>onlineheight</code> — </li><li><code>onmaxhscroll</code> — </li><li><code>onmaxlength</code> — </li><li><code>onmaxscroll</code> — </li><li><code>onpattern</code> — </li><li><code>onscroll</code> — </li><li><code>onscrollevents</code> — </li><li><code>onscrollheight</code> — </li><li><code>onscrollwidth</code> — </li><li><code>onselectable</code> — </li><li><code>ontext</code> — </li><li><code>ontextlink</code> — 
+                Sent when a clickable HTML link in the text field is clicked.
+ Event data is a string with the link value.
+ See the 
+                <code>makeTextLink</code>
+                 method.
+              </li><li><code>onxscroll</code> — </li><li><code>onyscroll</code> — </li></ul><h3>Methods</h3><ul class="methods"><li><code>makeTextLink()</code></li></ul>
+</main><script src="_nav.js"></script></body></html>

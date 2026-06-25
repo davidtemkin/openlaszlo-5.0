@@ -1,0 +1,270 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 6. Introduction to Components</title><link rel="stylesheet" type="text/css" href="../../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="../index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="../developers.tutorials.html" title="Part II. Tutorial Introduction"><link rel="prev" href="laszlo_basics.html" title="Chapter 5. OpenLaszlo Basics"><link rel="next" href="views-tutorial.html" title="Chapter 7. Introduction to Views"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 6. Introduction to Components</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="laszlo_basics.html">Prev</a> </td><th width="60%" align="center">Part II. Tutorial Introduction</th><td width="20%" align="right"> <a accesskey="n" href="views-tutorial.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="comp-intro"></a>Chapter 6. Introduction to Components</h2></div></div></div><p>OpenLaszlo components are high-level objects that implement common user-interface functions. 
+They range from relatively simple objects such as <a class="indexterm" name="id3650"></a><code class="sgmltag-element">&lt;button&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ to complex objects
+such as <a class="indexterm" name="id3654"></a><code class="sgmltag-element">&lt;form&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ and <a class="indexterm" name="id3658"></a><code class="sgmltag-element">&lt;grid&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+.
+</p><p>
+Components that are written by Laszlo Systems, Inc., and supplied with the OpenLaszlo Server are called <em class="glossterm">LZ components</em>. 
+</p><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1433"></a>1. Overview</h2></div></div></div><p>
+This tutorial introduction is intended to show you the variety of OpenLaszlo components and demonstrate how to use their
+basic features. Later chapters explain how to use advanced features of components and how to create your own components.
+
+</p><p>
+The simplest way to build an OpenLaszlo application is to use LZ components "out of the box" with their default
+behaviors. This chapter includes a few such examples. It also includes a few examples that use concepts that have not yet been introduced.
+Don't worry if you don't understand exactly how they work.  The idea here is to get acquainted with the general "feel" of an OpenLaszlo
+application that is built mostly from components. The subsequent tutorials present the concepts you'll need in order to create your
+own applications.
+</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1430"></a>1.1. A Sampler</h3></div></div></div><p>
+Before reading this chapter about how to use components to build an OpenLaszlo application, you should take a few
+moments to get familiar with the range of components that ship with OpenLaszlo. 
+</p><p>
+The example below shows a miscellaneous collection of components. It's an abbreviated version of the sampler
+in the <a class="ulink" href="../../../laszlo-explorer/index.jsp" target="_top">OpenLaszlo Explorer,</a> which contains a visual tour of all the components. The code that implements
+these components may look a little intimidating if you have not worked with this kind of language before, but don't be put off.
+In fact you may not even want to look at the code yet. Your goal here is to start thinking about the kinds of things you can do in 
+an OpenLaszlo application, and components provide your quickest route to productivity.</p><p>
+The <a class="ulink" href="../../reference/" target="_top">LZX Reference</a> documents all the tags, attributes and methods associated with each component.
+</p><div class="example"><a name="id3675"></a><p class="title"><b>Example 6.1. Components miscellany</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="500"&gt;
+    &lt;silverstyle name="silvercolors"/&gt;
+    &lt;greenstyle name="greencolors"/&gt;
+    &lt;bluestyle name="bluecolors"/&gt;
+    &lt;view id="s1" x="20" y="20"&gt;
+        &lt;view layout="spacing:20"&gt;
+            &lt;text&gt;Choose a style to change colors...&lt;/text&gt;
+
+            &lt;view name="stylechooser" layout="axis:x; spacing:4"&gt;
+                &lt;text&gt;Style:&lt;/text&gt;
+                &lt;combobox width="120" editable="false"&gt;
+                    &lt;handler name="onselect"&gt;
+                        var colorchoice = this.getText();
+                        canvas[colorchoice+'colors'].setAttribute("isdefault", true);
+                    &lt;/handler&gt;
+
+                    &lt;textlistitem text="silver"/&gt;
+                    &lt;textlistitem text="green"/&gt;
+                    &lt;textlistitem text="blue" selected="true"/&gt;
+                &lt;/combobox&gt;
+
+            &lt;/view&gt;
+            &lt;tabslider width="250" height="200"&gt;
+                &lt;tabelement text="holiday cheer" selected="true"&gt;
+                    &lt;radiogroup&gt;
+                        &lt;radiobutton text="peace on earth"/&gt;
+                        &lt;radiobutton text="joy to the world"/&gt;
+                        &lt;radiobutton text="happy new year"/&gt;
+                    &lt;/radiogroup&gt;
+                &lt;/tabelement&gt;
+                &lt;tabelement text="housewares"&gt;
+                    &lt;simplelayout axis="y" spacing="10"/&gt;
+                    &lt;checkbox text="stainless steel"/&gt;
+                    &lt;checkbox text="glassware"/&gt;
+                &lt;/tabelement&gt;
+                &lt;tabelement text="isotope"&gt;
+                    &lt;text multiline="true" width="${immediateparent.width}"&gt;
+                        Atoms that have the same number of protons but a different number of neutrons. They are atoms of the same element that have different masses. The isotope number is the number of protons plus the number of neutrons.
+                    &lt;/text&gt;
+                &lt;/tabelement&gt;
+            &lt;/tabslider&gt;
+
+            &lt;tabs&gt;
+                &lt;tabpane&gt;Insecticides
+                    &lt;simplelayout spacing="10" inset="10"/&gt;
+                    &lt;radiogroup&gt;
+                        &lt;radiobutton&gt;Yes, I want to know more&lt;/radiobutton&gt;
+                        &lt;radiobutton&gt;No, I prefer to remain blissfully unaware&lt;/radiobutton&gt;
+                        &lt;radiobutton&gt;Please tell my neighbor, who may tell me&lt;/radiobutton&gt;
+                    &lt;/radiogroup&gt;
+                &lt;/tabpane&gt;
+                &lt;tabpane text="Subliminal"&gt;
+                    &lt;button height="22"&gt;Submit&lt;/button&gt;
+                &lt;/tabpane&gt;
+            &lt;/tabs&gt;
+        &lt;/view&gt;
+
+        &lt;window text="test window" width="250" height="250" x="410" y="180" resizable="true" id="fw" title="A Simple Window"&gt;
+            &lt;menubar name="mbar" placement="menubar"&gt;
+                 &lt;menu name="file" id="mfile" width="80"&gt;File
+                     &lt;menuitem text="item 1"/&gt;
+                     &lt;menuseparator/&gt;
+                     &lt;menuitem id="MWS" text="item 3"&gt;
+                         &lt;menu name="subedit"&gt;subedit
+                             &lt;menuitem text="subitem 1"/&gt;
+                             &lt;menuitem text="subitem 2"/&gt;
+                         &lt;/menu&gt;
+                     &lt;/menuitem&gt;
+                 &lt;/menu&gt;
+                 &lt;menu name="Options"&gt;Document
+                     &lt;menuitem text="option 1"/&gt;
+                     &lt;menuitem text="option 2"/&gt;
+                 &lt;/menu&gt;
+            &lt;/menubar&gt;
+            &lt;scrollbar/&gt;
+        &lt;/window&gt;
+
+        &lt;view layout="spacing:14"&gt;
+            &lt;button height="22"&gt;Submit&lt;/button&gt;
+            &lt;button height="22" enabled="false"&gt;disabled&lt;/button&gt;
+
+            &lt;combobox width="100"&gt;
+                &lt;textlistitem text="pistachio" selected="true"/&gt;
+                &lt;textlistitem text="chocolate chip"/&gt;
+            &lt;/combobox&gt;
+
+            &lt;radiogroup&gt;
+                &lt;radiobutton text="tension"/&gt;
+                &lt;radiobutton text="distance"/&gt;
+            &lt;/radiogroup&gt;
+        &lt;/view&gt;
+
+        &lt;view layout="spacing:20"&gt;
+            &lt;view layout="spacing:10"&gt;
+                &lt;checkbox text="I want to take a weekend flight"/&gt;
+                &lt;checkbox text="Also search airports within 70 miles"/&gt;
+            &lt;/view&gt;
+            &lt;view layout="spacing:5"&gt;
+                &lt;edittext width="200" text="text entry here"/&gt;
+                &lt;edittext width="200" text="disabled" enabled="false"/&gt;
+            &lt;/view&gt;
+        &lt;/view&gt;
+        &lt;simplelayout axis="x" spacing="20"/&gt;
+    &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+</pre></div></div><br class="example-break"><p></p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1432"></a>1.2. Form components and "general" components</h3></div></div></div><p>
+You will
+notice that the OpenLaszlo Explorer groups components into "form components" and "general components."  This is merely a 
+heuristic grouping of those components that usually appear within a <a class="indexterm" name="id3682"></a><code class="sgmltag-element">&lt;form&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag and those
+that don't. There is no essential difference; for example, the <a class="indexterm" name="id3686"></a><code class="sgmltag-element">&lt;button&gt;</code> tag can be contained in a 
+<a class="indexterm" name="id3689"></a><code class="sgmltag-element">&lt;view&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ or <a class="indexterm" name="id3693"></a><code class="sgmltag-element">&lt;window&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+— it does not have to be contained in a <a class="indexterm" name="id3697"></a><code class="sgmltag-element">&lt;form&gt;</code>.
+</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1431"></a>1.2.1. When to use the form tag</h4></div></div></div><p>
+Depending on your background in building web applications, you may be inclined to use the <a class="indexterm" name="id3703"></a><code class="sgmltag-element">&lt;form&gt;</code> in place of the HTML &lt;form&gt; tag. This is often a mistake; OpenLaszlo applications are based on a different interaction model than HTML-based applications and overuse of the &lt;form&gt; tag results in LZX programs that fail to exploit OpenLaszlo's range of options.
+</p><p>
+The <a class="indexterm" name="id3707"></a><code class="sgmltag-element">&lt;form&gt;</code> tag is, generally speaking, not a widely used tag in LZX applications. It is intended to be used in situations in which the client-server interaction is simple, and there is a 1:1 mapping between the returned server data and the form elements. When the server interaction is more complicated, more advanced databinding techniques should be used, as explained in later chapters.
+</p><p></p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1437"></a>2. Building with Components</h2></div></div></div><p>
+In this section we'll explore the various ways to use components in OpenLaszlo applications:
+</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>using tags</p></li><li class="listitem"><p>using script APIs</p></li><li class="listitem"><p>using databinding</p></li></ul></div><p>
+As mentioned above, the concepts of scripting and databinding are presented in later chapters. Don't worry if you're not
+completely comfortable with these topics.
+</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1434"></a>2.1. Using Tags</h3></div></div></div><p>
+The simplest way to use the components is in an application that has tags only—no script.  The following trivial example shows
+what this looks like.
+</p><div class="example"><a name="id3724"></a><p class="title"><b>Example 6.2. Components example-tags only</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="100" width="100%"&gt;
+    &lt;simplelayout axis="x" spacing="10" inset="10"/&gt;
+    &lt;list shownitems="4"&gt;
+        &lt;textlistitem&gt;judy&lt;/textlistitem&gt;
+        &lt;textlistitem&gt;ann&lt;/textlistitem&gt;
+        &lt;textlistitem&gt;betsy&lt;/textlistitem&gt;
+        &lt;textlistitem&gt;sarah&lt;/textlistitem&gt;
+        &lt;textlistitem&gt;carol&lt;/textlistitem&gt;
+        &lt;textlistitem&gt;danah&lt;/textlistitem&gt;
+    &lt;/list&gt;
+
+    &lt;radiogroup&gt;
+        &lt;radiobutton text="apple"/&gt;
+        &lt;radiobutton text="cherry"/&gt;
+        &lt;radiobutton text="key lime"/&gt;
+    &lt;/radiogroup&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+</pre></div></div><br class="example-break"><p>
+As a practical matter, you will usually need to use some script, whether in a method, or, less
+frequently, to create a component within a <a class="indexterm" name="id3728"></a><code class="sgmltag-element">&lt;script&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ element.
+</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1435"></a>2.2. Creating components from script API</h3></div></div></div><p>
+In addition to declaring components in tags, you can create and manipulate components from script. 
+</p><p>
+The following example shows how you can create buttons using tags and script.
+</p><div class="example"><a name="id3736"></a><p class="title"><b>Example 6.3. Creating components from script</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="150" width="100%"&gt;
+  &lt;simplelayout/&gt;
+  &lt;!--Here is a button created with a tag --&gt;
+  &lt;button name="framitz" width="50"&gt;
+   hello
+  &lt;/button&gt;
+  &lt;script&gt;
+  //And here is a button created with using script 
+   var b = new lz.button();
+     b.setAttribute("width", 50);
+     b.setAttribute("height", 50);
+   &lt;/script&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+</pre></div></div><br class="example-break"><p>
+ In the example below,
+the <code class="literal">onclick</code> method procedurally adds an item to the <a class="indexterm" name="id3741"></a><code class="sgmltag-element">&lt;list &gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ component.</p><div class="example"><a name="id3745"></a><p class="title"><b>Example 6.4. Component APIs</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="150" width="100%"&gt;
+    &lt;simplelayout spacing="10"/&gt;
+    &lt;list id="mylist" height="82"&gt;     
+        &lt;textlistitem text="something"/&gt;
+    &lt;/list&gt;
+
+    &lt;view layout="axis:x;spacing:4" &gt;
+        &lt;edittext id="item" text="new item"/&gt;
+        &lt;button text="Add" isdefault="true"&gt;
+            &lt;handler name="onclick"&gt;
+               mylist.addItem(item.getText());
+            &lt;/handler&gt;
+        &lt;/button&gt;
+    &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+</pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1436"></a>2.3. Data-Driven Components</h3></div></div></div><p>
+A third way to create components is through databinding.  In the example below, a new component <code class="literal">textlistitem</code> is created
+for each matching node in the "mydata" dataset.
+</p><div class="example"><a name="id3752"></a><p class="title"><b>Example 6.5. Data-Driven Components</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="200" width="100%"&gt;
+    &lt;dataset name="mydata" src="resources/contacts.xml" request="true"/&gt;
+    &lt;simplelayout axis="x" spacing="10" inset="10"/&gt;
+    &lt;list id="a"&gt;
+        &lt;textlistitem datapath="mydata:/contacts/person"
+                      text="$path{'@firstname'}"/&gt;
+    &lt;/list&gt;
+
+    &lt;list id="b" shownitems="4"&gt;
+        &lt;textlistitem datapath="mydata:/contacts/person"
+                      text="$path{'@firstname'}"/&gt;
+    &lt;/list&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+</pre></div></div><br class="example-break"><p></p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="laszlo_basics.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="../developers.tutorials.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="views-tutorial.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 5. OpenLaszlo Basics </td><td width="20%" align="center"><a accesskey="h" href="../index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 7. Introduction to Views</td></tr></table></div></body></html>

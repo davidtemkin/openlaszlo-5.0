@@ -1,0 +1,20 @@
+<!--begin foo.css-->
+
+#gPhilip {
+    width: 300;
+    height: 200;
+    bgcolor: #8F008F;
+}
+
+<!--end-->
+
+<!--The LZX file-->
+
+<canvas>
+
+	<stylesheet src="foo.css" />
+
+	<view id="gPhilip" width="$style{'width'}" height="$style{'height'}" bgcolor="$style{'bgcolor'}"/>
+
+</canvas>
+

@@ -1,0 +1,46 @@
+
+<canvas width="100%" height="400" bgcolor="0xE5E1B0"  >
+  <!-- INCLUDES That provide framework for the example -->
+  <include href="animation_library.lzx"/>
+  
+  <!-- The EXAMPLE itself-->
+  <view id="tutorial2" height="400" width="${parent.width}" visible="true">
+    <ruler name="rlr" height="350" y="0"/>
+    <view height="30"/>
+    <view height="200" y="40">
+      <view height="150" x="50">
+        <box id="B20"  onclick="this.anm.doStart()">
+          <animatorgroup name="anm" start="false" process="simultaneous">
+            <animator attribute="x" from="0" to="300" duration="1000" motion="linear"/>
+            <animator attribute="y" from="0" to="100" duration="1000"                />
+          </animatorgroup>
+        </box>
+      </view>
+      <view height="150" x="350">
+        <box id="B21" onclick="this.anm.doStart()">
+          <animatorgroup name="anm" start="false" process="simultaneous">
+            <animator attribute="x" from="0" to="300" duration="1000"                 />
+            <animator attribute="y" from="0" to="100" duration="1000" motion="easeout"/>
+          </animatorgroup>
+        </box>
+      </view>
+      <simplelayout axis="y" spacing="10"/>
+    </view>
+  </view>
+
+  <!-- The TEST and RESET buttons -->
+  <view x="50" y="350">
+    <button text="Test" x="50"
+                onclick="B20.anm.doStart();
+                         B21.anm.doStart()"/>
+    <button text="Reset"
+                onclick="B20.setAttribute('x', 0);B20.setAttribute('y', 0);
+                         B21.setAttribute('x', 0);B21.setAttribute('y', 0);
+                         this.parent.P2.setAttribute('display', ' ');"/>
+    <simplelayout axis="x"/>
+  </view>
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

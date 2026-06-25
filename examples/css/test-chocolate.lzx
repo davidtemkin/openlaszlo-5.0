@@ -1,0 +1,7 @@
+<!-- Copyright 2006 Laszlo Systems -->
+<canvas id="gMyCanvas" title="Chocolate CSS example" width="100%" height="100%">
+
+    <stylesheet src="chocolate.css"/>
+    <include href="content.lzx" />
+
+</canvas>

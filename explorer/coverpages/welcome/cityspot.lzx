@@ -1,0 +1,146 @@
+<!--=======================================================================-->
+<!-- clocks.lzx                                                            -->
+<!--                                                                       -->
+<!-- library classes for the 'cityspot' class used in world clocks map     -->
+<!--                                                                       -->
+<!-- Copyright 2002-2007 Laszlo Systems, Inc.  All Rights Reserved.        -->
+<!-- Unauthorized use, duplication or distribution is strictly prohibited. -->
+<!-- This software is the proprietary information of Laszlo Systems, Inc.  -->
+<!-- Use is subject to license terms.                                      -->
+<!--                                                                       -->
+<!--=======================================================================-->
+<library>
+    <class name="cityspot">
+
+        <!-- the display name of the city -->
+        <attribute name="label"    value="San Francisco" type="string" />
+
+        <!-- position: 1-label appears above the dot centered    -->
+        <!--           2-label appears to the right of the dot   -->
+        <!--           3-label appears below the dot centered    -->
+        <!--           4-label appears to the left of the dot    -->
+        <attribute name="position" value="2" type="number"/>
+
+        <!-- timezone state (filled from citydata.xml in ondata). Declared so a clock
+             that syncs before the async data load doesn't read undefined. -->
+        <attribute name="timezoneoffset" value="0" type="number"/>
+        <attribute name="isDST"          value="false" type="boolean"/>
+        <attribute name="dataready"      value="false" type="boolean"/>
+        <attribute name="pendingclock"   value="null"/>
+
+        <view name="dothilite" resource="images/dothilite.png"
+              stretches="both" visible="false"  x="-6" y="-6" />
+
+        <view name="dot" resource="images/dot.png" stretches="both" x="-4" y="-4"
+              onmouseover="this.parent.dothilite.setAttribute('visible', true)"
+              onmouseout="this.parent.dothilite.setAttribute('visible', false)"
+              onclick="this.parent.activateclock( myclock )" />
+
+        <text name="titlesdhw" x="${parent.title.x + 1}" y="${parent.title.y + 1}"
+              font="Kgr,Lucida Sans Unicode,Lucida Grande,sans-serif" fontsize="8"  fgcolor="0xFFFFFF"  datapath="name/text()" opacity=".5" />
+
+        <text name="title" x="${-this.getTextWidth() -3}" y="-3"
+              font="Kgr,Lucida Sans Unicode,Lucida Grande,sans-serif" fontsize="8" datapath="name/text()" >
+            <method name="setLabelPosition" >
+                if ( this.parent.position == 1) {
+                    this.setAttribute('x', -this.getTextWidth() - 7);
+                    this.setAttribute('y', -9);
+                } else if ( this.parent.position == 2) {
+                    this.setAttribute('x', Math.round(-this.getTextWidth()/2 ));
+                    this.setAttribute('y', -19);
+                } else if ( this.parent.position == 3) {
+                    this.setAttribute('x', 4);
+                    this.setAttribute('y', -8);
+                } else {
+                    this.setAttribute('x', Math.round(-this.getTextWidth()/2 - 2 ));
+                    this.setAttribute('y', 0);
+                }
+           </method>
+        </text>
+
+        <!-- Create a date in the current year -->
+        <method name="makeDate" args="dateparts">
+            var currentYear = new Date();
+            currentYear = 1900 + currentYear.getYear();
+
+            // dateparts is month,day,hours,mins
+            var datepartsarray = dateparts.split( ',' );
+
+            return new Date( currentYear,
+                             datepartsarray[0],
+                             datepartsarray[1],
+                             datepartsarray[2],
+                             datepartsarray[3] );
+        </method>
+
+        <!-- Data has been received so process it -->
+        <handler name="ondata">
+            <![CDATA[
+
+            // First, position the dot for the city
+            this.setAttribute('x', 1*this.datapath.xpathQuery('@x'));
+            this.setAttribute('y', 1*this.datapath.xpathQuery('@y'));
+            this.position = (1*this.datapath.xpathQuery('@labelposition'));
+            // Now set the timezone for the city
+            this.timezoneoffset = (1*this.datapath.xpathQuery('@timezoneoffset'));
+            this.dst_start = this.datapath.xpathQuery('@dst_start');
+            this.dst_end = this.datapath.xpathQuery('@dst_end');
+            var cd = new Date();
+            var currentGMTDate = cd.getTime() + ( 1000 * 60 * cd.getTimezoneOffset() );
+
+            // Adjust time for city's offset from GMT.
+            var localDate = currentGMTDate + ( this.timezoneoffset * 60 * 60 * 1000 );
+
+            // Are we in Daylight Savings Time (DST)?
+            var dstStart = this.makeDate( this.dst_start );
+            var dstEnd = this.makeDate( this.dst_end );
+            if ( dstStart.getMonth() > dstEnd.getMonth() ) {
+                // Southern hemisphere: DST wraps the year end (starts ~Oct, ends
+                // ~Apr), so we're in DST EXCEPT during the [end..start] winter window.
+                // (The old code did `isDST = !true`, i.e. always false — never inverted.)
+                this.isDST = ! ( (localDate > dstEnd.getTime()) && (localDate < dstStart.getTime()) );
+            } else {
+                // Northern hemisphere (and no-DST cities, where start==end -> false).
+                this.isDST = (localDate > dstStart.getTime()) && (localDate < dstEnd.getTime());
+            }
+
+            this.title.setLabelPosition()
+
+            // The city data has now arrived. Clocks sync on canvas.oninit, which
+            // races ahead of this async dataset load, so re-apply the now-known
+            // offset to any clock that synced early (otherwise every clock keeps
+            // its default offset 0 and they all show the same UTC time).
+            this.dataready = true;
+            if ( this.pendingclock != null ) this.applyOffset( this.pendingclock );
+            ]]>
+        </handler>
+
+        <!-- apply this city's tz offset (incl. DST) to a clock -->
+        <method name="applyOffset" args="clockObj">
+            var myOffset = this.timezoneoffset;
+            if ( this.isDST ) { // in daylight savings time
+                myOffset += 1;
+            }
+            clockObj.setTimeZone( myOffset );
+        </method>
+
+        <!-- sync clock to a specific timezone of a city. Remember the clock so a
+             sync issued before the data loaded gets re-applied from ondata. -->
+        <method name="syncclock" args="clockObj">
+            this.pendingclock = clockObj;
+            if ( this.dataready ) this.applyOffset( clockObj );
+        </method>
+
+        <!-- set sync and set clock name to a specific city -->
+        <method  name="activateclock" args="clockObj">
+            this.syncclock(clockObj);
+            myclocktext.setAttribute('text', this.title.getText() );
+        </method>
+
+    </class> <!-- end cityspot -->
+
+</library>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2008 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

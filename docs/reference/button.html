@@ -1,0 +1,77 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;button&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>button<span class="ang">&gt;</span></h1><p class="short">
+              The button class provides a simple pushbutton.</p><p class="meta">Extends <code>basebutton</code></p>
+                    
+        <p>
+          The 
+          <code>button</code>
+           tag provides a simple button. The
+button is rectangular and typically displays a text label describing
+its action. The button adjusts to fit the label.
+        </p>
+        
+        <pre class="example">
+&lt;canvas height="30"&gt;      
+  &lt;button onclick="animate('x', 100, 1000, true)"&gt;
+    Move me
+  &lt;/button&gt;
+&lt;/canvas&gt;
+</pre>
+        
+        <p>
+          If you need to format the text using additional tags such as
+
+          <code>b</code>
+          , add the text inside the button tags instead of
+using the 
+          <code>text</code>
+           attribute.
+        </p>
+        
+        <pre class="example">
+&lt;canvas height="30"&gt;      
+  &lt;button onclick="animate('x', 100, 1000, true)"&gt;
+    Move &lt;b&gt;me&lt;/b&gt;
+  &lt;/button&gt;
+&lt;/canvas&gt;
+</pre>
+        
+        <p>
+          A 
+          <code>button</code>
+           may contain both XHTML markup, and
+object tags such as 
+          <code>attribute</code>
+           and
+
+          <code>method</code>
+          .
+        </p>
+        
+        <pre class="example">
+&lt;canvas height="30"&gt;      
+  &lt;button onclick="moveHoriz(5);"&gt;
+    Move &lt;b&gt;me&lt;/b&gt;
+    &lt;method name="moveHoriz" args="moveAmount"&gt;
+      this.setAttribute("x", this.x+moveAmount);
+    &lt;/method&gt;
+  &lt;/button&gt;
+&lt;/canvas&gt;
+</pre>
+        
+        <p class="meta">See also: 
+          
+          
+          
+        </p>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">buttonstate</td><td class="ty">number</td><td class="ty">1</td><td>1=up, 2=down, allows title to shift a but when button is depressed</td></tr><tr><td class="nm">doesenter</td><td class="ty">expression</td><td class="ty">true</td><td/></tr><tr><td class="nm">focusable</td><td class="ty">expression</td><td class="ty">true</td><td>if true, the enter key will activate this button (call its onclick
+         handler) if it is enclosed in a form.  It will also have a visually
+         distinct look to indicate to the user</td></tr><tr><td class="nm">height</td><td class="ty">expression</td><td class="ty">this._title.height + 2*this.text_padding_y</td><td/></tr><tr><td class="nm">leftalign</td><td class="ty">number</td><td class="ty">false</td><td/></tr><tr><td class="nm">maxframes</td><td class="ty">expression</td><td class="ty">4</td><td/></tr><tr><td class="nm">text_padding_x</td><td class="ty">number</td><td class="ty">11</td><td>the amount of space to add horizontally when sizing button to its
+        text.</td></tr><tr><td class="nm">text_padding_y</td><td class="ty">number</td><td class="ty">4</td><td>the amount of space to add vertically  when sizing button to its
+        text.</td></tr><tr><td class="nm">text_x</td><td class="ty">number</td><td class="ty">this.width/2 - this._title.width/2</td><td>the x position of the button text. default: centered</td></tr><tr><td class="nm">text_y</td><td class="ty">number</td><td class="ty">this.height/2 - this._title.height/2</td><td>the y position of the button text. default: centered</td></tr><tr><td class="nm">titleshift</td><td class="ty">number</td><td class="ty">this.buttonstate == 1 ? 0 : 1</td><td/></tr><tr><td class="nm">width</td><td class="ty">expression</td><td class="ty">this._title.width + 2*this.text_padding_x</td><td/></tr></table>
+</main><script src="_nav.js"></script></body></html>

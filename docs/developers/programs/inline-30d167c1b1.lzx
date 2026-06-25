@@ -1,0 +1,12 @@
+<method name="unload">
+    /* some other code here */
+
+    // clean up server-side code
+    LzJavaRPCService.unloadObject(this._unloadDel, 
+        {
+          classname: this.classname, 
+          oname: this.attributename, 
+          scope: this.scope
+        }, 
+        this.secure, this.secureport);
+</method>

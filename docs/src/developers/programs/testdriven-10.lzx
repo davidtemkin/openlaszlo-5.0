@@ -1,0 +1,50 @@
+<canvas debug="true" width="100%">
+<debug y="150"/>
+<include href="lzunit"/>
+<simplelayout axis="y" spacing="10"/>
+
+<button name="goButton" width="100" text="Go">
+
+<attribute name="go" type="boolean" value="true"/>
+<attribute name="counter" type="number" value="1" when="once"/>
+
+<handler name="onclick">
+    if (goButton.go==true) {
+        if (goButton.counter&lt;Number.MAX_VALUE) {
+            foo = new LzDelegate(this, "count", lz.Idle, "onidle");
+            this.setAttribute('text', 'Stop');
+            this.setAttribute('go', false);
+        }
+    }
+    else {
+        foo.unregisterAll();
+        Debug.debug("Paused");
+        this.setAttribute('text', 'Go');
+        this.setAttribute('go', true);
+    }
+</handler>
+
+<method name="count" args="v">
+    Debug.debug("%w", counter);
+    counter=counter+1;
+</method>
+
+</button>
+
+<TestSuite>
+    <TestCase>
+        <method name="testGoButtonTrue">
+            assertEquals(1, goButton.counter);
+            assertTrue(goButton.go);
+        </method>
+        <method name="addTests"> 
+            this.addTest("testGoButtonTrue");
+        </method> 
+    </TestCase>   
+</TestSuite>
+
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

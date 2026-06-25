@@ -1,0 +1,184 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 56. Local Docbook Style Guide</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.doctools.html" title="Part IX. Contributor's Guide"><link rel="prev" href="doc-backwards.html" title="Chapter 55. The Backwards Transformation: From Reference Page to Source"><link rel="next" href="js2doc-reference.html" title="Chapter 57. JS2Doc Reference"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 56. Local Docbook Style Guide</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="doc-backwards.html">Prev</a> </td><th width="60%" align="center">Part IX. Contributor's Guide</th><td width="20%" align="right"> <a accesskey="n" href="js2doc-reference.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="docbook-local"></a>Chapter 56. Local Docbook Style Guide</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2098"></a>1. Introduction</h2></div></div></div><p>This chapter contains information about writing Docbook
+    documentation within the OpenLaszlo project. It builds on the
+    standard information available about 
+    <a class="ulink" href="http://www.docbook.org/tdg/en/html/docbook.html" target="_top">
+    Docbook itself</a> and the 
+    <a class="ulink" href="http://www.sagehill.net/docbookxsl/" target="_top">Docbook-XSL
+    tool</a>. Content in this chapter assumes you are familiar
+    with the basic information available in those references. For
+    general information about the local Docbook-based OpenLaszlo
+    documentation tool chain, see 
+    <a class="xref" href="doc-toolchain.html" title="Chapter 54. The Documentation Toolchain">Chapter 54, <i>The Documentation Toolchain</i></a>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2100"></a>2. General information</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2099"></a>2.1. Index term label generation</h3></div></div></div><p>When using an 
+      <code class="sgmltag-element">indexterm</code> tag, be aware
+      that the text of the corresponding entry in the index will be
+      generated from the 
+      <code class="sgmltag-element">title</code> or 
+      <code class="sgmltag-attribute">xreflabel</code> found nearest
+      to the 
+      <code class="sgmltag-element">indexterm</code> itself.</p><div class="informalexample"><pre class="programlisting">
+&lt;section&gt;
+  &lt;title&gt;Including HTML
+        markup in OpenLaszlo applications&lt;/title&gt;
+  &lt;para&gt;Openlaszlo provides support for incorporating
+      HTML. Here's a list of tags that are
+      supported:
+  &lt;/para&gt;
+  &lt;simplelist&gt;
+    &lt;listitem&gt;
+      &lt;indexterm&gt;&lt;primary&gt;a&lt;/primary&gt;&lt;/indexterm&gt;
+      &lt;sgmltag class="element"&gt;&lt;a&gt;&lt;/sgmltag&gt;
+    &lt;/listitem&gt;
+    &lt;listitem&gt;
+      &lt;indexterm&gt;&lt;primary&gt;font&lt;/primary&gt;&lt;/indexterm&gt;
+      &lt;sgmltag class="element"&gt;&lt;font&gt;&lt;/sgmltag&gt;
+    &lt;/listitem&gt;
+  &lt;/simplelist&gt;
+&lt;/section&gt;</pre></div><p>Here, the index entry text for 
+      <code class="sgmltag-element">a</code> and 
+      <code class="sgmltag-element">font</code> both read, "Including
+      HTML markup in OpenLaszlo applications."</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2103"></a>3. Markup for class members</h2></div></div></div><p>Mentions of class members (properties, methods, etc.)
+    within the text that have been properly declared are
+    automatically expanded to include index entries and hyperlinks
+    to the appropriate section of the reference guide.</p><p>For example, this declaration:</p><div class="informalexample"><pre class="programlisting">
+&lt;sgmltag class="attribute" role="<em class="replaceable"><code>LzView.__ivars__.resourcewidth</code></em>"&gt;
+  <em class="replaceable"><code>resourcewidth</code></em>
+&lt;/sgmltag&gt;</pre></div><p>is expanded to this Docbook markup:</p><div class="informalexample"><pre class="programlisting">
+&lt;indexterm&gt;
+  &lt;primary&gt;resourcewidth&lt;/primary&gt;
+&lt;/indexterm&gt;
+&lt;link linkend="LzView.__ivars__.resourcewidth"&gt;
+  &lt;sgmltag class="attribute"&gt;resourcewidth&lt;/sgmltag&gt;
+&lt;/link&gt;</pre></div><p>The 
+    <code class="sgmltag-element">indexterm</code> block generates an
+    entry in the index. The entry text is automatically derived
+    from the nearest surrounding section title.</p><p>The 
+    <code class="sgmltag-element">link</code> block is a hypertext
+    link into the appropriate reference page. The value of the 
+    <code class="sgmltag-attribute">role</code> attribute is the same
+    as the automatically-generated 
+    <code class="sgmltag-attribute">id</code> of that member in the
+    js2doc output.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2101"></a>3.1. Markup tags that are automatically expanded</h3></div></div></div><p>Expansion of markup occurs in the preprocess stage, and
+      requires inclusion of the 
+      <code class="sgmltag-attribute">role</code> attribute in the
+      relevant tag. The tags currently supported are: 
+      <span class="simplelist">
+          <code class="sgmltag-element">structfield</code>
+        , 
+          <code class="sgmltag-element">property</code>
+        , 
+          <code class="sgmltag-element">methodname</code>
+        , 
+          <code class="sgmltag-element">sgmltag</code>
+        </span>.</p><p>Note that 
+      <code class="sgmltag-element">classname</code>, 
+      <code class="sgmltag-element">tag</code>, and other potentially
+      relevant tags, are not currently supported. Adding support
+      should be relatively straightforward, perhaps as simple as
+      adding a new match clause to the relevant XSLT
+      template.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2102"></a>3.2. Determining 
+      <code class="sgmltag-attribute">role</code> values</h3></div></div></div><p>The simplest way of determining what string to put into
+      the 
+      <code class="sgmltag-attribute">role</code> value is to find the
+      desired entry in the HTML version of the Reference Guide and
+      note the first 
+      <code class="sgmltag-element">a</code> tag in the member
+      entry.</p><div class="informalexample"><pre class="programlisting">
+&lt;span class="term"&gt;
+  &lt;a name="LzView.__ivars__.resourcewidth"&gt;
+  &lt;a class="indexterm" name="d0e187250"&gt; "resourcewidth"
+&lt;/span&gt;</pre></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2109"></a>4. Inline examples</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2104"></a>4.1. Basic inline examples</h3></div></div></div><p>Here is an simple version of an inline example:</p><div class="informalexample"><pre class="programlisting">
+&lt;example&gt;
+  &lt;title&gt;A simple title/&gt;
+  &lt;programlisting language="lzx"&gt;
+    &amp;lt;canvas height="100" width="500"&amp;gt;
+      &amp;lt;window&amp;gt;
+        &amp;lt;animator attribute="x" to="100" duration="1000"/&amp;gt;
+      &amp;lt;/window&amp;gt;
+    &amp;lt;/canvas&amp;gt;
+  &lt;/programlisting&gt;
+&lt;/example&gt;</pre></div><p>Here is a version that transcludes the source
+      code.</p><div class="informalexample"><pre class="programlisting">
+&lt;example&gt;
+  &lt;title&gt;A simple animator&lt;/title&gt;
+  &lt;programlisting language="lzx"&gt; 
+    <span class="emphasis"><em>&lt;textobject&gt;
+      &lt;textdata fileref="programs/animation-$4.lzx"/&gt;
+    &lt;/textobject&gt;</em></span>
+  &lt;/programlisting&gt;
+&lt;/example&gt;</pre></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2105"></a>4.2. Live examples</h3></div></div></div><p>Here is a version that runs within the documentation
+      page:</p><div class="informalexample"><pre class="programlisting">
+&lt;example <span class="emphasis"><em>role="live-example"</em></span>&gt;
+  &lt;title&gt;Importing a resource&lt;/title&gt;
+  &lt;programlisting language="lzx"&gt;
+    &lt;textobject&gt;
+      &lt;textdata fileref="programs/animation-$4.lzx" /&gt;
+    &lt;/textobject&gt;
+  &lt;/programlisting&gt;
+&lt;/example&gt;</pre></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2106"></a>4.3. Emphasized Areas</h3></div></div></div><p>Here is a version with highlighted areas:</p><div class="informalexample"><pre class="programlisting">
+&lt;example role="live-example"&gt;
+  &lt;title&gt;Controlling animation with a script&lt;/title&gt; 
+  <span class="emphasis"><em>&lt;programlistingco&gt;</em></span>
+    &lt;programlisting language="lzx"&gt;
+      &lt;textobject&gt;
+        &lt;textdata fileref="programs/animation-$4.lzx"/&gt;
+      &lt;/textobject&gt;
+    &lt;/programlisting&gt; 
+    <span class="emphasis"><em>&lt;areaspec&gt;
+      &lt;area units="other" otherunits="/canvas[1]/view[1]/@onclick"/&gt;
+    &lt;/areaspec&gt;</em></span>
+  <span class="emphasis"><em>&lt;/programlistingco&gt;</em></span>
+&lt;/example&gt;</pre></div><p>The 
+      <code class="sgmltag-element">areaspec</code> block is an
+      OpenLaszlo specialization of Docbook-XSL that highlights any
+      portion of an LZX program that matches the given XPath
+      expression. Here, we are targeting a section of the following
+      LZX source:</p><div class="informalexample"><pre class="programlisting">
+&lt;canvas height="100" width="500"&gt;
+  &lt;view bgcolor="red" width="100" height="100" 
+      <span class="emphasis"><em>onclick="this.myAnimator.doStart()"</em></span>&gt;
+    &lt;animator name="myAnimator" attribute="x" to="100"
+        duration="1000" start="false"/&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;</pre></div><p>The XPath expression refers to the attribute
+      highlighted in the above source.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2107"></a>4.4. Callouts</h3></div></div></div><p>Less commonly, there is a need to use callouts within
+      live examples.</p><div class="informalexample"><pre class="programlisting">
+&lt;example role="live-example"&gt;
+  &lt;title&gt;Using attributes and class children together&lt;/title&gt;
+  &lt;programlisting language="lzx"&gt;
+    &lt;textobject&gt;
+      &lt;textdata fileref="programs/class-1.lzx"/&gt;
+    &lt;/textobject&gt;
+  &lt;/programlisting&gt;
+&lt;/example&gt;
+&lt;calloutlist&gt;
+  &lt;callout arearefs="N10086"&gt;
+    &lt;para&gt;Blah blah&lt;/para&gt;
+  &lt;/callout&gt;
+  &lt;callout arearefs="N10090"&gt;
+    &lt;para&gt;Blah blah&lt;/para&gt;
+  &lt;/callout&gt;
+&lt;/calloutlist&gt;</pre></div><p>To accomplish this, we can't use XPath expressions, so
+      we have to embed processing instructions into the
+      source.</p><div class="informalexample"><pre class="programlisting">
+&lt;canvas height="40"&gt;
+  &lt;class name="myframe" extends="view"&gt;
+    &lt;?lzx-co N10086 ?&gt;
+    &lt;attribute name="bgcolor" value="red"/&gt;
+    &lt;view x="5" y="5" width="${parent.width-10}"
+        height="${parent.height-10}" bgcolor="blue"/&gt;
+  &lt;/class&gt;
+  &lt;myframe width="40" height="40"/&gt;
+  &lt;?lzx-co N10090 ?&gt;
+&lt;/canvas&gt;</pre></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2108"></a>4.5. Current Gotchas</h3></div></div></div><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+        LPP-4308: Examples whose text is not transcluded
+        (included from an external file) are not
+        pretty-printed.</p></li></ul></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2110"></a>5. Runtime-specific content</h2></div></div></div><p>Docbook content can be marked as runtime specific. This
+    is done using the 
+    <code class="sgmltag-attribute">condition</code> attribute within
+    a selection of Docbook markup tags.</p><p>The currently-supported list of tags is 
+    </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><code class="sgmltag-element">para</code></p></li><li class="listitem"><p><code class="sgmltag-element">title</code> within a 
+      <code class="sgmltag-element">section</code></p></li></ul></div><p>
+    </p><p>Support within other tags is possible by editing the
+    relevant portion of 
+    <code class="literal">docs/src/xsl/conditional-html.xsl</code>.</p><p>Currently only one runtime may be given within an 
+    <code class="sgmltag-attribute">condition</code> attribute.</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="doc-backwards.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.doctools.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="js2doc-reference.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 55. The Backwards Transformation: From Reference Page to Source </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 57. JS2Doc Reference</td></tr></table></div></body></html>

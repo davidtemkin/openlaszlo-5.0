@@ -1,0 +1,46 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;textlistitem&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>textlistitem<span class="ang">&gt;</span></h1><p class="short">
+               a textlistitem extends listitem and provides text display 
+           </p><p class="meta">Extends <code>listitem</code></p>
+                     
+        <p>
+          A 
+          <code>textlistitem</code>
+           is a
+               
+          <code>&lt;listitem&gt;</code>
+           which displays text.  This is the most
+               common form of a 
+          <code>&lt;listitem&gt;</code>
+          , and is the default
+               listitem for 
+          <code>&lt;combobox&gt;</code>
+          s,
+               
+          <code>&lt;menu&gt;</code>
+          s, 
+          <code>&lt;list&gt;</code>
+          s, and
+               
+          <code>&lt;floatinglist&gt;</code>
+          s.
+             
+        </p>
+         
+
+             
+        <pre class="example">
+               &lt;canvas height="100"&gt;
+               &lt;list&gt;
+               &lt;textlistitem text="item 1" value="1" selected="true"/&gt;
+               &lt;textlistitem text="item 2" value="2"/&gt;
+               &lt;/list&gt;
+               &lt;/canvas&gt;
+             </pre>
+                   
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">text_x</td><td class="ty">expression</td><td class="ty">4</td><td>The x position of the displayed text.</td></tr><tr><td class="nm">text_y</td><td class="ty">expression</td><td class="ty">this.height/2 - this._title.height/2</td><td>the y position of the text label. default: centered</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

@@ -1,0 +1,99 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;handler&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>handler<span class="ang">&gt;</span></h1><p class="short">The receiver in Laszlo's point-to-point event system.</p>
+        <p>A delegate is an object that calls a specific method on a
+ specific object when its execute method is called. It is
+ essentially a method closure.</p>
+         
+        <p>
+          Delegates, along with 
+          
+          , comprise
+ Laszlo's point to point event system. A delegate represents a
+ named method of an object. Delegates are mostly registered with
+ events, but they can be used anywhere a function callback would
+ traditionally be called for: for instance, 
+          
+           takes a delegate as
+ its argument.
+        </p>
+         
+        <p>
+          You can create a delegate explicitly using the 
+          <code>LzDelegate</code>
+           class, or implicitly by
+ specifying an event handler.  There are two syntaxes with which
+ you can specify an event handler: in the open tag used to create
+ that object, or by using the 
+          <code>handler</code>
+           tag in the body of the object.
+        </p>
+         
+        <p>To specify an event handler in an open tag, simply include it
+ like any other attribute.</p>
+         
+        <pre><code>
+ &lt;view onmouseover="doSomething()"&gt;
+   &lt;method name="doSomething"&gt;
+     // code to be executed when mouse is over the view
+   &lt;/method&gt;
+ &lt;/view&gt;
+ </code></pre>
+         
+        <p>
+          To specify an event hander using the 
+          <code>handler</code>
+           tag, you include it in the body of
+ the object.
+        </p>
+         
+        <pre><code>
+ &lt;view&gt;
+  &lt;handler name="onmouseover"&gt;
+    // code to be executed when the mouse is over the view
+  &lt;/name&gt;
+ &lt;/view&gt;
+ </code></pre>
+         
+        <p>
+          The above two examples are functionally equivalent.  Using the
+ 
+          <code>handler</code>
+           tag, however, can often lead to more
+ readable code because it removes clutter from the object creation
+ tag.  This is especially true if the handler code is complex.
+        </p>
+         
+        <p>
+          <em>Note:</em>
+           When creating a delegate explicitly using
+ 
+          <code>new LzDelegate</code>
+          , 
+          <code>methodName</code>
+           must be a
+ method of one parameter, because it will be invoked by 
+          
+           with one argument
+ (typically the argument that is passed to 
+          
+           when that delegate is
+ registered to receive events).  Similarly, when specifying an
+ event handler method using 
+          <code>&lt;handler
+ ... method="methodName" /&gt;</code>
+          , the handler method must
+ accept one argument (even if it ignores it).
+        </p>
+         
+        <p>
+          See also the code examples at 
+          
+           and the
+ Developer's Guide for more detailed information on using events
+ and delegates.
+        </p>
+</main><script src="_nav.js"></script></body></html>

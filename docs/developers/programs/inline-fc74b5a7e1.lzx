@@ -1,0 +1,14 @@
+<method name="load">
+
+    /* other code here */
+
+    var opts = {
+        loadoption: this.loadoption,
+        params: this.createargs,
+        classname: this.classname,
+        oname: this.attributename,
+        scope: this.scope
+    }
+
+    LzJavaRPCService.loadObject(this._loadDel, opts, this.secure, this.secureport);
+</method>

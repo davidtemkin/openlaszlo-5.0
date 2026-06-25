@@ -1,0 +1,111 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;datapath&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>datapath<span class="ang">&gt;</span></h1><p class="short">The binder between data and nodes.</p><p class="meta">Extends <a href="datapointer.html"><code>LzDatapointer</code></a></p>
+        <p>
+           Datapaths are used to merge data hierarchies with the hierarchy of an
+ OpenLaszlo application. This is done using the the XPath syntax supported
+ by 
+          <code>lz.datapointer</code>
+          .  When a node is given a
+ 
+          <code>datapath</code>
+           attribute, a datapath with
+ the given value as its XPath is created. If the datapath retrieves a
+ node (
+          <em>i.e.</em>
+           it doesn't terminate in an attribute getter or a
+ 
+          <code>()</code>
+           operator) then the node is mapped to that data context
+ and all child nodes will implicitly share the datacontext, but no
+ further action is taken. If the datapath retrieves data, rather than
+ just a node, a few extra things happen. First, the node's
+ 
+          <code>data</code>
+           property is set and the node's
+ 
+          <code>&lt;event&gt;ondata&lt;/event&gt;</code>
+           event is sent. Second, the node's
+ 
+          <code>&lt;method&gt;applyData&lt;/method&gt;</code>
+           method is called with the data as the
+ argument. In cases where a datapath matches more than one data node,
+ the view with the matching datapath is replicated once for each data
+ node that matches, and a 
+          
+           takes over 
+ the view's spot in its parent.
+ 
+        </p>
+         
+        <p>
+           When a node is replicated, an LzReplicationManager takes it's place,
+ and an 
+          <code>&lt;event&gt;onclones&lt;/event&gt;</code>
+           will be sent when the node's clones are updated.
+ 
+        </p>
+         
+ 
+        <p>
+           A node can only have one datapath, and datapaths always have the name
+ 
+          <code>datapath</code>
+          .  Additional options available on datapath such
+ as 
+          pooling
+           and 
+ 
+          replication
+           are specified 
+ by writing the 
+          <code>datapath</code>
+           tag as a separate node.
+ 
+        </p>
+         
+ 
+        
+           
+          <pre><code>
+            &lt;canvas height="120"&gt;
+   &lt;dataset name="testdata"&gt;
+     &lt;Monday temp="Hi 48"&gt; Partly Cloudly &lt;/Monday&gt;
+     &lt;Tuesday temp="Hi 60"&gt; Showers Likely &lt;/Tuesday&gt;
+     &lt;Wednesday temp="Hi 63"&gt; Chance Showers &lt;/Wednesday&gt;
+     &lt;Thursday temp="Hi 58"&gt; Mostly Sunny &lt;/Thursday&gt;
+     &lt;Friday temp="Hi 50"&gt; Clear and Cold &lt;/Friday&gt;
+   &lt;/dataset&gt;
+   &lt;simplelayout spacing="5"/&gt;
+   &lt;view datapath="testdata:/*"&gt;
+     &lt;view&gt;
+       &lt;simplelayout axis="x"/&gt;
+       &lt;text 
+            <em>datapath="name()"</em>
+            /&gt;
+       &lt;text 
+            <em>datapath="text()"</em>
+            /&gt;
+       &lt;text 
+            <em>datapath="@temp"</em>
+            /&gt;
+     &lt;/view&gt;
+   &lt;/view&gt;
+ &lt;/canvas&gt;
+          </code></pre>
+        
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">axis</td><td class="ty">'x'|'y'</td><td class="ty">'y'</td><td>
+                The direction in which the replicated elements will be layed out.
+ 
+                <div class="note">
+                  This attribute is only available if 
+                  <code>replication</code>
+                   is set to either 
+                  <code>"lazy"</code>
+                   or 
+                  <code>"resize"</code>
+                  .
+</main><script src="_nav.js"></script></body></html>

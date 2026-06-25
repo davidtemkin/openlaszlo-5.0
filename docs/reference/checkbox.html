@@ -1,0 +1,52 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;checkbox&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>checkbox<span class="ang">&gt;</span></h1><p class="short">The checkbox tag provides a simple toggle button.</p><p class="meta">Extends <code>baseformitem</code></p>
+                    
+        <p>
+                        The 
+          <code>checkbox</code>
+           tag provides a simple toggle
+              button that represents a value of 
+          <code>true</code>
+           or
+              
+          <code>false</code>
+          . It has a disabled state where it does not
+              respond to mouse events when 
+          <code>enabled=false</code>
+          .
+            
+        </p>
+                    
+        <pre class="example">
+              &lt;canvas debug="true" height="160"&gt;
+              &lt;debug x="135" y="15"/&gt;
+              &lt;checkbox id="checkMe" text="Show Green Square"/&gt;
+              &lt;view visible="${checkMe.value}" bgcolor="green" width="20" height="20"/&gt;
+
+              &lt;button text="Toggle" onclick="checkMe.setAttribute('value', !checkMe.value)"/&gt;
+              &lt;button text="Disable" onclick="checkMe.setAttribute('enabled', false)"/&gt;
+              &lt;button text="Enable" onclick="checkMe.setAttribute('enabled', true)"/&gt;
+              &lt;button text="status" onclick="Debug.debug('value: %w', checkMe.value)"/&gt;
+              &lt;simplelayout axis="y" spacing="4"/&gt;
+              &lt;/canvas&gt;
+            </pre>
+                    
+        <p>
+              Note that checkbox attributes may be used as constraints for other attributes.
+              In the example above, clicking the checkbox toggles the visibility of the
+              green square.  Whenever the value of the checkbox changes, so does the
+              visibility attribute of the green view.
+            </p>
+                    
+        <p class="meta">See also: 
+                        
+          
+                      
+        </p>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">text_y</td><td class="ty">number</td><td class="ty">this.cb.height/2 - this._title.height/2+1</td><td>the y position of the text label. default: centered</td></tr><tr><td class="nm">value</td><td class="ty">expression</td><td class="ty">false</td><td/></tr></table>
+</main><script src="_nav.js"></script></body></html>

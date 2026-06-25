@@ -1,0 +1,51 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;gridcolumn&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>gridcolumn<span class="ang">&gt;</span></h1><p class="short">
+              Declares a column in a grid.
+          </p><p class="meta">Extends <code>basegridcolumn</code></p>
+                    
+        <p>
+                        The 
+          <code>gridcolumn</code>
+           class can be used to declare a
+              column in a 
+          <code>grid</code>
+           with the standard column
+              header look without specifying exactly what goes inside the
+              column. This can be useful for embedding other components within a
+              grid.
+        </p>
+                    
+        <pre class="example">
+              &lt;canvas height="160"&gt;
+              &lt;dataset name="contacts" request="true"
+              src="http:resources/contactsdata.xml"/&gt;
+
+              &lt;grid datapath="contacts:/resultset"&gt;
+              &lt;gridcolumn showheader="false" width="50"&gt;
+              &lt;view bgcolor="#CCCCCC" width="${parent.width}"
+              placement="header"
+              height="${parent.immediateparent.height-1}"/&gt;
+              &lt;text datapath="position()"/&gt;
+              &lt;/gridcolumn&gt;
+              &lt;gridcolumn width="200"&gt; Name
+              &lt;text datapath="@displayname" resize="false"/&gt;
+              &lt;/gridcolumn&gt;
+              &lt;gridcolumn sortable="false"&gt; Home
+              &lt;checkbox value="$path{'@home_default'}"
+              xoffset="${10-parent.width/2}"&gt;
+              &lt;handler name="onvalue"&gt;
+              this.datapath.updateData();
+              &lt;/handler&gt;
+              &lt;/checkbox&gt;
+              &lt;/gridcolumn&gt;
+              &lt;/grid&gt;
+              &lt;/canvas&gt;
+            </pre>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">colwidth</td><td class="ty">expression</td><td class="ty">this.width -                                      (this.resizable ? 4 : 2) </td><td/></tr><tr><td class="nm">resizable</td><td class="ty">boolean</td><td class="ty">true</td><td>If set to false, the column cannot be resized.</td></tr><tr><td class="nm">resizemargin</td><td class="ty">number</td><td class="ty">3</td><td>The width of the resizer between columns.</td></tr><tr><td class="nm">showheader</td><td class="ty">boolean</td><td class="ty">true</td><td>If set to false, then no header will be shown for this column.</td></tr><tr><td class="nm">sortable</td><td class="ty">boolean</td><td class="ty">true</td><td>If true, the column header is clickable and will initiate a 
+              sort</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

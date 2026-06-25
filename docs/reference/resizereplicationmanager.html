@@ -1,0 +1,94 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>LzResizeReplicationManager — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1>LzResizeReplicationManager</h1><p class="short">An optimization for displaying large sets of data that allows the elements to resize.</p><p class="meta">Extends <a href="lazyreplicationmanager.html"><code>LzLazyReplicationManager</code></a></p>
+        <p>
+          The 
+          <code>lz.ResizeReplicationManager</code>
+           extends
+ the capabilities of the
+ 
+          <code>lz.LazyReplicationManager</code>
+           so that the
+ elements in the replication can be resized in their axis. All of
+ the restrictions on the use of the
+ 
+          <code>lz.LazyReplicationManager</code>
+           apply to the
+ 
+          <code>lz.ResizeReplicationManager</code>
+           except for this
+ one:
+        </p>
+         
+        <ul>
+               
+          <li>
+            The replicated view 
+            <em>can</em>
+             change its size in the
+     replication axis, and the size 
+            <em>can</em>
+             be a
+     constraint. Resize replication should work in all cases,
+     even those in which the replicated view is sized by its
+     contents.
+          </li>
+           
+        </ul>
+         
+        <p>Note that the performance of a resize replication manager is
+ related to the number of items displayed and the length of the
+ data, whereas the lazy replication manager performance is only
+ determined by the number of items displayed.</p>
+         
+        
+          <pre><code>
+ &lt;canvas height="200"&gt;
+     &lt;dataset name="vegetables"&gt;
+         &lt;celery/&gt; &lt;celeriac/&gt; &lt;carrot/&gt; &lt;florence_fennel/&gt; &lt;parsnip/&gt;
+         &lt;parsley/&gt; &lt;winter_endive/&gt; &lt;witloof_chicory/&gt; &lt;cardoon/&gt;
+         &lt;artichoke/&gt; &lt;head_lettuce/&gt; &lt;cos_lettuce/&gt; &lt;black_salsify/&gt;
+         &lt;swedish_turnip/&gt; &lt;cauliflower/&gt; &lt;cabbage/&gt; &lt;brussels_sprouts/&gt;
+         &lt;kohlrabi/&gt; &lt;broccoli/&gt; &lt;savoy_cabbage/&gt; &lt;turnip/&gt; &lt;radish/&gt;
+         &lt;water_cress/&gt; &lt;garden_cress/&gt; &lt;foliage_beet/&gt; &lt;spinach/&gt;
+         &lt;sweet_potato/&gt; &lt;watermelon/&gt; &lt;melon/&gt; &lt;cucumber/&gt; &lt;winter_squash/&gt;
+         &lt;marrow/&gt; &lt;chickpea/&gt; &lt;lentil/&gt; &lt;runner_bean/&gt; &lt;common_bean/&gt;
+         &lt;pea/&gt; &lt;faba_bean/&gt; &lt;leek/&gt; &lt;shallot/&gt; &lt;onion/&gt; &lt;salsify/&gt;
+         &lt;welsh_onion/&gt; &lt;garlic/&gt; &lt;chives/&gt; &lt;asparagus/&gt; &lt;ladyfinger/&gt;
+         &lt;sweet_corn/&gt; &lt;rhubarb/&gt; &lt;capsicum_pepper/&gt; &lt;tomato/&gt; &lt;eggplant/&gt;
+     &lt;/dataset&gt;
+
+     &lt;simplelayout spacing="10" /&gt;
+     &lt;text width="200" oninit="countSubviews()"&gt;
+         &lt;handler name="onaddsubview" reference="replicationParent"&gt;
+             countSubviews();
+         &lt;/handler&gt;
+         &lt;method name="countSubviews"&gt;
+             this.format("number of subviews: %d",
+                         replicationParent.subviews.length);
+         &lt;/method&gt;
+     &lt;/text&gt;
+
+     &lt;view clip="true" width="200" height="160" id="clipper"&gt;
+         &lt;view id="replicationParent"&gt;
+             &lt;view bgcolor="#CCCCFF" height="15"&gt;
+                 &lt;datapath xpath="vegetables:/* /name()" spacing="5" replication="resize"/&gt;
+
+                 &lt;text datapath="name()" valign="middle"/&gt;
+                 &lt;handler name="onclick"&gt;
+                     if ( this.height != 40 ){
+                         this.animate ( 'height', 40 , 500 );
+                     } else {
+                         this.animate ( 'height', 15 , 500 );
+                     }
+                 &lt;/handler&gt;
+             &lt;/view&gt;
+         &lt;/view&gt;
+         &lt;scrollbar/&gt;
+     &lt;/view&gt;
+ &lt;/canvas&gt;
+ </code></pre>
+</main><script src="_nav.js"></script></body></html>

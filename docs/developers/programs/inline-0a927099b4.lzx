@@ -1,0 +1,3 @@
+[attribute="value of attribute"] {
+	property: "foo";
+	}

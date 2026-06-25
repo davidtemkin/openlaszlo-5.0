@@ -1,0 +1,20 @@
+<canvas>
+  <dataset name="ds" src="http:logger.jsp"/>
+  <form layout="axis: y" id="f">
+    <edittext id="logger" width="200">mylogger</edittext>
+    <edittext id="msg"    width="300">Your message here </edittext>
+    
+    <radiogroup id="t">
+      <radiobutton>debug</radiobutton> 
+      <radiobutton>warn</radiobutton> 
+      <radiobutton>error</radiobutton> 
+      <radiobutton>info</radiobutton> 
+    </radiogroup> 
+    <button isdefault="true">Log message to server
+      <handler name="onclick">
+        ds.setQueryParams({logger:logger.text, msg: msg.text, type:t.value}); 
+          ds.doRequest();
+      </handler>
+    </button>
+  </form>
+</canvas>

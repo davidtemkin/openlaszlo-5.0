@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1008">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>California Coastal Hills</title>
+  <description>California Coastal Hills — from the OpenLaszlo sample image library.</description>
+  <dates posted="1490604800" />
+  <urls><url type="photopage">data/photos/1008.jpg</url></urls>
+  <tags><tag>california</tag><tag>coastal</tag><tag>hills</tag></tags>
+</photo>
+</rsp>

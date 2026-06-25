@@ -1,0 +1,10 @@
+<canvas height="140">
+  <class name="coloredRect" width="20" height="80"/>
+
+  <view name="container">
+    <simplelayout name="slayout" axis="x" spacing="10"/>
+    <coloredRect bgcolor="red"/>
+    <coloredRect bgcolor="aqua"/>
+    <coloredRect bgcolor="yellow"/>
+  </view>
+</canvas>

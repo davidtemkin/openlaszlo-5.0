@@ -1,0 +1,14 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN"
+   "http://www.w3.org/TR/html4/frameset.dtd">
+<HTML>
+<HEAD>
+<TITLE>OpenLaszlo @VERSIONID@ Reference</TITLE>
+</HEAD>
+<FRAMESET cols="240px, *" >
+  <FRAME name="lzxdocnavframe" src="nav.lzx?lzt=html&target=content" scrolling="no"/>
+  <FRAME name="content" src="ref.preface.html" />
+</FRAMESET>
+</HTML>
+
+<!-- Copyright 2007-2009 Laszlo Systems -->
+

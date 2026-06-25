@@ -1,0 +1,10 @@
+<html>
+  <body>
+    <h1>Here is a header</h1>
+    <div align="center">
+      <iframe src="myOpenLaszloApplication.lzx?lzt=html" width="200"
+        height="200" frameborder="0" name="inlineApplication"
+        scrolling="no"/>
+    </div>
+  </body>
+</html>

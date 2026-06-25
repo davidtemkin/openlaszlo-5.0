@@ -1,0 +1,9 @@
+<canvas height="120">
+   <script>
+     <emphasis role="em"><![CDATA[</emphasis>
+     for (var i = 0; i < 11; i++) {
+       Debug.debug("%d", i);
+     }
+     <emphasis role="em">]]></emphasis>
+   </script>
+</canvas>

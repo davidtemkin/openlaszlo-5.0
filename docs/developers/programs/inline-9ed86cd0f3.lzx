@@ -1,0 +1,10 @@
+R1005 MESSAGEs MUST NOT contain soap:encodingStyle attributes on any of the
+elements whose [namespace name] is "http://schemas.xmlsoap.org/soap/envelope/".
+
+R1006 MESSAGEs MUST NOT contain soap:encodingStyle attributes on any element
+which is a child of soap:Body.
+
+R1007 MESSAGEs MUST NOT contain soap:encodingStyle attributes on any elements
+which are grandchildren of soap:Body.
+
+For interoperability, literal XML is preferred.

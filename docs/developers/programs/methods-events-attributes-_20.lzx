@@ -1,0 +1,8 @@
+<canvas height="150" debug="true">
+    <view width="50" height="50" bgcolor="red" onclick="Debug.write('Hello, World!');"/>
+</canvas>
+
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 - 2009 Laszlo Systems, Inc.  All Rights Reserved.            *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

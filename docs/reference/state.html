@@ -1,0 +1,132 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;state&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>state<span class="ang">&gt;</span></h1><p class="short">A description of an instance hierarchy that can be applied and removed at runtime.</p><p class="meta">Extends <a href="node.html"><code>LzNode</code></a></p>
+        <p>
+          A state is an object that holds its children and attributes
+ for creation or application at a later time — when the
+ state's 
+          <code>&lt;method&gt;apply&lt;/method&gt;</code>
+           method is called. In addition to
+ representing visual state by adding and removing children from a
+ view, states are often used to control constraints which are
+ applied and removed at different times during the run of an
+ application.
+        </p>
+         
+        <p>
+          For the most part, the declarative style used in OpenLaszlo
+ applications represents an initial state for the application. All
+ modification to application state can be made using the script
+ API's, but it is often convenient to declaratively describe a bit
+ of application state which may be selectively applied or removed
+ at runtime. The 
+          <code>state</code>
+           tag is provided for this
+ purpose.
+        </p>
+         
+        <p>
+          Everything within a 
+          <code>state</code>
+           tag acts as if it
+ were written inside the parent when the state is applied. States
+ can contain attributes, methods, and other nodes.
+        </p>
+         
+        <p>When a state is removed, any children or constraints created
+ when the state was applied are then removed, but attributes that
+ were set by the application of the state are not restored.</p>
+         
+        
+          <pre><code>
+ &lt;canvas&gt;
+   &lt;window id="demo" title="state demo" width="400" height="300"&gt;
+     &lt;attribute name="maximized" value="true" /&gt;
+
+     &lt;state name="big" applied="${demo.maximized}"&gt;
+       &lt;animatorgroup duration="1000" process="simultaneous"&gt;
+         &lt;animator attribute="width" to="400"/&gt;
+         &lt;animator attribute="height" to="300"/&gt;
+         &lt;animator attribute="x" to="100"/&gt;
+         &lt;animator attribute="y" to="100"/&gt;
+       &lt;/animatorgroup&gt;
+     &lt;/state&gt;
+
+     &lt;state name="little" applied="${! demo.maximized}"&gt;
+       &lt;animatorgroup duration="1000" process="simultaneous"&gt;
+         &lt;animator attribute="width" to="170"/&gt;
+         &lt;animator attribute="height" to="100"/&gt;
+         &lt;animator attribute="x" to="0"/&gt;
+         &lt;animator attribute="y" to="0"/&gt;
+       &lt;/animatorgroup&gt;
+     &lt;/state&gt;
+
+     &lt;button text="Toggle" placement="title_area" align="right" height="16"&gt;
+       &lt;handler name="onclick"&gt;
+         demo.setAttribute('maximized', (! demo.maximized));
+       &lt;/handler&gt;
+     &lt;/button&gt;
+
+     &lt;text name="display"
+           align="center" valign="middle"
+           width="120" multiline="true" /&gt;
+
+     &lt;handler name="onapplied" reference="big"&gt;
+       demo.display.format("big.applied = %s\nlittle.applied = %s",
+                           demo.big.applied, demo.little.applied);
+     &lt;/handler&gt;
+   &lt;/window&gt;
+ &lt;/canvas&gt;
+ </code></pre>
+        
+         
+        <p>
+          By default, states are not applied.  It is often convenient to
+ assign this attribute as a constraint in the tag.  For example:
+ 
+          <code>&lt;state name="mystate" applied="${parent.opened}"</code>
+           will apply the state when 
+          <code>parent.opened</code>
+           is
+ 
+          <code>true</code>
+          .
+        </p>
+         
+        <p>
+          Note that for any script that is in the tag, the parent is the
+ tag that encloses the script.  Any method that is declared within
+ the state can only be called after the state is applied, and upon
+ application 
+          <code>this</code>
+           will refer to the view that
+ encloses the state, rather than the state itself.
+        </p>
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">applied</td><td class="ty">boolean</td><td class="ty">false</td><td>
+                Whether or not the state is applied.
+ 
+                <code>setAttribute('applied', true)</code>
+                 will apply the state.
+ 
+                <code>setAttribute('applied', false)</code>
+                 will remove the
+ state.
+              </td></tr><tr><td class="nm">pooling</td><td class="ty">boolean</td><td class="ty">false</td><td>If true, the state will merely hide any views it has created when
+ it is removed (not applied), instead of destroying them.</td></tr></table><h3>Events</h3><ul class="events"><li><code>onapplied</code> — 
+                Sent when a state is applied or removed.  The event argument is
+ the new value of 
+                <code>applied</code>
+                 (
+                <code>true</code>
+                 if the
+ state is being applied, 
+                <code>false</code>
+                 if the state is being
+ removed).
+              </li><li><code>onapply</code> — Sent before a state is applied. The event argument is the state
+ that is being applied.</li><li><code>onremove</code> — Sent before a state is removed.  The event argument is the state
+ that is being removed.</li></ul>
+</main><script src="_nav.js"></script></body></html>

@@ -1,0 +1,17 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;replicator&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>replicator<span class="ang">&gt;</span></h1><p class="short"/><p class="meta">Extends <code>node</code></p>This is a declared replicator for visual elements. Unlike
+        OpenLaszlo''s data-replication feature, a replicator can take an
+        arbitrary node set that may be passed in as an array.
+        Non-replicating elements may be used inside a replicator; only
+        the last child inside the replicator is replicated.
+
+        The data attribute of the replicated (cloned) view is set by the
+        setData method with data from the nodes array when the clone is
+        bound.<h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">axis</td><td class="ty">string</td><td class="ty">y</td><td>The axis in which to replicate</td></tr><tr><td class="nm">clones</td><td class="ty">expression</td><td class="ty">null</td><td>The list of elements controlled by this repliator</td></tr><tr><td class="nm">container</td><td class="ty">expression</td><td class="ty"/><td>The view that will contain the replicated nodes.  Defaults to the immediateparent of the replicator.</td></tr><tr><td class="nm">dataset</td><td class="ty">expression</td><td class="ty"/><td>Compute nodes from this dataset</td></tr><tr><td class="nm">mask</td><td class="ty">expression</td><td class="ty"/><td>The view that will clip the replicated nodes.  Defaults to the immediateparent of the container</td></tr><tr><td class="nm">nodes</td><td class="ty">expression</td><td class="ty">null</td><td>The list of nodes over which this replictor acts</td></tr><tr><td class="nm">pool</td><td class="ty">boolean</td><td class="ty">true</td><td>If true, then instances of the replicated instance are reused
+            when possible</td></tr><tr><td class="nm">replicatedsize</td><td class="ty">expression</td><td class="ty">null</td><td>The size (width or height) in the replication axis of the view
+            being replicated.  Assumes all subviews have same replicated size.</td></tr><tr><td class="nm">spacing</td><td class="ty">expression</td><td class="ty">0</td><td>A pixel amount to use between each replicated view</td></tr><tr><td class="nm">xpath</td><td class="ty">string</td><td class="ty"/><td>Compute nodes from this xpath query against the specified dataset</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

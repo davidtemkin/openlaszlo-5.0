@@ -1,0 +1,24 @@
+<!--
+* X_LZ_COPYRIGHT_BEGIN ****************************************************
+* Copyright 2007-2008 Laszlo Systems, Inc.  All Rights Reserved.          *
+>>>>>>> .merge-right.r8400
+* Use is subject to license terms.                                        *
+* X_LZ_COPYRIGHT_END ******************************************************-->
+<canvas title="test-button.lzx">
+
+<include href="views/mybutton.lzx" />
+
+<mybutton width="50" height="50" stretches="both">
+    <handler name="onclick">
+        Debug.write("mybutton onclick"); 
+    </handler>
+</mybutton>
+
+<mybutton y="75" width="50" height="50" >
+    <text>click me</text>
+    <handler name="onclick">
+        Debug.write("mybutton with text onclick"); 
+    </handler>
+</mybutton>
+
+</canvas>

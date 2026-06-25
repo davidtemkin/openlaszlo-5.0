@@ -1,0 +1,51 @@
+<!--- Basesliderthumb expects to be within a baseslidertrack (or its
+    subclass). In other words, its "classroot" should be a
+    slidertrack. -->
+<class name="basesliderthumb" <emphasis role="em">extends="button"</emphasis> <emphasis role="em">focusable="false"</emphasis>
+       width="${parent.classroot.thumbwidth}" 
+       height="${parent.classroot.thumbheight}"
+       <emphasis role="em">onmousedown="thedragstate.apply();"</emphasis>
+       <emphasis role="em">onmouseup="thedragstate.remove();"</emphasis>
+       y="${(parent.height-height)/2}">
+
+  <!--- Toggles the floating value text when dragging thumb. Constrain
+        showvalue to baseslider's showvalue: parent is track,
+        parent.parent is slider container. -->
+  <attribute <emphasis role="em">name="showvalue" value="${parent.parent.showvalue}"</emphasis>/>
+
+  <!--- @keywords private -->
+  <dragstate <emphasis role="em">name="thedragstate"</emphasis> drag_axis="x">
+    <text name="t"
+         resize="true"
+         x="${classroot.width/2-width/2}"
+         y="-14"
+         text="${parent.parent.parent.value}"
+         visible="${classroot.showvalue}"
+    />
+  </dragstate>
+
+  <!--- constrain to parents bounds, and adjust slider value when dragged
+        @keywords private -->
+  <method <emphasis role="em">name="setX"</emphasis> args="x">
+    var boundedx = x;
+    if ( x > parent.getWidth()-getWidth() ) {
+      var constrainX = parent.getWidth()-getWidth();
+      boundedx = constrainX;
+    } else
+    if (parent.x > x) {
+      boundedx =  parent.x;
+    }
+    super.setX(boundedx);
+
+    //update slider value
+    var perc = ( (x) / (parent.parent.width-width) );
+    var val = Math.round( ( (perc)*(parent.parent.maxValue-parent.parent.minValue) )
+                          + parseInt(parent.parent.minValue) );
+    //only adjust value if user is dragging or left or right key is pressed
+    if (thedragstate.isapplied || 
+      lz.Keys.isKeyDown("leftarrow") || 
+      lz.Keys.isKeyDown("rightarrow") ) {
+      parent.parent.setValue(val);
+    }
+  </method>
+</class>

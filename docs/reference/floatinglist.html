@@ -1,0 +1,38 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;floatinglist&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>floatinglist<span class="ang">&gt;</span></h1><p class="short">
+              a floatinglist appears above other components 
+          </p><p class="meta">Extends <code>basefloatinglist</code></p>
+                    
+        <p>
+          The 
+          <code>floatinglist</code>
+           tag provides a list that floats
+              on top of the canvas.  It includes an attachment API for popping-up
+              relative to a target. This attachment API guarantees visibility on the
+              canvas, such that if the floatinglist intersects the canvas bounds,
+              the attach location will change to a more visible location.
+        </p>
+                    
+        <pre class="example">
+              &lt;canvas height="100"&gt;
+              &lt;button x="10" y="10" text="owner"&gt;
+              &lt;floatinglist width="80" attach="right"&gt;
+              &lt;textlistitem text="one"/&gt;
+              &lt;textlistitem text="two"/&gt;
+              &lt;/floatinglist&gt;
+              &lt;/button&gt;
+              &lt;/canvas&gt;
+            </pre>
+                    
+        <p class="meta">See also: 
+                        
+          
+                      
+        </p>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">border_bottom</td><td class="ty">expression</td><td class="ty">this._currentattachy == 'bottom' ? 0 : this.bordersize</td><td/></tr><tr><td class="nm">border_top</td><td class="ty">expression</td><td class="ty">this._currentattachy == 'top' ? 0 : this.bordersize</td><td/></tr><tr><td class="nm">shadowcrn</td><td class="ty">expression</td><td class="ty">0</td><td/></tr><tr><td class="nm">shadowoffsety</td><td class="ty">expression</td><td class="ty">this._currentattachy == 'bottom' ? 3:-9</td><td>The shadow offset in the y coordinate space.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

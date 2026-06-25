@@ -1,0 +1,4 @@
+<script type="text/javascript">
+  // pass 'myData' with value 'myValue' to the application
+  lz.embed.swf({url: 'mainApplication.lzx?lzt=swf&myData=myValue', bgcolor: '#394660', width: 1024, height: 768});
+</script>

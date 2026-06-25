@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ItemLookupResponse><Items>
+  <Request><IsValid>True</IsValid></Request>
+  <Item>
+    <ASIN>B00006IX86</ASIN>
+    <SmallImage><URL>data/covers/B00006IX86.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B00006IX86.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B00006IX86.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>Academy of Ancient Music</Artist>
+      <Manufacturer>Decca</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>2000-03-21</ReleaseDate>
+      <Title>The Four Seasons</Title>
+      <ListPrice><Amount>1398</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$13.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$7.99</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$3.25</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$10.49</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Vivaldi’s evergreen concertos, played on period instruments with crackling energy.</Content></EditorialReview></EditorialReviews>
+  </Item>
+</Items></ItemLookupResponse>

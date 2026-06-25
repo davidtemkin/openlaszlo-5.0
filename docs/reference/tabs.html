@@ -1,0 +1,92 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;tabs&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>tabs<span class="ang">&gt;</span></h1><p class="short">
+              The tabs class takes tabpanes, and provides a tab for each one.
+          </p><p class="meta">Extends <code>basetabs</code></p>
+                    
+        <p>
+          The 
+          <code>tabs</code>
+           component contains a row of
+              
+          <code>tabs</code>
+           that control the visibility of a stack of
+              
+          <code>&lt;tabpane&gt;</code>
+          s. When a 
+          <code>&lt;tabpane&gt;</code>
+                        is added to a 
+          <code>tabs</code>
+           component, a corresponding
+              tab is created for that 
+          <code>&lt;tabpane&gt;</code>
+          . The text which shows up in the tab is
+              derived from the 
+          <code>text</code>
+           attribute of the
+              
+          <code>&lt;tabpane&gt;</code>
+          .
+        </p>
+                    
+        <p>
+          The 
+          <code>tabs</code>
+           component will be sized
+              automatically to the largest 
+          <code>tabpane</code>
+          , unless an
+              explicit 
+          <code>height</code>
+           or 
+          <code>width</code>
+                        is specified within the 
+          <code>tabs</code>
+           tag.
+        </p>
+                    
+        <pre class="example">
+              &lt;canvas height="100"&gt;
+              &lt;tabs&gt;
+              &lt;tabpane text="one"&gt;
+              &lt;button&gt;press one&lt;/button&gt;
+              &lt;/tabpane&gt;
+              &lt;tabpane text="two"&gt;
+              &lt;button&gt;press two&lt;/button&gt;
+              &lt;/tabpane&gt;
+              &lt;/tabs&gt;
+              &lt;/canvas&gt;
+            </pre>
+                      
+            
+        <p>
+          <strong>See Also:</strong>
+        </p>
+                      
+        <ul>
+                            
+          <li>
+                                  
+            <code>&lt;tab&gt;</code>
+            , 
+            <code>&lt;tabsbar&gt;</code>
+            ,
+                      
+            <code>&lt;tabpane&gt;</code>
+            , 
+            <code>&lt;tabscontent&gt;</code>
+            , and 
+                      
+            <code>&lt;basetabs&gt;</code>
+                              
+          </li>
+              
+              
+        </ul>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">barclass</td><td class="ty">string</td><td class="ty">tabsbar</td><td>Class to use for tabs bar.</td></tr><tr><td class="nm">bordersize</td><td class="ty">number</td><td class="ty">1</td><td>Content's border size (see tabscontent).</td></tr><tr><td class="nm">contentclass</td><td class="ty">string</td><td class="ty">tabscontent</td><td>Class to use for tabs content area.</td></tr><tr><td class="nm">layout</td><td class="ty">expression</td><td class="ty">class: simplelayout; axis: y; spacing: -2</td><td>Layout to use between tabsbar and tabscontent.</td></tr><tr><td class="nm">tabalign</td><td class="ty">string</td><td class="ty">left</td><td>Align the set of tabs within the dimensions of the "tabs"
+             container ("left", "center", "right").</td></tr><tr><td class="nm">tabclass</td><td class="ty">string</td><td class="ty">tab</td><td>Class to use for tab items in tabsbar.</td></tr><tr><td class="nm">tabspacing</td><td class="ty">number</td><td class="ty">-15</td><td>Spacing between the tabs. Defaults to -15 so tabs overlap.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

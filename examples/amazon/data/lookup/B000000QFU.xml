@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ItemLookupResponse><Items>
+  <Request><IsValid>True</IsValid></Request>
+  <Item>
+    <ASIN>B000000QFU</ASIN>
+    <SmallImage><URL>data/covers/B000000QFU.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B000000QFU.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B000000QFU.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>New York Philharmonic</Artist>
+      <Manufacturer>Columbia</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>1998-02-18</ReleaseDate>
+      <Title>Rhapsody in Blue</Title>
+      <ListPrice><Amount>1598</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$15.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$9.00</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$4.25</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$12.49</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Gershwin’s jazz-symphonic landmark, brash and beautiful in equal measure.</Content></EditorialReview></EditorialReviews>
+  </Item>
+</Items></ItemLookupResponse>

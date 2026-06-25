@@ -1,0 +1,25 @@
+<%@ page import="java.util.*" %>
+<%@ page import="java.io.*" %>
+<%@ page import="org.apache.log4j.*" %>
+<%
+  response.setContentType("text/xml");
+  response.setHeader("Expires", "Fri, 05 Oct 2001 00:00:00 GMT");
+
+  String loggerName = request.getParameter("logger");
+  Logger logger = Logger.getLogger(loggerName);
+  String msg = request.getParameter("msg");
+  String t = request.getParameter("type");
+
+  if (t.equalsIgnoreCase("debug")) {
+    logger.debug(msg);
+  } else if (t.equalsIgnoreCase("info")) {
+    logger.info(msg);
+  } else if (t.equalsIgnoreCase("error")) {
+    logger.error(msg);
+  } else if (t.equalsIgnoreCase("warn")) {
+    logger.warn(msg);
+  } else {
+    throw new Exception("unknown log type");
+  }
+%>
+<status>ok</status>

@@ -1,0 +1,9 @@
+<!-- Assume xsd is "http://www.w3.org/2001/XMLSchema" and
+     soapenc is "http://schemas.xmlsoap.org/soap/encoding/". -->
+<xsd:complexType name="COMPLEX_TYPE_NAME">
+  <xsd:all>
+    <xsd:element name="NAME1" type="TYPE1" />
+    <xsd:element name="NAME2" type="TYPE2" />
+    <!-- other elements... -->
+  </xsd:all>
+</xsd:complexType>

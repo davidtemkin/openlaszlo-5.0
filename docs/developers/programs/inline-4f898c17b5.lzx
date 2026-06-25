@@ -1,0 +1,7 @@
+<canvas>
+   <!-- WARNING: Bad example! -->
+   <font name="serifFont" src="timmonsr.ttf"/>
+   <text width="150" height="20">
+      <font face="serifFont" size="14">Hello, <emphasis role="em"><b></emphasis>World!<emphasis role="em"></b></emphasis></font>
+   </text>
+</canvas>

@@ -1,0 +1,19 @@
+<script type="text/javascript">
+  var screenW = screen.width;
+  var screenH = 0;
+  if (screenW >= 1280) {
+    screenW = 1280;
+    screenH = 1024;
+  } else if (screenW >= 1024) {
+    screenW = 1024;
+    screenH = 768;
+  } else if (screenW >= 800) {
+    screenW = 800;
+    screenH = 600;
+  } else {
+    screenW = 640;
+    screenH = 480;
+  }
+  lz.embed.swf({url: 'mainApplication'+screenW+'.lzx?lzt=swf',
+    bgcolor: '#394660', width: screenW, height: screenH});
+</script>

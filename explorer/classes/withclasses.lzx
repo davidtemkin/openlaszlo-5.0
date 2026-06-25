@@ -1,0 +1,11 @@
+<canvas>
+  <simplelayout spacing="5"/>
+  
+  <class name="box" height="100" width="100" bgcolor="red"/>
+  
+  <box/>
+  <box/>
+  <box/>
+</canvas>
+
+

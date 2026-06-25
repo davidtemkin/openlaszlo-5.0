@@ -1,0 +1,5 @@
+<method name="load">
+    LzSOAPService.loadObject(this._loadDel,
+        { wsdl: this.wsdl, service: this.service, port: this.port },
+          this.secure, this.secureport);
+</method>

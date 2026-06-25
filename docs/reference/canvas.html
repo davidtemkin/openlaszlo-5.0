@@ -1,0 +1,58 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;canvas&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>canvas<span class="ang">&gt;</span></h1><p class="short">The top-most view in a Laszlo application.</p><p class="meta">Extends <a href="view.html"><code>LzView</code></a></p>
+        <p>The canvas is the container for all views within an application.</p>
+         
+        <p>
+          The 
+          <code>lz.canvas</code>
+           class represents the viewable
+ area of the application.  There is one instance of
+ 
+          <code>lz.canvas</code>
+          , named 
+          <code>canvas</code>
+          .  The
+ canvas contains all views within an application.
+        </p>
+         
+ 
+        <p>
+          The 
+          <code>canvas</code>
+           tag is the document root of an LZX
+ application file.  It contains class, resource, and font definitions,
+ library includes, and view and other instances.
+        </p>
+         
+ 
+        <p>
+          See the 
+          <a >Guide</a>
+           for a complete discussion of the 
+          <code>canvas</code>
+           tag.
+        </p>
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">dataloadtimeout</td><td class="ty">numberExpression</td><td class="ty"/><td>If present, specifies the default timeout in milliseconds for data load requests</td></tr><tr><td class="nm">framerate</td><td class="ty">number</td><td class="ty">"30"</td><td>The framerate that should be used for this application</td></tr><tr><td class="nm">mediaerrortimeout</td><td class="ty">numberExpression</td><td class="ty"/><td>If present, specifies the default timeout in milliseconds for media errors.  An error occurs when no bytes have been received.  This is used in Flash to detect media loads that have failed due to the security policy.</td></tr><tr><td class="nm">medialoadtimeout</td><td class="ty">numberExpression</td><td class="ty"/><td>If present, specifies the default timeout in milliseconds for media load requests</td></tr><tr><td class="nm">proxied</td><td class="ty">booleanLiteral | "inherit"</td><td class="ty">"inherit"</td><td>If true, requests for data and media are proxied through LPS server.
+ if false, requests are made directly to target URLs. 
+ if inherit, inherit from lzproxied query arg.</td></tr><tr><td class="nm">scriptlimits</td><td class="ty">css</td><td class="ty"/><td>
+                A CSS declaration of 
+                <code>property:</code>
+                 
+                <code>value</code>
+                 pairs used to advise the
+ underlying runtime of desired 
+                <code>recursion</code>
+                 and
+ 
+                <code>timeout</code>
+                 limits.  Not all runtimes respect this
+ advice.  The default value is runtime dependent, but typically
+ recursion is at least 100 and timeout at least 10 (seconds).
+ Example: 
+                <code>scriptlimits="recursion: 256, timeout: 15"</code>
+              </td></tr><tr><td class="nm">version</td><td class="ty">string</td><td class="ty"/><td>The lpsversion of this lzx application.</td></tr></table><h3>Events</h3><ul class="events"><li><code>onafterinit</code> — Sent after oninit</li><li><code>onframerate</code> — Sent whenever the framerate changes</li><li><code>onfullscreen</code> — Sent whenever the application switches to full screen mode.</li><li><code>onmouseenter</code> — Sent whenever the mouse is moved over the canvas</li><li><code>onmouseleave</code> — Sent whenever the mouse is moved off the canvas</li><li><code>onmousemove</code> — Sent whenever the mouse moves</li><li><code>onpercentcreated</code> — Sent whenever the number of created nodes changes</li></ul>
+</main><script src="_nav.js"></script></body></html>

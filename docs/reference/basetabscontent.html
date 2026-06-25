@@ -1,0 +1,110 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basetabscontent&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basetabscontent<span class="ang">&gt;</span></h1><p class="short">The non-visual container for basetabpanes.</p><p class="meta">Extends <code>basecomponent</code></p>
+                    
+        <p>
+          <code>basetabscontent</code>
+           is the non-visual container
+            (and immediate parent) of 
+          <code>basetabpane</code>
+          s. Extend
+            
+          <code>basetabscontent</code>
+           to give the content area of
+            your 
+          <code>basetabs</code>
+           a look, e.g., adding borders to
+            your content. 
+          <code>basetabscontent</code>
+           is a child of the
+            
+          <code>basetabs</code>
+           component.
+        </p>
+                      
+        <p>
+          <code>basetabscontent</code>
+           should be in 
+          <code>basetabs</code>
+          . If
+                  
+          <code>width</code>
+           and 
+          <code>height</code>
+           are not set,
+                  
+          <code>basetabscontent</code>
+           will stretch to the largest content item. You can
+                  pass the name of this class in the 
+          <code>contentclass</code>
+           attribute of
+                  
+          <code>basetabs</code>
+           and 
+          <code>tabs</code>
+          .
+                  
+          <code>basetabs</code>
+           uses this class as its default
+                  
+          <code>contentclass</code>
+        </p>
+                    
+            
+        <pre class="example">
+            &lt;canvas height="75"&gt;
+              &lt;include /&gt;
+            
+              &lt;class name="aquatab" extends="basetab" 
+                        width="40" height="20" bgcolor="aqua"&gt;
+                &lt;text&gt;tab&lt;/text&gt;
+              &lt;/class&gt;
+            
+              &lt;class name="borderedtabscontent" extends="basetabscontent" 
+                        bgcolor="black"&gt;
+                &lt;attribute name="defaultplacement" value="borderedcontent" 
+                              type="string" /&gt;
+                &lt;view name="borderedcontent"
+                    x="${parent.parent.bordersize}"
+                    y="${parent.parent.bordersize}"
+                    width="${parent.width-(2*parent.parent.bordersize)}"
+                    height="${parent.height-(2*parent.parent.bordersize)}"
+                    clip="true" bgcolor="red"/&gt;
+              &lt;/class&gt;
+              
+              &lt;basetabs x="10" y="10" bordersize="3"
+                           tabclass="aquatab" 
+                           contentclass="borderedtabscontent"&gt;
+                &lt;basetabpane&gt;
+                  &lt;text&gt;one&lt;/text&gt;
+                &lt;/basetabpane&gt;
+                &lt;basetabpane&gt;
+                  &lt;text&gt;two&lt;/text&gt;
+                &lt;/basetabpane&gt;
+                &lt;basetabpane&gt;
+                  &lt;text&gt;three&lt;/text&gt;
+                &lt;/basetabpane&gt;
+              &lt;/basetabs&gt;
+            &lt;/canvas&gt;
+            </pre>
+                    
+              
+        <p>
+          <strong>See Also:</strong>
+        </p>
+                      
+        <ul>
+                            
+          <li>
+                                  
+            <code>&lt;basetabpane&gt;</code>
+                                  and 
+            <code>&lt;basetabs&gt;</code>
+                              
+          </li>
+                        
+        </ul>
+</main><script src="_nav.js"></script></body></html>

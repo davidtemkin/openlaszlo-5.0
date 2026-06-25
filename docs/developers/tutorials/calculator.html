@@ -1,0 +1,1584 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 14. Building a Calculator</title><link rel="stylesheet" type="text/css" href="../../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="../index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="../developers.tutorials.html" title="Part II. Tutorial Introduction"><link rel="prev" href="drawview-intro.html" title="Chapter 13. Introduction to Drawing"><link rel="next" href="../developers.building-apps.html" title="Part III. Fundamental Concepts"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 14. Building a Calculator</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="drawview-intro.html">Prev</a> </td><th width="60%" align="center">Part II. Tutorial Introduction</th><td width="20%" align="right"> <a accesskey="n" href="../developers.building-apps.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="calculator"></a>Chapter 14. Building a Calculator</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1474"></a>1. Introduction</h2></div></div></div><p>In this section we draw on the concepts presented thus far to create a simple calculator.</p><p>
+When you compile this application for SWF, you can uncomment the lines that embed fonts. This will import fonts that give a somewhat more polished look to the calculator.
+</p><div class="informalfigure"><div class="mediaobject"><img src="img/d_t_calculator_1.jpg"></div></div><p>As throughout this Guide, the examples are "live" and you can edit them. However, many of the examples are a bit long and not
+ideally suited to the example editor.  So, if you wish to do some experimenting with this example you may wish to copy the source files
+and resources to whichever directory you use for development.</p><p>Keep in mind that this is an exercise in basic LZX, not in scripting, so there won't be too much discussion on how the script works.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1479"></a>2. Visual Layout</h2></div></div></div><p>Our first step will be to build the calculator visually. That is, to start with we will not worry about the functionality, we'll just make it look right. 
+Let's start by bringing in all the art assets. There are a body, a display and a number of buttons. </p><div class="example"><a name="id5136"></a><p class="title"><b>Example 14.1. Using resourced for body image</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="500" width="100%"&gt;
+      &lt;!-- Uncomment to include fonts for SWF --&gt;
+    &lt;!-- fonts --&gt;
+    &lt;!-- 
+    &lt;font src="helmetbi.ttf" name="obliqueText" /&gt;
+    &lt;font src="helmetr.ttf" name="displayText" /&gt;
+    --&gt;
+    &lt;!-- art assets --&gt;
+    &lt;resource name="calc_body" src="resources/body.png" /&gt;
+    &lt;resource name="calc_display" src="resources/display.png" /&gt;
+    &lt;resource name="button_grn" src="resources/button_green.gif" /&gt;
+    &lt;resource name="button_red" src="resources/button_red.gif" /&gt;
+    &lt;resource name="button_blu" src="resources/button_blue.gif" /&gt;
+    &lt;view name="calculator" resource="calc_body" x="20" y="20"&gt;
+    &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>In this code we have brought in the fonts and art assets we plan to use, and created the body of the calculator. Remember, if you're compiling for DHTML you cannot use imported fonts.
+</p><p>We don't need to set the size of the view that is the calculator body, because it will stretch to the size of its resource automatically.</p><p>Next we add the display:</p><div class="example"><a name="id5142"></a><p class="title"><b>Example 14.2. Adding the display</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="500"&gt;
+    &lt;!-- Uncomment to include fonts for SWF --&gt;
+    &lt;!-- fonts --&gt;
+    &lt;!-- 
+    &lt;font src="helmetbi.ttf" name="obliqueText" /&gt;
+    &lt;font src="helmetr.ttf" name="displayText" /&gt;
+    --&gt;
+    &lt;!-- art assets --&gt;
+    &lt;resource name="calc_body" src="resources/body.png" /&gt;
+    &lt;resource name="calc_display" src="resources/display.png" /&gt;
+    &lt;resource name="button_grn" src="resources/button_green.gif" /&gt;
+    &lt;resource name="button_red" src="resources/button_red.gif" /&gt;
+    &lt;resource name="button_blu" src="resources/button_blue.gif" /&gt;
+    
+    &lt;view name="calculator" resource="calc_body" x="20" y="20"&gt;
+        &lt;!-- display --&gt;
+        &lt;view id="display" resource="calc_display" x="20" y="31"&gt;
+            &lt;!-- the text in the display --&gt;
+            &lt;text name="screen" height="30" width="165"
+                  font="displayText" fontsize="25"
+                  y="5" x="5"&gt;
+                0
+            &lt;/text&gt;
+        &lt;/view&gt;
+    &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>There are two parts to this. The first is the light gray art asset that is the display itself, and the second is the text in the display.
+ We're naming everything with name attributes now, so that later we will be able to refer to these elements 
+from scripts (for example, to change the text in the display).</p><p>Note that the text tag is <span class="i">within</span> the display view tag. In fact it's 
+convenient because it allows us to position the text tag relative to the display, which is how we think of it.
+</p><p>The buttons are all the same size, and they're arranged in a grid. The buttons are actually arranged in rows 
+(or you might describe them as columns, but for the purposes of this tutorial, we're going to treat them as rows).</p><div class="informalfigure"><div class="mediaobject"><img src="img/d_t_calculator_2.gif"></div></div><p>Each button will be a view with a resource attached to it. We could have used images
+ for the labels, but it is far easier to use text.</p><p>Here's the code for a single button:</p><div class="example"><a name="id5155"></a><p class="title"><b>Example 14.3. code for a single button</b></p><div class="example-contents"><pre class="programlisting">
+    &lt;view resource="button_blu" clickable="true" 
+          onclick="display.inputDigit( this );"&gt;
+        &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+              fgcolor="#ffffff" x="9" valign="middle"&gt;
+            7
+        &lt;/text&gt;
+    &lt;/view&gt;
+</pre></div></div><br class="example-break"><p>The resource attribute tells the button what image to use. Remember the button will automatically size to 
+fit the view. Next the clickable attribute means that this button will be clickable - it will have 
+an onclick event, which will come to later and the mouse will change to a hand when it hovers over it. 
+The text tag is the button's label.</p><p>The onclick event handler is calling a method that we haven't written yet.</p><p>The code for a row of buttons is as follows:</p><div class="example"><a name="id5161"></a><p class="title"><b>Example 14.4. code for a row of buttons</b></p><div class="example-contents"><pre class="programlisting">
+    &lt;!-- row 2 --&gt;
+    &lt;view name="row2"&gt;
+        &lt;simplelayout axis="x" spacing="7" /&gt;
+        &lt;view resource="button_blu" clickable="true" 
+              onclick="display.inputDigit( this );"&gt;
+            &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                  fgcolor="#ffffff" x="9" valign="middle"&gt;
+                7
+            &lt;/text&gt;
+        &lt;/view&gt;
+        &lt;view resource="button_blu" clickable="true" 
+              onclick="display.inputDigit( this );"&gt;
+            &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                  fgcolor="#ffffff" x="9" valign="middle"&gt;
+                8
+            &lt;/text&gt;
+        &lt;/view&gt;
+        &lt;view resource="button_blu" clickable="true" 
+              onclick="display.inputDigit( this );"&gt;
+            &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                  fgcolor="#ffffff" x="9" valign="middle"&gt;
+                9
+            &lt;/text&gt;
+        &lt;/view&gt;
+        &lt;view resource="button_blu" clickable="true" 
+              onclick="display.inputDigit( this );"&gt;
+            &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                  fgcolor="#ffffff" x="9" valign="middle"&gt;
+                *
+            &lt;/text&gt;
+        &lt;/view&gt;
+    &lt;/view&gt;
+</pre></div></div><br class="example-break"><p>Notice that we're using the simplelayout tag to control the spacing of the buttons <span class="i">in the x-axis</span>.</p><p>For four rows of buttons, we will just repeat the above code, and we shall space all the <span class="i">rows</span> with 
+a simplelayout <span class="i">in the y-axis</span>. Here's the code so far:</p><div class="example"><a name="id5169"></a><p class="title"><b>Example 14.5. Spacing rows with &lt;simplelayout&gt;</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas  height="500" width="100%"&gt;
+    &lt;!-- Uncomment to include fonts for SWF --&gt;
+    &lt;!-- fonts --&gt;
+    &lt;!-- 
+    &lt;font src="helmetbi.ttf" name="obliqueText" /&gt;
+    &lt;font src="helmetr.ttf" name="displayText" /&gt;
+    --&gt;
+    &lt;!-- art assets --&gt;
+    &lt;resource name="calc_body" src="resources/body.png" /&gt;
+    &lt;resource name="calc_display" src="resources/display.png" /&gt;
+    &lt;resource name="button_grn" src="resources/button_green.gif" /&gt;
+    &lt;resource name="button_red" src="resources/button_red.gif" /&gt;
+    &lt;resource name="button_blu" src="resources/button_blue.gif" /&gt;
+    
+    &lt;view name="calculator" resource="calc_body" x="20" y="20"&gt;
+        &lt;!-- display --&gt;
+        &lt;view id="display" resource="calc_display" x="20" y="31"&gt;
+            &lt;!-- the text in the display --&gt;
+            &lt;text name="screen" height="30" width="165"
+                  font="displayText" fontsize="25"
+                  y="5" x="5"&gt;
+                0
+            &lt;/text&gt;
+        &lt;/view&gt;
+        &lt;!-- 5 rows of buttons --&gt;
+        &lt;view name="buttons" x="19" y="88"&gt;
+            &lt;simplelayout axis="y" spacing="7" /&gt;
+            &lt;!-- row 2 --&gt;
+            &lt;view name="row2"&gt;
+                &lt;simplelayout axis="x" spacing="7" /&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        7
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        8
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        9
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        *
+                    &lt;/text&gt;
+                &lt;/view&gt;
+            &lt;/view&gt;
+            &lt;!-- row 3 --&gt;
+            &lt;view name="row3"&gt;
+                &lt;simplelayout axis="x" spacing="7" /&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        4
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        5
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        6
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="15" valign="middle"&gt;
+                        -
+                    &lt;/text&gt;
+                &lt;/view&gt;
+            &lt;/view&gt;
+            &lt;!-- row 4 --&gt;
+            &lt;view name="row4"&gt;
+                &lt;simplelayout axis="x" spacing="7" /&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        1
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        2
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        3
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        +
+                    &lt;/text&gt;
+                &lt;/view&gt;
+            &lt;/view&gt;
+            &lt;!-- row 5 --&gt;
+            &lt;view name="row5"&gt;
+                &lt;simplelayout axis="x" spacing="7" /&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        0
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="20" 
+                          fgcolor="#ffffff" x="5" valign="middle"&gt;
+                        +/-
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        .
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_grn" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        =
+                    &lt;/text&gt;
+                &lt;/view&gt;
+            &lt;/view&gt;
+        &lt;/view&gt;
+    &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>The x and fontsize properties of the text elements 
+have been tweaked to get the button labels to line up correctly.</p><p>Finally, let's build the top row of buttons:</p><div class="example"><a name="id5174"></a><p class="title"><b>Example 14.6. top row of buttons</b></p><div class="example-contents"><pre class="programlisting">
+    &lt;!-- row 1 --&gt;
+    &lt;view name="row1" width="${parent.width}"&gt;
+        &lt;view resource="button_red" clickable="true" 
+              onclick="display.inputDigit( this );"&gt;
+            &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                  fgcolor="#ffffff" x="7" valign="middle"&gt;
+                C
+            &lt;/text&gt;
+        &lt;/view&gt;
+        &lt;view resource="button_blu" clickable="true" 
+              onclick="display.inputDigit( this );"
+              align="right"&gt;
+            &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                  fgcolor="#ffffff" x="9" valign="middle"&gt;
+                /
+            &lt;/text&gt;
+        &lt;/view&gt;
+    &lt;/view&gt;
+</pre></div></div><br class="example-break"><p>The "C" button will be automatically placed at x="0" y="0". The "/" button needs to be right aligned, hence 
+the align="right" attribute.</p><p>The parent view of the buttons (i.e. one named <span class="i">buttons</span> in the code above) will automatically size to 
+fit rows 2, 3, 4 and 5, so it's OK to align the "/" button to the right, as long as we explicitly set the width of <span class="i">row1</span> to the 
+same as <span class="i">buttons</span>.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1475"></a>2.1. Scripting</h3></div></div></div><a name="calculator.scripting"></a><p>There is a lot of code here to make the calculator behave predictably. We can break this down into methods that perform tasks, 
+and properties that retain values. Alternatively, if we didn't want to use methods and properties, we'd have to write a lot of 
+functions and have a large number of global variables declared. All the methods that we write are going to be assigned to the
+ <span class="i">display</span> view, which is also the parent of the <span class="i">screen</span> text field.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1476"></a>2.2. Methods</h3></div></div></div><p>
+<span class="b">start()</span>
+
+This is the method that sets up all the view properties.
+</p><p>
+<span class="b">clear()</span>
+
+For clearing the screen and restarting. All this does is call the start method again, so that the properties get re initialized. We could have called the start method directly when we wanted to clear the screen.
+</p><p>
+<span class="b">inputDigit()</span>
+
+The default method for hitting a key. This figures out what the user is typing in (whether it's a number, an operator, the equals
+ sign and so forth) and takes the appropriate action.
+</p><p>
+<span class="b">inputOperator()</span>
+
+When the user hits an operator ("+", "-", "*", "/") a few things could based on what the user has entered previously. 
+For example, if the user has hits "1" then "*", nothing happens. But if the user has already entered two operands 
+and an operator (e.g. "1" then "*" then "4" <span class="i">then</span> "+") the first expression gets evaluated. This method handles all that logic.
+</p><p>
+<span class="b">equals()</span>
+
+Called when the user hits the equals sign. </p><p>
+<span class="b">execute()</span>
+
+The actual method that does any computation. Called from various circumstances.</p><p>
+<span class="b">isThereDecimal()</span>
+
+Utility method for checking if a decimal point is shown on the display (to prevent one from being entered twice.</p><p>
+<span class="b">addDecimalPoint()</span>
+Concatenates a decimal point to the end of the display</p><p>
+<span class="b">negative()</span> Toggles the sign of a number.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1477"></a>2.3. Properties</h3></div></div></div><p>
+<span class="b">valueX</span>
+
+The first operand (value) to use.</p><p>
+<span class="b">oldValue</span>
+
+This can be different things depending on the combination of buttons that were entered.</p><p>
+<span class="b">lastInput</span>
+
+What was last entered (e.g. digit, equals, operator).</p><p>
+<span class="b">allOperators</span>
+
+An array of values that are operators.</p><p>
+<span class="b">operator</span>
+
+The active operator (e.g. "+").</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1478"></a>2.4. Global functions</h3></div></div></div><p>
+<span class="b">isInArray</span>
+
+This is a simple function that loops through an array to determine whether a value is contained within it. 
+The reason it is not a method is because it's the kind of function that might be reused in another script, and it's handy to have 
+it set aside like this.</p><p>So here's the full code:</p><div class="example"><a name="id5222"></a><p class="title"><b>Example 14.7. Completed calculator</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas  height="500" width="100%"&gt;
+    &lt;!-- Uncomment to include fonts for SWF --&gt;
+    &lt;!-- fonts --&gt;
+    &lt;!-- 
+    &lt;font src="helmetbi.ttf" name="obliqueText" /&gt;
+    &lt;font src="helmetr.ttf" name="displayText" /&gt;
+    --&gt;
+    &lt;!-- art assets --&gt;
+    &lt;resource name="calc_body" src="resources/body.png" /&gt;
+    &lt;resource name="calc_display" src="resources/display.png" /&gt;
+    &lt;resource name="button_grn" src="resources/button_green.gif" /&gt;
+    &lt;resource name="button_red" src="resources/button_red.gif" /&gt;
+    &lt;resource name="button_blu" src="resources/button_blue.gif" /&gt;
+    
+    &lt;!-- global variables and functions --&gt;
+    &lt;script&gt;
+    &lt;![CDATA[
+        // utility function that finds an item in an array
+        //
+        function isInArray( x, theArray ) {
+            var isThere = false;
+            for ( var i=0; i&lt;theArray.length; i++ ) {
+                if ( theArray[i] == x ) {
+                    isThere = true;
+                }
+            }
+            return isThere;
+        }
+    ]]&gt;
+    &lt;/script&gt;
+    &lt;view name="calculator" resource="calc_body" x="20" y="20"&gt;
+        &lt;!-- display --&gt;
+        &lt;view id="display" resource="calc_display" x="20" y="31"
+              oninit="this.start()"&gt;
+            &lt;!-- the text in the display --&gt;
+            &lt;text name="screen" height="30" width="165"
+                  font="displayText" fontsize="25"
+                  y="5" x="5"&gt;
+                0
+            &lt;/text&gt;
+            &lt;method name="start"&gt;
+                this.valueX = 0;
+                this.lastInput = 'none';
+                this.oldValue = false;
+                this.allOperators = new Array( '+', '-', '/', '*' );
+                this.operator = '+';
+                this.screen.setAttribute('text',  this.valueX.toString() );
+            &lt;/method&gt;
+           
+            &lt;method name="clear"&gt;
+                this.start();
+            &lt;/method&gt;
+            &lt;!-- handles the push of a button --&gt;
+            &lt;method name="inputDigit" args="buttonObj"&gt;
+            &lt;![CDATA[
+                var val = buttonObj.buttonText.getText();
+                // weed out any non-numbers (e.g. operators, clear button)
+                if ( isInArray( val, this.allOperators ) ) {
+                    var theOperator = val;
+                    this.inputOperator( theOperator );
+                    return;
+                } else if ( val == 'C' ) {
+                    this.start();
+                    return;
+                } else if ( val == '.' ) {
+                    this.addDecimalPoint();
+                    return;
+                } else if ( val == '+/-' ) {
+                    this.negative();
+                    return;
+                } else if ( val == '=' ) {
+                    this.equals();
+                    return;
+                }
+                var displ = this.screen.getText();
+                if  ( displ == '0' ) if ( val == '0' )  {
+                    return;
+                }
+                if ( ( this.lastInput == 'none' ) 
+                    || ( this.lastInput == 'operator' ) ) {
+                    // clear display and rewrite
+                    this.screen.setAttribute('text',  val );    
+                } else if ( this.lastInput == 'digit' ) {
+                    this.screen.setAttribute('text',  displ + val );
+                } else if ( this.lastInput == 'equals' ) {
+                    this.clear();
+                    this.screen.setAttribute('text',  val );
+                }
+                this.lastInput = 'digit';
+            ]]&gt;
+            &lt;/method&gt;
+            &lt;method name="inputOperator" args="operator"&gt;
+                if ( this.lastInput == 'digit' ) {
+                    this.execute( this.screen.getText() );
+                }
+                this.valueX = this.screen.getText();
+                this.operator = operator;
+                this.lastInput = 'operator';
+            &lt;/method&gt;
+            &lt;method name="equals"&gt;
+                if (this.lastInput != 'equals' ) {
+                    this.oldValue = this.screen.getText();
+                    this.lastInput = 'equals';
+                    this.execute( this.oldValue );
+                } else {
+                    this.lastInput = 'equals';
+                    this.execute( this.oldValue );
+                }
+            &lt;/method&gt;
+            &lt;method name="execute" args="val"&gt;
+                this.valueX -= 0;
+                var valFromDisp = val - 0;
+                if ( this.valueX == 0 ) return;
+                if ( this.operator == '+' ) {
+                    val = this.valueX + valFromDisp;
+                } else if ( this.operator == '-' ) {
+                    val = this.valueX - valFromDisp;
+                } else if ( this.operator == '*' ) {
+                    val = this.valueX * valFromDisp;
+                } else if ( this.operator == '/' ) {
+                    val = this.valueX / valFromDisp;
+                }
+                valFromDisp = val;
+                this.screen.setAttribute('text',  valFromDisp.toString() );
+                this.valueX = this.screen.getText();
+            &lt;/method&gt;
+            &lt;method name="isThereDecimal"&gt;
+            &lt;![CDATA[
+                var disp = this.screen.getText();
+                var isDecimal = false;
+                for ( var i=0; i &lt; disp.length; i++ ) {
+                    if ( disp.charAt( i ) == '.' ) {
+                        return true;
+                    }
+                }
+                return false;
+            ]]&gt;
+            &lt;/method&gt;
+            
+            &lt;method name="addDecimalPoint"&gt;
+                if ( ( this.lastInput == 'none' ) 
+                   || ( this.lastInput == 'operator' ) ) {
+                    if ( !this.isThereDecimal() ) {
+                        this.screen.setAttribute('text',  "0." );
+                    }
+                } else if ( this.lastInput == 'digit' ) {
+                    if ( !this.isThereDecimal() ) {
+                        var newText = this.screen.getText();
+                        newText += ".";
+                        this.screen.setAttribute('text',  newText );
+                    }
+                } else if ( this.lastInput == 'equals' ) {
+                    this.clear(); 
+                    this.screen.setAttribute('text',  '0.' );
+                }
+                this.lastInput = 'digit';
+            &lt;/method&gt;
+            
+            &lt;method name="negative"&gt;
+                if ( ( this.lastInput == 'digit' ) ||
+                    ( this.lastInput == 'equals' ) ) {
+                    var newDisp = ( this.screen.getText() - 0 ) * -1;
+                    this.screen.setAttribute('text',  newDisp.toString() ); 
+                } else {
+                    clear();
+                }            
+            &lt;/method&gt;
+        &lt;/view&gt;
+        &lt;!-- 5 rows of buttons --&gt;
+        &lt;view name="buttons" x="19" y="88"&gt;
+            &lt;simplelayout axis="y" spacing="7" /&gt;
+            &lt;!-- row 1 --&gt;
+            &lt;view name="row1" width="${parent.width}"&gt;
+                &lt;view resource="button_red" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="7" valign="middle"&gt;
+                        C
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"
+                      align="right"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        /
+                    &lt;/text&gt;
+                &lt;/view&gt;
+            &lt;/view&gt;
+            &lt;!-- row 2 --&gt;
+            &lt;view name="row2"&gt;
+                &lt;simplelayout axis="x" spacing="7" /&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        7
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        8
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        9
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        *
+                    &lt;/text&gt;
+                &lt;/view&gt;
+            &lt;/view&gt;
+            &lt;!-- row 3 --&gt;
+            &lt;view name="row3"&gt;
+                &lt;simplelayout axis="x" spacing="7" /&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        4
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        5
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        6
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="15" valign="middle"&gt;
+                        -
+                    &lt;/text&gt;
+                &lt;/view&gt;
+            &lt;/view&gt;
+            &lt;!-- row 4 --&gt;
+            &lt;view name="row4"&gt;
+                &lt;simplelayout axis="x" spacing="7" /&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        1
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        2
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        3
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        +
+                    &lt;/text&gt;
+                &lt;/view&gt;
+            &lt;/view&gt;
+            &lt;!-- row 5 --&gt;
+            &lt;view name="row5"&gt;
+                &lt;simplelayout axis="x" spacing="7" /&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        0
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="20" 
+                          fgcolor="#ffffff" x="5" valign="middle"&gt;
+                        +/-
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_blu" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        .
+                    &lt;/text&gt;
+                &lt;/view&gt;
+                &lt;view resource="button_grn" clickable="true" 
+                      onclick="display.inputDigit( this );"&gt;
+                    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+                          fgcolor="#ffffff" x="9" valign="middle"&gt;
+                        =
+                    &lt;/text&gt;
+                &lt;/view&gt;
+            &lt;/view&gt;
+        &lt;/view&gt;
+    &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>Notice that there is now an oninit event handler on the display that calls the <span class="i">start</span> method.</p><p>Also notice how we're always calling the <span class="i">inputDigit</span> method from the buttons with the same argument: We're passing 
+the button element, and the <span class="i">inputDigit</span> method works out what the button it is by calling the getText() method on its
+ text element. This saves us the hassle of writing a different argument each time.</p><p>There is still a lot of code here, a lot of which is repetitive. We can condense it by using classes. For an introduction to classes in LZX, see <a class="xref" href="classes-tutorial.html" title="Chapter 12. Introduction to Classes and Object Oriented Programming">Chapter 12, <i>Introduction to Classes and Object Oriented Programming</i></a></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="calculator.perspective"></a>3. Using Classes to Simplify</h2></div></div></div><p>Let's take a look at how we can use classes to simplify our code. We'll start by making a class for calculator buttons.</p><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>
+need another intro sentence
+</span></em></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1480"></a>3.1. Button</h3></div></div></div><p>Consider a calculator button. Most of them are blue and they have a white label on them. The label varies from button to button. They all call a method when clicked. When we say blue, we really mean that they take a resource which happens to be blue. Some buttons take other images. In at least one case, we had to position the label explicitly so it would look right.</p><p>In short, what we need is a class that will:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>Produce a blue button by default.</p></li><li class="listitem"><p>Allow us to specify a different resource.</p></li><li class="listitem"><p>Take a label attribute.</p></li><li class="listitem"><p>Allow the label to be explicitly positioned in the x plane to tweak it.</p></li></ul></div><p>Here is the old code for a single button:</p><div class="example"><a name="id5251"></a><p class="title"><b>Example 14.8. Single button</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="80"&gt;
+   &lt;!-- Uncomment to include fonts for SWF --&gt;
+    &lt;!-- fonts --&gt;
+    &lt;!-- 
+    &lt;font src="helmetbi.ttf" name="obliqueText" /&gt;
+    --&gt;
+  &lt;!-- art assets --&gt;
+  &lt;resource name="button_blu" src="resources/button_blue.gif"/&gt;
+  
+  
+  &lt;view resource="button_blu" clickable="true" 
+        onclick="/*display.inputDigit(this);*/"&gt;
+    &lt;text name="buttonText" font="obliqueText" fontsize="30" 
+          fgcolor="#ffffff" x="9" valign="middle"&gt;
+      0
+    &lt;/text&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>And here's how that might be translated into a class:</p><div class="example"><a name="id5255"></a><p class="title"><b>Example 14.9. Converting button to class</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="100"&gt;
+    &lt;!-- Uncomment to include fonts for SWF --&gt;
+    &lt;!-- fonts --&gt;
+    &lt;!-- 
+    &lt;font src="helmetbi.ttf" name="obliqueText" /&gt;
+
+    --&gt;
+  &lt;resource name="button_blu" src="resources/button_blue.gif"/&gt;
+  &lt;resource name="button_red" src="resources/button_red.gif"/&gt;
+  &lt;resource name="button_green" src="resources/button_green.gif"/&gt;
+  
+  &lt;class name="calcButton" resource="button_blu" clickable="true" 
+           onclick="/*display.inputDigit(this);*/" oninit="this.initButton()"&gt;
+    &lt;attribute name="buttLabel" type="string"/&gt;
+    &lt;attribute name="labelX" type="number" value="11"/&gt;
+    
+    &lt;method name="initButton"&gt;
+      this.buttonText.setAttribute('x', 
+                                   this.labelX);
+      this.buttonText.setAttribute('text', this.buttLabel);
+    &lt;/method&gt;
+    
+    &lt;text name="buttonText" font="obliqueText" fontsize="25" 
+              fgcolor="#ffffff" x="13" valign="middle"&gt;
+      &lt;handler name="ontext"&gt;
+        this.setAttribute('width', this.getTextWidth() + 5);
+      &lt;/handler&gt;
+    &lt;/text&gt;
+  &lt;/class&gt;
+  
+  &lt;simplelayout axis="x" spacing="5"/&gt;
+  &lt;calcButton buttLabel="0"/&gt;
+  &lt;calcButton buttLabel="1" resource="button_red"/&gt;
+  &lt;calcButton buttLabel="+/-" resource="button_green" labelX="0"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>We can give the class a default resource (<code class="varname">button_blu</code>), as well as a default onclick attribute. Since these are 
+default attributes of the class we're extending (i.e. view), they get overwritten when we instantiate the class and set that attribute.
+ However we need a method to handle the custom attributes <a class="indexterm" name="id5260"></a><code class="sgmltag-attribute">buttLabel</code> and <a class="indexterm" name="id5263"></a><code class="sgmltag-attribute">labelX</code>. That's why 
+we call the <a class="indexterm" name="id5266"></a><code class="methodname">initButton()</code> method at init time, and set the label of the text and optionally the x-offset of the label 
+that way.</p><p>In this case we've made the fontsize of the view a little smaller, so that we don't have to worry about making the labels fit 
+the buttons.</p><p>The method within the <a class="indexterm" name="id5272"></a><code class="sgmltag-element">&lt;text&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag adjusts the size of the text field when the text gets set to the correct size 
+(plus a few extra pixels for good measure).</p><p>Applying this to the original calculator code, we get:</p><div class="example"><a name="id5277"></a><p class="title"><b>Example 14.10. Classes in calculator</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="400"&gt;
+  &lt;!-- Uncomment to include fonts for SWF --&gt;
+  &lt;!-- fonts --&gt;
+  &lt;!-- 
+  &lt;font src="helmetbi.ttf" name="obliqueText" /&gt;
+  &lt;font src="helmetr.ttf" name="displayText" /&gt;
+  --&gt;
+  &lt;!-- art assets --&gt;
+  &lt;resource name="calc_body" src="resources/body.png"/&gt;
+  &lt;resource name="calc_display" src="resources/display.png"/&gt;
+  &lt;resource name="button_grn" src="resources/button_green.gif"/&gt;
+  &lt;resource name="button_red" src="resources/button_red.gif"/&gt;
+  &lt;resource name="button_blu" src="resources/button_blue.gif"/&gt;
+  
+  &lt;!-- classes --&gt;
+  &lt;class name="calcButton" resource="button_blu" clickable="true" 
+          onclick="display.inputDigit(this);" oninit="this.initButton()"&gt;
+    &lt;attribute name="buttLabel" type="string"/&gt;
+    &lt;attribute name="labelX" type="number" value="11"/&gt;
+    
+    &lt;method name="initButton"&gt;
+      this.buttonText.setAttribute('x', 
+                                   this.labelX);
+      this.buttonText.setAttribute('text', this.buttLabel);
+    &lt;/method&gt;
+        
+    &lt;text name="buttonText" font="obliqueText" fontsize="25" 
+              fgcolor="#ffffff" x="13" valign="middle" width="0"&gt;
+      &lt;handler name="ontext"&gt;
+        this.setAttribute('width', this.getTextWidth() + 5);
+      &lt;/handler&gt;
+    &lt;/text&gt;
+  &lt;/class&gt;
+  
+  &lt;!-- global variables and functions --&gt;
+  &lt;script&gt;&lt;![CDATA[
+    // utility function that finds an item in an array
+    //
+    function isInArray(x, theArray) {
+      var isThere = false;
+        for (var i=0; i&lt;theArray.length; i++) {
+          if (theArray[i] == x) {
+            isThere = true;
+          }
+        }
+      return isThere;
+    }
+    ]]&gt;&lt;/script&gt;
+    
+  &lt;view name="calculator" resource="calc_body" x="20" y="20"&gt;
+    &lt;!-- display --&gt;
+    &lt;view id="display" resource="calc_display" x="20" y="31"
+          oninit="this.start()"&gt;
+      &lt;!-- the text in the display --&gt;
+      &lt;text name="screen" height="30" width="165"
+            font="displayText" fontsize="25"
+            y="5" x="5"&gt;
+        0
+      &lt;/text&gt;
+      
+      &lt;method name="start"&gt;
+        this.valueX = 0;
+        this.lastInput = 'none';
+        this.oldValue = false;
+        this.allOperators = new Array('+', '-', '/', '*');
+        this.operator = '+';
+        this.screen.setAttribute('text', this.valueX.toString());
+      &lt;/method&gt;
+      
+      &lt;method name="clear"&gt;
+        this.start();
+      &lt;/method&gt;
+      
+      &lt;!-- handles the push of a button --&gt;
+      &lt;method name="inputDigit" args="buttonObj"&gt;
+      &lt;![CDATA[
+        var val = buttonObj.buttonText.getText();
+        
+        // weed out any non-numbers (e.g. operators, clear button)
+        if (isInArray(val, this.allOperators)) {
+          var theOperator = val;
+          this.inputOperator(theOperator);
+          return;
+        } else if (val == 'C') {
+          this.start();
+          return;
+        } else if (val == '.') {
+          this.addDecimalPoint();
+          return;
+        } else if (val == '+/-') {
+          this.negative();
+          return;
+        } else if (val == '=') {
+          this.equals();
+          return;
+        }
+        
+        var displ = this.screen.getText();
+       if (displ == 0) { 
+           if (val == 0) {
+           return;
+           }
+        }
+        
+        if ((this.lastInput == 'none') 
+            || (this.lastInput == 'operator')) {
+          // clear display and rewrite
+          this.screen.setAttribute('text', val);    
+        } else if (this.lastInput == 'digit') {
+          this.screen.setAttribute('text', displ + val);
+        } else if (this.lastInput == 'equals') {
+          this.clear();
+          this.screen.setAttribute('text', val);
+        }
+        this.lastInput = 'digit';
+        ]]&gt;
+      &lt;/method&gt;
+      
+      &lt;method name="inputOperator" args="operator"&gt;
+        if (this.lastInput == 'digit') {
+          this.execute(this.screen.getText());
+        }
+        this.valueX = this.screen.getText();
+        this.operator = operator;
+        this.lastInput = 'operator';
+      &lt;/method&gt;
+      
+      &lt;method name="equals"&gt;
+        if (this.lastInput != 'equals') {
+          this.oldValue = this.screen.getText();
+          this.lastInput = 'equals';
+          this.execute(this.oldValue);
+        } else {
+          this.lastInput = 'equals';
+          this.execute(this.oldValue);
+        }
+      &lt;/method&gt;
+      
+      &lt;method name="execute" args="val"&gt;
+        this.valueX -= 0;
+        var valFromDisp = val - 0;
+        if (this.valueX == 0) return;
+        
+        if (this.operator == '+') {
+          val = this.valueX + valFromDisp;
+        } else if (this.operator == '-') {
+          val = this.valueX - valFromDisp;
+        } else if (this.operator == '*') {
+          val = this.valueX * valFromDisp;
+        } else if (this.operator == '/') {
+          val = this.valueX / valFromDisp;
+        }
+        valFromDisp = val;
+        this.screen.setAttribute('text', valFromDisp.toString());
+        this.valueX = this.screen.getText();
+      &lt;/method&gt;
+      
+      &lt;method name="isThereDecimal"&gt;
+      &lt;![CDATA[
+        var disp = this.screen.getText();
+        var isDecimal = false;
+        for (var i=0; i != disp.length; i++) {
+          if (disp.charAt(i) == '.') {
+            return true;
+          }
+        }
+        return false;
+        ]]&gt;
+      &lt;/method&gt;
+      
+      &lt;method name="addDecimalPoint"&gt;
+        if ((this.lastInput == 'none') 
+             || (this.lastInput == 'operator')) {
+          if (!this.isThereDecimal()) {
+            this.screen.setAttribute('text', "0.");
+          }
+        } else if (this.lastInput == 'digit') {
+          if (!this.isThereDecimal()) {
+            var newText = this.screen.getText();
+            newText += ".";
+            this.screen.setAttribute('text', newText);
+          }
+        } else if (this.lastInput == 'equals') {
+          this.clear(); 
+          this.screen.setAttribute('text', '0.');
+        }
+        this.lastInput = 'digit';
+      &lt;/method&gt;
+      
+      &lt;method name="negative"&gt;
+        if ((this.lastInput == 'digit') ||
+            (this.lastInput == 'equals')) {
+          var newDisp = (this.screen.getText() - 0) * -1;
+          this.screen.setAttribute('text', newDisp.toString()); 
+        } else {
+          clear();
+        }            
+      &lt;/method&gt;
+    &lt;/view&gt;
+    
+    &lt;!-- 5 rows of buttons --&gt;
+    &lt;view name="buttons" x="19" y="88"&gt;
+      &lt;simplelayout axis="y" spacing="7"/&gt;
+      &lt;!-- row 1 --&gt;
+      &lt;view name="row1" width="100%"&gt;
+        &lt;calcButton buttLabel="C" resource="button_red"/&gt;
+        &lt;calcButton buttLabel="/" align="right" labelX="13"/&gt;
+      &lt;/view&gt;
+      
+      &lt;!-- row 2 --&gt;
+      &lt;view name="row2"&gt;
+        &lt;simplelayout axis="x" spacing="7"/&gt;
+        &lt;calcButton buttLabel="7"/&gt;
+        &lt;calcButton buttLabel="8"/&gt;
+        &lt;calcButton buttLabel="9"/&gt;
+        &lt;calcButton buttLabel="*" labelX="13"/&gt;
+      &lt;/view&gt;
+       &lt;!-- row 3 --&gt;
+      &lt;view name="row3"&gt;
+        &lt;simplelayout axis="x" spacing="7"/&gt;
+        &lt;calcButton buttLabel="4"/&gt;
+        &lt;calcButton buttLabel="5"/&gt;
+        &lt;calcButton buttLabel="6"/&gt;
+        &lt;calcButton buttLabel="-" labelX="15"/&gt;
+      &lt;/view&gt;
+      
+      &lt;!-- row 4 --&gt;
+      &lt;view name="row4"&gt;
+        &lt;simplelayout axis="x" spacing="7"/&gt;
+        &lt;calcButton buttLabel="1"/&gt;
+        &lt;calcButton buttLabel="2"/&gt;
+        &lt;calcButton buttLabel="3"/&gt;
+        &lt;calcButton buttLabel="+"/&gt;
+      &lt;/view&gt;
+       &lt;!-- row 5 --&gt;
+      &lt;view name="row5"&gt;
+        &lt;simplelayout axis="x" spacing="7"/&gt;
+        &lt;calcButton buttLabel="0"/&gt;
+        &lt;calcButton buttLabel="+/-" labelX="1"/&gt;
+        &lt;calcButton buttLabel="." labelX="16"/&gt;
+        &lt;calcButton buttLabel="=" resource="button_grn" labelX="12"/&gt;
+      &lt;/view&gt;
+    &lt;/view&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>Not only does this make the code more navigable, but lightens the calculator application by over 100 lines of code.</p><p>Now, say that we wanted to upgrade the buttons we have and make them react to mouse events (e.g. highlight when rolled over
+and appear depressed when clicked). Since we've created a class, we only have to make the change in one place, and it will 
+immediately be propagated to all of the instances of that class:</p><div class="example"><a name="id5282"></a><p class="title"><b>Example 14.11. Updating class definition</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="400"&gt;
+   &lt;!-- Uncomment to include fonts for SWF --&gt;
+   &lt;!-- fonts --&gt;
+   &lt;!-- 
+   &lt;font src="helmetbi.ttf" name="obliqueText" /&gt;
+   &lt;font src="helmetr.ttf" name="displayText" /&gt;
+   --&gt;
+  
+  &lt;!-- art assets --&gt;
+  &lt;resource name="calc_body" src="resources/body.png"/&gt;
+  &lt;resource name="calc_display" src="resources/display.png"/&gt;
+  &lt;resource name="button_grn"&gt;
+    &lt;frame src="resources/new_button_green_off.png"/&gt;
+    &lt;frame src="resources/new_button_green_over.png"/&gt;
+    &lt;frame src="resources/new_button_green_down.png"/&gt;
+  &lt;/resource&gt;
+  &lt;resource name="button_blu"&gt;
+    &lt;frame src="resources/new_button_blue_off.png"/&gt;
+    &lt;frame src="resources/new_button_blue_over.png"/&gt;
+    &lt;frame src="resources/new_button_blue_down.png"/&gt;
+  &lt;/resource&gt;
+  &lt;resource name="button_red"&gt;
+    &lt;frame src="resources/new_button_red_off.png"/&gt;
+    &lt;frame src="resources/new_button_red_over.png"/&gt;
+    &lt;frame src="resources/new_button_red_down.png"/&gt;
+  &lt;/resource&gt;
+  
+  &lt;!-- classes --&gt;
+  &lt;class name="calcButton" resource="button_blu" clickable="true" 
+          onclick="display.inputDigit(this);" oninit="this.initButton()"
+          extends="basebutton"&gt;
+    &lt;attribute name="buttLabel" type="string"/&gt;
+    &lt;attribute name="labelX" type="number" value="11"/&gt;
+    
+    &lt;method name="initButton"&gt;
+      this.buttonText.setAttribute('x', 
+                                   this.labelX);
+      this.buttonText.setAttribute('text', this.buttLabel);
+    &lt;/method&gt;
+        
+    &lt;text name="buttonText" font="obliqueText" fontsize="25" 
+          fgcolor="#ffffff" x="13" valign="middle" width="0"&gt;
+      &lt;handler name="ontext"&gt;
+        this.setAttribute('width', this.getTextWidth() + 5);
+      &lt;/handler&gt;
+    &lt;/text&gt;
+  &lt;/class&gt;
+  
+  &lt;!-- global variables and functions --&gt;
+  &lt;script&gt;
+  &lt;![CDATA[
+    // utility function that finds an item in an array
+    //
+    function isInArray(x, theArray) {
+      var isThere = false;
+      for (var i=0; i != theArray.length; i++) {
+        if (theArray[i] == x) {
+          isThere = true;
+        }
+      }
+      return isThere;
+    }
+  ]]&gt;
+  &lt;/script&gt;
+  
+  &lt;view name="calculator" resource="calc_body" x="20" y="20"&gt;
+    &lt;!-- display --&gt;
+    &lt;view id="display" resource="calc_display" x="20" y="31"
+              oninit="this.start()"&gt;
+      &lt;!-- the text in the display --&gt;
+      &lt;text name="screen" height="30" width="165"
+                  font="displayText" fontsize="25"
+                  y="5" x="5"&gt;
+                0
+      &lt;/text&gt;
+      
+      &lt;method name="start"&gt;
+        this.valueX = 0;
+        this.lastInput = 'none';
+        this.oldValue = false;
+        this.allOperators = new Array('+', '-', '/', '*');
+        this.operator = '+';
+        this.screen.setAttribute('text', this.valueX.toString());
+      &lt;/method&gt;
+      
+      &lt;method name="clear"&gt;
+        this.start();
+      &lt;/method&gt;
+      
+      &lt;!-- handles the push of a button --&gt;
+      &lt;method name="inputDigit" args="buttonObj"&gt;
+      &lt;![CDATA[
+        var val = buttonObj.buttonText.getText();
+        // weed out any non-numbers (e.g. operators, clear button)
+        if (isInArray(val, this.allOperators)) {
+          var theOperator = val;
+          this.inputOperator(theOperator);
+          return;
+        } else if (val == 'C') {
+          this.start();
+          return;
+        } else if (val == '.') {
+          this.addDecimalPoint();
+          return;
+        } else if (val == '+/-') {
+          this.negative();
+          return;
+        } else if (val == '=') {
+          this.equals();
+          return;
+        }
+ 
+        var displ = this.screen.getText();
+        if  (displ == '0') { if (val == '0') {  
+          return;
+          }
+        }
+ 
+        if ((this.lastInput == 'none') 
+            || (this.lastInput == 'operator')) {
+            // clear display and rewrite
+          this.screen.setAttribute('text', val);    
+        } else if (this.lastInput == 'digit') {
+          this.screen.setAttribute('text', displ + val);
+        } else if (this.lastInput == 'equals') {
+          this.clear();
+          this.screen.setAttribute('text', val);
+        }
+        this.lastInput = 'digit';
+      ]]&gt;
+      &lt;/method&gt;
+            
+      &lt;method name="inputOperator" args="operator"&gt;
+        if (this.lastInput == 'digit') {
+          this.execute(this.screen.getText());
+        }
+        this.valueX = this.screen.getText();
+        this.operator = operator;
+        this.lastInput = 'operator';
+      &lt;/method&gt;
+      &lt;method name="equals"&gt;
+        if (this.lastInput != 'equals') {
+          this.oldValue = this.screen.getText();
+          this.lastInput = 'equals';
+          this.execute(this.oldValue);
+        } else {
+          this.lastInput = 'equals';
+          this.execute(this.oldValue);
+        }
+      &lt;/method&gt;
+      &lt;method name="execute" args="val"&gt;
+        this.valueX -= 0;
+        var valFromDisp = val - 0;
+        if (this.valueX == 0) return;
+        if (this.operator == '+') {
+          val = this.valueX + valFromDisp;
+        } else if (this.operator == '-') {
+          val = this.valueX - valFromDisp;
+        } else if (this.operator == '*') {
+          val = this.valueX * valFromDisp;
+        } else if (this.operator == '/') {
+          val = this.valueX / valFromDisp;
+        }
+        valFromDisp = val;
+        this.screen.setAttribute('text', valFromDisp.toString());
+        this.valueX = this.screen.getText();
+      &lt;/method&gt;
+      &lt;method name="isThereDecimal"&gt;
+      &lt;![CDATA[
+        var disp = this.screen.getText();
+        var isDecimal = false;
+        for (var i=0; i !=disp.length; i++) {
+          if (disp.charAt(i) == '.') {
+            return true;
+          }
+        }
+        return false;
+      ]]&gt;
+      &lt;/method&gt;
+      &lt;method name="addDecimalPoint"&gt;
+        if ((this.lastInput == 'none') 
+           || (this.lastInput == 'operator')) {
+          if (!this.isThereDecimal()) {
+              this.screen.setAttribute('text', "0.");
+          }
+        } else if (this.lastInput == 'digit') {
+          if (!this.isThereDecimal()) {
+            var newText = this.screen.getText();
+            newText += ".";
+            this.screen.setAttribute('text', newText);
+          }
+        } else if (this.lastInput == 'equals') {
+          this.clear(); 
+          this.screen.setAttribute('text', '0.');
+        }
+        this.lastInput = 'digit';
+      &lt;/method&gt;
+      &lt;method name="negative"&gt;
+        if ((this.lastInput == 'digit') ||
+            (this.lastInput == 'equals')) {
+          var newDisp = (this.screen.getText() - 0) * -1;
+          this.screen.setAttribute('text', newDisp.toString()); 
+        } else {
+          clear();
+        }            
+      &lt;/method&gt;
+    &lt;/view&gt;
+    
+    &lt;!-- 5 rows of buttons --&gt;
+    &lt;view name="buttons" x="19" y="88"&gt;
+      &lt;simplelayout axis="y" spacing="7"/&gt;
+      &lt;!-- row 1 --&gt;
+      &lt;view name="row1" width="100%"&gt;
+        &lt;calcButton buttLabel="C" resource="button_red"/&gt;
+        &lt;calcButton buttLabel="/" align="right" labelX="13"/&gt;
+      &lt;/view&gt;
+      &lt;!-- row 2 --&gt;
+      &lt;view name="row2"&gt;
+        &lt;simplelayout axis="x" spacing="7"/&gt;
+        &lt;calcButton buttLabel="7"/&gt;
+        &lt;calcButton buttLabel="8"/&gt;
+        &lt;calcButton buttLabel="9"/&gt;
+        &lt;calcButton buttLabel="*" labelX="13"/&gt;
+      &lt;/view&gt;
+      &lt;!-- row 3 --&gt;
+      &lt;view name="row3"&gt;
+        &lt;simplelayout axis="x" spacing="7"/&gt;
+        &lt;calcButton buttLabel="4"/&gt;
+        &lt;calcButton buttLabel="5"/&gt;
+        &lt;calcButton buttLabel="6"/&gt;
+        &lt;calcButton buttLabel="-" labelX="15"/&gt;
+      &lt;/view&gt;
+      &lt;!-- row 4 --&gt;
+      &lt;view name="row4"&gt;
+        &lt;simplelayout axis="x" spacing="7"/&gt;
+        &lt;calcButton buttLabel="1"/&gt;
+        &lt;calcButton buttLabel="2"/&gt;
+        &lt;calcButton buttLabel="3"/&gt;
+        &lt;calcButton buttLabel="+"/&gt;
+      &lt;/view&gt;
+      &lt;!-- row 5 --&gt;
+      &lt;view name="row5"&gt;
+        &lt;simplelayout axis="x" spacing="7"/&gt;
+        &lt;calcButton buttLabel="0"/&gt;
+        &lt;calcButton buttLabel="+/-" labelX="1"/&gt;
+        &lt;calcButton buttLabel="." labelX="16"/&gt;
+        &lt;calcButton buttLabel="=" resource="button_grn" labelX="12"/&gt;
+      &lt;/view&gt;
+    &lt;/view&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>Aside from defining and naming the new multi-frame resources at the
+top of the code, the only other change was to extend the
+<a class="indexterm" name="id5286"></a><code class="classname">basebutton</code> class instead of the
+<a class="indexterm" name="id5289"></a><code class="classname">lz.view</code> class. The
+<a class="indexterm" name="id5292"></a><code class="classname">basebutton</code> class is a predefined class that
+gives simple mouse rollover and click behavior to a view with a
+multiframe resource. Since the <a class="indexterm" name="id5295"></a><code class="classname">basebutton</code> class
+extends <a class="indexterm" name="id5298"></a><code class="classname">lz.view</code>, it inherits all
+<a class="indexterm" name="id5301"></a><code class="classname">lz.view</code>'s attributes. This means that we can
+still use the same attributes (e.g. <a class="indexterm" name="id5304"></a><code class="sgmltag-attribute">onclick</code> and
+<a class="indexterm" name="id5307"></a><code class="sgmltag-attribute">resource</code>) in our new <a class="indexterm" name="id5310"></a><code class="classname">calcButton</code> class, as we could in the original
+<a class="indexterm" name="id5313"></a><code class="sgmltag-element">&lt;view&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag, which used to <span class="em">be</span> the button.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="calculator.separating"></a>4. Separating Across Files</h2></div></div></div><p>Although we've saved a lot of typing, the lzx file is still quite long. This may not be much of an issue if 
+you're writing this application on your own, but one of the great advantages of using classes is that a project can be 
+divided up among developers with ease. To do this, we're going to break the calculator application across a number of files, 
+using classes as a divider.</p><p>Since we already have the button separated out as a class, let's start with that one:</p><div class="example"><a name="id5322"></a><p class="title"><b>Example 14.12. Grouping classes in libraries</b></p><div class="example-contents"><pre class="programlisting">
+<span class="b">calculator_button.lzx:</span>
+<span class="em">&lt;library&gt;</span>
+  &lt;!-- A standard calculator button --&gt;
+  &lt;resource name="button_grn"&gt;
+    &lt;frame src="./resources/new_button_green_off.png"/&gt;
+    &lt;frame src="./resources/new_button_green_over.png"/&gt;
+    &lt;frame src="./resources/new_button_green_down.png"/&gt;
+  &lt;/resource&gt;
+  &lt;resource name="button_blu"&gt;
+    &lt;frame src="./resources/new_button_blue_off.png"/&gt;
+    &lt;frame src="./resources/new_button_blue_over.png"/&gt;
+    &lt;frame src="./resources/new_button_blue_down.png"/&gt;
+  &lt;/resource&gt;
+  &lt;resource name="button_red"&gt;
+    &lt;frame src="./resources/new_button_red_off.png"/&gt;
+    &lt;frame src="./resources/new_button_red_over.png"/&gt;
+    &lt;frame src="./resources/new_button_red_down.png"/&gt;
+  &lt;/resource&gt;
+  
+  &lt;class name="calcButton" resource="button_blu" clickable="true" 
+          onclick="display.inputDigit(this);" oninit="this.initButton()"
+          extends="basebutton"&gt;
+    &lt;attribute name="buttLabel" type="string"&gt;
+    &lt;attribute name="labelX" type="number" value="11"&gt;
+    
+    &lt;method name="initButton"&gt;
+      this.buttonText.setAttribute('x', 
+                                   this.labelX);
+      this.buttonText.setAttribute('text', this.buttLabel);
+    &lt;/method&gt;
+    
+    &lt;text name="buttonText" font="obliqueText" fontsize="25" 
+              fgcolor="#ffffff" x="13" valign="middle"&gt;
+      &lt;handler name="ontext"&gt;
+        this.setAttribute('width', this.getTextWidth() + 5);
+      &lt;/handler&gt;
+    &lt;/text&gt;
+  &lt;/class&gt;
+<span class="em">&lt;/library&gt;</span>
+</pre></div></div><br class="example-break"><p>Notice that the <a class="indexterm" name="id5329"></a><code class="sgmltag-element">&lt;library&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag replaces the <a class="indexterm" name="id5333"></a><code class="sgmltag-element">&lt;canvas&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ when we're breaking apart code like this. 
+It's also worth noting that the resources included by calculator_button.lzx are referenced <span class="i">relative</span> to it.</p><p>Next we're going to separate out the display. Even though there is only one instance of the display, it's 
+OK to turn it into a class:</p><div class="example"><a name="id5339"></a><p class="title"><b>Example 14.13. Placing display in a library</b></p><div class="example-contents"><pre class="programlisting">
+<span class="b">calculator_display.lzx:</span>
+<span class="em">&lt;library&gt;</span>
+  &lt;resource name="calc_display" src="../resources/display.png"/&gt;
+  
+  &lt;!-- The calculator display --&gt;
+  &lt;<span class="em">class name="calcDisplay"</span> resource="calc_display" x="20" y="31"
+            oninit="this.start()"&gt;
+    &lt;!-- the text in the display --&gt;
+    &lt;text name="screen" height="30" width="165"
+                font="displayText" fontsize="30"
+                y="5" x="5"&gt;
+      0
+    &lt;/text&gt;
+    
+    &lt;method name="start"&gt;
+      this.valueX = 0;
+      this.lastInput = 'none';
+      this.oldValue = false;
+      this.allOperators = new Array('+', '-', '/', '*');
+      this.operator = '+';
+      this.screen.setAttribute('text', this.valueX.toString());
+    &lt;/method&gt;
+    
+    &lt;method name="clear"&gt;
+      this.start();
+    &lt;/method&gt;
+    
+    &lt;!-- handles the push of a button --&gt;
+    &lt;method name="inputDigit" args="buttonObj"&gt;
+    &lt;![CDATA[
+      var val = buttonObj.buttonText.getText();
+      // weed out any non-numbers (e.g. operators, clear button)
+      if (isInArray(val, this.allOperators)) {
+        var theOperator = val;
+        this.inputOperator(theOperator);
+        return;
+      } else if (val == 'C') {
+        this.start();
+        return;
+      } else if (val == '.') {
+        this.addDecimalPoint();
+        return;
+      } else if (val == '+/-') {
+        this.negative();
+        return;
+      } else if (val == '=') {
+        this.equals();
+        return;
+      }
+      displ = this.screen.getText();
+      if ((displ == '0') &amp;&amp; (val == '0')) {
+        return;
+      }
+      if ((this.lastInput == 'none') 
+          || (this.lastInput == 'operator')) {
+        // clear display and rewrite
+        this.screen.setAttribute('text', val);    
+      } else if (this.lastInput == 'digit') {
+        this.screen.setAttribute('text', displ + val);
+      } else if (this.lastInput == 'equals') {
+        this.clear();
+        this.screen.setAttribute('text', val);
+      }
+      this.lastInput = 'digit';
+    ]]&gt;
+    &lt;/method&gt;
+    
+    &lt;method name="inputOperator" args="operator"&gt;
+      if (this.lastInput == 'digit') {
+        this.execute(this.screen.getText());
+      }
+      this.valueX = this.screen.getText();
+      this.operator = operator;
+      this.lastInput = 'operator';
+    &lt;/method&gt;
+    
+    &lt;method name="equals"&gt;
+      if (this.lastInput != 'equals') {
+        this.oldValue = this.screen.getText();
+        this.lastInput = 'equals';
+        this.execute(this.oldValue);
+      } else {
+        this.lastInput = 'equals';
+        this.execute(this.oldValue);
+      }
+    &lt;/method&gt;
+    
+    &lt;method name="execute" args="val"&gt;
+      this.valueX -= 0;
+      var valFromDisp = val - 0;
+      if (this.valueX == 0) return;
+      if (this.operator == '+') {
+        val = this.valueX + valFromDisp;
+      } else if (this.operator == '-') {
+        val = this.valueX - valFromDisp;
+      } else if (this.operator == '*') {
+        val = this.valueX * valFromDisp;
+      } else if (this.operator == '/') {
+        val = this.valueX / valFromDisp;
+      }
+      valFromDisp = val;
+      this.screen.setAttribute('text', valFromDisp.toString());
+      this.valueX = this.screen.getText();
+    &lt;/method&gt;
+    
+    &lt;method name="isThereDecimal"&gt;
+    &lt;![CDATA[
+      var disp = this.screen.getText();
+      var isDecimal = false;
+      for (var i=0; i != disp.length; i++) {
+        if (disp.charAt(i) == '.') {
+            return true;
+        }
+      }
+      return false;
+  ]]&gt;
+    &lt;/method&gt;
+    
+    &lt;method name="addDecimalPoint"&gt;
+      if ((this.lastInput == 'none') 
+          || (this.lastInput == 'operator')) {
+        if (!this.isThereDecimal()) {
+            this.screen.setAttribute('text', "0.");
+        }
+      } else if (this.lastInput == 'digit') {
+        if (!this.isThereDecimal()) {
+            var newText = this.screen.getText();
+            newText += ".";
+            this.screen.setAttribute('text', newText);
+        }
+      } else if (this.lastInput == 'equals') {
+        this.clear(); 
+        this.screen.setAttribute('text', '0.');
+      }
+      this.lastInput = 'digit';
+    &lt;/method&gt;
+    
+    &lt;method name="negative"&gt;
+      if ((this.lastInput == 'digit') ||
+          (this.lastInput == 'equals')) {
+        var newDisp = (this.screen.getText() - 0) * -1;
+        this.screen.setAttribute('text', newDisp.toString()); 
+      } else {
+        clear();
+      }            
+    &lt;/method&gt;
+  &lt;/class&gt;
+<span class="em">&lt;/library&gt;</span>
+</pre></div></div><br class="example-break"><p>The <a class="indexterm" name="id5347"></a><code class="sgmltag-element">&lt;view&gt;</code> tag changes to a <a class="indexterm" name="id5350"></a><code class="sgmltag-element">&lt;class&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag, and the id attribute is removed. This is because if
+ we used an id attribute here (i.e. in the <span class="i">class definition</span>, then every instance of that class would have the same 
+id (which would cause problems, since IDs are supposed to be unique!). We also added a <a class="indexterm" name="id5355"></a><code class="sgmltag-attribute">name</code> attribute, which will get used to create 
+instances of the class. The resource for the display is also included in the display library file.</p><p>Finally, the code for the calculator itself:</p><div class="example"><a name="id5359"></a><p class="title"><b>Example 14.14. Calculator implemented with libraries</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="400"&gt;
+  &lt;!-- Uncomment to include fonts for SWF --&gt;
+  &lt;!-- fonts --&gt;
+  &lt;!-- 
+  &lt;font src="helmetbi.ttf" name="obliqueText" /&gt;
+  &lt;font src="helmetr.ttf" name="displayText" /&gt;
+  --&gt;
+  &lt;!-- art assets --&gt;
+  &lt;resource name="calc_body" src="resources/body.png"/&gt;
+  
+  &lt;!-- includes --&gt;
+  &lt;include href="calculator_button.lzx"/&gt;
+  &lt;include href="calculator_display.lzx"/&gt;
+  
+  &lt;!-- global variables and functions --&gt;
+  &lt;script&gt;
+  &lt;![CDATA[
+        // utility function that finds an item in an array
+        //
+        function isInArray(x, theArray) {
+            var isThere = false;
+            for (var i=0; i&lt;theArray.length; i++) {
+                if (theArray[i] == x) {
+                    isThere = true;
+                }
+            }
+            return isThere;
+        }
+  ]]&gt;
+  &lt;/script&gt;
+  
+  &lt;view name="calculator" resource="calc_body" x="20" y="20"&gt;
+    &lt;!-- display --&gt;
+    &lt;calcDisplay id="display"/&gt;
+      &lt;!-- 5 rows of buttons --&gt;
+      &lt;view name="buttons" x="19" y="88"&gt;
+        &lt;simplelayout axis="y" spacing="7"/&gt;
+        
+        &lt;!-- row 1 --&gt;
+        &lt;view name="row1" width="100%"&gt;
+          &lt;calcButton buttLabel="C" resource="button_red"/&gt;
+          &lt;calcButton buttLabel="/" align="right" labelX="13"/&gt;
+        &lt;/view&gt;
+        
+        &lt;!-- row 2 --&gt;
+        &lt;view name="row2"&gt;
+          &lt;simplelayout axis="x" spacing="7"/&gt;
+          &lt;calcButton buttLabel="7"/&gt;
+          &lt;calcButton buttLabel="8"/&gt;
+          &lt;calcButton buttLabel="9"/&gt;
+          &lt;calcButton buttLabel="*" labelX="13"/&gt;
+        &lt;/view&gt;
+        
+        &lt;!-- row 3 --&gt;
+        &lt;view name="row3"&gt;
+          &lt;simplelayout axis="x" spacing="7"/&gt;
+          &lt;calcButton buttLabel="4"/&gt;
+          &lt;calcButton buttLabel="5"/&gt;
+          &lt;calcButton buttLabel="6"/&gt;
+          &lt;calcButton buttLabel="-" labelX="15"/&gt;
+        &lt;/view&gt;
+        
+        &lt;!-- row 4 --&gt;
+        &lt;view name="row4"&gt;
+          &lt;simplelayout axis="x" spacing="7"/&gt;
+          &lt;calcButton buttLabel="1"/&gt;
+          &lt;calcButton buttLabel="2"/&gt;
+          &lt;calcButton buttLabel="3"/&gt;
+          &lt;calcButton buttLabel="+"/&gt;
+        &lt;/view&gt;
+        
+        &lt;!-- row 5 --&gt;
+        &lt;view name="row5"&gt;
+          &lt;simplelayout axis="x" spacing="7"/&gt;
+          &lt;calcButton buttLabel="0"/&gt;
+          &lt;calcButton buttLabel="+/-" labelX="1"/&gt;
+          &lt;calcButton buttLabel="." labelX="16"/&gt;
+          &lt;calcButton buttLabel="=" resource="button_grn" labelX="12"/&gt;
+        &lt;/view&gt;
+      &lt;/view&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>We used the same id attribute that we had in the <a class="indexterm" name="id5363"></a><code class="sgmltag-element">&lt;view&gt;</code> tag of the display in the <span class="i">instance</span> of the calcDisplay class.
+The calculator app is now broken up across three files:</p><div class="orderedlist"><ol class="orderedlist compact" type="1"><li class="listitem"><p>calculator_button.lzx</p></li><li class="listitem"><p>calculator_display.lzx</p></li><li class="listitem"><p>calculator_main.lzx</p></li></ol></div><p>At the very least, classes help minimize the amount of typing you have to do, as well as giving you an intuitive system 
+for dividing up and organizing your code. LZX was designed to be an Object Oriented language, and the use of classes in LZX goes much 
+further than saving you typing. </p><p>For a deeper discussion of using classes in LZX, see the <a class="xref" href="../introductory-classes.html" title="Chapter 28. Classes">Chapter 28, <i>Classes</i></a> and 
+<a class="xref" href="../class-inheritance.html" title="Chapter 33. Extending Classes">Chapter 33, <i>Extending Classes</i></a>
+chapters of the Guide</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="drawview-intro.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="../developers.tutorials.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="../developers.building-apps.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 13. Introduction to Drawing </td><td width="20%" align="center"><a accesskey="h" href="../index.html">Home</a></td><td width="40%" align="right" valign="top"> Part III. Fundamental Concepts</td></tr></table></div></body></html>

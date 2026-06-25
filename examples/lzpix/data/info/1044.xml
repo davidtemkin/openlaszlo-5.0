@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1044">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>One World Trade Center</title>
+  <description>One World Trade Center — from the OpenLaszlo sample image library.</description>
+  <dates posted="1493715200" />
+  <urls><url type="photopage">data/photos/1044.jpg</url></urls>
+  <tags><tag>one</tag><tag>world</tag><tag>trade</tag><tag>center</tag></tags>
+</photo>
+</rsp>

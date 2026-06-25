@@ -1,0 +1,6 @@
+   <rtmpconnection src="rtmp://mysite.com/myapp/" autoconnect="true"/>
+   <videoview x="10" id="v" url="test.flv" type="rtmp">
+       <camera show="true" index="2"/> 
+       <microphone name="mic" capturing="false"/>    
+   </videoview>
+   <view bgcolor="green" width="10" height="${v.mic.level/100*v.height}"/>

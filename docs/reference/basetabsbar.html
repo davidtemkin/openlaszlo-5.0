@@ -1,0 +1,76 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basetabsbar&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basetabsbar<span class="ang">&gt;</span></h1><p class="short">A non-visual container for basetab components.</p><p class="meta">Extends <code>baselist</code></p>
+                    
+        <p>
+          A 
+          <code>basetabsbar</code>
+           is a non-visual container
+            class that uses a default x-axis 
+          <code>&lt;simplelayout&gt;</code>
+           
+            to lay out its 
+          <code>&lt;basetab&gt;</code>
+           
+            children. 
+          <code>basetabsbar </code>
+           is contained in a 
+            
+          <code>&lt;basetabs&gt;</code>
+           component.
+        </p>
+                    
+            
+        <pre class="example">
+            &lt;canvas height="75"&gt;
+              &lt;include /&gt;
+            
+              &lt;class name="aquatab" extends="basetab" 
+                        width="40" height="20" bgcolor="aqua"&gt;
+                &lt;text&gt;tab&lt;/text&gt;
+              &lt;/class&gt;
+            
+              &lt;class name="spacetabsbar" extends="basetabsbar" bgcolor="black" 
+                     layout="class: simplelayout; axis: x; spacing: 4"&gt;
+              &lt;/class&gt;
+            
+              &lt;basetabs x="10" y="10" tabclass="aquatab" barclass="spacetabsbar"&gt;
+                &lt;basetabpane&gt;
+                  &lt;text&gt;one&lt;/text&gt;
+                &lt;/basetabpane&gt;
+                &lt;basetabpane&gt;
+                  &lt;text&gt;two&lt;/text&gt;
+                &lt;/basetabpane&gt;
+                &lt;basetabpane&gt;
+                  &lt;text&gt;three&lt;/text&gt;
+                &lt;/basetabpane&gt;
+              &lt;/basetabs&gt;
+            &lt;/canvas&gt;
+            </pre>
+                      
+        <p>
+          <strong>See Also:</strong>
+        </p>
+                      
+        <ul>
+                            
+          <li>
+                                  
+            <code>&lt;basetab&gt;</code>
+            , 
+                      and 
+            <code>&lt;basetabs&gt;</code>
+                              
+          </li>
+                        
+        </ul>
+                               
+          This class is a container for basetab items. It must be a child of
+          basetabs. The default layout for its subviews is "class: simplelayout;
+          axis: x; spacing: 0". You can pass the name of this class in the
+          'barclass' attribute of tabpane, basetabpane, basetabs, and
+          tabs. Basetabs uses this class as its default 'barclass'.
+</main><script src="_nav.js"></script></body></html>

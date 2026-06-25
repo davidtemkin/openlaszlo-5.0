@@ -1,0 +1,88 @@
+<canvas width="100%" height="500" debug="true"> 
+  <debug x="30%" width="65%" y="5%" height="90%" />
+  <stylesheet>
+    /* default, should only be seen if things are broken */
+    colorswatch { background-color: orange }
+
+    /* Static for buttons */
+    colorbutton[color=red] {background-color: red }
+    /* `lime` is the HTML name for rgb(0,255,0) */
+    colorbutton[color=green] {background-color: lime }
+    colorbutton[color=blue] {background-color: blue }
+
+    /* dynamic single selectors that apply to individual swatches */
+    [red=off] colorswatch { background-color: cyan; opacity: 0.2 }
+    [red=on] colorswatch { background-color: red; opacity: 0.95 }
+    [green=off] colorswatch { background-color: magenta; opacity: 0.2 }
+    [green=on] colorswatch { background-color: lime; opacity: 0.95 }
+    [blue=off] colorswatch { background-color: yellow; opacity: 0.2 }
+    [blue=on] colorswatch { background-color: blue; opacity: 0.95 }
+
+    /* dynamic compound selectors that apply to mixer colorswatch */
+    [red=off] [green=off] [blue=off] [name=mixer] colorswatch { background-color: black; opacity: 1 }
+    [red=off] [green=off] [blue=on] [name=mixer] colorswatch { background-color: blue; opacity: 1 }
+    [red=off] [green=on] [blue=off] [name=mixer] colorswatch { background-color: lime; opacity: 1 }
+    [red=off] [green=on] [blue=on] [name=mixer] colorswatch { background-color: cyan; opacity: 1 }
+    [red=on] [green=off] [blue=off] [name=mixer] colorswatch { background-color: red; opacity: 1 }
+    [red=on] [green=off] [blue=on] [name=mixer] colorswatch { background-color: magenta; opacity: 1 }
+    [red=on] [green=on] [blue=off] [name=mixer] colorswatch { background-color: yellow; opacity: 1 }
+    [red=on] [green=on] [blue=on] [name=mixer] colorswatch { background-color: white; opacity: 1 }
+  </stylesheet>
+
+ <!-- button to toggle an attribute which should trigger style change -->
+  <class name="colorbutton" width="40" height="20" align="center">
+    <attribute name="bgcolor" style="background-color" />
+    <attribute name="color" type="string" />
+    <text fgcolor="white" text="${this.parent.on}" align="center" />
+    <attribute name="on" type="string" value="off" />
+    <handler name="onclick">
+      this.setAttribute('on', this.on === 'on' ? 'off' : 'on' );
+    </handler>
+  </class>
+
+  <!-- color swatch that is styled by background-color and opacity -->
+  <class name="colorswatch" height="60" width="60" bgcolor="gray" align="center">
+    <attribute name="swatchcolor" style="background-color" type='color' />
+    <attribute name="swatchopacity" style="opacity" value="1" />
+    <handler name="onclick">
+      Debug.clear();
+      Debug.explainStyleBindings(this);
+    </handler>
+    <view name="swatch" x="5" y="5" height="50" width="50">
+      <attribute name="bgcolor" value="${parent.swatchcolor}" />
+      <attribute name="opacity" value="${parent.swatchopacity}" />
+    </view>
+  </class>
+
+  <!-- nested views with red, green, blue attributes that dynamically change
+       to demonstrate the applicability of compound dynamic selectors  -->
+  <view x="5%" y="5%" width="20%" height="80%" layout="axis: y; spacing: 5">
+    <text width="100%" multiline="true">
+      Toggle the red, green, and blue buttons on and off to
+      dynamically update the applicable CSS selectors.  Click on a color
+      swatch to explain the applicability of the CSS selectors.
+    </text>
+    <attribute name="red" value="${this.toggle.on}" type="string" />
+    <colorbutton name="toggle" color="red" />
+    <colorswatch />
+    <view width="100%" layout="axis: y; spacing: 5">
+      <attribute name="green" value="${this.toggle.on}" type="string" />
+      <colorbutton name="toggle" color="green" />
+      <colorswatch />
+      <view width="100%" layout="axis: y; spacing: 5">
+        <attribute name="blue" value="${this.toggle.on}" type="string" />
+        <colorbutton name="toggle" color="blue" />
+        <colorswatch />
+        <view width="100%" name="mixer" layout="axis: y; spacing: 5">
+          <text align="center">Mixer</text>
+          <colorswatch id="mixer"/>
+        </view>
+      </view>
+    </view>
+  </view>
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+  * Copyright 2010 Laszlo Systems, Inc.  All Rights Reserved.                   *
+  * Use is subject to license terms.                                            *
+  * X_LZ_COPYRIGHT_END ****************************************************** -->
+

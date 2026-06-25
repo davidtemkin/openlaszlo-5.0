@@ -1,0 +1,40 @@
+<canvas width="0" height="0" >
+    <view name="audioplayer" y="40">
+        <method name="quieter">
+            this.setVolume( this.getVolume() - 10)
+        </method>
+        <method name="louder">
+            this.setVolume( this.getVolume() + 10)
+        </method>
+        <method name="panLeft">
+            this.setPan( this.getPan() - 10)
+        </method>
+        <method name="panRight">
+            this.setPan( this.getPan() + 10)
+        </method>
+        <handler name="onlastframe">
+            //Debug.write("Got lastframe");
+            lz.Browser.callJS('setCanAttr', null, 'lastframe'); 
+        </handler>
+        <handler name="onstop">
+            //Debug.write("Got stop");
+        </handler>
+        <handler name="onloadperc" args="l">
+            //Debug.write("Got loadperc", l);
+            lz.Browser.callJS('setCanAttr', null, 'loadperc', l); 
+        </handler>
+        <handler name="onframe" args="f">
+            //Debug.write("Got frame", f);
+            lz.Browser.callJS('setCanAttr', null, 'frame', f); 
+        </handler>
+        <handler name="ontotalframes" args="t">
+            //Debug.write("Got totalframes", t);
+            lz.Browser.callJS('setCanAttr', null, 'totalframes', t); 
+        </handler>
+    </view>
+</canvas>    
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2008 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->

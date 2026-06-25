@@ -1,0 +1,28 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;ulink&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>ulink<span class="ang">&gt;</span></h1><p class="short"/><p class="meta">Extends <a href="view.html"><code>LzView</code></a></p>
+        A class for URL links.
+    
+    This differs from the use of the XHTML &lt;a&gt; attribute, e.g in '&lt;text&gt;&lt;a &gt;OpenLaszlo.org&lt;/a&gt;lt;/text&gt;', in these ways:
+    - There is a hover effect.  (This defaults to underline.)
+    - There is a hover color.  (This defaults to blue.)
+    - The link content and target can be databound. 
+    
+    
+        <pre class="example">
+      &lt;ulink &gt;OpenLaszlo.org&lt;/ulink&gt;
+    </pre>
+            
+    See ulink-test.lzx for additional examples.
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">color</td><td class="ty">color</td><td class="ty">blue</td><td>
+                The color when the link is 
+                <em>not</em>
+                 being hovered.
+              </td></tr><tr><td class="nm">hoverColor</td><td class="ty">color</td><td class="ty">blue</td><td>The color when the link is hovered.</td></tr><tr><td class="nm">hoverTags</td><td class="ty">string</td><td class="ty">u</td><td>A list of tags that are applied to the link when
+    it is hovered.  This is either a list of tag names, e.g. "u"
+    or "u b", or the HTML itself, e.g. "&lt;u&gt;".</td></tr><tr><td class="nm">href</td><td class="ty">string</td><td class="ty"/><td>The URL target.</td></tr><tr><td class="nm">target</td><td class="ty">string</td><td class="ty">_new</td><td>Where the target opens.  See lz.Browser.loadURL for
+    a list of values.</td></tr><tr><td class="nm">text</td><td class="ty">html</td><td class="ty"/><td>The text of the link.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

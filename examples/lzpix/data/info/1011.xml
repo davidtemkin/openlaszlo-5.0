@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1011">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Coastal Resort View</title>
+  <description>Coastal Resort View — from the OpenLaszlo sample image library.</description>
+  <dates posted="1490864000" />
+  <urls><url type="photopage">data/photos/1011.jpg</url></urls>
+  <tags><tag>coastal</tag><tag>resort</tag></tags>
+</photo>
+</rsp>

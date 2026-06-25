@@ -1,0 +1,29 @@
+<!-- SOAP -->
+<soap name="mySOAP" wsdl="...">
+    <handler name="onload">
+        Debug.debug("soap proxy loaded: %w", this.proxy);
+    </handler>
+    <handler name="onunload">
+        Debug.debug("soap proxy unloaded: %w", this.proxy);
+    </handler>
+</soap>
+
+<!-- JavaRPC -->
+<javarpc name="myJavaRPC" classname="..." scope="...">
+    <handler name="onload">
+        Debug.debug("javarpc proxy loaded: %w", this.proxy);
+    </handler>
+    <handler name="onunload">
+        Debug.debug("javarpc proxy unloaded: %w", this.proxy);
+    </handler>
+</javarpc>
+
+<!-- XML-RPC -->
+<xmlrpc name="myXMLRPC" service="...">
+    <handler name="onload">
+        Debug.debug('xmlrpc proxy loaded: %w", this.proxy);
+    </handler>
+    <handler name="onunload">
+        Debug.debug("xmlrpc proxy unloaded: %w", this.proxy);
+    </handler>
+</xmlrpc>

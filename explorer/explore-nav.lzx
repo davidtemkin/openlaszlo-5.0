@@ -1,0 +1,434 @@
+<canvas height="100%" width="100%" bgcolor="0xeaeaea" history="false" title="Laszlo Explorer">
+  <attribute name="bookmark"/>
+  <event name="onbookmark"/>
+  <attribute name="lastbookmark" value="" type="text"/>
+  <setter name="bookmark" args="b">
+  <![CDATA[
+    if (b == null || this.lastbookmark == b) return;
+    this.lastbookmark = b;
+
+    // deserialize
+    this.bookmark = b.split('|');
+
+    lz.Browser.setWindowTitle('Laszlo Explorer: ' + this.bookmark.join(':'));
+
+    //Debug.warn('restoring bookmark', b, this.bookmark);
+    if (this.onbookmark.ready) this.onbookmark.sendEvent(this.bookmark);
+  ]]>
+  </setter>
+  <attribute name="loadcounter" value="0" type="number"/>
+
+  <!-- Datasets -->
+  <dataset name="navdata"/>
+
+  <!-- Included Libraries -->
+  <include href="base/basetree.lzx" />
+
+  <include href="resources.lzx" />
+
+  <handler name="oninit"><![CDATA[
+    var navset = lz.Browser.getInitArg("navset");
+    if (navset == null) {
+        if ($dhtml) {
+            navset = "nav_dhtml.xml";
+        } else {
+            navset = "nav.xml";
+        }
+    }
+    canvas.navdata.setAttribute("src", navset);
+    canvas.navdata.doRequest();
+
+    // Expose an inbound hook so the host shell (index.html) can drive navigation from a clean
+    // URL (deep link / browser back-forward) by replaying a "|"-joined title path through the
+    // existing bookmark→openSequence restore machinery. Drive the canvas attribute DIRECTLY
+    // (not lz.embed.setCanvasAttribute, which is hash-coupled): `canvas` is a window global in
+    // the app frame. Clearing lastbookmark first lets a repeat target re-fire the setter.
+    lz.Browser.loadJS("window.olGoto=function(tp){try{canvas.lastbookmark=null;canvas.setAttribute('bookmark',tp);}catch(e){}}");
+  ]]></handler>
+
+  <!-- CLASSES -->
+
+  <!-- Animator group classes to be instantiated when needed -->
+  <class name="openanimator" extends="animatorgroup" process="sequential" start="false">
+    <attribute name="item" value="null"/>
+    <animator target="$once{parent.item}" attribute="width" to="$once{160 + 7*(parent.item.level+1)}"
+        duration="100" relative="false"/>
+    <animatorgroup name="open" process="simultaneous" duration="250" start="false"
+        onstop="parent.item.onopendone.sendEvent()">
+        <!-- note the spacing & inset to -6, since the shadow is 6 pixels high -->
+        <animator attribute="inset" to="-6"
+            start="false" relative="false"/>
+        <animator attribute="spacing" to="-6"
+            start="false"  relative="false"/>
+    </animatorgroup>
+  </class>
+
+  <class name="closeanimator" extends="animatorgroup" process="sequential" start="false">
+    <attribute name="item" value="null"/>
+    <animatorgroup name="items" process="simultaneous" duration="200"  start="false"
+        onstop="parent.item.children.setAttribute('visible', false);">
+        <!-- note the spacing & inset from -6, since the shadow is 6 pixels high -->
+        <animator attribute="spacing" to="${-parent.parent.parent.hgt}" from="-6"
+            start="false"
+            relative="false"/>
+        <animator attribute="inset" to="${-parent.parent.parent.hgt}" from="-6"
+            start="false"/>
+    </animatorgroup>
+    <animator target="$once{parent.item}" attribute="width" to="$once{160 + 7*parent.item.level}"
+        duration="100" relative="false"/>
+  </class>
+
+  <!-- NavButton Class parent of all item buttons -->
+  <class name="menubutton" extends="basetree" xindent="0" yindent="${this.item.height}"
+    closechildren="true" closesiblings="true" layout="class:null">
+    <attribute name="level" type="number"/>
+    <attribute name="defaultplacement" value="itemlist" type="string"/>
+    <event name="onopendone"/>
+
+    <datapath xpath="*">
+        <attribute name="doneDel" value="null"/>
+        <handler name="onclones">
+            var lastclone = this.clones[ this.clones.length - 1 ];
+            if ( !this.doneDel ){
+                this.doneDel = new LzDelegate( this, 'replicationDone');
+            } else {
+                this.doneDel.unregisterAll();
+            }
+            this.doneDel.register( lastclone , "oninit" );
+        </handler>
+        <method name="replicationDone" args="clone">
+            this.parent.dataBound();
+        </method>
+    </datapath>
+
+    <handler name="oninit">
+        this.children.sendToBack();
+    </handler>
+
+    <attribute name="deferOpen" value="false"/>
+
+    <method name="_setOpen" args="o"><![CDATA[
+        if (_initcomplete && this.isleaf) {
+            this.open = false;
+            return;
+        }
+
+        if (o && this.itemlist.subviews.length == 0) {
+            this.deferOpen = true;
+            new lz.navbutton(this, { level: this.level + 1 });
+        } else {
+            super._setOpen(o);
+        }
+    ]]></method>
+
+    <method name="dataBound"><![CDATA[
+        this.dataloaded = true;
+        if (this.deferOpen) {
+            this.deferOpen = false;
+            this.setAttribute('open', true);
+        }
+        if (this['nextOpenList']) {
+            this.searchChildren();
+        }
+    ]]></method>
+
+    <method name="searchChildren">
+        var nol = this.nextOpenList;
+        var no = this.searchSubnodes("title", nol[0]);
+        if (no != null) {
+            no.openSequence(nol);
+        } else if ($debug) {
+            Debug.warn("invalid element in open sequence %w\n", nol[0]);
+        }
+        canvas.loadcounter--;
+        if ($debug) Debug.warn('loaded', nol[0], canvas.loadcounter);
+    </method>
+
+    <method name="openChildren" args="o">
+        if (this.itemlist.subviews.length > 0) {
+            // Debug.write('doOpenChildren', this, o, this.itemlist.subviews);
+            var item_hgt = this.item.height;
+
+            var layout = this.itemlist.childlayout;
+            layout.setAttribute('hgt', item_hgt);
+            if (o) {
+                layout.setAttribute('spacing', -item_hgt);
+                layout.setAttribute('inset', -item_hgt);
+                this.children.setAttribute('visible', true);
+                layout.doOpen();
+            } else {
+                layout.doClose();
+            }
+        }
+    </method>
+
+    <method name="openSequence" args="seq">
+        if (seq[0] == this.title) {
+            // first, open self
+            if (! this.open) {
+                this.header.open();
+            } else {
+                // do the action even if we're opened...
+                this.header.doaction();
+            }
+            if (seq.length > 1) {
+                //seq.splice(1) requires the second argument in IE8
+                this.nextOpenList = seq.splice(1, seq.length - 1);
+                if (this.dataloaded) {
+                    // data loaded already, search children now.
+                    this.searchChildren();
+                }
+            }
+        }
+    </method>
+
+    <view name="itemlist" width="${classroot.width}" placement="children" >
+        <simplelayout name="childlayout" spacing="-20">
+            <attribute name="hgt" value="0" />
+            <attribute name="animateOpen" value="null"/>
+            <attribute name="animateClose" value="null"/>
+
+            <method name="doOpen">
+                if (this.animateOpen == null) {
+                    this.animateOpen = new lz.openanimator(this, { item: classroot });
+                }
+                this.animateOpen.doStart();
+            </method>
+
+            <method name="doClose">
+                if (this.animateClose == null) {
+                    this.animateClose = new lz.closeanimator(this, { item: classroot });
+                }
+                this.animateClose.doStart();
+            </method>
+        </simplelayout>
+    </view>
+    <itembutton name="header" level="$once{classroot.level}"
+       text="$once{classroot.title}" width="${classroot.width}"/>
+  </class>
+
+  <!-- ItemButton class the visible portion of navButtons -->
+  <class name="itembutton" placement="item" datapath="."
+    onmouseover="background.setAttribute('frame', 2)"
+    onmouseout="showUp()"
+    onmousedown="background.setAttribute('frame', 3)"
+    onmouseup="showUp()" clickable="true">
+
+    <attribute name="level" type="number"/>
+    <attribute name="text" type="string"/>
+    <attribute name="isleaf" value="false"/>
+
+    <event name="onopendone"/>
+
+    <method name="largetext">
+        icon.setAttribute("y", 9);
+        label.setAttribute("fgcolor", 0xffffff);
+        label.setAttribute("fontsize", 13);
+    </method>
+
+    <method name="smalltext">
+        icon.setAttribute("y", 5);
+        label.setAttribute("fgcolor", 0xd4dcec);
+        label.setAttribute("fontsize", 11);
+    </method>
+
+    <handler name="ondata">
+        var dp = this.datapath;
+
+        this.setAttribute("isleaf", !dp.p.hasChildNodes());
+
+        var tagtype = dp.xpathQuery("name()");
+        this.background.setAttribute('resource', tagtype + "_btn");
+        if (tagtype == 'subitem') {
+             this.smalltext();
+        } else {
+            this.largetext();
+        }
+
+        var action = dp.xpathQuery("@action");
+        if (action == 'popup' || action == 'source' || action == 'popupexternal') {
+            icon.setAttribute('frame', 4);
+        }
+    </handler>
+
+    <handler name="onopen" reference="classroot" method="doaction"/>
+    <method name="doaction" args="v=null"><![CDATA[
+        var dp = this.datapath;
+        var autoselect = dp.xpathQuery("@autoselect");
+        if (autoselect == "true") {
+            var firstitem = classroot.itemlist.subviews[0];
+            if (firstitem is lz.menubutton) {
+                firstitem.header.open();
+            }
+        } else {
+            // Clean-URL launches (no JSP): an .lzx path RUNS the app; ?source views it.
+            var action = dp.xpathQuery("@action");
+            var src = dp.xpathQuery("@src");
+            if (action == 'popup') {
+                var popup = dp.xpathQuery("@popup");
+                var target = dp.xpathQuery("@target") || escape(popup);
+                var popwidth = dp.xpathQuery("@width") || 860;
+                var popheight = dp.xpathQuery("@height") || 600;
+                var features = label.formatToString("scrollbars=yes,width=%s,height=%s", popwidth, popheight);
+                lz.Browser.loadURL(popup, target, features);          // run the app in a popup window
+                if (src != null) browser.loadURL(src);                // cover in the content pane
+            } else if (action == 'popupexternal') {
+                var t = dp.xpathQuery("@target");
+                var f = "scrollbars=yes,resizable=yes,toolbar=yes,location=yes,menubar=yes,width=860,height=600";
+                lz.Browser.loadJS(label.formatToString("window.open('%s', '%s', '%s')", src, t, f));
+            } else if (action == 'source') {
+                if (src != null) lz.Browser.loadURL(src + '?source', 'source', 'scrollbars=yes,width=920,height=620');
+            } else if (action == 'explore') {
+                if (src != null) browser.loadURL(src + '?edit');      // editable source + live in-browser recompile in the pane
+            } else if (src != null) {
+                browser.loadURL(src);                                 // section cover / welcome
+            }
+        }
+    ]]></method>
+
+    <handler name="onclick"><![CDATA[
+        var p = this.parent;
+        var bookmark = [];
+        while (p.title) {
+          bookmark.unshift(p.title);
+          p = p.parent;
+        }
+        var newbookmark = bookmark.join('|');
+        if (newbookmark != canvas.lastbookmark) {
+          if ($debug) Debug.warn('new bookmark:', newbookmark, this);
+          // Drive the bookmark via the canvas's OWN setter (fires onbookmark → openSequence
+          // → doaction, which loads the content pane) instead of lz.embed.setCanvasAttribute,
+          // which routes through lz.embed.history._store and writes the legacy #_lzbookmark
+          // hash onto the TOP URL (regardless of canvas history="false"). Same navigation,
+          // no hash. The host shell (below) owns the clean, shareable URL via the History API.
+          canvas.setAttribute('bookmark', newbookmark);
+          lz.Browser.loadJS("if(window.parent&&window.parent.olNav)window.parent.olNav(decodeURIComponent('" + encodeURIComponent(newbookmark) + "'))");
+        }
+        // Re-clicking an ALREADY-active content topic must reload it to the top: its embedded
+        // page may have navigated internally (e.g. links inside the Developer's Guide), and the
+        // nav otherwise treats a re-click as a no-op (doaction doesn't re-fire).
+        var dp = this.datapath;
+        if (dp != null) {
+          var act = dp.xpathQuery("@action");
+          var s = dp.xpathQuery("@src");
+          if (s != null && (act == null || act == '') && browser.url == s) {
+            browser.loadURL(s);
+          }
+        }
+    ]]></handler>
+    <method name="open" args="v=null"><![CDATA[
+      classroot.changeFocus(null);
+
+      // only open subitems if there are
+      if (! this.isleaf) {
+        // only open menu if not already opened ( i.e don't toggle like before )
+        // if ( !classroot.open ) -- this did not completely work, so just always open
+        classroot.setAttribute("open", true);
+      }
+      if ($debug) Debug.warn('open', this.parent.title, canvas.loadcounter);
+
+      this.doaction();
+    ]]></method>
+
+    <handler name="onopen" reference="classroot" method="showUp"/>
+    <method name="showUp" args="v=null">
+        background.setAttribute('frame', classroot.open ? 4 : 1);
+        // Only toggle arrow if there are subnodes
+        if (this.datapath.getNodeCount()) {
+            icon.setAttribute('frame', classroot.open ? 2 : 1);
+        }
+    </method>
+
+    <view name="background"  width="${classroot.width}" x="${classroot.width-200}" />
+
+    <view name="icon" resource="icon" y="9" stretches="both" width="11" height="11"
+        x="${classroot.width - this.width - 6 }" />
+    <defaulttext name="label" x="${6 + classroot.level*7}" valign="middle"
+        fontstyle="bold" fontsize="13"
+        width="${parent.width-x}" text="${classroot.text}"/>
+  </class>
+
+  <class name="defaulttext" extends="text" font="helvetica,sans-serif" fgcolor="#ffffff"/>
+
+  <class name="navbutton" extends="menubutton" width="${immediateparent.width}">
+      <attribute name="title" value="$path{'@name'}"/>
+  </class>
+
+  <!-- APPLICATION -->
+  <!-- navigation bar and classes -->
+  <view width="200" height="$once{canvas.height}" >
+    <view x="-15" resource="navbg"/>
+    <!-- logo -> local home (openlaszlo.org is defunct) -->
+    <basebutton resource="logobtn" x="2" y="6"
+        onclick="lz.Browser.loadJS(&quot;top.location.href = (top.OL_BASE || '/')&quot;)"/>
+    <view x="10" y="570" layout="axis:y" >
+      <!-- project version (5.0); canvas.version is the underlying 4.9.0.0 oracle build -->
+      <defaulttext resize="true" fontsize="10" text="${'Version: 5.0 (' + canvas.runtime + ')'}" />
+    </view>
+  </view>
+
+  <view name="treecontainer" width="200" y="42">
+    <simplelayout/>
+    <!-- runtime selector (DHTML / Flash 8 / Flash 10) removed: this is a DHTML-only distribution -->
+    <basetree name="menu" datapath="navdata:/menu"
+        showroot="false" x="2" y="2"
+        layout="spacing:-6">
+        <!-- note spacing is -6, since the shadow is 6 pixels high -->
+      <method name="dataBound" args="ignore=null">
+        // this is how we restore the state of the app from an incoming URL,
+        // this is always provided by the JSP wrappers
+        var bookmark = canvas.bookmark;
+        if (! bookmark) return;
+        if (bookmark.length > 0) {
+          var no = this.searchSubnodes("title", bookmark[0]);
+          if (no != null) {
+            if (canvas.loadcounter == 0) {
+              canvas.loadcounter = bookmark.length - 1;
+              if ($debug) Debug.info('dataBound', bookmark, canvas.loadcounter);
+              no.openSequence(bookmark);
+            }
+          }
+        }
+      </method>
+      <handler name="onbookmark" reference="canvas" method="dataBound"/>
+      <navbutton width="160" level="0">
+      </navbutton>
+    </basetree>
+  </view>
+  <html id="browser" src="coverpages/welcome/welcome.lzx" history="false" x="200" width="${canvas.width - this.x}" height="100%">
+    <handler name="oninit" args="ignore=null">
+        this.bringToFront();
+    </handler>
+    <method name="loadURL" args="url">
+      <![CDATA[
+        this.url = url;
+        url = url.toString();
+        // Always navigate the content pane to `url`. Even when it equals the last src,
+        // the embedded page may have navigated INTERNALLY (e.g. clicking links inside the
+        // Developer's Guide), so re-selecting the nav item must reset it to the top — force
+        // a reload by bouncing through about:blank when the requested url is unchanged.
+        if (url === this.src) { this.setAttribute('src', 'about:blank'); }
+        this.setAttribute('src', url);
+        if ($debug) Debug.info('loading', url, canvas.loadcounter);
+      ]]>
+    </method>
+    <handler name="onload" args="ignore=null">
+      <![CDATA[
+        this.callJavascript('window.focus');
+      ]]>
+    </handler>
+
+    <handler name="onfocus" args="ignore=null">
+      <![CDATA[
+        this.callJavascript('window.focus');
+      ]]>
+    </handler>
+  </html>
+
+
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->

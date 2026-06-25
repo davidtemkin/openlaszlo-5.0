@@ -1,0 +1,9 @@
+<!--- Baseslidertrack expects to be within a baseslider (or its
+    subclass). In other words, its "classroot" should be a slider. -->
+<class name="baseslidertrack" width="100%" bgcolor="0x333333" 
+       height="${classroot.trackheight}">
+  <method name="init">
+    super.init();
+    classroot.track = this;
+  </method>
+</class>

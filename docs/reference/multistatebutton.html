@@ -1,0 +1,124 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;multistatebutton&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>multistatebutton<span class="ang">&gt;</span></h1><p class="short">a button with multiple states, such as a toggle button</p><p class="meta">Extends <code>basebutton</code></p>
+                    
+        <p>
+          A 
+          <code>multistatebutton</code>
+           is an extension of the
+            
+          <code>basebutton</code>
+           class to address the more general
+            class of buttons that can have multiple states, and where each state
+            has it own mouseup, mouseover, and mousedown images. Like the
+            
+          <code>basebutton</code>
+           class, the construction of a
+            
+          <code>multistatebutton</code>
+           starts with a multiframe
+            resource.
+        </p>
+                    
+            
+        <p>The example below create a play/pause button, using the following
+            resources:</p>
+                    
+            
+        <code>&lt;img&gt;&lt;/img&gt;</code>
+                    
+        <code>&lt;img&gt;&lt;/img&gt;</code>
+                    
+        <code>&lt;img&gt;&lt;/img&gt;</code>
+                    
+        <code>&lt;img&gt;&lt;/img&gt;</code>
+                    
+        <code>&lt;img&gt;&lt;/img&gt;</code>
+                    
+        <code>&lt;img&gt;&lt;/img&gt;</code>
+                    
+            
+        <p>With a multistatebutton, the following must be specified explicitly:</p>
+                    
+            
+        <dl>
+                      
+          <dt>statenum</dt>
+                      
+          <dd>the initial state of a button</dd>
+                      
+          <dt>statelength</dt>
+                      
+          <dd>the number of frames (of a multiframe resource) used for a single button state - NOTE: all states must be the same length</dd>
+                      
+          <dt>maxstate</dt>
+                      
+          <dd>the total number of states of the button - 1  (since states are counted starting from 0).</dd>
+                      
+        </dl>
+                    
+            
+        <pre class="example">
+            &lt;library&gt;
+              &lt;!-- first create the multi-frame resource and give it a name --&gt;
+              &lt;resource name="mybutton_rsrc"&gt;
+                 &lt;!--  State: 0 --&gt;
+                 &lt;!-- first  frame of state 1 = mouseup   image of the button --&gt;
+                 &lt;frame src="resources/multistatebutton/state0-mouseup.jpg"/&gt;
+                 &lt;!-- second frame of state 1 = mouseover image of the button --&gt;
+                 &lt;frame src="resources/multistatebutton/state0-mouseover.jpg"/&gt;
+                 &lt;!-- third  frame of state 1 = mousedown image of the button --&gt;
+                 &lt;frame src="resources/multistatebutton/state0-mousedown.jpg"/&gt;
+            
+                 &lt;!--  State: 1 --&gt;
+                 &lt;!-- first  frame of state 2 = mouseup image of the button --&gt;
+                 &lt;frame src="resources/multistatebutton/state1-mouseup.jpg"/&gt;
+                 &lt;!-- second frame of state 2 = mouseover image of the button --&gt;
+                 &lt;frame src="resources/multistatebutton/state1-mouseover.jpg"/&gt;
+                 &lt;!-- third  frame of state 2 = mousedown image of the button --&gt;
+                 &lt;frame src="resources/multistatebutton/state1-mousedown.jpg"/&gt;
+              &lt;/resource&gt;
+            &lt;/library&gt;
+            </pre>
+                      
+            
+        <pre class="example">
+            &lt;canvas height="60"&gt;
+              &lt;include /&gt;
+            
+              &lt;!-- Second, assign the resource to a basebutton tag --&gt;
+              &lt;multistatebutton name="myButton" resource="mybutton_rsrc"
+                                statenum="0" statelength="3" maxstate="1"/&gt;
+            &lt;/canvas&gt;
+            </pre>
+                    
+            
+        <p>
+          Now, the multistatebutton will stay in state "0" until you switch
+            states. This can be accomplished by calling
+            
+          <code>myButton.setStateNum(number)</code>
+          .
+        </p>
+                    
+            
+        <pre class="example">
+            &lt;canvas height="60"&gt;
+              &lt;include /&gt;
+              
+              &lt;multistatebutton name="myButton" resource="mybutton_rsrc"
+                                statenum="0" statelength="3" maxstate="1"
+                                onclick="this.toggle()"&gt;
+                 &lt;method name="toggle"&gt;
+                    if (this.statenum == 0) this.setStateNum(1)
+                    else this.setStateNum(0)
+                 &lt;/method&gt;
+              &lt;/multistatebutton&gt;
+            &lt;/canvas&gt;
+            </pre>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">frame</td><td class="ty">expression</td><td class="ty">this.lastres + (this.statenum * this.statelength)</td><td/></tr><tr><td class="nm">lastres</td><td class="ty">number</td><td class="ty">1</td><td/></tr><tr><td class="nm">maxstate</td><td class="ty">number</td><td class="ty">0</td><td>the largest number allowed for the value of statenum</td></tr><tr><td class="nm">statelength</td><td class="ty">number</td><td class="ty">3</td><td>the number of frames in a state</td></tr><tr><td class="nm">statenum</td><td class="ty">number</td><td class="ty">0</td><td>the current state</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

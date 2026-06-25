@@ -1,0 +1,271 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 32.  States</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.power.html" title="Part IV. In Depth"><link rel="prev" href="input-devices.html" title="Chapter 31. Input Devices and Gestures"><link rel="next" href="class-inheritance.html" title="Chapter 33. Extending Classes"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 32.  States </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="input-devices.html">Prev</a> </td><th width="60%" align="center">Part IV. In Depth</th><td width="20%" align="right"> <a accesskey="n" href="class-inheritance.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="states"></a>Chapter 32.  States </h2></div></div></div><p>This chapter discusses the general use of states and the built in states dragstate and resizestate.</p><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="states.I"></a>1. Overview</h2></div></div></div><p><a class="indexterm" name="id11136"></a><em class="glossterm">States</em> are a convenient method of defining multiple complex behaviors in your application using declarative syntax, 
+behaviors that might normally be contained in a script block.
+ </p><p>States are written within the object to which the state is applied and can contain any number of children. 
+All code in a <a class="indexterm" name="id11140"></a><code class="sgmltag-element">&lt;state&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ is written as if it were directly inside the parent of the state when it is applied.  This concept sounds 
+a bit abstract, but in practice seems quite natural, as we hope the following discussion will make clear.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1760"></a>2. States vs Procedures</h2></div></div></div><p>
+Declarative programming is great for declaring the initial state of an application, but 
+subsequent transformations may make the originally declared structures barely recognizable. 
+Laszlo's <a class="indexterm" name="id11147"></a><code class="sgmltag-element">&lt;state&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ construct provides a way to make declarative constructs effectively procedural.
+</p><p>
+The alternative to using states is to declare the initial state of your program with tags, and then 
+manipulate that state with procedural code, 
+that is, with script.  This poses a problem, because some of LZX's most powerful features are difficult to add 
+programmatically.
+</p><p>
+This is particularly true of animators and constraints. Constraints are central to the whole Laszlo idea, but manipulating them with script can be very tricky.
+For instance, here's a small program where the blue box follows the mouse:
+</p><div class="example"><a name="id11153"></a><p class="title"><b>Example 32.1. Following mouse events without states</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%"&gt;
+  &lt;view bgcolor="blue" width="20" height="20"&gt;
+    &lt;attribute name="x" value="${parent.getMouse('x') - 10}"/&gt;
+    &lt;attribute name="y" value="${parent.getMouse('y') - 10}"/&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/states-_1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/states-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
+While this is a nice way of expressing this kind of thing (made possible by Laszlo's constraint system), it's rarely useful in a program.
+ Usually, objects only follow the mouse when they're being dragged. What's needed for that is a way to write declarative LZX nodes that 
+could be applied and removed depending on whether the view is to be dragged or not.
+</p><p>
+The <a class="indexterm" name="id11158"></a><code class="sgmltag-element">&lt;state&gt;</code> tag makes this possible. Here's a rewrite of the above program using states to make the blue 
+box drag only when the mouse is down:
+</p><div class="example"><a name="id11161"></a><p class="title"><b>Example 32.2. Using states to follow mouse</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%"&gt;
+  &lt;view bgcolor="blue" width="20" height="20"
+        onmousedown="this.setAttribute('mouseIsDown', true )"
+        onmouseup="  this.setAttribute('mouseIsDown', false )"&gt;
+    &lt;attribute name="mouseIsDown" value="false"/&gt;
+    &lt;handler name="onmouseIsDown"&gt;
+        if(mouseIsDown == true){
+            ds.setAttribute('applied', true);
+        } else {
+            ds.setAttribute('applied', false);
+        }
+    &lt;/handler&gt;
+    &lt;state name="ds"&gt;
+      &lt;attribute name="x" value="${parent.getMouse('x') - 10}"/&gt;
+      &lt;attribute name="y" value="${parent.getMouse('y') - 10}"/&gt;
+    &lt;/state&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/states-_2.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/states-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
+Note that the syntax of the constraints hasn't changed; they're just inside a <a class="indexterm" name="id11165"></a><code class="sgmltag-element">&lt;state&gt;</code> tag. 
+This is useful, but it's also a little strange: the <a class="indexterm" name="id11168"></a><code class="sgmltag-element">&lt;state&gt;</code> tag is essentially an invisible node of 
+hierarchy. You can see this in the fact that the <code class="literal">parent</code> in the apply constraint for the state is
+ not the same object as the <code class="literal">parent</code> in the drag constraints inside the state.
+</p><p>
+This example highlights the metaphysical nature of states: they modify the meta-object protocol enough so that
+ their contents can be stored and applied elsewhere. (This could conceivably be a feature of the system as a whole 
+ as in, for example, <code class="literal">an lz.node.setParent(otherNode)</code>, but it's not). 
+</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1754"></a>2.1. Attributes of states</h3></div></div></div><p>
+Here's a question: what should happen when you write this?
+</p><div class="example"><a name="id11178"></a><p class="title"><b>Example 32.3. attributes of states</b></p><div class="example-contents"><pre class="programlisting">
+  &lt;class name="myDragState" extends="state"&gt;
+    &lt;attribute name="dragMin" value="2"/&gt;
+    &lt;attribute name="dragMax" value="20"/&gt;
+    &lt;!-- ... --&gt;
+  &lt;/class&gt;
+</pre></div></div><br class="example-break"><p>
+Do the attributes <a class="indexterm" name="id11182"></a><code class="sgmltag-attribute">dragMin</code> and <a class="indexterm" name="id11185"></a><code class="sgmltag-attribute">dragMax</code> pertain to the state itself, 
+or to the state's container? The former is more powerful: it would allow for developers to extend the special behavior of states, 
+say by over-riding the state's apply method. The latter, though, is more consistent with the LZX idiom, where, 
+as a first-order approximation, a class behaves like a macro.
+</p><p>
+The answer is, the behavior is the latter: attributes apply to the state's container. Here's a little test program that shows that.</p><div class="example"><a name="id11189"></a><p class="title"><b>Example 32.4. Attributes pertain to container, not to parent</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%"&gt;
+  &lt;class name="constrainedDragState" extends="state"&gt;
+    &lt;attribute name="dragMin" value="100"/&gt;
+    &lt;attribute name="dragMax" value="300"/&gt;
+    &lt;attribute name="mousePos" value="${parent.getMouse( 'x' ) - 10}"/&gt;
+    &lt;attribute name="x" 
+               value="${Math.max(Math.min(this.dragMax, this.mousePos),
+                                 this.dragMin )}"/&gt;
+  &lt;/class&gt;
+  
+  &lt;view bgcolor="blue" width="20" height="20" x="100" y="50"
+        onmousedown="myDrag.apply()"
+        onmouseup="  myDrag.remove()"&gt;
+    &lt;attribute name="mouseIsDown" value="false"/&gt;
+    &lt;constrainedDragState name="myDrag"/&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/states-_4.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/states-_4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
+Note that the references to <code class="literal">dragMin</code>, <code class="literal">dragMax</code> and such are all qualified by the keyword <code class="literal">this</code>.
+</p><p>
+Any attribute for which the state has a setter belongs to the state itself, 
+whereas any attribute that doesn't belongs to the state's <code class="literal">apply</code> target. This makes sense, 
+because any setter for an attribute which is intended to be applied by the state 
+(and not kept by the state) can be written in the apply target. 
+This how it  works in LZX. Here's a little program that proves that:</p><div class="example"><a name="id11198"></a><p class="title"><b>Example 32.5. Using setters in &lt;state&gt; attributes</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="200" width="100%"&gt;
+  &lt;class name="testState" extends="state"&gt;
+    &lt;attribute name="countApplies" type="number" value="0"
+      setter="this.countApplies = countApplies"/&gt;
+    &lt;handler name="onapplied"&gt;
+      &lt;![CDATA[
+        if(this.applied == true){
+            this.setAttribute('countApplies', this['countApplies'] &gt;= 0 ? ++this.countApplies : 1);
+        }
+        ]]&gt;
+    &lt;/handler&gt;
+  &lt;/class&gt;
+  &lt;button &gt;Try it
+    &lt;handler name="onclick"&gt;
+      ts.setAttribute('applied', true);
+      message.addText("\napplies: " + ts.countApplies);
+      ts.setAttribute('applied', false);
+    &lt;/handler&gt;
+    &lt;testState name="ts"/&gt;
+  &lt;/button&gt;
+  &lt;text id="message" y="30" multiline="true" /&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/states-_5.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/states-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1755"></a>2.2. The 'this' keyword in states</h3></div></div></div><p>
+In states, the "this" keyword refers to the view or node that state is nested inside of. Methods nested inside of a state apply to the view. There is an exception to the above rule: when listening to the onapply or onremove events, the methods apply to the state, and the "this" keyword points to the state.
+</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1756"></a>2.3. Performance Considerations</h3></div></div></div><p>All states are instantiated. Therefore your application "pays the instantiation cost" of a regular node 
+of hierarchy for a state, whether or not it is applied. This is because the state is itself an <a class="indexterm" name="id11206"></a><code class="classname">lz.node</code>,
+ which must be processed by the <a class="indexterm" name="id11209"></a><code class="classname">lz.node</code> constructor.</p><p>
+The advantage of limiting the ways in which a developer can modify a 
+state itself is that then a given state can have a limited number of attributes, which are controlled by the runtime. 
+
+Allowing developers to change the semantics of "state" by attaching attributes and methods to it would make it harder to make 
+this optimization. 
+</p><div class="example"><a name="id11213"></a><p class="title"><b>Example 32.6. Using states to animiate transitions</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%"&gt;
+  &lt;window title="state demo" width="400" height="300" oninit="this.max.setAttribute('applied', true)"&gt;
+    &lt;state name="max"&gt;
+      &lt;animatorgroup duration="1000" process="simultaneous"&gt;
+        &lt;animator attribute="width" to="400"/&gt;
+        &lt;animator attribute="height" to="300"/&gt;
+        &lt;animator attribute="x" to="100"/&gt;
+        &lt;animator attribute="y" to="100"/&gt;
+      &lt;/animatorgroup&gt;
+      &lt;text align="center" y="20%"&gt;M a x i m i z e d&lt;/text&gt;
+    &lt;/state&gt;
+    &lt;state name="min"&gt;
+      &lt;animatorgroup duration="1000" process="simultaneous"&gt;
+        &lt;animator attribute="width" to="170"/&gt;
+        &lt;animator attribute="height" to="100"/&gt;
+        &lt;animator attribute="x" to="0"/&gt;
+        &lt;animator attribute="y" to="0"/&gt;
+      &lt;/animatorgroup&gt;
+      &lt;text align="center" valign="middle"&gt;Minimized&lt;/text&gt;
+    &lt;/state&gt;
+    &lt;button placement="title_area" align="right" height="16"&gt; Toggle
+      &lt;attribute name="isMax" value="true"/&gt;
+      &lt;handler name="onclick"&gt;
+        if (this.isMax) {parent.max.setAttribute('applied', false); parent.min.setAttribute('applied', true);}
+        else {parent.max.setAttribute('applied', true); parent.min.setAttribute('applied', false);}
+        this.isMax = !this.isMax;
+      &lt;/handler&gt;
+    &lt;/button&gt;
+&lt;/window&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/states-_6.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/states-_6.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
+   The state element is declared with the <a class="indexterm" name="id11217"></a><code class="sgmltag-attribute">apply</code>, <a class="indexterm" name="id11220"></a><code class="sgmltag-attribute">onapply</code>, and
+   <a class="indexterm" name="id11223"></a><code class="sgmltag-attribute">onremove</code> attributes, and the <a class="indexterm" name="id11226"></a><code class="sgmltag-element">&lt;view&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+.  <a class="indexterm" name="id11230"></a><code class="sgmltag-attribute">apply</code>, 
+<a class="indexterm" name="id11233"></a><code class="sgmltag-attribute">onapply</code>,
+   and <a class="indexterm" name="id11236"></a><code class="sgmltag-attribute">onremove</code> control the behavior of the state itself.  Any other
+   attributes and children are applied to the state's parent, when
+   the state is applied.
+   </p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1757"></a>2.4. States that are not children of views</h3></div></div></div><p>
+If the state is a child of an element that is not a view,
+   such as a <a class="indexterm" name="id11242"></a><code class="sgmltag-element">&lt;layout&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ or <a class="indexterm" name="id11246"></a><code class="sgmltag-element">&lt;animator&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+, then the view attributes may not
+   make sense.  It is possible to attach an attribute that applies
+   to one of these other elements to a state, by using
+   the <a class="indexterm" name="id11250"></a><code class="sgmltag-element">&lt;attribute&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ element.
+</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="states.II"></a>2.5. States may contain views or classes </h3></div></div></div><p>States can also contain views or classes that are only created when the state is applied.</p><pre class="programlisting">
+&lt;state name="showchildren"&gt;
+  &lt;view y="13" x="13" name="children"&gt;
+    &lt;simplelayout/&gt;
+    &lt;treeitem grown="${parent.opened}"&gt;
+      &lt;datapath xpath="*" pooling="true"/&gt;
+    &lt;/treeitem&gt;
+   &lt;/view&gt;
+&lt;/state&gt;
+</pre><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1758"></a>2.6. Classroot not available in &lt;state&gt;</h3></div></div></div><p>
+The <a class="indexterm" name="id11262"></a><code class="sgmltag-element">&lt;state&gt;</code> tag does not define classroot.  Therefore, its sublasses don't have it either.
+If you subclass state you don't get classroot.</p><pre class="programlisting">
+&lt;class name="redState" extends="state" /&gt;
+</pre><p>
+will not have classroot defined.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1759"></a>2.7. Dragstate</h3></div></div></div><p>You can subclass <a class="indexterm" name="id11270"></a><code class="sgmltag-element">&lt;state&gt;</code> to suit whatever purpose is at hand. LZX contains two such subclasses of <a class="indexterm" name="id11273"></a><code class="sgmltag-element">&lt;state&gt;</code> 
+to solve common problems.</p><p>This example shows how to subclass the <a class="indexterm" name="id11277"></a><code class="sgmltag-element">&lt;dragstate&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ class to create a state functionality that you can apply to
+ different views. </p><div class="example"><a name="id11281"></a><p class="title"><b>Example 32.7. Dropshadow done using states</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="200" width="100%"&gt;
+  &lt;class extends="dragstate" name="fadeDragger" pooling="true"&gt;
+    &lt;handler name="onapply"&gt;
+      parent.bringToFront();
+      parent.setAttribute('opacity', .5)
+    &lt;/handler&gt;
+    &lt;handler name="onremove"&gt;
+      parent.setAttribute('opacity', 1)
+    &lt;/handler&gt;
+    &lt;view name="hShadow" x="10" y="${parent.body.height}"
+          width="${parent.body.width}" height="10"
+          opacity=".2" bgcolor="black"/&gt;
+    &lt;view name="vShadow"  x="${parent.body.width}" y="10"
+          width="10" height="${parent.body.height - 10}"
+          opacity=".2" bgcolor="black"/&gt;
+  &lt;/class&gt;
+  
+  &lt;view
+        onmousedown="myFadeDragger.apply()"
+        onmouseup="myFadeDragger.remove()"&gt;
+    &lt;fadeDragger name="myFadeDragger"/&gt;
+    &lt;view name="body" width="40" height="40" bgcolor="blue"/&gt;
+  &lt;/view&gt;
+  &lt;view x="100" y="100"
+        onmousedown="myFadeDragger.apply()"
+        onmouseup="myFadeDragger.remove()"&gt;
+    &lt;fadeDragger name="myFadeDragger"/&gt;
+    &lt;view name="body" width="60" height="60" bgcolor="red"/&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/states-_7.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/states-_7.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="input-devices.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.power.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="class-inheritance.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 31. Input Devices and Gestures </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 33. Extending Classes</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

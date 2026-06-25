@@ -1,0 +1,5 @@
+<view name="beatles" width="${this.paul.width + 28}">
+   <view name="paul" onclick="clickhandler()">
+      <!-- clickhandler method here to increase paul's width based on user clicking mouse -->
+   </view>
+</view>

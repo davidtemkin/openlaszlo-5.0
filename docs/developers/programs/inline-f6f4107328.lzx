@@ -1,0 +1,13 @@
+<method name="load">
+    // Since there aren't any prototypes to load for XML-RPC services, we just
+    // create proxy using declared calls.
+    for (var cn in this.subnodes) {
+        /* code to set up this.proxy */
+    }
+
+    this._loadDel.execute( 
+        { status: 'ok', message: 'ok', 
+          stub: this.proxy, stubinfo: null }
+    );
+
+</method>

@@ -1,0 +1,10 @@
+<canvas>
+  <?lzc class="c1" inline="true"?>
+  <class name="c1">
+    <view name="v2"/>
+    <view name="v3"/>
+  </class>
+  <view name="v1">
+    <c1/>
+  </view>
+</canvas>

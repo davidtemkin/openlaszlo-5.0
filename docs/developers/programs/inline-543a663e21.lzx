@@ -1,0 +1,5 @@
+<method name="cancelFloater">
+    this.gm.unregisterAll();
+    this.d.unregisterAll();
+    this.f.destroy();
+</method>

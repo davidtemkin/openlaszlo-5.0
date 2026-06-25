@@ -1,0 +1,5 @@
+<dataset name="myData">
+  <myXML>
+     <!-- ... other XML tags ... -->
+  </myXML>
+</dataset>

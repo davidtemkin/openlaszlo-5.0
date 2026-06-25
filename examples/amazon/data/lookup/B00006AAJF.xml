@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ItemLookupResponse><Items>
+  <Request><IsValid>True</IsValid></Request>
+  <Item>
+    <ASIN>B00006AAJF</ASIN>
+    <SmallImage><URL>data/covers/B00006AAJF.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B00006AAJF.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B00006AAJF.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>Vienna Philharmonic</Artist>
+      <Manufacturer>Sony Classical</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>2001-01-30</ReleaseDate>
+      <Title>Eine kleine Nachtmusik</Title>
+      <ListPrice><Amount>1198</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$11.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$6.49</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$2.99</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$8.99</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Mozart’s serenade, elegant and effortless, in a warm Viennese reading.</Content></EditorialReview></EditorialReviews>
+  </Item>
+</Items></ItemLookupResponse>

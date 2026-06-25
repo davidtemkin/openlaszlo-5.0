@@ -1,0 +1,4 @@
+<xmlrpc service="..."
+      autoload="[true|false]"
+      secure="[true|false]"
+      secureport="..." >

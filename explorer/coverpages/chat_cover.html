@@ -1,0 +1,38 @@
+<!--=======================================================================-->
+<!-- chat_cover.html                                                       -->
+<!--=======================================================================-->
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+<link href="../../lps/includes/explore.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h1>Chat</h1>
+<div style="float: left">
+    <div style="margin: 10px">
+        <img border="0" src="images/cover-images/chat.jpg" alt="Chat Application" width="330" height="248" />
+        <div style="text-align: center">
+            <a class="launch-app" onclick="window.open(this.href, '_blank', 'width=900,height=680'); return false" href="../../examples/chat/chat.lzx" style="display:inline-block;padding:9px 26px;background:#2a5db0;color:#fff;font:600 14px/1 -apple-system,'Segoe UI',Helvetica,Arial,sans-serif;border-radius:5px;text-decoration:none;cursor:pointer">Launch App</a>
+        </div>
+    </div>
+</div>
+<p>
+This application opens in a window.  If you don't see it, you may need to
+bring that window to the front.
+</p>
+<p>
+A real-time, multi-user chat room. Pick a name to join, then
+<strong>open this same page in a second browser window</strong> (or share the URL with
+someone else) to chat between them.
+</p>
+<p>
+Chat is built on OpenLaszlo's <em>persistent connection</em> (the <code>LzConnection</code>
+service), which lets a server push messages to every connected client. OpenLaszlo only ever
+shipped this feature for the Flash runtime; here it has been rebuilt for DHTML over a
+dependency-free <strong>WebSocket</strong> server, so the same LZX application now works
+in the browser with no plugin.
+</p>
+</body>
+</html>

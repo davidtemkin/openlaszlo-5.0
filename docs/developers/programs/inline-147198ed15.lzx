@@ -1,0 +1,8 @@
+<view name="list" datapath="dset:/phonebook/contact">
+  <simplelayout axis="x"/>
+  <text datapath="firstName/text()"/>
+  <text datapath="lastName/text()"/>
+  <text datapath="phone/text()"/>
+  <text datapath="email/text()"/>
+  <text datapath="@category"/>
+</view>

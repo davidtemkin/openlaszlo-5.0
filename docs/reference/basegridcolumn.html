@@ -1,0 +1,53 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basegridcolumn&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basegridcolumn<span class="ang">&gt;</span></h1><p class="short">An abstract column in a grid.</p><p class="meta">Extends <code>basecomponent</code></p>
+                    
+        <p>
+          <code>basegridcolumn</code>
+           can be used in
+            
+          <code>basegrid</code>
+          s or 
+          <code>grid</code>
+          s to
+            customize the look of both the column header and the row contents for
+            that column. In cases where a standard column header look is desired,
+            but the contents may vary, use 
+          <code>gridcolumn</code>
+          .
+        </p>
+                    
+            
+        <p>
+          The placement of "header" can be used to place nodes in the header
+            of the grid, and the default placement for the class will place things
+            in the row. See the example in 
+          <code>basegrid</code>
+          .
+        </p>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">ascendComparator</td><td class="ty">expression</td><td class="ty">null</td><td>An optional method. If defined, this method will be used when 
+              the column is sorted when ascendsort is set to true. This method
+              should have the comparator signature. It should accept to string
+              argument and return 1, 0 , or -1, indicating that the two
+              arguments are in order, equivalent, or out of order,
+              respectively.</td></tr><tr><td class="nm">ascendsort</td><td class="ty">expression</td><td class="ty">true</td><td>If true, the next sort will be ascending, otherwise it will
+              be descending.</td></tr><tr><td class="nm">colwidth</td><td class="ty">expression</td><td class="ty">this.width</td><td>The current width of the column.</td></tr><tr><td class="nm">datatype</td><td class="ty">string</td><td class="ty">string</td><td>Either "number" or "string". If "string", then dictionary sort
+              is used. If "number", then types are coerced to a number before
+              sorting.</td></tr><tr><td class="nm">defaultplacement</td><td class="ty">string</td><td class="ty">content</td><td/></tr><tr><td class="nm">descendComparator</td><td class="ty">expression</td><td class="ty">null</td><td>An optional method. If defined, this method will be used when 
+              the column is sorted when ascendsort is set to false. This method
+              should have the comparator signature. It should accept to string
+              argument and return 1, 0 , or -1, indicating that the two
+              arguments are in order, equivalent, or out of order,
+              respectively.</td></tr><tr><td class="nm">focusable</td><td class="ty">expression</td><td class="ty">false</td><td/></tr><tr><td class="nm">hasSort</td><td class="ty">boolean</td><td class="ty">false</td><td>
+                Set by 
+                <code>doSort()</code>
+                 method. If true, then this is the current
+              sort column.
+              </td></tr><tr><td class="nm">minwidth</td><td class="ty">number</td><td class="ty">10</td><td>The minimum width for this column. This is relevant if the column
+              can be resized.</td></tr><tr><td class="nm">placement</td><td class="ty">expression</td><td class="ty">hcontent</td><td/></tr><tr><td class="nm">sortpath</td><td class="ty">string</td><td class="ty"/><td>An xpath expression to use to determine the sort key for this
+              column. By default, this is the column's datapath's xpath.</td></tr><tr><td class="nm">text</td><td class="ty">text</td><td class="ty"> this.datapath? this.datapath.xpath : '' </td><td>By default, the text of this element is the column's datapath.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

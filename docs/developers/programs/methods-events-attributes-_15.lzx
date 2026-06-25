@@ -1,0 +1,9 @@
+<canvas height="40">
+  <simplelayout/>
+  <view name="myView" width="20" height="20" bgcolor="red"/> 
+  <text oninit="this.format('myView.width = %d', myView.width)"/>
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007 - 2009 Laszlo Systems, Inc.  All Rights Reserved.            *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

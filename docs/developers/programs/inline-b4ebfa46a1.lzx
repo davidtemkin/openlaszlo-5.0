@@ -1,0 +1,9 @@
+<datapointer xpath="dsSendData:/">
+  <handler name="ondata">
+    if (this.xpathQuery("result/text()") == "success") {
+      Debug.debug("Operation succeeded");
+    } else {
+      Debug.debug("Operation failed");
+    }
+  </handler>
+</datapointer> 

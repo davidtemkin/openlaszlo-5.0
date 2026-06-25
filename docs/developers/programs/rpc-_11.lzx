@@ -1,0 +1,45 @@
+
+<canvas debug="true" width="100%">
+
+    <soap name="temperature" 
+          wsdl="http://developerdays.com/cgi-bin/tempconverter.exe/wsdl/ITempConverter">
+
+        <attribute name="myDel" value="$once{new LzDelegate(this, 'myhandler')}" />
+
+        <method name="init">
+            Debug.debug('soap service loading...');
+            super.init();
+        </method>
+
+        <handler name="onload">
+            Debug.debug('temperature service loaded!');
+            Debug.inspect(this.proxy);
+        </handler>
+
+        <method name="myhandler" args="returnObject">
+            Debug.debug('got returned object:');
+            Debug.inspect(returnObject);
+        </method>
+
+    </soap>
+
+    <view layout="spacing: 5" x="20" y="20">
+        <button text="ok conversion">
+            <handler name="onclick">
+                Debug.debug('requesting good conversion...');
+                temperature.proxy.FtoC([ 100 ], temperature.myDel);
+            </handler>
+        </button>
+        <button text="bad conversion">
+            <handler name="onclick">
+                Debug.debug('requesting bad conversion...');
+                temperature.proxy.FtoC([ 'string' ], temperature.myDel);
+            </handler>
+        </button>
+    </view>
+
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

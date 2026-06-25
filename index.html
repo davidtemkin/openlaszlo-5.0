@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenLaszlo — Laszlo Explorer</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<!--
+  The STATIC Laszlo Explorer bootstrap. Serve this `openlaszlo/` tree from any plain
+  static host (S3, GitHub Pages, nginx, `python3 -m http.server`). This page registers
+  the root-scope Service Worker (service-worker.js), which compiles every LZX app IN-BROWSER on
+  demand — no dynamic server, no Java, nothing pre-compiled. Then it loads the Explorer
+  in a full-page frame; from there the SW intercepts every `.lzx` you browse to.
+  Requires a current browser (module Service Worker) over https:// or http://localhost.
+-->
+<style>
+  html, body { height: 100%; margin: 0; background: #eaeaea;
+    font: 14px/1.45 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+  #explorer { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; display: none; }
+  #boot { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    flex-direction: column; color: #556; text-align: center; padding: 24px; }
+  #boot .logo { font-weight: 600; color: #2a5db0; font-size: 20px; letter-spacing: .2px; }
+  #boot .sub { margin-top: 6px; color: #889; }
+  #boot .spin { margin-top: 18px; width: 28px; height: 28px; border: 3px solid #ccd;
+    border-top-color: #2a5db0; border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #err { display: none; position: fixed; inset: 0; padding: 32px; color: #511; background: #fee;
+    font-family: ui-monospace, Menlo, monospace; white-space: pre-wrap; overflow: auto; }
+</style>
+</head>
+<body>
+  <div id="boot">
+    <div class="logo">OpenLaszlo</div>
+    <div class="sub">starting the in-browser compiler…</div>
+    <div class="spin" aria-hidden="true"></div>
+  </div>
+  <iframe id="explorer" title="Laszlo Explorer"></iframe>
+  <div id="err"></div>
+
+  <script type="module">
+    const boot = document.getElementById("boot");
+    const errBox = document.getElementById("err");
+
+    // BASE — this page's own directory. The whole distro is relative to it, so everything
+    // adapts to WHATEVER URL serves index.html (origin root, /openlaszlo/ project page, …)
+    // with no build step. Recorded so 404.html can rebuild homepage URLs at any deploy depth.
+    const BASE = location.pathname.replace(/[^/]*$/, "");   // "/" | "/openlaszlo/" | …
+    try { localStorage.setItem("ol_base", BASE); } catch (e) {}
+    // A 404-bootstrap deep link arrives as ?goto=<distro-relative path>; routed below.
+    const GOTO = new URLSearchParams(location.search).get("goto");
+    window.OL_BASE = BASE;   // read by the Explorer logo + 404.html
+
+    function fail(msg) {
+      boot.style.display = "none";
+      errBox.style.display = "block";
+      errBox.textContent = msg;
+    }
+
+    // ── Clean-URL routing (Scenario A — the address bar mirrors the content you're viewing).
+    // The Explorer runs in the iframe and reports its nav location (a "|"-joined title path)
+    // via window.olNav; we map that to a clean, shareable framed URL and pushState it. On a
+    // deep link or browser back/forward we map the URL back to a title path and replay it
+    // through the Explorer's existing openSequence (window.olGoto). The path↔node map is
+    // derived from nav_dhtml.xml — no separate slug table. All adapts to BASE automatically.
+    const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    const byTitle = new Map();   // "Demos|Calendar" → framed pathname (e.g. /openlaszlo/examples/calendar/)
+    const byFramed = new Map();  // framed pathname  → "Demos|Calendar"
+    let suppressNav = false;     // true while WE drive the Explorer (don't echo back to pushState)
+
+    async function buildNavMap() {
+      try {
+        const xml = await (await fetch("nav_dhtml.xml")).text();   // SW serves it BASE-rebased
+        const doc = new DOMParser().parseFromString(xml, "application/xml");
+        const entries = [];
+        (function walk(el, trail) {
+          for (const c of Array.from(el.children)) {
+            const name = c.getAttribute("name");
+            const t = name ? trail.concat(name) : trail;
+            if (name) entries.push({ key: t.join("|"), trail: t, src: c.getAttribute("src") });
+            walk(c, t);
+          }
+        })(doc.documentElement, []);
+        const dirCount = {};
+        for (const e of entries) if (e.src) { const d = e.src.replace(/\/[^/]*$/, ""); dirCount[d] = (dirCount[d] || 0) + 1; }
+        for (const e of entries) {
+          let framed;
+          if (e.src) {
+            const d = e.src.replace(/\/[^/]*$/, "");
+            // unique dir → tidy dir URL (/examples/calendar/); shared dir → keep the file stem
+            // (/basics/hello/) so siblings don't collide. Mirrors the content path either way.
+            const stem = (dirCount[d] === 1) ? d : e.src.replace(/\.[^/.]+$/, "");
+            framed = stem.replace(/\/+$/, "") + "/";
+          } else {
+            framed = BASE + e.trail.map(slug).join("/") + "/";   // folder-only node → slug path
+          }
+          byTitle.set(e.key, framed);
+          if (!byFramed.has(framed)) byFramed.set(framed, e.key);
+        }
+      } catch (e) { /* routing degrades to no-op; the Explorer still works */ }
+    }
+
+    const explorerWindow = () => { const f = document.getElementById("explorer"); return f && f.contentWindow; };
+    function whenExplorerReady(cb, tries = 0) {
+      const w = explorerWindow();
+      if (w && w.olGoto) return cb();
+      if (tries > 200) return;                  // ~20s budget
+      setTimeout(() => whenExplorerReady(cb, tries + 1), 100);
+    }
+    function driveExplorer(titlePath) {
+      whenExplorerReady(() => {
+        suppressNav = true;
+        try { explorerWindow().olGoto(titlePath); } catch (e) {}
+        setTimeout(() => { suppressNav = false; }, 500);
+      });
+    }
+
+    // Explorer → shell
+    window.olNav = function (titlePath) {
+      if (suppressNav) return;
+      const framed = byTitle.get(titlePath);
+      if (framed && location.pathname !== framed) history.pushState({ tp: titlePath }, "", framed);
+    };
+    // back / forward
+    window.addEventListener("popstate", (e) => {
+      const tp = (e.state && e.state.tp) || byFramed.get(location.pathname) || "";
+      if (tp) driveExplorer(tp);
+    });
+
+    async function loadExplorer() {
+      await buildNavMap();
+      const f = document.getElementById("explorer");
+      f.addEventListener("load", () => {
+        boot.style.display = "none"; f.style.display = "block";
+        // Honor a 404-bootstrap deep link: clean ?goto out of the address bar and drive the
+        // Explorer to the matching node.
+        if (GOTO) {
+          const framed = (BASE.replace(/\/$/, "") + GOTO).replace(/\/?$/, "/");
+          const tp = byFramed.get(framed);
+          history.replaceState(tp ? { tp } : null, "", tp ? framed : BASE);
+          if (tp) driveExplorer(tp);
+        }
+      }, { once: true });
+      // The Explorer's source lives under explorer/; the SW maps the `/`-namespace URL
+      // `explore-nav.lzx` → explorer/explore-nav.lzx and compiles it in-browser.
+      f.src = "explore-nav.lzx";
+    }
+
+    (async () => {
+      if (!("serviceWorker" in navigator)) {
+        return fail("This browser does not support Service Workers, which the static Laszlo "
+          + "Explorer needs to compile LZX in the browser.\n\nUse a current Chrome / Edge / "
+          + "Firefox / Safari over https:// (or http://localhost), or run the bundled Node server.");
+      }
+      try {
+        await navigator.serviceWorker.register("./service-worker.js", { type: "module", scope: "./" });
+      } catch (e) {
+        return fail("Service Worker registration failed — likely a browser without MODULE "
+          + "service-worker support.\n\n" + (e && e.message ? e.message : e)
+          + "\n\nTry a current browser, or run the bundled Node server.");
+      }
+      await navigator.serviceWorker.ready;
+
+      // A SW does not control the page that registered it until the next navigation.
+      // If we're not controlled yet, reload ONCE (guarded) so this page — and the
+      // Explorer iframe we create — are intercepted. service-worker.js calls clients.claim(), which
+      // minimizes this to a single reload on the very first visit.
+      if (!navigator.serviceWorker.controller && !sessionStorage.getItem("ol-sw-reloaded")) {
+        sessionStorage.setItem("ol-sw-reloaded", "1");
+        return location.reload();
+      }
+      loadExplorer();
+    })().catch((e) => fail("Bootstrap error:\n" + (e && e.stack ? e.stack : e)));
+  </script>
+</body>
+</html>

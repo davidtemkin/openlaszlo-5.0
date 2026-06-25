@@ -1,0 +1,18 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;custombutton&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>custombutton<span class="ang">&gt;</span></h1><p class="short"/><p class="meta">Extends <code>basebutton</code></p>
+        The custombutton class can include text and/or an icon, with our app-specific background graphic
+        
+        <pre class="example">
+          &lt;canvas&gt;
+            &lt;include /&gt;
+            &lt;custombutton iconname="target" text="Hit Me"/&gt;
+          &lt;/canvas&gt;
+        </pre>
+                the icon should be a resource with a name ending in "_icon_rsc";
+        the iconname should be that resource name, without the "_icon_rsc"
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">collapsedWidth</td><td class="ty">expression</td><td class="ty">30</td><td>min width of button</td></tr><tr><td class="nm">expandedWidth</td><td class="ty">expression</td><td class="ty">this.width</td><td>max width of button</td></tr><tr><td class="nm">iconname</td><td class="ty">string</td><td class="ty"/><td>icon resource name prefix</td></tr><tr><td class="nm">iconspace</td><td class="ty">expression</td><td class="ty">2</td><td>fine-tune the horizontal spacing of icon to text</td></tr><tr><td class="nm">iconstretches</td><td class="ty">string</td><td class="ty">none</td><td>controls whether the icon stretches (none|both)</td></tr><tr><td class="nm">icony</td><td class="ty">expression</td><td class="ty">null</td><td>fine-tune the vertical position of icon</td></tr><tr><td class="nm">leftrsc</td><td class="ty">string</td><td class="ty">custombutton_small_left_rsc</td><td>background resources</td></tr><tr><td class="nm">middlersc</td><td class="ty">string</td><td class="ty">custombutton_small_middle_rsc</td><td/></tr><tr><td class="nm">rightrsc</td><td class="ty">string</td><td class="ty">custombutton_small_right_rsc</td><td/></tr><tr><td class="nm">text</td><td class="ty">html</td><td class="ty"/><td>text to display in the button (can leave empty)</td></tr><tr><td class="nm">texty</td><td class="ty">expression</td><td class="ty">0</td><td>use to fine-tune text y position</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

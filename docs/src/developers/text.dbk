@@ -1,0 +1,984 @@
+<chapter id="text">
+  <title>Text Views</title>
+  <!-- removed commented out code examples that the build ignored. IORIO 31 oct 2007 -->
+  <para>This section describes the 
+  <indexterm>
+    <primary>text</primary>
+  </indexterm>
+  <sgmltag class="element">&lt;text&gt;</sgmltag>
+  <remark role="fixme">[unknown tag]</remark>
+  <!--unknown tag: text-->
+  and 
+  <indexterm>
+    <primary>inputtext</primary>
+  </indexterm>
+  <sgmltag class="element">&lt;inputtext&gt;</sgmltag>
+  <remark role="fixme">[unknown tag]</remark>
+  <!--unknown tag: inputtext-->
+  tags
+  (<indexterm>
+    <primary>lz.text</primary>
+  </indexterm>
+  <classname>lz.text</classname> and 
+  <indexterm>
+    <primary>lz.inputtext</primary>
+  </indexterm>
+  <classname>lz.inputtext</classname> classes). It assumes you're
+  familiar with basic LZX concepts such as views (<xref linkend="views" />), methods, and attributes.</para>
+  <para>For a gentle introduction, see 
+  <xref linkend="text-tutorial" />.</para>
+     <!-- remove empty para tag LI LPP-4642 9/4/2007-->
+    <!-- <para /> -->
+  <section>
+    <title>Summary of properties</title>
+    <para>To a first approximation, "text" refers to displayable
+    data in UTF-8 encoding; depending on context "text" can mean
+    the data itself, or its display. The term "font" refers to the
+    software that is used to draw, or render, the textual
+    characters on the screen. The topics are intertwined. In this
+    chapter we'll be talking about mostly about text, but you
+    should be sure that you understand key concepts about fonts in
+    OpenLaszlo applications.</para>
+    <para condition="swf">In particular, you should understand the
+    difference between client fonts and embedded fonts in
+    applications compiled to SWF. (Applications compiled to DHTML
+    cannot use embedded fonts). Because they don't always behave
+    the same way (for example client fonts can not be rotated or
+    changed in opacity due to a limitation of the Flash Player),
+    changing from one to the other can cause bewildering changes in
+    behavior. Furthermore, it's possible to implicitly change from
+    one kind of font to the other in your application without
+    realizing you've done so. Fonts are described in 
+    <xref linkend="fonts" />.</para>
+    <para />
+  </section>
+  <section>
+    <title>Text as attribute and text as object</title>
+    <para>LZX is an XML language. By definition, in XML, whatever
+    comes between an opening and closing tag is called text. As we
+    have seen text in this context is implemented as HTML.</para>
+    <para>In other words, despite being called text, in our
+    implementation you can use HTML markup in anything that is
+    text. (In browser DOM, there are properties innerText,
+    outerText, innerHTML, and outerHTML. Only the latter two
+    interpret HTML markup.)</para>
+    <para>In LZX, we've also exposed that text as an attribute of
+    components, because sometimes it is useful to do so. For
+    example, you might want to constrain the text of a node; that's
+    easy to do with LZX constraints. Thus, text can be specified as
+    an attribute in the opening tag of basecomponent and
+    subclasses, which include all components. For example,</para>
+    <programlisting>&lt;button text="this is a fine kettle of fish"&gt;</programlisting>
+    <para>is equivalent to</para>
+    <programlisting>&lt;button&gt; this is a fine kettle of fish &lt;/button&gt;</programlisting>
+    <para>LZX also includes a text object, 
+    <literal>lz.text</literal>, which can be instantiated by using
+    the 
+    <sgmltag class="element">&lt;text&gt;</sgmltag> tag.</para>
+    <para>In addition to the HTML markup properties of text
+    attributes, 
+    <sgmltag class="element">lz.text</sgmltag> objects have
+    additional properties such as maximum length, selectability,
+    and so forth, which are described later on in this chapter.
+    Oddly enough, one of the attributes of the 
+    <sgmltag class="element">&lt;text&gt;</sgmltag> object is 
+    <literal>text</literal>.</para>
+    <para>Thus,</para>
+    <programlisting>&lt;text id="sam" text="King Samuel was a fine hamster"&gt;</programlisting>
+    <para>is equivalent to</para>
+    <programlisting>&lt;text id="sam"&gt; King Samuel was a fine hamster &lt;/text&gt;</programlisting>
+    <para>In each case we have defined an 
+    <literal>lz.text</literal> object with an id of "sam" whose text
+    attribute is set to the string "King Samuel was a fine hamster",
+    which can be marked up with the supported HTML markup supported
+    by LZX, as defined below. In this document, we have tried to
+    make clear when we are talking about text as text, and when we
+    are talking about text as an lz.text object. However, we may
+    have been loose at times. If you keep in mind that many
+    objects, including the 
+    <literal>lz.text</literal> object have 
+    <literal>text</literal> attributes.</para>
+  </section>
+  <!-- <para /> -->
+    <!-- remove empty para tag LI LPP-4642 9/4/2007-->
+  <section>
+    <title>Text width and height</title>
+    <para>Generally speaking, unless an explicit width and height
+    are specified as attributes, the text field will by default be
+    sized to a width and height which encloses its
+    text content. The text field can be set to avoid to automatically resize
+    itself when its value is modified at runtime, by setting the
+    attribute 
+    <literal>resize="false"</literal>.</para>
+    <para>The exception to this rule is when the 
+    <indexterm>
+      <primary>text</primary>
+    </indexterm>
+    <sgmltag class="element">&lt;text&gt;</sgmltag> element contains
+    an 
+    <indexterm>
+      <primary>img</primary>
+    </indexterm>
+    <sgmltag class="element">&lt;img&gt;</sgmltag>
+    <remark role="fixme">[unknown tag]</remark>
+    <!--unknown tag: img-->
+    tag, in which case you may in some cases have to explicitly set
+    the height and width of the 
+    <indexterm>
+      <primary>text</primary>
+    </indexterm>
+    <sgmltag class="element">&lt;text&gt;</sgmltag>, as explained
+    below.</para>
+    <programlisting>&lt;text bgcolor="#ffcccc"&gt;Initial text from server.&lt;/text&gt;</programlisting>
+    <para>Text can be set to automatically wrap at the right
+    margin, by setting the attribute 
+    <literal>multiline="true"</literal>.</para>
+    <para />
+    <section>
+      <title>HTML formatting</title>
+      <para>Within a text element, a simple subset of HTML
+      formatting is supported for the text content, supporting
+      XHTML tags 
+      <indexterm>
+        <primary>br</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;br&gt;</sgmltag>
+      <remark role="fixme">[unknown tag]</remark>
+      <!--unknown tag: br-->
+      , 
+      <indexterm>
+        <primary>b</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;b&gt;</sgmltag>
+      <remark role="fixme">[unknown tag]</remark>
+      <!--unknown tag: b-->
+      , 
+      <indexterm>
+        <primary>i</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;i&gt;</sgmltag>
+      <remark role="fixme">[unknown tag]</remark>
+      <!--unknown tag: i-->
+      , 
+      <indexterm>
+        <primary>u</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;u&gt;</sgmltag>
+      <remark role="fixme">[unknown tag]</remark>
+      <!--unknown tag: u-->
+      , 
+      <indexterm>
+        <primary>font</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;font&gt;</sgmltag>
+      <remark role="fixme">[unknown tag]</remark>
+      <!--unknown tag: font-->
+      , 
+      <indexterm>
+        <primary>pre</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;pre&gt;</sgmltag>
+      <remark role="fixme">[unknown tag]</remark>
+      <!--unknown tag: pre-->
+      , and 
+      <indexterm>
+        <primary>a</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;a&gt;</sgmltag>
+      <remark role="fixme">[unknown tag]</remark>
+      <!--unknown tag: a-->
+      .</para>
+      <para>The 
+      <indexterm>
+        <primary>img</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;img&gt;</sgmltag> is also
+      supported, but with some caveats. See below.</para>
+      <para>The examples below show how to use XHTML tags in text
+      content.</para>
+      <para>For font style, the text element itself supports
+      attributes for setting the font parameters. These are the 
+      <indexterm>
+        <primary>font</primary>
+      </indexterm>
+      <sgmltag class="attribute">font</sgmltag>, 
+      <indexterm>
+        <primary>fontstyle</primary>
+      </indexterm>
+      <sgmltag class="attribute">fontstyle</sgmltag>, and 
+      <indexterm>
+        <primary>fontsize</primary>
+      </indexterm>
+      <sgmltag class="attribute">
+      fontsize</sgmltag> attributes:</para>
+      <example role="live-example">
+        <title>Setting font, fontstyle and fontsize</title>
+        <programlisting language="lzx">
+          <textobject>
+            <textdata fileref="programs/text-$1.lzx" />
+          </textobject>
+        </programlisting>
+      </example>
+      <para>Within the text content, HTML tags may also be
+      used:</para>
+      <example role="live-example">
+        <title>HTML tags within text</title>
+        <programlisting language="lzx">
+          <textobject>
+            <textdata fileref="programs/text-$2.lzx" />
+          </textobject>
+        </programlisting>
+      </example>
+      <para>Text can contain preformatted regions, where linebreaks
+      and whitespace are preserved:</para>
+      <example role="live-example">
+        <title>Preformatted text</title>
+        <programlisting language="lzx">
+          <textobject>
+            <textdata fileref="programs/text-$3.lzx" />
+          </textobject>
+        </programlisting>
+      </example>
+      <para>Within a text element, the HTML 
+      <emphasis role="i">font</emphasis>tag supports the 
+      <indexterm>
+        <primary>face</primary>
+      </indexterm>
+      <sgmltag class="attribute">face</sgmltag>, 
+      <indexterm>
+        <primary>size</primary>
+      </indexterm>
+      <sgmltag class="attribute">size</sgmltag>, and 
+      <indexterm>
+        <primary>color</primary>
+      </indexterm>
+      <sgmltag class="attribute">color</sgmltag> attributes. The
+      color must be specified as an RGB hex string of the form "
+      <literal>#<varname>RRGGBB</varname></literal>".</para>
+      <example role="live-example">
+        <title>Setting text colors using RGB strings</title>
+        <programlisting language="lzx">
+          <textobject>
+            <textdata fileref="programs/text-$4.lzx" />
+          </textobject>
+        </programlisting>
+      </example>
+      <para>If you wish to include HTML escape characters in the
+      text value, you can use entity codes such as 
+      <literal>&amp;amp;</literal> or 
+      <literal>&amp;lt;</literal> (or the numeric codes 
+      <literal>&amp;#<varname>ddd</varname>;</literal>), or you may enclose the
+      characters using a CDATA region:</para>
+      <example role="live-example">
+        <title>Escaping HTML characters</title>
+        <programlisting language="lzx">
+          <textobject>
+            <textdata fileref="programs/text-$5.lzx" />
+          </textobject>
+        </programlisting>
+      </example>
+      <para />
+      <section>
+        <title>Text Scrolling</title>
+        <para>Text fields can be scrolled using the 
+        <indexterm>
+          <primary>xscroll</primary>
+        </indexterm>
+        <literal>xscroll</literal> and 
+        <indexterm>
+          <primary>yscroll</primary>
+        </indexterm>
+        <literal>yscroll</literal> attributes. These attributes
+        set the pixel position of the top line
+        of text relative to the text view bounding box, and should
+        be less than or equal to zero. When the text is scrolled
+        horizontally or vertically, an 
+        <indexterm>
+          <primary>onscrollx event</primary>
+        </indexterm>
+        <literal>onscrollx</literal> or 
+        <indexterm>
+          <primary>onscrolly event</primary>
+        </indexterm>
+        <literal>onscrolly</literal> event will be sent.</para>
+        <para />
+      </section>
+    </section>
+    <section>
+      <title>Text Width</title>
+      <para>A text view which is not given an explicit width will
+      default to have a width which is the length of the longest
+      line. (See below, however, about resizing text fields, and
+      also about the 
+      <indexterm>
+        <primary>img</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;img&gt;</sgmltag>.) Given that
+      the initial text content is normalized according to HTML
+      normalization rules, and if you do not specify an explicit
+      width, the only way a linebreak will occur is if you have an
+      explicit HTML linebreak code such as 
+      <literal>&lt;br/&gt;</literal>, 
+      <literal>&lt;p/&gt;</literal> or a newline inside of the text
+      contents of a 
+      <indexterm>
+        <primary>pre</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;pre&gt;</sgmltag> element.</para>
+      <para>The text view will default to a height which encloses
+      all of the lines of text.</para>
+      <para>If you want to know the total height of the text in a
+      text field (if you want to know how large to draw a
+      scrollbar, for example) there are a couple of ways to figure
+      this out: For a 
+      <literal>multiline=false</literal> text field (i.e., one in
+      which wrapping is not being done automatically by the
+      system), you can use the 
+      <indexterm>
+        <primary>
+          <literal>getTextHeight()</literal>
+        </primary>
+      </indexterm>
+      <methodname>getTextHeight()</methodname>method on 
+      <indexterm>
+        <primary>lz.text</primary>
+      </indexterm>
+      <classname>lz.text</classname>.</para>
+      <para>For a 
+      <literal>multiline=true</literal> output text field, the
+      system computes a property 
+      <indexterm>
+        <primary>text.scrollheight</primary>
+      </indexterm>
+      <sgmltag class="attribute">text.scrollheight</sgmltag> which
+      which you may examine. This field is not maintained for input
+      text.</para>
+      <para>There are two basic classes for displaying text, 
+      <indexterm>
+        <primary>text</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;text&gt;</sgmltag> and 
+      <indexterm>
+        <primary>inputtext</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;inputtext&gt;</sgmltag>. The 
+      <indexterm>
+        <primary>text</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;text&gt;</sgmltag>
+      <remark role="fixme">[unknown tag]</remark>
+      <!--unknown tag: text-->
+      class is used for displaying text, while 
+      <indexterm>
+        <primary>inputtext</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;inputtext&gt;</sgmltag>
+      <remark role="fixme">[unknown tag]</remark>
+      <!--unknown tag: inputtext-->
+      is used for input fields where the user can type or edit text
+      interactively.</para>
+   <!-- fix LPP-5000: minor clarification of examples -->
+      <section>
+        <title>Resizable text fields</title>
+        <!-- changed to reflect the fact that resize is now true by default -->
+        <para>If you set 
+        <literal>resize=false</literal>, the field will not expand to
+        fit the text. In the example below, notice how the string is truncated as you move the slider.</para>
+      <!-- added resize attribute in text-$6.lzx, IORIO 21 sep 2007                  --> 
+        <example role="live-example">
+          <title>Non-resizing text is truncated</title>
+          <programlisting language="lzx">
+            <textobject>
+              <textdata fileref="programs/text-$6.lzx" />
+            </textobject>
+          </programlisting>
+        </example>
+
+<para>If you set 
+        <literal>resize=true</literal> (the default), the field will expand to
+        fit the text.</para>
+        <example role="live-example">
+          <title>Resizing text expands</title>
+          <programlisting language="lzx">
+            <textobject>
+              <textdata fileref="programs/text-$7.lzx" />
+            </textobject>
+          </programlisting>
+        </example>
+        <para />
+      </section>
+    </section>
+  </section>
+  <section id="text.textview">
+    <title>The 
+    <indexterm>
+      <primary>text</primary>
+    </indexterm>
+    <sgmltag class="element">&lt;text&gt;</sgmltag> View</title>
+    <para>The 
+    <indexterm>
+      <primary>text</primary>
+    </indexterm>
+    <sgmltag class="element">&lt;text&gt;</sgmltag>
+    <remark role="fixme">[unknown tag]</remark>
+    <!--unknown tag: text-->
+    tag instantiates an 
+    <indexterm>
+      <primary>lz.text</primary>
+    </indexterm>
+    <classname>lz.text</classname> view. The text content can be
+    specified at compile time using either of the two methods
+    below; as the content of the 
+    <indexterm>
+      <primary>text</primary>
+    </indexterm>
+    <sgmltag class="element">&lt;text&gt;</sgmltag> tag, or as the 
+    <indexterm>
+      <primary>text</primary>
+    </indexterm>
+    <sgmltag class="attribute">text</sgmltag> attribute.</para>
+    <example role="live-example">
+      <title>Text views</title>
+      <programlisting language="lzx">
+        <textobject>
+          <textdata fileref="programs/text-$8.lzx" />
+        </textobject>
+      </programlisting>
+    </example>
+       <!-- remove empty para tag LI LPP-4642 9/4/2007-->
+      <!-- <para /> -->
+  <!-- duplicate section id; the other looks correct LI LPP-4642 9/4/2007-->
+    <!--    <section id="text.multiline"> -->
+    <section>
+      <title>Idiosyncrasies of lz.text views</title>
+      <para>
+      <literal>lz.text</literal> extends 
+      <literal>lz.view</literal>, but some of its behaviors are
+      different from what you might expect. For example, 
+      <literal>lz.text</literal> inherits opacity from view, as well
+      as rotation. But these attributes don't work in all cases, as
+      described below.</para>
+      <para>
+      <literal>lz.text</literal> has the following additional
+      peculiarities:</para>
+        
+      <itemizedlist spacing="compact">
+        <listitem><para>Even though lz.text is a subclass of lz.view, you
+        cannot nest views inside of it.</para></listitem>
+        <listitem><para>Data-bound text fields will automatically display
+        the text they are bound to.</para></listitem>
+      </itemizedlist>
+    </section>
+       <!-- remove empty para tag LI LPP-4642 9/4/2007-->
+    <section id="textformat">
+    <title>Formated Text</title>
+    <para>You can format text the same way you use <literal>Debug.format()</literal>. The difference is
+    that you need the debugger to be running to use <literal>Debug.format()</literal>, but <literal>text.format()</literal> is
+    always availabe. Like <literal>Debug.format()</literal>, <literal>text.format()</literal> uses 
+    <ulink url="../reference/LzFormatter.html"><literal>lz.Formatter</literal></ulink> to format text based
+    on a control string.</para>
+          <example role="live-example">
+        <title>Formated text with <literal>text.format()</literal></title>
+        <programlisting language="lzx">
+          <textobject>
+            <textdata fileref="programs/textformat.lzx" />
+          </textobject>
+        </programlisting>
+          </example>
+      <para><literal>text.addFormat()</literal> is similar to <literal>text.format()</literal>, but instead of replacing text,
+      it appends to the text.</para>
+      <example role="live-example">
+        <title>Formated text with <literal>text.addFormat()</literal></title>
+        <programlisting language="lzx">
+          <textobject>
+            <textdata fileref="programs/addformat.lzx" />
+          </textobject>
+        </programlisting>
+      </example>
+    </section> 
+  
+    <section id="text.multiline">
+      <title>Single-line and multiline text</title>
+      <para>A text field can be either a single line or multiple
+      lines. 
+      <indexterm>
+        <primary>multiline</primary>
+      </indexterm>
+      <sgmltag class="attribute">multiline</sgmltag> sets whether
+      wrapping is enabled. The default is a single-line text
+      field.</para>
+      <example role="live-example">
+        <title>Multiline text</title>
+        <programlisting language="lzx">
+          <textobject>
+            <textdata fileref="programs/text-$9.lzx" />
+          </textobject>
+        </programlisting>
+      </example>
+      <para>With multiline text, the automatic wrapping is always
+      enabled. You can disable wrapping by setting the 
+      <indexterm>
+        <primary>multiline</primary>
+      </indexterm>
+      <sgmltag class="attribute">multiline</sgmltag> to false. When
+      <literal>multiline=false</literal>, the linebreaks will only be placed where you
+      specify them in the text content, either as 
+      <literal>&lt;br/&gt;</literal> tags for HTML content, or
+      newlines inside of a 
+      <literal>&lt;pre/&gt;</literal> preformatted text
+      region.</para>
+      <example role="live-example">
+        <title>Multiline text with explicit line breaks</title>
+        <programlisting language="lzx">
+          <textobject>
+            <textdata fileref="programs/text-$10.lzx" />
+          </textobject>
+        </programlisting>
+      </example>
+      <para>Below is a non-wrapping text field with explicit line
+      breaks.</para>
+      <example role="live-example">
+        <title>non-wrapping text with breaks</title>
+        <programlisting language="lzx">
+          <textobject>
+            <textdata fileref="programs/text-$11.lzx" />
+          </textobject>
+        </programlisting>
+      </example>
+      <para />
+    </section>
+    <section id="text.width-height">
+      <title>Text Width and Height</title>
+      <para>If no explicit text width and height attributes are
+      supplied, the text field will be sized to contain the initial
+      text content. If the text view is single-line, then it will
+      be sized to the height of the current font.</para>
+      <para>Setting the 
+      <indexterm>
+        <primary>resize</primary>
+      </indexterm>
+      <sgmltag class="attribute">resize</sgmltag> attribute on a text field
+      will cause it to be resized to fit its text content at
+      runtime, whenever the 
+      <indexterm>
+        <primary>text</primary>
+      </indexterm>
+      <sgmltag class="attribute">text</sgmltag> attribute is changed.</para>
+      <example role="live-example">
+        <title>Resizing text</title>
+        <programlisting language="lzx">
+          <textobject>
+            <textdata fileref="programs/text-$12.lzx" />
+          </textobject>
+        </programlisting>
+      </example>
+      <para />
+    </section>
+    <section id="text.selection">
+      <title>Text Selection</title>
+      <para>Text can be made user-selectable with the 
+      <indexterm>
+        <primary>selectable</primary>
+      </indexterm>
+      <sgmltag class="attribute">selectable</sgmltag> attribute.
+      This allows copy operations (and cut and paste, for 
+      <indexterm>
+        <primary>inputtext</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;inputtext&gt;</sgmltag>) by the
+      user.</para>
+      <example role="live-example">
+        <title>Selectable text</title>
+        <programlisting language="lzx">
+          <textobject>
+            <textdata fileref="programs/text-$13.lzx" />
+          </textobject>
+        </programlisting>
+      </example>
+      <para />
+    </section>
+    <section>
+      <title>HTML Text Content</title>
+      <para>Within a text view, a limited set of HTML tags and
+      parameter entities may be used to format the text.</para>
+      <table>
+        <title>HTML Tags</title>
+        <tgroup cols="2">
+          <thead>
+            <row>
+              <entry>Tag</entry>
+              <entry>Example</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <literal>&lt;b&gt;</literal>
+              </entry>
+              <entry>
+                <programlisting>&lt;b&gt;bold text&lt;/b&gt;</programlisting>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <literal>&lt;a href="url"&gt;</literal>
+              </entry>
+              <entry>
+                <programlisting>&lt;a href="http://www.boston.com"&gt;The Boston Globe&lt;/a&gt;</programlisting>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <literal>&lt;font [color="#xxxxxx"] [face="Type Face"] [size="Type Size"]&gt;</literal>
+              </entry>
+              <entry>
+                <programlisting>&lt;font color="#ff0000" face="myfont" size="12"&gt;Red text in font 'myfont'&lt;/font&gt;</programlisting>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <literal>&lt;i&gt;</literal>
+              </entry>
+              <entry>
+                <programlisting>&lt;i&gt;italic text&lt;/i&gt;</programlisting>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <literal>&lt;p&gt;</literal>
+              </entry>
+              <entry>
+                <programlisting>line break &lt;p&gt; after p tag</programlisting>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <literal>&lt;u&gt;</literal>
+              </entry>
+              <entry>
+                <programlisting>&lt;u&gt;underline text&lt;/u&gt;</programlisting>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <literal>&amp;quot;</literal>
+              </entry>
+              <entry>
+                <programlisting>"</programlisting>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <literal>&amp;apos;</literal>
+              </entry>
+              <entry>
+                <programlisting>'</programlisting>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <literal>&amp;amp;</literal>
+              </entry>
+              <entry>
+                <programlisting>&amp;</programlisting>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <literal>&amp;lt;</literal>
+              </entry>
+              <entry>
+                <programlisting>&lt;</programlisting>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <literal>&amp;gt;</literal>
+              </entry>
+              <entry>
+                <programlisting>&gt;</programlisting>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <example role="live-example">
+        <title>HTML tags in text views</title>
+        <programlisting language="lzx">
+	   <textobject>
+            <textdata fileref="programs/text-$15.lzx" />
+           </textobject>
+	</programlisting>
+      </example>
+         <!-- remove empty para tag LI LPP-4642 9/4/2007-->
+        <!-- <para /> -->
+    </section>
+    <section>
+      <title>Using &lt;img&gt; tag to include images in HTML
+      content</title>
+      <para>The 
+      <indexterm>
+        <primary>img</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;img&gt;</sgmltag>
+      <remark role="fixme">[unknown tag]</remark>
+      <!--unknown tag: img-->
+      tag allows you to include certain kinds of images in HTML
+      content within a 
+      <indexterm>
+        <primary>text</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;text&gt;</sgmltag> element, or
+      within an HTML element that a &lt;text&gt; element
+      contains.</para>
+      <para condition="swf">When you're compiling to SWF, the image
+      you include must be natively supported by the Flash Player
+      (regardless whether your application is SOLO or
+      proxied).</para>
+      <note>
+        <para>
+        <indexterm>
+          <primary>img</primary>
+        </indexterm>
+        <sgmltag class="element">&lt;img&gt;</sgmltag> tag does not
+        work inside 
+        <indexterm>
+          <primary>inputtext</primary>
+        </indexterm>
+        <sgmltag class="element">&lt;inputtext&gt;</sgmltag>, only 
+        <indexterm>
+          <primary>text</primary>
+        </indexterm>
+        <sgmltag class="element">&lt;text&gt;</sgmltag>.</para>
+      </note>
+      <para>Due to implementation details of the Flash Player, the
+      <sgmltag class="element">&lt;img&gt;</sgmltag> tag is only rendered when the 
+     <literal>multiline</literal> attribute of
+      the &lt;text&gt; element is true.</para>
+      <para condition="dhtml">Applications compiled to DTHML may
+      not match exactly the appearance of those compiled to SWF.
+      You may find that you need to "tweak" the layout using things
+      like <sgmltag class="element">&lt;br&gt;</sgmltag> tags. However, remember that applications
+      compiled to DHTML can make use of the 
+      <indexterm>
+        <primary>HTML</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;HTML&gt;</sgmltag>
+      <remark role="fixme">[unknown tag]</remark>
+      <!--unknown tag: HTML-->
+      tag, which supports all HTML markup.</para>
+      <para>The &lt;img&gt; tag supports the following attributes.
+      All of these attributes are optional except the 
+      <indexterm>
+        <primary>src</primary>
+      </indexterm>
+      <sgmltag class="attribute">src</sgmltag> attribute. All
+      attributes must be specified as literals (not constraints) in
+      the program source.</para>
+      <itemizedlist spacing="compact">
+        <listitem>
+          <para><literal>src</literal>: This attribute is either a URI, or a
+          JavaScript identifier. If it is a URI, it specifies the
+          location of the image resource, which must be a JPEG or
+          (Flash deployment targets only) SWF file. If it is a
+          JavaScript identifier, it must be the name of a resource
+          defined via the &lt;resource&gt; tag. This attribute is
+          required.</para>
+        </listitem>
+        <listitem>
+          <para><literal>align</literal> = bottom | middle | top | left | right. The
+          values have the same meaning as in HTML.</para>
+        </listitem>
+  
+        <listitem>
+          <para><literal>alt</literal>: string. When specified, the content of this
+          attribute is made available to screen readers.</para>
+        </listitem>
+        <listitem>
+          <para><literal>width</literal>, <literal>height</literal>: When specified, the width and
+          height attributes scale the natural image size to these
+          values. The values of <literal>width</literal> and <literal>height</literal> are specified
+            in pixels.</para>
+        </listitem>
+        <listitem>
+          <para><literal>hspace</literal>: This attribute specifies the amount of
+          white space to be inserted to the left and right of an
+          IMG. The default value is not specified, but is generally
+          a small, non-zero length. (On the Flash deployment
+          target, this value is 8 pixels.)</para>
+        </listitem>
+        <listitem>
+          <para><literal>vspace</literal>: This attribute specifies the amount of
+          white space to be inserted above and below an IMG. The
+          default value is not specified, but is generally a small,
+          non-zero length. (On the Flash deployment target, this
+          value is 8 pixels.)</para>
+        </listitem>
+      </itemizedlist>
+      <para>The <sgmltag class="element">&lt;text&gt;</sgmltag> view is not by default sized to the
+      content of the <sgmltag class="element">&lt;img&gt;</sgmltag> tag.</para>
+      <para>Here's an example of the basic use of the 
+      <indexterm>
+        <primary>img</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;img&gt;</sgmltag> tag.</para>
+      <example role="live-example">
+        <title>Basic use of &lt;img&gt; tag</title>
+        <programlisting language="lzx">
+          <textobject>
+            <textdata fileref="programs/text-$16.lzx" />
+          </textobject>
+        </programlisting>
+      </example>
+      <para>By giving values to the 
+      <indexterm>
+        <primary>height</primary>
+      </indexterm>
+      <sgmltag class="attribute">height</sgmltag> and 
+      <indexterm>
+        <primary>width</primary>
+      </indexterm>
+      <sgmltag class="attribute">width</sgmltag> attributes on the 
+      <indexterm>
+        <primary>img</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;img&gt;</sgmltag> tag, you can
+      scale the image:</para>
+      <example role="live-example">
+        <title>Scaling an image included in text</title>
+        <programlisting language="lzx">
+          <textobject>
+            <textdata fileref="programs/text-$18.lzx" />
+          </textobject>
+        </programlisting>
+      </example>
+      <para>You can position the included image by setting the 
+      <indexterm>
+        <primary>align</primary>
+      </indexterm>
+      <sgmltag class="attribute">align</sgmltag> attribute.</para>
+      <example role="live-example">
+        <title>Scaled and left-aligned image</title>
+        <programlisting language="lzx">
+          <textobject>
+            <textdata fileref="programs/text-$19.lzx" />
+          </textobject>
+        </programlisting>
+      </example>
+      <para>You can include multiple 
+      <indexterm>
+        <primary>img</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;img&gt;</sgmltag> tags within the
+      same 
+      <indexterm>
+        <primary>text</primary>
+      </indexterm>
+      <sgmltag class="element">&lt;text&gt;</sgmltag> elements. Take
+      care with the positioning; it's possible to position the
+      images on top of each other, so you may not get the effect
+      you want.</para>
+      <example role="live-example">
+        <title>Multiple images in text</title>
+        <programlisting language="lzx">
+          <textobject>
+            <textdata fileref="programs/text-$20.lzx" />
+          </textobject>
+        </programlisting>
+      </example>
+      <para />
+    </section>
+    <section id="text.advanced-styles">
+      <title>Advanced Styles</title>
+      <para>Supported advanced text styles include the
+      <sgmltag class="attribute">textalign</sgmltag>, <sgmltag class="attribute">textindent</sgmltag>,
+      <sgmltag class="attribute">letterspacing</sgmltag> and <sgmltag class="attribute">textdecoration</sgmltag>
+      attribute.</para>
+
+      <itemizedlist spacing="compact">
+        <listitem><para>
+          <literal>textalign</literal>:
+          Specifies how to align the text content within the <sgmltag class="element">&lt;text&gt;</sgmltag>
+          view. Valid values are <literal>left</literal> (default), <literal>center</literal>, <literal>right</literal>
+          and <literal>justify</literal>.
+        </para></listitem>
+
+        <listitem><para>
+          <literal>textindent</literal>:
+          By adjusting this attribute, you can describe how to indent the first line of a paragraph. The attribute is
+          interpreted as a pixel value with 0 being the default.
+        </para></listitem>
+
+        <listitem><para>
+          <literal>letterspacing</literal>:
+          Can be used to change the inter-character space. The attribute is interpreted as a pixel value,
+          negative values give narrower spacing whereas positive values give wider spacing. The default value is 0.
+        </para></listitem>
+
+        <listitem><para>
+          <literal>textdecoration</literal>:
+          Allows to add decorations to the text. Valid values are <literal>none</literal> (default) and <literal>underline</literal>.
+        </para></listitem>
+      </itemizedlist>
+
+      <example role="live-example">
+        <title>Advanced styles for text</title>
+        <programlisting language="lzx">
+          <textobject>
+            <textdata fileref="programs/text.advanced-styles.lzx" />
+          </textobject>
+        </programlisting>
+      </example>
+      <para />
+    </section>
+  </section>
+  <section>
+    <title>The 
+    <indexterm>
+      <primary>inputtext</primary>
+    </indexterm>
+    <sgmltag class="element">
+    &lt;inputtext&gt;</sgmltag> View</title>
+    <para>Editable text fields are created with the 
+    <indexterm>
+      <primary>inputtext</primary>
+    </indexterm>
+    <sgmltag class="element">&lt;inputtext&gt;</sgmltag> tag. Like
+    the non-editable 
+    <indexterm>
+      <primary>text</primary>
+    </indexterm>
+    <sgmltag class="element">&lt;text&gt;</sgmltag> view, an input
+    text field can be single line or multiline (wrapped).</para>
+    <!-- remove empty para tag LI LPP-4642 9/4/2007-->
+      <!--    <para /> -->
+    <section>
+      <title>Handling Inputtext Selection</title>
+      <para>When a region of text is selected in an inputtext view,
+      the 
+      <indexterm>
+        <primary>
+          <literal>getSelectionPosition()</literal>
+        </primary>
+      </indexterm>
+      <methodname>getSelectionPosition()</methodname> and 
+      <indexterm>
+        <primary>
+          <literal>getSelectionSize()</literal>
+        </primary>
+      </indexterm>
+      <methodname>getSelectionSize()</methodname> methods can be
+      used to obtain the offset and length of the selected text.
+      The 
+      <indexterm>
+        <primary>
+          <literal>setSelection()</literal>
+        </primary>
+      </indexterm>
+      <methodname>setSelection()</methodname> selects a region of
+      text in the view.</para>
+     <!-- remove empty para tag LI LPP-4642 9/4/2007-->
+        <!--     <para />  -->
+    </section>
+  </section>
+</chapter>

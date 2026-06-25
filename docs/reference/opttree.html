@@ -1,0 +1,22 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;opttree&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>opttree<span class="ang">&gt;</span></h1><p class="short"/><p class="meta">Extends <a href="view.html"><code>LzView</code></a></p>A keyboard navigable (with arrow keys) tree control that supports 
+         selection and dynamic data loading. This tree must be backed by an
+         XML DOM datastructure and presented within a clipping region. 
+         
+         The datapath for an opttree must resolve to a single LzDataElement
+         which is the undisplayed root of the tree.<h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">depthattr</td><td class="ty">string</td><td class="ty">__OPTTREE_META_depth</td><td>(Protected) The attribute name to use in the data to mark a
+              a node's depth in the tree hierarchy</td></tr><tr><td class="nm">depthattrpath</td><td class="ty">string</td><td class="ty">@__OPTTREE_META_depth</td><td>(Protected) An xpath that selects the depthattr attribute from
+              a node. This should match depthattr but prepend the '@' symbol.
+              This cannot be when=always or when=once because it is used as
+              a reference in a $path expression n baseopttreenode</td></tr><tr><td class="nm">dragee</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">dragged</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">highlighted</td><td class="ty">expression</td><td class="ty">null</td><td>The keyboard nav highlighted baseopttreenode or null. This
+              attribute is read-only.</td></tr><tr><td class="nm">nodeclass</td><td class="ty">string</td><td class="ty"/><td>The name of the class to use to represent nodes in the tree.</td></tr><tr><td class="nm">nodecollection</td><td class="ty">expression</td><td class="ty"> opttreecontroller.nodelist </td><td/></tr><tr><td class="nm">nodelist</td><td class="ty">expression</td><td class="ty">nodecollection</td><td/></tr><tr><td class="nm">nodepath</td><td class="ty">string</td><td class="ty">*</td><td>The xpath expression to use to retrieve nodes out of the 
+              datapath.</td></tr><tr><td class="nm">openattr</td><td class="ty">string</td><td class="ty">__OPTTREE_META_open</td><td>(Protected) The attribute name to use in the data to mark a
+              a node as open.</td></tr><tr><td class="nm">openattrpath</td><td class="ty">string</td><td class="ty">@__OPTTREE_META_open</td><td>(Protected) An xpath that selects the openattr attribute from
+              a node. This should match openattr but prepend the '@' symbol.
+              This cannot be when=always or when=once because it is used as
+              a reference in a $path expression in baseopttreenode</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

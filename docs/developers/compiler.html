@@ -1,0 +1,209 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 49. Understanding Compilation</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.methodology.html" title="Part VIII. Development Methodology"><link rel="prev" href="developers.methodology.html" title="Part VIII. Development Methodology"><link rel="next" href="editing-lzx.html" title="Chapter 50. Editing"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 49. Understanding Compilation</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="developers.methodology.html">Prev</a> </td><th width="60%" align="center">Part VIII. Development Methodology</th><td width="20%" align="right"> <a accesskey="n" href="editing-lzx.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="compiler"></a>Chapter 49. Understanding Compilation</h2></div></div></div><p>You can compile your applications for any of several runtimes using any of several
+    techniques. In this chapter we'll look at the various ways of invoking the compiler and its
+    various options:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>Using the Developer's Console to invoke the OpenLaszlo Server</p></li><li class="listitem"><p>Using URLs to invoke the OpenLaszlo Server</p></li><li class="listitem"><p>Invoking the lzc compiler directly from the command line</p></li></ul></div><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2036"></a>1. Overview</h2></div></div></div><p>You can cause compilation either by implicitly calling the compiler through the OpenLaszlo
+      Server, or by explicitly calling it from the command line. The most usual way to invoke the
+      server is using the Developer's Console.</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="dguide_dev_console"></a>1.1. The Developer's Console</h3></div></div></div><p> The Developer's Console is a small OpenLaszlo application for selecting things like the
+        target runtime, the deployment mode (proxied or SOLO) and whether the debugger is included.
+        When you first compile an OpenLaszlo application (as explained below), by default it is
+        returned with the Developer's Console appearing at the bottom of the application.</p><p> Depending on whether your compile to SWF (the default) or DHTML, a slightly different
+        version of the Developer's Console is returned. The fugures below show both versions. </p><div class="figure"><a name="id16507"></a><p class="title"><b>Figure 49.1. Developer's console for DHTML compilation</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/dhtmlconsole.png" alt="Developer's console for DHTML compilation"></div></div></div><br class="figure-break"><p>The developer's console for DHTML has the following features:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Compile option buttons: select the runtime.</p></li><li class="listitem"><p>Server and SOLO buttons: select the deployment mode. See <a class="xref" href="../">???</a> in the Administrator's Guide for more information.</p></li><li class="listitem"><p>View Source button: view the LZX source code.</p></li><li class="listitem"><p>Compile button: click to compile your application.</p></li><li class="listitem"><p>Debug checkbox: compile the application with the debugger enabled.</p></li><li class="listitem"><p>Backtrace checkbox: compile and maintain a call stack.</p></li></ul></div><div class="figure"><a name="id16527"></a><p class="title"><b>Figure 49.2. Developer's console for SWF compilation</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/swfconsole.png" alt="Developer's console for SWF compilation"></div></div></div><br class="figure-break"><p>The developer's console for SWF has all the features of the DHTML console, and adds the
+        following features:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Console Remote Debug checkbox: Enable the standalone debugger (not compiled into the
+            application). See <a class="xref" href="debugging.html" title="Chapter 51. Debugging">Chapter 51, <i>Debugging</i></a> in the Developer's Guide for more
+            information.</p></li><li class="listitem"><p>Size Profile link: opens an HTML page that displays details about the
+          application.</p></li></ul></div><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2043"></a>2. The Command Line Compiler</h2></div></div></div><p> In OpenLaszlo, 'the compiler' consists (currently) of two phases: </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><span class="emphasis"><em>the view compiler</em></span>, which compiles LZX to JavaScript</li><li class="listitem"><span class="emphasis"><em>the script compiler</em></span>, which compiles JavaScript to the target
+          runtime (SWF8, SWF9 and DHTML). <code class="literal">lzc </code> invokes both those phases
+          (although you can ask for the intermediate output).</li></ul></div><p>
+    </p><p> The Debugger needs an OL server to be able to evaluate forms (it calls the server to
+      compile the form and then loads and runs the result). It will try to talk to OL server (using
+      the url the application was loaded from), so it should 'just work', so long as you are running
+      a server, even if you don't use the server for compiling your application. </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p> If you use the command-line compiler to compile a SOLO application, you won't be able
+        to use <code class="literal">Debug.trace()</code>, <code class="literal">Debug.monitor()</code> or evaluate any
+        expression that requires the Debugger to send code to the server for compilation. </p></div><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2037"></a>2.1. Running the Command Line Compiler</h3></div></div></div><p> To run lzc you must do so from a current directory that matches the value of LPS_HOME,
+        and LPS_HOME must be set to the correct value for the build. </p><p> Say the application to be compiled is</p><pre class="programlisting">
+$LPS_HOME/laszlo-explorer/basics/mediatst.lzx
+</pre><p> To compile it correctly you would set the current directory first: </p><pre class="programlisting">
+cd $LPS_HOME;
+</pre><p> and then compile using </p><pre class="programlisting">
+lzc --script --runtime=dhtml laszlo-explorer/basics/mediatst.lzx;
+</pre><p> Let's say the file $LPS_HOME/laszlo-explorer/basics/mediatst.lzx wants to reference the
+        file $LPS_HOME/laszlo-explorer/basics/assets/background.jpg. It might contain the following
+        reference. </p><div class="informalexample"><pre class="programlisting">
+&lt;canvas&gt;
+  &lt;view resource="assets/background.jpg"/&gt;
+&lt;/canvas&gt;
+</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/inline-0e039ee1ee.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/inline-0e039ee1ee.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div><p> Running LZC from other than LPS_HOME will result in a file not found error. </p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2038"></a>2.2. Command Line Options</h3></div></div></div><p> Here are the options available for compilation: </p><p>
+        <span class="b">Options:</span>
+      </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">--help</span></dt><dd><p>lists all options.</p></dd><dt><span class="term">-D&lt;name&gt;=&lt;value&gt;</span></dt><dd><p> Set the name/var property to value (See Compiler.getProperties).</p></dd><dt><span class="term">-D&lt;name&gt;</span></dt><dd><p> Short for -Dname=true.</p></dd><dt><span class="term">-v</span></dt><dd><p>Write progress information to standard output.</p></dd><dt><span class="term">--mcache on|off</span></dt><dd><p>Turns on/off media cache. Default is off.</p></dd><dt><span class="term">--onerror [throw|warn]</span></dt><dd><p>Action to take on compilation errors. Defaults to warn.</p></dd><dt><span class="term">--script-cache-dir &lt;directory&gt;</span></dt><dd><p> Location of script cache directory (default &lt;lps&gt;/work/scache).
+            </p></dd><dt><span class="term">--media-cache-dir &lt;directory&gt;</span></dt><dd><p> Location of media cache directory (default
+              &lt;lps&gt;/work/cache/cmcache). </p></dd><dt><span class="term">--flush-script-cache</span></dt><dd><p>Doesn't flush script cache before compiling.</p></dd></dl></div><p>
+        <span class="b">Output options:</span>
+      </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">--runtime=[swf8|swf9|dhtml]</span></dt><dd><p> Compile to swf8, swf9, or dhtml.</p></dd><dt><span class="term"> --output &lt;file&gt; (or -o &lt;file&gt;) </span></dt><dd><p>The name of the output file. This option is only valid when there is one input
+              file. </p></dd><dt><span class="term">--dir outputdir</span></dt><dd><p>Output directory.</p></dd><dt><span class="term">-g | --debug</span></dt><dd><p>Add debugging information into the output object.</p></dd><dt><span class="term">-p | --profile</span></dt><dd><p> Add profiling information into the output object.</p></dd></dl></div><p>
+        <span class="b">Logging options:</span>
+      </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">-l&lt;loglevel&gt;</span></dt><dd><p>Logging level (See org.apache.log4j.Level)</p></dd><dt><span class="term">-l&lt;loggerName&gt;=&lt;loglevel&gt;</span></dt><dd><p>Logging level (See org.apache.log4j.Level)</p></dd><dt><span class="term">-lp file</span></dt><dd><p>Log4j properties files</p></dd><dt><span class="term">--log logfile</span></dt><dd><p>Specify logfile (output still goes to console as well)</p></dd><dt><span class="term">--schema</span></dt><dd><p> Writes the schema to standard output.</p></dd><dt><span class="term">--script</span></dt><dd><p>Writes JavaScript to standard output.</p></dd></dl></div><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2039"></a>2.3. Compile-time constants</h3></div></div></div><p> You can define compile-time constants to `lzc` by using `-D_name_=_value_`, where
+        _value_ should be either `true` or `false`. By convention, we use `$` as the first character
+        of _name_, but nothing enforces that. </p><p> The compiler will compile only the chosen branch of an if statement when the condition
+        expression is a compile-time constant (i.e., just the constant name, no other computation).
+        For example: </p><pre class="programlisting">
+  if ($slow) {
+    ... slow way ...
+  } else {
+    ... fast way ...
+  }
+</pre><p> You can define compile-time constants to `lzc` by using `-D_name_=_value_`, where
+        _value_ should be either `true` or `false`. By convention, we use `$` as the first character
+        of _name_, but nothing enforces that. The compiler will compile only the chosen branch of an
+        if statement when the condition expression is a compile-time constant (i.e., just the
+        constant name, no other computation). </p><p> For example: </p><pre class="programlisting">
+  if ($slow) {     ... slow way ...   } else {     ... fast way ...   } Can be made to run fast by `lzc -Dslow=false`
+</pre><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2040"></a>2.4.  New DHTML Runtime and new URL parameters </h3></div></div></div><p> As part of the architectural overhaul, we have created a new version of the client
+        runtime (LFC plus kernel). To invoke an application compiled for DHMTML, use the
+          <code class="literal">?lzr=dhtml</code> query. </p><p> The <code class="literal">?lzr</code> parameter selects the runtime. Your choices are swf8, swf9,
+        and dhtml. The default is specified in <code class="literal">lps/config/lps.properties</code> as
+          <code class="literal">compiler.runtime.default</code>. The default runtime selector is swf8. </p><p> The <code class="literal">?lzt</code> parameter is the 'request type', in general what kind of
+        'wrapper' page will be generated around your application. Your choices are: app_console or
+        html. app_console is the developer console, html is your app in an html page. The latter can
+        be used as a model for embedding your app in a custom page, or you can simply embed using an
+        iframe: </p><p>
+        <code class="literal">&lt;iframe src=".../app.lzx?lzt=html"&gt;&lt;/iframe&gt;</code>
+      </p><p> The default for <code class="literal">?lzt</code> is specified in lps/config/lps.properties as
+        defaultRequestType. The default value is app_console. </p><p> Mnemonics: </p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>lzr - Laszlo <span class="em">R</span>untime</p></li><li class="listitem"><p>lzt - Laszlo request <span class="em">T</span>ype </p></li></ul></div><p> So, for example, to view an LZX application in DHTML within a browser, download it from
+        a live server with an url parameter requesting the DHTML runtime
+        <code class="literal">lzt=html</code>: <a class="ulink" href="../../examples/components/button_example.lzx?lzt=html" target="_top">http://<span class="i">myserver</span>/mylaszloapp.lzx?<span class="b">lzr=dhtml</span></a>. To
+        request the SWF runtime, use <a class="ulink" href="../../examples/components/button_example.lzx?lzt=swf" target="_top">http://<span class="i">myserver</span>/mylaszloapp.lzx?<span class="b">lzr=swf</span></a>. </p><p> To specify that the application run in the Developer's Console, use the
+        <code class="literal">lzt</code> flag: <code class="literal">lzt=app_console</code> loads the application with
+        the Developer's Console. <code class="literal">lzr=swf8</code> and <code class="literal">lzr=swf9</code> loads
+        the application compiled for the SWF8 or SWF9 runtime, with the Developer's Console. Two lzr
+        values have been added for future use, but are not currently supported: <code class="literal">j2me, and
+          svg</code>
+      </p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2042"></a>2.5. Incremental Compilation</h3></div></div></div><p>When compiling an application to the swf10 runtime, there is an incremental compilation
+        mode which may help to speed up recompiling the application.</p><p>The incremental compilation mode should be from the <code class="code">fcsh</code> compiler shell
+        utility (located in <code class="code">WEB-INF/bin/fcsh</code>). This is a utility which is specific to
+        compiling for the swf10 runtime. An application can be compiled within the <code class="code">fcsh</code>
+        shell, and the shell left running. When the source code is modified, you can recompile the
+        application from within the shell.</p><p>This should be substantially faster than invoking the compiler via <code class="code">lzc</code>,
+        because internal state of the flash 10 backend compiler is kept in memory in the Java
+        virtual machine, rather than having to be reloaded from disk.</p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id2041"></a>2.5.1. Using Incremental Compilation</h4></div></div></div><p>Where you would normally run <code class="code">lzc --runtime=swf10 yourapp.lzx</code>, instead you
+          use the modified <code class="code">fcsh</code> shell, as follows. It supports a <code class="code">lzc</code>
+          command which has the same arguments:</p> run <code class="code">fcsh</code> shell script (lives in
+          <code class="code">WEB-INF/bin</code>) <p>
+          </p><pre class="programlisting">FLEX_HOME=../../WEB-INF/bin/..
+        Adobe Flex Compiler SHell (fcsh)
+        Version 4.0.0 build 6898
+        Copyright (c) 2004-2007 Adobe Systems, Inc. All rights reserved.</pre><p>
+        </p><pre class="programlisting">(fcsh) lzc --runtime=swf9 app.lzx
+        calling lzc
+        Compiling: app.lzx to app.swf9.swf
+        swf9 compiler options changes, cleaning working dir
+        Executing compiler: (cd /var/folders/xh/xhmdrA41HCKjjiditeqN1k+++TI/-Tmp-/lzswf9/./build/app; /Users/hqm/openlaszlo/trunk/WEB-INF/bin/mxmlc -load-config=/Users/hqm/openlaszlo/trunk/WEB-INF/frameworks/flex-config.xml -compiler.show-actionscript-warnings=false -compiler.source-path+=/var/folders/xh/xhmdrA41HCKjjiditeqN1k+++TI/-Tmp-/lzswf9/./build/app -compiler.headless-server=true -compiler.fonts.advanced-anti-aliasing=true -output /var/folders/xh/xhmdrA41HCKjjiditeqN1k+++TI/-Tmp-/lzswf9/./build/app/app.swf -default-size 800 600 -compiler.library-path+=/Users/hqm/openlaszlo/trunk/lps/includes/lfc/LFC9.swc -compiler.library-path+=/Users/hqm/openlaszlo/trunk/WEB-INF/flexlib -includes \$debug \$profile \$backtrace \$runtime \$swf7 \$swf8 \$as2 \$swf9 \$swf10 \$as3 \$dhtml \$j2me \$svg \$js1 -target-player=9.0.0 -compiler.incremental=true -frame two LzSpriteApplication -file-specs=/var/folders/xh/xhmdrA41HCKjjiditeqN1k+++TI/-Tmp-/lzswf9/./build/app/LzPreloader.as)
+        option EMIT_AS3_ONLY set, returning without invoking flex compiler, call 'lcompile #' to compile as3
+        lzc returned /Users/hqm/openlaszlo/trunk/examples/lzpix/app.swf9.swf
+        fcsh: Assigned 1 as the compile target id
+        Loading configuration file /Users/hqm/openlaszlo/trunk/WEB-INF/frameworks/flex-config.xml
+        /var/folders/xh/xhmdrA41HCKjjiditeqN1k+++TI/-Tmp-/lzswf9/./build/app/app.swf (403317 bytes)
+        (fcsh) </pre><p>then if you modify one or more <code class="code">.lzx</code> files, you
+          recompile incrementally by saying <code class="code">lcompile 1</code> (or whatever the ID number
+          assigned by <code class="code">fcsh</code> in the previous command)</p><pre class="programlisting">touch classes/pivotlayout.lzx</pre><pre class="programlisting">(fcsh) lcompile 1
+        lcompile, calling lzc with args: 
+        --lzxonly
+        --incremental
+        --runtime=swf9
+        app.lzx
+        Compiling: app.lzx to app.swf9.swf
+        Executing compiler: (cd /var/folders/xh/xhmdrA41HCKjjiditeqN1k+++TI/-Tmp-/lzswf9/./build/app; /Users/hqm/openlaszlo/trunk/WEB-INF/bin/mxmlc -load-config=/Users/hqm/openlaszlo/trunk/WEB-INF/frameworks/flex-config.xml -compiler.show-actionscript-warnings=false -compiler.source-path+=/var/folders/xh/xhmdrA41HCKjjiditeqN1k+++TI/-Tmp-/lzswf9/./build/app -compiler.headless-server=true -compiler.fonts.advanced-anti-aliasing=true -output /var/folders/xh/xhmdrA41HCKjjiditeqN1k+++TI/-Tmp-/lzswf9/./build/app/app.swf -default-size 800 600 -compiler.library-path+=/Users/hqm/openlaszlo/trunk/lps/includes/lfc/LFC9.swc -compiler.library-path+=/Users/hqm/openlaszlo/trunk/WEB-INF/flexlib -includes \$debug \$profile \$backtrace \$runtime \$swf7 \$swf8 \$as2 \$swf9 \$swf10 \$as3 \$dhtml \$j2me \$svg \$js1 -target-player=9.0.0 -compiler.incremental=true -frame two LzSpriteApplication -file-specs=/var/folders/xh/xhmdrA41HCKjjiditeqN1k+++TI/-Tmp-/lzswf9/./build/app/LzPreloader.as)
+        option EMIT_AS3_ONLY set, returning without invoking flex compiler, call <code class="code">lcompile #</code> to compile as3
+        Loading configuration file /Users/hqm/openlaszlo/trunk/WEB-INF/frameworks/flex-config.xml
+        Recompile: /private/var/folders/xh/xhmdrA41HCKjjiditeqN1k+++TI/-Tmp-/lzswf9/build/app/$lzc$class_pivotlayout.as
+        Reason: The source file or one of the included files has been updated.
+        Files changed: 1 Files affected: 0
+        /var/folders/xh/xhmdrA41HCKjjiditeqN1k+++TI/-Tmp-/lzswf9/./build/app/app.swf (403318 bytes)
+        renaming /var/folders/xh/xhmdrA41HCKjjiditeqN1k+++TI/-Tmp-/lzswf9/./build/app/app.swf to /Users/hqm/openlaszlo/trunk/examples/lzpix/app.swf9.swf
+        (fcsh) </pre><p>You can keep modifying files and calling <code class="code">lcompile 1</code>
+          to recompile incrementally.</p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2046"></a>3. LZO Binary Compilation</h2></div></div></div><p>LZO stands for "LasZlo Object" file format.</p><p>For awhile, the 'lzc' compiler has been able to compile files into <code class="code">.lzo</code> binary files by
+      using the <code class="code">-c</code> flag. It stored the library code in an intermediate platform-independent
+      format.</p><p>In the latest release the compiler can also store precompiled platform-specific object
+      code for both the DHTML and SWF10 runtime in the library, so that linking an application with
+      libraries should be faster than ever.</p><div class="mediaobject"><img src="images/lzocompile.png"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2045"></a>3.1. Building with LZO Libraries</h3></div></div></div><p>To compile a library to include native object code for both runtimes, you call <code class="code">lzc</code> as
+        follows, specifying one or more runtimes to place in the library.</p><pre class="programlisting">lzc -c --runtime=swf10,dhtml mylibrary.lzx</pre><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id2044"></a>3.1.1. LZO libraries which reference other external LZO libraries</h4></div></div></div><p> We have a new rule, which is that when you compile a library that makes any external
+          references to classes or globals in another library, that library must be already compiled
+          down to an external binary library lzo file, and one which contains the target runtime.</p><p>For example let's say you are an ice-cream manufacturer, and have some new equipment
+          that makes ice-cream bars. Your machine came with some software from the factory which
+          makes basic tubs of icecream, and then you extend that software with your own custom class
+          to make ice-cream bars.</p><p>Let's say the manufacturer supplied an <code class="code">lzx</code> file to be included when you compile,
+          called <code class="code">extdessert.lzx</code> that defines a base <code class="code">icecream</code> class. It's source code might be:</p><pre class="programlisting">
+      extdessert.lzx:
+      &lt;library&gt;
+        &lt;class name="icecream"&gt;
+        ...
+        &lt;/class&gt;
+      &lt;/library&gt;</pre><p>Then your code might look like:</p><pre class="programlisting">
+      libdir/mylib.lzx:
+      &lt;library&gt;
+        &lt;include href="../extdessert.lzx"/&gt;
+        &lt;class name="icreambar" extends="icecream"&gt;
+          &lt;attribute name="coating" type="string" value="chocolate"/&gt;
+          &lt;attribute name="icecreamflavor" type="string" value="vanilla"/&gt;
+          ....
+        &lt;/class&gt;
+      &lt;/library&gt;
+        </pre><p>Now you want to go to compile your code into a library.</p><p>If we want to compile to swf10, the <code class="code">extdessert</code> file MUST be first compiled to an <code class="code">lzo</code>
+          which contains a swf10 runtime target , or the flash10 compiler will not be able to link
+          against it properly when you build your library.</p><p>So you would in that case first build the <code class="code">extdessert.lzx</code> into an <code class="code">lzo</code>:</p><pre class="programlisting">lzc -c --runtime=swf10 extdessert.lzx</pre><p>and then your custom class library can be linked against it</p><pre class="programlisting">lzc -c --runtime=swf10 libdir/mylib.lzx</pre><p>So basically the rule is that when building a <code class="code">lzo</code> library that depends on extending or
+          referencing classes from other files, those files MUST be compiled to swf10 <code class="code">lzo</code>'s
+        first.</p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2047"></a>4. Compiler Errors and Warnings</h2></div></div></div><p> When the compiler detects an error that makes it impossible to compile the application,
+      the error is reported in the browser window, or, if you invoked compilation using lzc, in the
+      terminal window. </p><p> When the compiler detects code that may be problematic but does not prevent compilation,
+      it issues a warning. If you have debugging enabled, the warning is displayed there. See <a class="xref" href="debugging.html" title="Chapter 51. Debugging">Chapter 51, <i>Debugging</i></a> for a detailed discussion of how to detect errors. </p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2049"></a>5. Compiler Directives</h2></div></div></div><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="conditionalcompilation"></a>5.1. Conditional Compilation of Runtime-Dependent code</h3></div></div></div><p class="fixme">
+        <em><span class="remark"><span class="para-label">FIXME: </span> Revisit this after Henry
+          finalizes the syntax of the "when" tag. </span></em>
+      </p><p> You can enclose blocks of code within <code class="literal">&lt;switch&gt;</code>
+        elements that are associated with a specific runtime. The
+        <code class="literal">&lt;switch&gt;</code> is a compiler directive that instructs the
+        compiler to compile or omit blocks according to the target runtime to which the application
+        is being compiled. Within a <code class="literal">&lt;switch&gt;</code> block, use
+          <code class="literal">&lt;when&gt;</code> to specify the runtime using a compile-time
+        constant, like this: </p><pre class="programlisting">&lt;when property="compile-time-constant-name"&gt;</pre><p><code class="literal">compile-time-constant-name</code> can be <code class="literal">$debug</code>,
+          <code class="literal">$profile</code>, <code class="literal">$backtrace</code>, <code class="literal">$runtime</code>,
+          <code class="literal">$swf7</code>, <code class="literal">$swf8</code>, <code class="literal">$as2</code>,
+          <code class="literal">$swf9</code>, <code class="literal">$swf10</code>, <code class="literal">$as3</code>,
+          <code class="literal">$dhtml</code>, <code class="literal">$j2me</code>, <code class="literal">$svg</code>, or
+          <code class="literal">$js1</code>.</p><div class="example"><a name="id16800"></a><p class="title"><b>Example 49.1. &lt;switch&gt; using &lt;when&gt; for conditional compilation</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="20" width="100%"&gt;
+  &lt;switch&gt;
+    &lt;when property="$dhtml"&gt;
+       &lt;text&gt;This program has been compiled for DHTML&lt;/text&gt;
+    &lt;/when&gt;
+    &lt;otherwise&gt;
+      &lt;text&gt;This program has been compiled for SWF&lt;/text&gt; 
+    &lt;/otherwise&gt;
+  &lt;/switch&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2009 Laszlo Systems, Inc.  All Rights Reserved.             *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/when.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/when.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>You can also use <code class="literal">unless</code> in a similar way.</p><div class="example"><a name="id16805"></a><p class="title"><b>Example 49.2. &lt;switch&gt; using &lt;unless&gt; for conditional compilation</b></p><div class="example-contents"><pre class="programlisting">
+          &lt;canvas height="20" width="100%"&gt;
+  &lt;switch&gt;
+    &lt;unless property="$swf8"&gt;
+      &lt;text&gt;Not SWF8&lt;/text&gt;
+    &lt;/unless&gt;
+    &lt;otherwise&gt;
+      &lt;text&gt;Must be SWF8&lt;/text&gt;
+    &lt;/otherwise&gt;
+  &lt;/switch&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2009 Laszlo Systems, Inc.  All Rights Reserved.             *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+        </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/unless.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/unless.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"> You can also use this syntax:
+      <pre class="programlisting">&lt;when property="$runtime" value="swf9"&gt; // checks for string equality </pre>
+      And for back compatibility:
+      <pre class="programlisting">&lt;when runtime="swf9"&gt;</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2048"></a>5.2. Font and Face</h3></div></div></div><p> The <a class="indexterm" name="id16812"></a><code class="sgmltag-element">&lt;font&gt;</code><em><span class="remark">[unknown tag]</span></em>
+         and <a class="indexterm" name="id16816"></a><code class="sgmltag-element">&lt;face&gt;</code><em><span class="remark">[unknown tag]</span></em>
+         tags are also compiler directives. Unlike most other LZX tags, they
+        do not correspond to a class; rather, they tell the compiler which fonts and typefaces are
+        to be bound to objects. </p><p></p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="developers.methodology.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.methodology.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="editing-lzx.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Part VIII. Development Methodology </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 50. Editing</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

@@ -1,0 +1,206 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;rpc&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>rpc<span class="ang">&gt;</span></h1><p class="short">remote procedure call</p><p class="meta">Extends <code>node</code></p>
+                        
+        <p>
+          The 
+          
+           tag is the abstract base class for RPC classes. Subclasses 
+                    must implement the 
+          <code>&lt;method&gt;load()&lt;/method&gt;</code>
+           method, which is responsible for creating 
+                    the proxy object. The proxy object contains a set of function stubs 
+                    that invoke a remote function (or procedure) over the network. It's 
+                    up to the caller of the stub function to know what parameters need to 
+                    be passed in by looking at what the backend remote function expects. 
+                    If calling a JavaRemoting (
+          <code>&lt;javarpc&gt;</code>
+          ) function, looking at the associated 
+                    Java API will be necessary. If calling a SOAP (
+          <code>&lt;soap&gt;</code>
+          ) function, the 
+                    developer will need to look at the corresponding operation in a WSDL file.
+        </p>
+                        
+        <p>
+          The implementation of this class can be found in lps/components/rpc/rpc.lzx. For details, see the 
+                    
+          <a href="../developers/rpc.html">RPC</a>
+           chapter of the Developer's Guide.
+        </p>
+                        
+        <p>Objects derived from rpc use function stubs in the proxy object to invoke a remote function. 
+                    Each function stub expects an array of arguments and a delegate to deal with the return value, 
+                    respectively. Both the array and the delegate are required. If a function has no arguments, 
+                    rpc passes in an empty array.</p>
+                        
+                
+        <pre class="example">
+    &lt;canvas debug="true" height="280"&gt;
+    
+        &lt;debug x="10" y="40" width="470" height="230" /&gt;
+    
+        &lt;soap name="temperature" autoload="false"
+            wsdl="http://developerdays.com/cgi-bin/tempconverter.exe/wsdl/ITempConverter"&gt;
+            &lt;method name="init"&gt;
+                super.init();
+                Debug.debug('soap service loading...');
+                this.load();
+            &lt;/method&gt;
+        &lt;handler name="onload"&gt;
+            Debug.debug('temperature service loaded!');
+            Debug.debug('---');
+    
+            // don't allow others to call RPC object until proxy is loaded.
+            canvas.convert.setAttribute('visible', true);
+            &lt;/handler&gt;   
+            &lt;/soap&gt; 
+            &lt;button name="convert" text="convert" x="10" y="10" visible="false"&gt;      
+            &lt;attribute name="myDel" value="$once{new LzDelegate(this, 'myhandler')}" /&gt;       
+            &lt;handler name="onclick"&gt;
+            var f = 100;
+            canvas.temperature.proxy.FtoC([ f ], this.myDel)
+            Debug.debug('Invoking FtoC...');
+        &lt;/handler&gt;
+        &lt;method name="myhandler" args="data"&gt;
+            Debug.debug('got data: %w', data);
+        &lt;/method&gt;
+    
+        &lt;/button&gt;
+    
+    &lt;/canvas&gt;
+                </pre>
+                        
+        <p>
+          Alternatively, you can use remotecall for a more declarative approach to invoking functions. 
+                    See the 
+          <code>&lt;remotecall&gt;</code>
+           reference or the 
+          RPC chapter
+           of the Developer's Guide for more information.
+        </p>
+                        
+        <pre class="example">
+    &lt;canvas debug="true" height="280"&gt;
+    
+        &lt;debug x="10" y="40" width="470" height="230" /&gt;
+    
+        &lt;soap name="temperature" autoload="false"
+            wsdl="http://developerdays.com/cgi-bin/tempconverter.exe/wsdl/ITempConverter"&gt;
+    
+        &lt;method name="init"&gt;
+            super.init();
+            Debug.debug('soap service loading...');
+            this.load();
+        &lt;/method&gt;
+    
+        &lt;handler name="onload"&gt;
+            Debug.debug('temperature service loaded!');
+            Debug.debug('---');
+    
+            // don't allow others to call RPC object until proxy is loaded.
+            canvas.convert.setAttribute('visible', true);
+        &lt;/handler&gt;
+    
+        &lt;remotecall funcname="FtoC"&gt;
+        &lt;param value="100" /&gt;
+    
+            &lt;handler name="ondata" args="value"&gt;
+                Debug.debug('got data: %w', value);
+                &lt;/handler&gt;
+                &lt;handler name="onerror" args="errmsg"&gt;
+                Debug.debug('error: %w', errmsg);
+            &lt;/handler&gt;
+    
+        &lt;/remotecall&gt;
+    
+    &lt;/soap&gt;
+    
+    &lt;button name="convert" text="convert" x="10" y="10" visible="false"&gt;
+        &lt;handler name="onclick"&gt;
+            canvas.temperature.FtoC.invoke();
+        Debug.debug('Invoking FtoC...');
+        &lt;/handler&gt;
+    &lt;/button&gt;
+    
+    &lt;/canvas&gt;
+                </pre>
+                        
+        <p>
+          <strong>See Also:</strong>
+        </p>
+                            
+        <ul>
+                                  
+          <li>
+                                        
+            <code>&lt;javarpc&gt;</code>
+                                    
+          </li>
+                                  
+          <li>
+                                        
+            <code>&lt;soap&gt;</code>
+                                    
+          </li>
+                                  
+          <li>
+                                        
+            <code>&lt;xmlrpc&gt;</code>
+                                    
+          </li>
+                                  
+          <li>
+                                        
+            <code>&lt;remotecall&gt;</code>
+                                    
+          </li>
+                                  
+          <li>
+                                        
+            Developer's Guide: RPC chapter
+                                    
+          </li>
+                                  
+          <li>
+                                        
+            Developer's Guide: JavaRPC chapter
+                                    
+          </li>
+                                  
+          <li>
+                                        
+            Developer's Guide: SOAP chapter
+                                    
+          </li>
+                                  
+          <li>
+                                        
+            Developer's Guide: XML-RPC chapter
+                                    
+          </li>
+                              
+        </ul>
+                            
+            
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">autoload</td><td class="ty">boolean</td><td class="ty">true</td><td>Load remote object during init. If false, create remote object by
+              calling load(). Default is true.</td></tr><tr><td class="nm">proxy</td><td class="ty">expression</td><td class="ty">null</td><td>The remote proxy object. Proxy is set after the rpc object
+              loads. Proxy contains client-side function stubs to remote
+              methods. Each method takes an array of arguments and a delegate
+              like:
+
+                myrpc.proxy.remoteFunc( [ p1, p2, ..., pN ], delegate );
+
+              Remote methods with no arguments are passed in an empty array
+              like:
+
+                myrpc.proxy.otherRemoteFunc( [], delegate );
+
+              The delegate is used to handle the return value since RPC calls
+              are asynchronous.</td></tr><tr><td class="nm">proxyinfo</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">secure</td><td class="ty">boolean</td><td class="ty">false</td><td>Make connection secure between client and the LPS secure
+             (HTTPS). Default is false.</td></tr><tr><td class="nm">secureport</td><td class="ty">number</td><td class="ty">null</td><td>The port to use for the secure socket between the client and the
+              LPS. If secure is false, this value is ignored.</td></tr></table><h3>Methods</h3><ul class="methods"><li><code>ondata()</code></li><li><code>onerror()</code></li><li><code>onload()</code></li><li><code>onunload()</code></li></ul>
+</main><script src="_nav.js"></script></body></html>

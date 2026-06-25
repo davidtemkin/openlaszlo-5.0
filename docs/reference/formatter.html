@@ -1,0 +1,97 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>LzFormatter — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1>LzFormatter</h1><p class="short">Formatted output support</p>
+        <p>
+          See 
+          
+           and 
+          
+           for additional
+ examples of how to present formatted text to the user
+ interface.
+        </p>
+         
+        <p>
+          Here are some simple examples that show the use of the
+ 
+          <code>s</code>
+           and 
+          <code>w</code>
+           conversions:
+        </p>
+         
+        
+          <pre><code>
+
+&lt;canvas debug="true" height="150" width="100%"&gt;
+&lt;debug y="5%" height="90%" /&gt;
+  &lt;script&gt;
+    var myObj = {a: 'eh?', b: 'bee', c: 'sea'};
+    Debug.debug("My object using %%s conversion: %s", myObj);
+    Debug.debug("My object using %%w conversion: %w", myObj);
+    Debug.debug("My object using %%#w conversion: %#w", myObj);
+  &lt;/script&gt;
+&lt;/canvas&gt;
+
+ </code></pre>
+        
+         
+        <p>Here is an example showing how representations can be
+ abbreviated.  If you click on the abbreviated representation, you can inspect
+ the entire object.</p>
+         
+        
+          <pre><code>
+
+&lt;canvas debug="true" height="150" width="100%"&gt;
+&lt;debug y="5%" height="90%" /&gt;
+  &lt;script&gt;
+    var myObj = {one: 1, too: 2, 3: 'threeee', 42: "The answer", 'a very long tag name': "With a very long value to boot"};
+    Debug.debug("My object using %%w: %w", myObj);
+    Debug.debug("My object using %%o.32w: %0.32w", myObj);
+  &lt;/script&gt;
+&lt;/canvas&gt;
+
+ </code></pre>
+        
+         
+        <p>Here is an example showing how positional arguments could be
+ used to accomodate parameterized control strings, say to support
+ internationalizations where the values converted may have to be
+ accessed in different orders.</p>
+         
+        
+          <pre><code>
+
+&lt;canvas layout="axis: y; spacing: 10" height="60" width="100%"&gt;
+  &lt;debug y="5%" height="90%" /&gt;
+  &lt;script&gt;
+    var date = {us: "%2$d/%3$d/%1$d", eu: "%1$d-%2$02d-%3$02d"};
+    var now = new Date();
+  &lt;/script&gt;
+  &lt;text oninit="this.format(date.us, now.getFullYear(), now.getMonth(), now.getDay())" /&gt;
+  &lt;text oninit="this.format(date.eu, now.getFullYear(), now.getMonth(), now.getDay());" /&gt;
+&lt;/canvas&gt;
+
+ </code></pre>
+        
+         
+        <p>Finally, here is an example of using a custom representation for
+ an object</p>
+         
+        
+          <pre><code>
+
+&lt;canvas debug="true" height="150" width="100%"&gt;
+&lt;debug y="5%" height="90%" /&gt;
+  &lt;script&gt;
+    var myObj = {a: "Complex", 'object with an': "ugly representation", 42: "The answer", length: 768};
+    Debug.debug("%=s &amp;lt;-- click for further details", myObj, 'Complex!')
+  &lt;/script&gt;
+&lt;/canvas&gt;
+
+ </code></pre>
+</main><script src="_nav.js"></script></body></html>

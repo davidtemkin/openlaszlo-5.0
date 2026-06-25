@@ -1,0 +1,82 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basedatacombobox&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basedatacombobox<span class="ang">&gt;</span></h1><p class="short">baseclass for a datacombobox</p><p class="meta">Extends <code>baseformitem</code></p>
+                      An abstract class to create dropdown lists of selectable items. Define
+              the look in a subclass. Also, a basedatacombobox_text must be declared in
+              the subclass. 
+              
+              
+        <pre class="example">
+&lt;canvas height="150"&gt;
+     &lt;include  /&gt;
+     
+     &lt;dataset name="items"&gt;
+          &lt;item value="item0"&gt;item 0&lt;/item&gt;
+          &lt;item value="item1"&gt;item 1&lt;/item&gt;
+          &lt;item value="item2"&gt;item 2&lt;/item&gt;
+          &lt;item value="item3"&gt;item 3&lt;/item&gt;
+          &lt;item value="item4"&gt;item 4&lt;/item&gt;
+          &lt;item value="item5"&gt;item 5&lt;/item&gt;
+          &lt;item value="item6"&gt;item 6&lt;/item&gt;
+          &lt;item value="item7"&gt;item 7&lt;/item&gt;
+          &lt;item value="item8"&gt;item 8&lt;/item&gt;
+          &lt;item value="item9"&gt;item 9&lt;/item&gt;
+          &lt;item value="item10"&gt;item 10&lt;/item&gt;
+          &lt;item value="item11"&gt;item 11&lt;/item&gt;
+     &lt;/dataset&gt;
+     
+     &lt;class name="simplecombobox" extends="basedatacombobox" width="100"&gt;
+          &lt;attribute name="_cbtext" value="$once{this._text}"/&gt;
+          &lt;attribute name="menuclassname" value="floatinglist" type="string"/&gt;
+          &lt;view width="100%" height="20" focusable="false" bgcolor="#CCCCCC"&gt;
+               &lt;handler name="onclick"&gt;
+                    lz.Focus.setFocus(this,false); 
+                    classroot.toggle()
+               &lt;/handler&gt;
+               &lt;handler name="onmouseout"&gt;
+                    this.setAttribute('bgcolor', 0xCCCCCC);
+               &lt;/handler&gt;
+               &lt;handler name="onmouseup"&gt;
+                    this.setAttribute('bgcolor', 0xCCCCCC);
+               &lt;/handler&gt;
+               &lt;handler name="onmouseover"&gt;
+                    this.setAttribute('bgcolor', 0xEEEEEE);
+               &lt;/handler&gt;
+               &lt;handler name="onmousedown"&gt;
+                    this.setAttribute('bgcolor', 0xAAAAAA);
+               &lt;/handler&gt;
+          &lt;/view&gt;
+          &lt;text name="_text" width="${ parent.width - 19 }" x="7" /&gt;
+     &lt;/class&gt;
+
+     &lt;simplecombobox id="cbox1" width="130" shownitems="6" defaulttext="Choose One..." itemdatapath="items:/item"/&gt;
+&lt;/canvas&gt;
+
+              
+              </pre>
+            
+               ** Caveat: Combobox items will not update if the attributes
+                that are mapped to textdatapath or valuedatapath change.
+                To force the changes to update, call 
+                
+        <code> node.parentNode.replaceChild(node.cloneNode(true), node) </code>
+                        where node is the dataelement of the list item. Don't forget 
+                to reset the seleciton on the list, as well.
+          
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">defaulttext</td><td class="ty">string</td><td class="ty">null</td><td>Default text to display before a selection is made. No default
+              item is selected if defaulttext is set. Defaulttext is replaced
+              with selected item's text.</td></tr><tr><td class="nm">ismenu</td><td class="ty">expression</td><td class="ty">false</td><td>If true, the combobox will behave like a menu. "value" is
+              ignored, and items will not remain selected. Selecting an
+              item generates an onselect event</td></tr><tr><td class="nm">isopen</td><td class="ty">expression</td><td class="ty">false</td><td>Indicates whether or not the popup list is showing.</td></tr><tr><td class="nm">itemclassname</td><td class="ty">string</td><td class="ty"/><td>The name of the class for items in the floating list.</td></tr><tr><td class="nm">itemdatapath</td><td class="ty">string</td><td class="ty">null</td><td>Datapath to items in list.</td></tr><tr><td class="nm">listattach</td><td class="ty">string</td><td class="ty">bottom</td><td>Where the floatinglist should attach to its owner. Possible
+              values: bottom, top, left, right.  In the event of a canvas
+              out-of-bounds, the floating list will attach in a visible
+              location.</td></tr><tr><td class="nm">listwidth</td><td class="ty">expression</td><td class="ty">null</td><td>Width of popup list, defaults to width of combobox view. During
+              setup, the width of the floating list view might not yet be set,
+              so this returns the expected width.</td></tr><tr><td class="nm">menuclassname</td><td class="ty">string</td><td class="ty"/><td/></tr><tr><td class="nm">selected</td><td class="ty">expression</td><td class="ty">null</td><td>Datapointer to selected item.</td></tr><tr><td class="nm">selectfirst</td><td class="ty">expression</td><td class="ty">true</td><td>When true, the 1st item is selected oninit.</td></tr><tr><td class="nm">shownitems</td><td class="ty">expression</td><td class="ty">4</td><td>Sets the height to the number of items to show in combobox
+              popup list. Must be greater than 0.</td></tr><tr><td class="nm">statictext</td><td class="ty">string</td><td class="ty">null</td><td>If set, this will always be displayed instead of selected item
+              text. Behaves like a menu button. Also see defaulttext.</td></tr><tr><td class="nm">textdatapath</td><td class="ty">string</td><td class="ty">text()</td><td>Datapath to text to display for items in list. 
+              See caveat.</td></tr><tr><td class="nm">value</td><td class="ty">expression</td><td class="ty">null</td><td>The value of the selected item.</td></tr><tr><td class="nm">valuedatapath</td><td class="ty">string</td><td class="ty">@value</td><td>Datapath to value for items in list. See caveat.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

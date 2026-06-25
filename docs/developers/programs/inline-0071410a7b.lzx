@@ -1,0 +1,7 @@
+<handler name="onclick">
+  parent.datapath.updateData();
+  var dp=canvas.datasets.dset.getPointer();   // 1
+  dp.selectChild();                           // 2
+  dp.addNodeFromPointer(parent.datapath);     // 3
+  parent.setAttribute('datapath', "new:/contact");         // 4
+</handler>

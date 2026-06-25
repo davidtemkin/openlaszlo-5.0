@@ -1,0 +1,2 @@
+   <rtmpconnection src="rtmp://mysite.com/myapp/" autoconnect="true"/>
+   <videoview url="myvideo.flv" type="rtmp" autoplay="true"/>

@@ -1,0 +1,33 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;richinputtext&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>richinputtext<span class="ang">&gt;</span></h1><p class="short">
+      An editor for rich text 
+    </p><p class="meta">Extends <code>inputtext</code></p>
+              
+        <p>
+                  The 
+          <code>richinputtext</code>
+           component allows you to add basic 
+        rich text properties, such as bolding and italics, to input text. 
+      
+        </p>
+              
+        <pre class="example">
+        
+&lt;canvas bgcolor="blue" height="60" &gt;
+  &lt;richinputtext width="200" x="20" y="20"&gt;default text goes here&lt;/richinputtext&gt;
+&lt;/canvas&gt;
+        
+      </pre>
+            
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">defaultformat</td><td class="ty">expression</td><td class="ty"/><td>The default format to use for inserted and typed text.
+      Flash support for default formatting of text is not reliable.
+      The default format will sometimes but rarely be observed. To ensure
+      that Flash uses the default format you want when the user types new
+      text, format the character after the insertion point.
+      See the example, also in test-richinputtext.lzx,
+      shows an example of using this trick.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

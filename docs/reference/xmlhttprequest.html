@@ -1,0 +1,75 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;XMLHttpRequest&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>XMLHttpRequest<span class="ang">&gt;</span></h1><p class="short">An implementation of XMLHttpRequest (also called "AJAX") for compatibility in SWF runtimes</p><p class="meta">Extends <code>node</code></p>
+                        
+        <p>
+          This class implements the XMLHTTPRequest as 
+          <a >
+                    specified</a>
+           by the 
+          <a >WHATWG</a>
+           consortium.
+        </p>
+         
+                
+        <p>In SOLO deployed applications, this class departs from the specification in these ways:</p>
+                        
+        <ul>
+                              
+                    
+          <li>Cannot set HTTP headers</li>
+                              
+                    
+          <li>Cannot access response headers</li>
+                              
+                    
+          <li>Cannot send raw POST data</li>
+                              
+                    
+          <li>Cannot send repeated query args in a POST using LoadVars</li>
+                              
+                    
+          <li>Username/password Auth args to send() not supported</li>
+                              
+                
+        </ul>
+                        
+        <pre><code>
+    &lt;script&gt;
+        function loadXMLDoc(url) {
+            var req = new lz.XMLHttpRequest();
+            req.onreadystatechange = processReqChange;
+            req.open("GET", url, true);
+            req.setRequestHeader('X-Test', 'one');
+            req.setRequestHeader('X-Test', 'two');
+            req.send(null);
+        }
+        
+        function processReqChange(request) {
+            Debug.debug("processReqChange: req.readyState %w", request.readyState);
+            // only if request shows "loaded"
+            if (request.readyState == 4) {
+            // only if "OK"
+        if (request.status == 200) {
+            Debug.debug("arg = %w", request);
+            Debug.debug("request.status: %w", request.status);
+            Debug.debug("request.responseText: %w", request.responseText);
+            Debug.debug("request.responseXML %w:", request.responseXML);
+            Debug.debug("request.getAllResponseaders:",
+            request.getAllResponseHeaders());
+        } else {
+            Debug.debug("There was a problem retrieving the XML data: %w\n",
+            request.statusText);
+               }
+           }
+        }
+    &lt;/script&gt;
+                </code></pre>
+                    
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">async</td><td class="ty">boolean</td><td class="ty">true</td><td/></tr><tr><td class="nm">dataRequest</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">dsLoadDel</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">headers</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">method</td><td class="ty">string</td><td class="ty"/><td/></tr><tr><td class="nm">ondataDelegate</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">onerrorDelegate</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">onreadystatechange</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">parsexml</td><td class="ty">expression</td><td class="ty">true</td><td/></tr><tr><td class="nm">proxied</td><td class="ty">expression</td><td class="ty">canvas.proxied</td><td/></tr><tr><td class="nm">readyState</td><td class="ty">number</td><td class="ty">0</td><td>Object status integer: 0 Uninitialised The initial value. 1 Open The open() method has been successfully called. 
+              2 Sent The send() method has been successfully called, but no data has yet been received. 3 Receiving Data is being received, 
+              but the data transfer is not yet complete. 4 Loaded The data transfer has been completed.</td></tr><tr><td class="nm">responseText</td><td class="ty">string</td><td class="ty"/><td>String version of data returned from server process</td></tr><tr><td class="nm">responseXML</td><td class="ty">expression</td><td class="ty"/><td>DOM-compatible document object of data returned from server process</td></tr><tr><td class="nm">status</td><td class="ty">number</td><td class="ty">0</td><td>Numeric code returned by server, such as 404 for "Not Found" or 200 for "OK"</td></tr><tr><td class="nm">statusText</td><td class="ty">string</td><td class="ty"/><td>String message accompanying the status code</td></tr><tr><td class="nm">timeout</td><td class="ty">expression</td><td class="ty">60000</td><td/></tr><tr><td class="nm">url</td><td class="ty">string</td><td class="ty"/><td/></tr></table>
+</main><script src="_nav.js"></script></body></html>

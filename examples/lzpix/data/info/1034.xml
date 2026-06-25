@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1034">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Lone Island in Blue Sea</title>
+  <description>Lone Island in Blue Sea — from the OpenLaszlo sample image library.</description>
+  <dates posted="1492851200" />
+  <urls><url type="photopage">data/photos/1034.jpg</url></urls>
+  <tags><tag>lone</tag><tag>island</tag><tag>blue</tag><tag>sea</tag></tags>
+</photo>
+</rsp>

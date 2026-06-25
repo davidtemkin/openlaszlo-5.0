@@ -1,0 +1,41 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;fileupload&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>fileupload<span class="ang">&gt;</span></h1><p class="short">A swf8-specific class for uploading a single file to a server</p><p class="meta">Extends <a href="view.html"><code>LzView</code></a></p>
+                        
+        <p>
+                A class for uploading a single file using the Flash 8 file upload api. This only works with
+                the swf8 runtime, that is, with lzr=swf8.
+                </p>
+                        
+        <p>
+                          Using this class requires a service to which to upload. A sample upload jsp is provided, 
+                which uses the cos.jar library from servlets.com. To use the example, copy cos.jar from
+                
+          <a >servlets.com</a>
+           into $TOMCAT_HOME/common/lib
+                and rename lps/components/incubator/uploader/example/upload.jsp.txt to upload.jsp. 
+                On windows, edit upload.jsp to have the upload destination of your choice, ie "C:/", 
+                by changing the value of saveDirectory. The destination
+                directory is currently /tmp/uploader, which will work for mac and linux servers.
+                Restart tomcat, so it will see the new jar, then visit 
+                
+          <a >
+                    http://localhost:8080/legals/lps/components/incubator/uploader/example/test-fileupload.lzx?lzr=swf8</a>
+                          
+        </p>
+                        
+        <p>
+                              To upload multiple files, see 
+          <code>multiplefileupload</code>
+                          
+        </p>
+                        
+        <p>(The terms of the servlets.com license forbid it from being redistributed 
+                with Open Laszlo.)
+                </p>
+                    
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">fileref</td><td class="ty">expression</td><td class="ty">new flash.net.FileReference()</td><td>file reference, for internal use</td></tr><tr><td class="nm">maxsize</td><td class="ty">expression</td><td class="ty">10000</td><td>Max file size in bytes</td></tr><tr><td class="nm">msg</td><td class="ty">string</td><td class="ty"/><td>message of feedback to user</td></tr><tr><td class="nm">uploadenable</td><td class="ty">boolean</td><td class="ty">false</td><td>Enable upload. True to enable uploading, false to disable uploading.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

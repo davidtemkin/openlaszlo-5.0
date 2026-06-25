@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1059">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Sunlit Portrait</title>
+  <description>Sunlit Portrait — from the OpenLaszlo sample image library.</description>
+  <dates posted="1495011200" />
+  <urls><url type="photopage">data/photos/1059.jpg</url></urls>
+  <tags><tag>sunlit</tag><tag>portrait</tag></tags>
+</photo>
+</rsp>

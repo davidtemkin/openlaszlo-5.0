@@ -1,0 +1,45 @@
+<!--=======================================================================-->
+<!--                                                                       -->
+<!-- returnpojo.lzx                                                      -->
+<!--                                                                       -->
+<!-- Laszlo Application Language (LZX) Example                             -->
+<!--                                                                       -->
+<!--=======================================================================-->
+
+<canvas width="700" height="500" debug="true">
+
+    <debug x="170" y="20" width="500" height="400" />
+
+    <security>
+        <allow>
+            <pattern>^examples.ReturnPOJOExample</pattern>
+        </allow>
+    </security>
+
+    <!-- Java source and class file can be found in WEB-INF/class/examples -->
+    <javarpc name="returnpojo" scope="none" objectreturntype="pojo"
+             remoteclassname="examples.ReturnPOJOExample">
+        <handler name="onload">
+            Debug.write('proxy:');
+            Debug.inspect(this.proxy);
+        </handler>
+
+        <remotecall funcname="getPOJO">
+            <handler name="ondata" args="pojo">
+                Debug.write('------------------------------');
+                Debug.write('got pojo:');
+                Debug.inspect(pojo);
+            </handler>
+        </remotecall>
+
+    </javarpc>
+
+    <button x="10" y="10" onclick="returnpojo.getPOJO.invoke()" 
+            text="get plain old java object" />
+
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2008 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->

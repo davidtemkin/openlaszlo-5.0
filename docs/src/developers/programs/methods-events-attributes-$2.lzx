@@ -1,0 +1,15 @@
+<canvas height="50" width="100%">
+  <text id="message">
+    <method name="add" args="a,b">
+      var sum = a + b;
+      this.setAttribute('text', ('a + b = ' + sum));          
+    </method>
+  </text>
+  <script>
+    message.add(4,9)
+  </script>
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --> 

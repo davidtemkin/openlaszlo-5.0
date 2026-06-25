@@ -1,0 +1,57 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;reverselayout&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>reverselayout<span class="ang">&gt;</span></h1><p class="short">A layout for arranging siblings vertically or horizontally in reverse order.</p><p class="meta">Extends <code>layout</code></p>
+                      
+        <code>&lt;para&gt;
+          <code>reverselayout</code>
+           is just like 
+          <code>&lt;simplelayout&gt;</code>
+          , 
+              except that the order of the views it keeps is reversed (bottom to top, or right to left).
+        &lt;/para&gt;</code>
+                      
+        <code>&lt;para&gt;
+          <code>reverselayout</code>
+           extends 
+          <code>&lt;layout&gt;</code>
+          , and therefore it is responsible 
+              for arranging all of the subviews for the view that it is attached to. The attributes of a view that 
+          <code>reverselayout</code>
+           
+              effects are the 
+          <code>x</code>
+           and 
+          <code>y</code>
+           values.
+        &lt;/para&gt;</code>
+                      
+        <pre class="example">
+&lt;canvas height="60" &gt;
+  &lt;include /&gt;
+  &lt;view bgcolor="yellow"&gt;
+    &lt;reverselayout axis="x" spacing="10"/&gt;
+    &lt;text text="one"/&gt;
+    &lt;text text="two"/&gt;
+    &lt;text text="three"/&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+                     </pre>
+                      
+        <pre class="example">
+&lt;canvas height="60"&gt;
+  &lt;include /&gt;
+  &lt;view bgcolor="yellow"&gt;
+    &lt;reverselayout axis="x" end="false" spacing="10"/&gt;
+    &lt;text text="one"/&gt;
+    &lt;text text="two"/&gt;
+    &lt;text text="three"/&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+              </pre>
+                
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">axis</td><td class="ty">string</td><td class="ty">y</td><td>The axis in which this layout operates. One of 'x' or 'y'.</td></tr><tr><td class="nm">end</td><td class="ty">expression</td><td class="ty">true</td><td>When true (the default), then the layout will push the subviews 
+              to the right (or bottom) of the containing view</td></tr><tr><td class="nm">inset</td><td class="ty">expression</td><td class="ty">0</td><td>A pixel amount to inset the last view controlled by the layout</td></tr><tr><td class="nm">sizeAxis</td><td class="ty">string</td><td class="ty">height</td><td/></tr><tr><td class="nm">spacing</td><td class="ty">expression</td><td class="ty">0</td><td>A pixel amount to use between each view in the layout</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

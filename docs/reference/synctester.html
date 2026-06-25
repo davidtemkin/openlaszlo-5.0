@@ -1,0 +1,38 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;SyncTester&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>SyncTester<span class="ang">&gt;</span></h1><p class="short">An extension of TestCase for testing asynchronous objects safely.</p><p class="meta">Extends <code>TestCase</code></p>
+                    
+        <p>SyncTester is an extension of TestCase that is useful for testing objects whose method are to be called sequentially, in effect synchronizing methods with potentially asynchronous behavior.</p>
+                        
+        <p>To take advantage of this helper class, you must declare a dataset named "&lt;instance name&gt;_methods", with a root node whose children are the method names to be called synchronously. The method nodes must be named "call", and have at least the "name" attribute defined. If the method needs to be called with arguments, specify them as value of the optional "args" attribute (only one argument is currently supported).</p>
+                            
+        <p>
+          Your specific tests will only run once a method returns. It is possible to provide an inspector method for each of the asynchronous methods declared; you reference it with the "tester" attribute of a node in the dataset. These inspector methods must be defined on the SyncTester object. If you dont specify a tester for a method, the default handler named 
+          <code>inspect</code>
+           will be called with the result of the method call as an argument. You should override this method if you want to have a generic inspector for most or all of your methods.
+        </p>
+                            
+        <p>
+          Generally speaking, you would expect that an event is sent when a method is done. This framework allows you to specify what event indicates the end of method execution by declaring the "event" attribute. It is assumed that the sender of the event is the object referenced by the 
+          <code>&lt;class&gt;tested_object&lt;/class&gt;</code>
+           attribute, or that the following method accepts a delegate to call on completion, as the last argument. If neither of these assumptions is correct, the flow of method execution will break.
+        </p>
+                            
+        <p>For example, if you have an instance of this class named "userinfo", then your list of methods might be declared like this:</p>
+                        
+        <pre><code>
+                    
+    &lt;dataset name="userinfo_methods"&gt;
+        &lt;suite&gt;
+            &lt;call name="isAuthenticated" args="admin"/&gt;
+            &lt;call name="getExpiration" event="ondata"/&gt;
+            &lt;call name="createAccount" event="onload" tester="checkAcct"/&gt;
+        &lt;/suite&gt;
+    &lt;/dataset&gt;
+                </code></pre>
+                    
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">current_method</td><td class="ty">expression</td><td class="ty">cur_meth.xpathQuery('@name')</td><td>Helps keep track of currently executed method</td></tr><tr><td class="nm">del</td><td class="ty">expression</td><td class="ty"/><td/></tr><tr><td class="nm">tested_object</td><td class="ty">expression</td><td class="ty"/><td>Refers to object to be tested; this is dependent on specific test run</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

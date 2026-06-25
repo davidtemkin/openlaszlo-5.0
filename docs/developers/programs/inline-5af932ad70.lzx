@@ -1,0 +1,9 @@
+<javarpc remoteclassname="..."
+     attributename="..."
+     scope="[session|webapp|none]"
+     loadoption="[loadcreate|loadonly|create]"
+     createargs="..."
+     objectreturntype="[pojo|javabean]"
+     autoload="[true|false]"
+     secure="[true|false]"
+     secureport="...">

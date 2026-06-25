@@ -1,0 +1,14 @@
+myview {
+    logorsc: "resources/berry/logo.png";        
+    boxrsc: "resources/berry/box.png";
+    lightbgcolor: "#ca83b1";
+    themename:  "Berry Bites";
+}
+
+#gTitle {
+    xpos: 40;
+    ypos: 45;
+    textcolor:  "#F9CEB4";    
+}
+
+/* Copyright 2008 Laszlo Systems */ 

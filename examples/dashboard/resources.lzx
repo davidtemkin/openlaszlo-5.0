@@ -1,0 +1,108 @@
+<library>
+    
+    <!-- Fonts -->
+    <font src="bitstream-vera-1.10/verabd.ttf" name="vera"/>
+    <font src="bitstream-vera-1.10/vera.ttf"   name="veraroman"/>
+    <font src="kroeger-6-plain-regular.ttf"    name="kroe"/> 
+
+    <resource name="background" src="img/background.png"/>
+
+    <!-- buttons for sign in -->
+    <resource name="signin_btn">
+        <frame src="img/signin/signin_btn_up.png" />
+        <frame src="img/signin/signin_btn_mo.png" />
+        <frame src="img/signin/signin_btn_dn.png" />
+    </resource>
+    <resource name="guest_btn">
+        <frame src="img/signin/guest_btn_up.png" />
+        <frame src="img/signin/guest_btn_mo.png" />
+        <frame src="img/signin/guest_btn_dn.png" />
+    </resource>
+
+    <!-- Icons for windows -->
+    <resource name="communicationsIcon" src="img/dash_icon_com.png" />
+    <resource name="dailyContentIcon" src="img/dash_icon_daily.png" />
+    <resource name="mediaIcon" src="img/dash_icon_media.png" />
+    <resource name="peopleIcon" src="img/dash_icon_people.png" />
+    <resource name="plannerIcon" src="img/dash_icon_planner.png" />
+
+    <resource name="winButtonMaxRestore">
+        <frame src="img/glob_win_plusminus_button.png" />
+        <frame src="img/glob_win_plusminus_button_down.png" />
+        <frame src="img/glob_win_plusminus_button_over.png" />
+    </resource>
+    <resource name="winPlus" src="img/dash_plus.png" />
+    <resource name="winMinus" src="img/dash_minus.png" />
+
+    <!-- Faked functionality resources -->
+    <resource name="weather" src="img/weather_ex.png" />
+    <resource name="horoscope" src="img/horoscope_ex.png" />
+    <resource name="entertainment" src="img/entertainment_ex.jpg" />
+    <resource name="news" src="img/news_ex.jpg" />
+
+    <resource name="email" src="img/email_ex.jpg" />
+    <resource name="chat" src="img/chat_ex.jpg" />
+    <resource name="voicemail" src="img/voicemail_ex.jpg" />
+    <resource name="calendar" src="img/db_cal.png"/>
+
+    <resource name="wallet" src="img/wallet.png"/>
+    <resource name="notes" src="img/notes.png"/>
+    <resource name="list" src="img/list.png"/>
+
+    <resource name="presentation_rsrc" src="img/presentation/q4numbers.png" />
+    
+    <!--resource name="presentation_rsrc" >
+        <frame src="img/presentation/slide1.png"/>
+        <frame src="img/presentation/slide2.png"/>
+        <frame src="img/presentation/slide3.png"/>
+        <frame src="img/presentation/slide4.png"/>
+    </resource -->
+
+    <!-- Media player resources -->
+    <resource name="playpausebutton">
+        <frame src="img/pause.png"/>
+        <frame src="img/pauseover.png"/>
+        <frame src="img/pausedown.png"/>
+        <frame src="img/play.png"/>
+        <frame src="img/playover.png"/>
+        <frame src="img/playdown.png"/>
+    </resource>
+    <resource name="prevbutton">
+        <frame src="img/prev.png"/>
+        <frame src="img/prevover.png"/>
+        <frame src="img/prevdown.png"/>
+    </resource>
+    <resource name="nextbutton">
+        <frame src="img/next.png"/>
+        <frame src="img/nextover.png"/>
+        <frame src="img/nextdown.png"/>
+    </resource>
+    <resource name="iconbutton">
+        <frame src="img/iconview.png"/>
+        <frame src="img/iconviewdown.png"/>
+    </resource>
+    <resource name="loadbar" src="img/loadbarback.png"/>
+    <resource name="loadbarprog" src="img/loadbar.png"/>
+    
+    <resource name="volumebar" src="img/volumebar.png"/>
+    <resource name="volumebutton" src="img/volumebutton.png"/>
+    <resource name="volumesoft" src="img/volumesoft.png"/>
+    <resource name="volumeloud" src="img/volumeloud.png"/>
+
+    <resource name="media_tab_r" src="img/media_tab_r.png"/>
+    <resource name="media_tab_m" src="img/media_tab_m.png"/>
+    <resource name="media_tab_l" src="img/media_tab_l.png"/>
+    <resource name="media_readout" src="img/media_timereadout.png"/>
+    <resource name="media_ISbuttons" src="img/media_is_buttons.png"/>
+    <resource name="media_TABbuttons" src="img/media_tab_buttons.png"/>
+
+    <resource name="media_popup" src="img/media_popup.png"/>
+    <resource name="media_close" src="img/media_close.png"/>
+    <resource name="media_play" src="img/media_play.png"/>
+
+</library>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2004 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->

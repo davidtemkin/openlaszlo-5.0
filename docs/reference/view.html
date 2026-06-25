@@ -1,0 +1,298 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;view&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>view<span class="ang">&gt;</span></h1><p class="short">The most basic viewable element.</p><p class="meta">Extends <a href="node.html"><code>LzNode</code></a></p>
+        <p>
+          The 
+          <code>view</code>
+           is the most basic viewable element in an
+ OpenLaszlo application. Anything that is displayed on the canvas is a view
+ or extends the view class. A view is a rectangle, which can be visible or invisible, and which can contain other views or display "resources" such as images,
+ .swf files, or other supported media. One view controls one
+ displayable resource. The view system is strictly hierarchical; that is, each 
+          <code>view</code>
+           has
+  a single parent but can have multiple children.
+ 
+ 
+        </p>
+         
+        <p>
+ The following code shows one view nested inside another:</p>
+           
+ 
+        <pre class="example">
+ &lt;canvas height="50"&gt;
+   &lt;view width="50" height="50" bgcolor="red"&gt;
+     &lt;view width="30" height="30" bgcolor="blue"/&gt;
+   &lt;/view&gt; 
+ &lt;/canvas&gt;</pre>
+         
+ 
+        <p>
+          <code>view</code>
+           extends 
+          <code>&lt;node&gt;</code>
+          ,
+ which is the fundamental abstract class of LZX.
+        </p>
+         
+ 
+        <p>
+          For an introduction to views see the 
+          <a href="../developers/developers.tutorials.html">OpenLaszlo tutorials</a>
+          , particularly 
+          <a href="../developers/tutorials/laszlo_basics.html">OpenLaszlo Basics</a>
+           and 
+          <a href="../developers/tutorials/views-tutorial.html">Introduction to Views</a>
+          . For a more
+ rigorous explanation of views see the 
+          <a >Application Developer's Guide</a>
+          , particularly the 
+          <a href="../developers/views.html">Views</a>
+           chapter.
+        </p>
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">aaactive</td><td class="ty">boolean</td><td class="ty"/><td>Activate/inactivate children for accessibility</td></tr><tr><td class="nm">aadescription</td><td class="ty">string</td><td class="ty"/><td>Set accessibility description</td></tr><tr><td class="nm">aaname</td><td class="ty">string</td><td class="ty"/><td>Set accessibility name</td></tr><tr><td class="nm">aasilent</td><td class="ty">boolean</td><td class="ty"/><td>Set accessibility silencing/unsilencing</td></tr><tr><td class="nm">aatabindex</td><td class="ty">number</td><td class="ty"/><td>Set accessibility tab order</td></tr><tr><td class="nm">align</td><td class="ty">"left" | "center" | "right" | constraint</td><td class="ty">"left"</td><td/></tr><tr><td class="nm">backgroundrepeat</td><td class="ty">"repeat" | "repeat-x" | "repeat-y" | "norepeat"</td><td class="ty">"norepeat"</td><td>
+                Setting 
+                <code>backgroundrepeat</code>
+                 causes a view to repeat its resource 
+ to fit the view's width and/or height.  Can be 'repeat', 'repeat-x',
+ 'repeat-y' or 'norepeat' per the CSS1 background-repeat style.
+              </td></tr><tr><td class="nm">bgcolor</td><td class="ty">color</td><td class="ty">null</td><td>
+                The background color of the view.  Setting 
+                <code>bgcolor</code>
+                 to
+ 
+                <code>null</code>
+                 will make the view transparent.
+
+ May be set to any valid CSS color specification.  When read, will
+ be read as the equivalent numeric value.  To retrieve a CSS color
+ specification, use 
+                <code>this.presentAttribute('bgcolor',
+ 'color')</code>
+                .  Default is 
+                <code>null</code>
+                 (transparent).
+              </td></tr><tr><td class="nm">cachebitmap</td><td class="ty">boolean</td><td class="ty">false</td><td>A value of true means that this view's bitmap will be cached, if available.</td></tr><tr><td class="nm">clickable</td><td class="ty">boolean</td><td class="ty">false</td><td>If true, this view intercepts click events; otherwise they are passed
+ to its container.  This defaults to true if the view defines a mouse
+ event handler or a cursor.</td></tr><tr><td class="nm">clickregion</td><td class="ty">string</td><td class="ty"/><td>Setting to a vector-based resource changes the clickable hotspot for the mouse.
+ Check capabilities.clickregion before using to avoid debugger warnings.</td></tr><tr><td class="nm">clip</td><td class="ty">boolean</td><td class="ty">false</td><td>Clip the view's contents to its size.</td></tr><tr><td class="nm">colortransform</td><td class="ty">expression</td><td class="ty"/><td>
+                color transforms everything contained in the view (except the
+ background) by the transformation dictionary given in 
+                <code>&lt;param&gt;o&lt;/param&gt;</code>
+                .  The dictionary has
+ the following possible keys:
+ 
+ o.redMultiplier: multiplier for red component (0 to 1) defaults to 1
+ o.redOffset: offset for red component (-255 to 255) defaults to 0
+ o.greenMultiplier: multiplier for green component (0 to 1) defaults to 1
+ o.greenOffset: offset for green component (-255 to 255) defaults to 0
+ o.blueMultiplier: multiplier for blue component (0 to 1) defaults to 1
+ o.blueOffset: offset for blue component (-255 to 255) defaults to 0
+ o.alphaMultiplier: multiplier for alpha component (0 to 1) defaults to 1
+ o.alphaOffset: offset for alpha component (-255 to 255) defaults to 0
+              </td></tr><tr><td class="nm">context</td><td class="ty">expression</td><td class="ty"/><td>Contains a reference to the raw drawing context.  The oncontext event is sent when the context is ready to use, which can take some time in IE DHTML.</td></tr><tr><td class="nm">cornerradius</td><td class="ty">string</td><td class="ty">0</td><td>The corner radius for the background</td></tr><tr><td class="nm">cursor</td><td class="ty">token</td><td class="ty"/><td>The cursor to display when the mouse is over this view. Any
+ resource can be used as a cursor. This attribute can be set for
+ any view with clickable=true, or any view whose class defaults
+ clickable to true.</td></tr><tr><td class="nm">fgcolor</td><td class="ty">color</td><td class="ty">0</td><td>
+                The foreground color of any 
+                <code>&lt;text&gt;</code>
+                 or 
+                <code>&lt;inputtext&gt;</code>
+                 elements that
+ appear inside this view.  To apply a color transform, see 
+                <code>tintcolor</code>
+                .
+
+ May be set to any valid CSS color specification.  When read, will
+ be read as the equivalent numeric value.  To retrieve a CSS color
+ specification, use 
+                <code>this.presentAttribute('fgcolor',
+ 'color')</code>
+                .  Default is 
+                <code>0</code>
+                 (black).
+              </td></tr><tr><td class="nm">focusable</td><td class="ty">boolean</td><td class="ty">false</td><td>If true, this view will receive focus events.
+ See focus manager (lz.Focus) for more details.</td></tr><tr><td class="nm">focustrap</td><td class="ty">boolean</td><td class="ty"/><td>If true, this view "traps" the focus, for example in a window or dialog.
+ See focus manager (lz.Focus) for more details.</td></tr><tr><td class="nm">font</td><td class="ty">string</td><td class="ty"/><td>
+                The font to use for any 
+                <code>&lt;text&gt;</code>
+                 or 
+                <code>&lt;inputtext&gt;</code>
+                 elements that
+ appear inside this view. Like all the font properties
+ (
+                <code>fontstyle</code>
+                 and 
+                <code>fontsize</code>
+                 too) these
+ properties cascade down the view hierarchy until a new value is
+ specified.
+              </td></tr><tr><td class="nm">fontsize</td><td class="ty">size</td><td class="ty"/><td>Pixel size to use to render text which appears inside this
+ view. The default is 8.</td></tr><tr><td class="nm">fontstyle</td><td class="ty">string</td><td class="ty"/><td>The style to use to render text fields that appear inside of
+ this view. One of "plain", "bold" , "italic" or "bolditalic".</td></tr><tr><td class="nm">frame</td><td class="ty">numberExpression</td><td class="ty">"1"</td><td>
+                If this view has a multi-frame resource, this allows setting which
+ resource frame is displayed.  Defaults to the first frame (1).
+ See also the 
+                <code>resource</code>
+                 attribute.  Setting this attribute will change the frame that is
+ being displayed by the resource associated with this view. The
+ first frame of the resource is frame 1.  Setting a view's
+ 'donttrackplay' option to true will allow the view's resource to
+ play without updating the value of the view's frame property. This
+ can save CPU usage in cases where the application doesn't need to
+ know what frame the resource is showing while it is playing.
+              </td></tr><tr><td class="nm">height</td><td class="ty">sizeExpression</td><td class="ty"/><td>
+                The height of the view.  Can be set to either a number, or
+ 
+                <code>null</code>
+                , to indicate that the view should be sized to
+ hold its content.  When read, reflects the actual size of the view.
+              </td></tr><tr><td class="nm">layout</td><td class="ty">css</td><td class="ty"/><td>
+                A CSS declaration of 
+                <code>property:</code>
+                 
+                <code>value</code>
+                 pairs of layout attributes, which
+ are used to create a layout that is attached to this view. If there
+ is a 
+                <code>class</code>
+                 property, it names the class of the
+ layout to be created, otherwise 
+                <code>simplelayout</code>
+                 is
+ used.
+
+ Examples:
+ 
+                <code>layout="axis: x"</code>
+                , 
+                <code>layout="class: constantlayout"</code>
+                ,
+ 
+                <code>layout="axis: y"</code>
+                , 
+                <code>layout="axis: x; spacing: 5"</code>
+                .
+              </td></tr><tr><td class="nm">opacity</td><td class="ty">Number</td><td class="ty">"1.0"</td><td>
+                The opacity of the view's contents. 
+                <code>1.0</code>
+                 is opaque; 
+                <code>0.0</code>
+                 is
+ totally transparent (invisible).
+              </td></tr><tr><td class="nm">pixellock</td><td class="ty">booleanLiteral</td><td class="ty"/><td>The view system supports sub-pixel positioning to enable smooth
+ animation. This may be turned off to make the view snap to a
+ pixel boundary by setting pixellock to true.</td></tr><tr><td class="nm">playing</td><td class="ty">boolean</td><td class="ty">false</td><td>If true, this view is currently playing.</td></tr><tr><td class="nm">proxyurl</td><td class="ty">expression</td><td class="ty">function</td><td>
+                The url of the proxy server, if the app is running in proxied mode.
+
+ proxyurl can be null, a URL string, or a function.
+
+ 
+                <ul>
+                   
+                  <li> If the value is a string, treat it as a URL to the proxy server. </li>
+                   
+                  <li> If the value is  a function, it should return the URL of the proxy server. </li>
+                   
+                </ul>
+                 The default proxy policy references the proxyurl of the canvas.
+              </td></tr><tr><td class="nm">resource</td><td class="ty">string</td><td class="ty"/><td>
+                A resource that is presented in the background of this view.  The
+ value can be either the name of a resource defined with the
+ 
+                
+                 tag, a URL, or a pathname.  If the value is a URL,
+ the resource is requested when the view is displayed.  If it's a
+ pathname, the file named by the pathname is compiled into the
+ application, and attached to this view.
+              </td></tr><tr><td class="nm">resourceheight</td><td class="ty">number</td><td class="ty"/><td>The height of the resource that this view attached</td></tr><tr><td class="nm">resourcewidth</td><td class="ty">number</td><td class="ty"/><td>The width of the resource that this view attached</td></tr><tr><td class="nm">rotation</td><td class="ty">numberExpression</td><td class="ty">"0"</td><td>The rotation value for the view (in degrees).
+ Value may be less than zero or greater than 360.</td></tr><tr><td class="nm">shadowangle</td><td class="ty">number</td><td class="ty">0</td><td>The angle for the drop shadow, in degrees</td></tr><tr><td class="nm">shadowblurradius</td><td class="ty">number</td><td class="ty">4</td><td>The blur radius for the drop shadow, in pixels</td></tr><tr><td class="nm">shadowcolor</td><td class="ty">color</td><td class="ty">0</td><td>The color for the drop shadow</td></tr><tr><td class="nm">shadowdistance</td><td class="ty">number</td><td class="ty">10</td><td>The distance for the drop shadow, in pixels</td></tr><tr><td class="nm">showhandcursor</td><td class="ty">boolean</td><td class="ty"/><td>Show or hide the hand cursor for this view, if clickable</td></tr><tr><td class="nm">source</td><td class="ty">string</td><td class="ty"/><td>The URL from which to load the resource for this
+ view.  If this attribute is set, the media for the view is loaded
+ at runtime.</td></tr><tr><td class="nm">stretches</td><td class="ty">"width" | "height" | "both" | "none"</td><td class="ty">"none"</td><td>
+                Setting 
+                <code>stretches</code>
+                 causes a view to change its
+ coordinate space so that everything it contains (resources and
+ other views) fit exactly into the view's width and/or height. The
+ default for this property is "none". This is used to resize a
+ view's contents by setting its width and/or height.
+              </td></tr><tr><td class="nm">tintcolor</td><td class="ty">string</td><td class="ty"/><td>Sets the color offset, based on a hexadecimal color string, e.g. '#ff00ff'.  See setColorTransform() for details.</td></tr><tr><td class="nm">usegetbounds</td><td class="ty">boolean</td><td class="ty">false</td><td>True if this view requires a call to getBounds() for accurate width and height measurement. This may be necessary when an offset or rotation are applied.</td></tr><tr><td class="nm">valign</td><td class="ty">"top" | "middle" | "bottom" | constraint</td><td class="ty">"top"</td><td>Creates a constraint on the view's y position which is a function
+ of its height and its parent's height. The default for this is
+ "top".</td></tr><tr><td class="nm">visibility</td><td class="ty">string</td><td class="ty">"collapse"</td><td>A value of "visible" means that this view is shown. A
+ value of "hidden" means that this view is hidden. Setting this attribute to "collapse"
+ means that the runtime will hide this view when: its opacity is zero, it has a
+ datapath that does not match a node, or it is loading its media. In this
+ case, the the value of the 'visible' attribute of the view will reflect the view's
+ current visible state.</td></tr><tr><td class="nm">visible</td><td class="ty">boolean</td><td class="ty">"true"</td><td>A value of true means that this view is shown. A
+ value of false means that this view is hidden.
+ Note that an otherwise clickable view that is not visible will have no click
+ region and will not be clickable.</td></tr><tr><td class="nm">width</td><td class="ty">sizeExpression</td><td class="ty"/><td>
+                The width of the view.  Can be set to either a number, or
+ 
+                <code>null</code>
+                , to indicate that the view should be sized to
+ hold its content.  When read, reflects the actual size of the view.
+              </td></tr><tr><td class="nm">x</td><td class="ty">numberExpression</td><td class="ty">"0"</td><td>The horizontal offset of this view's upper left corner from the
+ upper left corner of its container.</td></tr><tr><td class="nm">xoffset</td><td class="ty">numberExpression</td><td class="ty">"0"</td><td>Specifies a translation point for drawing of this view. If the xoffset
+ is set, then rotation and x position will be calculated by first adding
+ the xoffset.</td></tr><tr><td class="nm">xscale</td><td class="ty">numberExpression</td><td class="ty">"1"</td><td>Specifies this horizontal scale for this and all child views.</td></tr><tr><td class="nm">y</td><td class="ty">numberExpression</td><td class="ty">"0"</td><td>The vertical offset of this view's upper left corner from the
+ upper left corner of its container</td></tr><tr><td class="nm">yoffset</td><td class="ty">numberExpression</td><td class="ty">"0"</td><td>Specifies a translation point for drawing of this view. If the yoffset
+ is set, then rotation and y position will be calculated by first adding
+ the yoffset.</td></tr><tr><td class="nm">yscale</td><td class="ty">numberExpression</td><td class="ty">"1"</td><td>Specifies this vertical scale for this and all child views.</td></tr></table><h3>Events</h3><ul class="events"><li><code>onaddsubview</code> — Event called when this view adds a subview</li><li><code>onbackgroundrepeat</code> — 
+                event for changes to view's 
+                <code>backgroundrepeat</code>
+                 property
+              </li><li><code>onblur</code> — The onblur event is sent when an element loses focus either
+ by the pointing device or by tabbing navigation.</li><li><code>onclick</code> — The onclick event is sent when the pointing device button is
+ clicked over an element.</li><li><code>onclickable</code> — 
+                Event for changes to view's 
+                <code>clickable</code>
+                 property
+              </li><li><code>onclip</code> — The onclip event is sent when the clip attribute of 
+ a view is changed</li><li><code>oncolortransform</code> — Sent when colortransform is changed</li><li><code>oncontext</code> — Sent when the drawing context is ready to use, which can take some time in IE DHTML.</li><li><code>oncornerradius</code> — Sent when cornerradius changes</li><li><code>ondblclick</code> — The ondblclick event is sent when the pointing device button
+ is double clicked over an element.</li><li><code>onerror</code> — Sent when there is an error loading the view's resource.
+ The argument sent with the event is an error string.</li><li><code>onfocus</code> — The onfocus event is sent when an element receives focus
+ either by the pointing device or by tabbing navigation.</li><li><code>onfont</code> — </li><li><code>onfontsize</code> — </li><li><code>onfontstyle</code> — </li><li><code>onframe</code> — Sent onidle while view is playing its resource</li><li><code>onframesloadratio</code> — Sends a percentage (0-1) reflecting the number of frames downloaded.</li><li><code>onheight</code> — 
+                Event for changes to view's 
+                <code>height</code>
+                 property
+              </li><li><code>onkeydown</code> — The onkeydown event is sent when this view has the focus and
+ a key is pressed down.  Multiple key down events are sent for a
+ key that is held down.  If you want the script executed only
+ once, use onkeyup. This event is sent with the keycode for the key that is
+ down.</li><li><code>onkeyup</code> — The onkeyup event is sent when this view has the focus and a
+ key is released. This event is sent with the keycode for the key that 
+ went up.</li><li><code>onlastframe</code> — Sent when the view sets its frame (resource number) to the last
+ frame. This can be used to find out when a streaming media clip is
+ done playing.</li><li><code>onload</code> — Send when the view finishes loading media.</li><li><code>onloadratio</code> — Sends a percentage (0-1) reflecting the amount of a media file that's been downloaded.</li><li><code>onmousedown</code> — The onmousedown event is sent when the pointing device button is
+ pressed over an element.</li><li><code>onmousedragin</code> — The onmousedragin event is sent when the pointing device button has moved 
+ off the element and back on again while the button is down.</li><li><code>onmousedragout</code> — The onmousedragout event is sent when the pointing device is moved off 
+ the element while the button is down.
+ down.</li><li><code>onmouseout</code> — The onmouseout event is sent when the pointing device is moved
+ so that is is no longer over an element.</li><li><code>onmouseover</code> — The onmouseover event is sent when the pointing device is
+ moved onto an element.</li><li><code>onmousetrackout</code> — Sent when the mouse leaves the visible area of a view
+ that previously sent an 'ontrackover' event.</li><li><code>onmousetrackover</code> — Sent when the mouse is over a view that is registered to
+ an active track group.</li><li><code>onmousetrackup</code> — Sent when the mouse button is released over a view that
+ is registered to an active track group.</li><li><code>onmouseup</code> — The onmouseup event is sent when the pointing device button is
+ released over an element.</li><li><code>onmouseupoutside</code> — The onmouseup event is sent when the pointing device button is released 
+ outside the element it went down on.</li><li><code>onopacity</code> — Sent when a view changes its opacity</li><li><code>onplay</code> — Sent when a view begins playing its resource</li><li><code>onremovesubview</code> — Event called when this view removes a subview</li><li><code>onresource</code> — </li><li><code>onresourceheight</code> — </li><li><code>onresourcewidth</code> — </li><li><code>onrotation</code> — </li><li><code>onshadowangle</code> — Sent when shadowangle changes</li><li><code>onshadowblurradius</code> — Sent when shadowblurradius changes</li><li><code>onshadowcolor</code> — Sent when shadowcolor changes</li><li><code>onshadowdistance</code> — Sent when shadowdistance changes</li><li><code>onstop</code> — Sent when a view's resource that is capable of playing is
+ stopped. This is only called if stop is called directly; when a resource
+ hits its last frame, the lz.view event onlastframe is called.</li><li><code>ontimeout</code> — Sent when the request to load media for the view times
+ out</li><li><code>ontintcolor</code> — Sent when tintcolor is changed</li><li><code>ontotalframes</code> — </li><li><code>onunstretchedheight</code> — </li><li><code>onunstretchedwidth</code> — </li><li><code>onvisibility</code> — </li><li><code>onvisible</code> — Sent when the view changes visibility (true/false)</li><li><code>onwidth</code> — 
+                event for changes to view's 
+                <code>width</code>
+                 property
+              </li><li><code>onx</code> — 
+                event for changes to view's 
+                <code>x</code>
+                 property
+              </li><li><code>onxoffset</code> — </li><li><code>onxscale</code> — </li><li><code>ony</code> — 
+                event for changes to view's 
+                <code>y</code>
+                 property
+              </li><li><code>onyoffset</code> — </li><li><code>onyscale</code> — </li></ul><h3>Methods</h3><ul class="methods"><li><code>getContextMenu()</code></li><li><code>getNextSelection()</code></li><li><code>getPrevSelection()</code></li><li><code>getProxyURL()</code></li><li><code>init()</code></li></ul>
+</main><script src="_nav.js"></script></body></html>

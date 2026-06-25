@@ -1,0 +1,164 @@
+<!--=======================================================================-->
+<!-- welcome.lzx                                                           -->
+<!--                                                                       -->
+<!-- Copyright 2002-2008 Laszlo Systems, Inc.  All Rights Reserved.        -->
+<!-- Unauthorized use, duplication or distribution is strictly prohibited. -->
+<!-- This software is the proprietary information of Laszlo Systems, Inc.  -->
+<!-- Use is subject to license terms.                                      -->
+<!--                                                                       -->
+<!--=======================================================================-->
+
+<canvas width="600" height="640"  bgcolor="#EAEAEA" >
+    <switch>
+        <when runtime="dhtml">
+            <include href="rclock/clock.lzx"/>
+        </when>
+        <otherwise>
+            <include href="clock.lzx"/>
+        </otherwise>
+    </switch>
+    <include href="cityspot.lzx"/>
+
+    <!-- DATA -->
+    <dataset src="citydata.xml" name="cities"/>
+
+    <!-- FONTS -->
+    <font src="bitstream-vera-1.10/verabd.ttf" name="headerfont"/>
+    <font name="Helmet">
+        <face src="helmetr.ttf" />
+        <face src="helmetb.ttf"  style="bold" />
+    </font>
+
+    <!-- RESOURCES -->
+    <resource name="copyright" src="images/copyright_text.png" />
+    
+    <simplelayout/>
+
+    <view >
+        <view initstage="early" resource="images/loadingclock_nofade.png">
+            <handler name="oninit" reference="canvas">
+                this.destroy();
+            </handler>
+        </view>
+
+        <!-- SECONDTIMER: an object that sends out an 'onsecond' event -->
+        <node id="secondtimer" >
+            <!-- trigger the initial animation on the oninit of the canvas.
+                 this helps in the krank process so that the initial time that the app
+                 get's is not stored in internal variables causing two animations to occur. -->
+            <handler name="oninit" reference="canvas">
+               this.del = new LzDelegate ( this, "tick" );
+               lz.Timer.addTimer( this.del, 1000 );
+             </handler>
+            <method name="tick" >
+               this.onsecond.sendEvent();
+               lz.Timer.addTimer( this.del, 1000 );
+            </method>
+        </node>
+
+
+        <!-- 'Laszlo (R) Presentation Server' -->
+        <view x="15" y="20" layout="axis:y; spacing:1">
+            <view>
+                <view resource="images/openlaszlo_blue_logo.png" /> 
+            </view>
+            <view id="headerline" width="560" height="1" bgcolor="0x394660"/>
+        </view>
+        
+        <!-- 'Designed for developers. Developed for Design' -->
+        <text x="15" y="48" fontstyle="bold" fgcolor="0x394660" >The premier open source platform for rich Internet applications</text>
+        <view x="15" y="64" layout="spacing:10">
+
+            <!-- descriptive text -->
+            <text id="olintro" fgcolor="0x394660" multiline="true"
+                width="560">
+                Welcome to OpenLaszlo, the open source XML-native
+                platform for building rich Internet applications.  OpenLaszlo technology
+                allows you to create web applications with a breakthrough user experience.
+                We built this Explorer to quickly introduce you to the power and flexibility of the OpenLaszlo Platform.
+                <br/><br/>Explore and enjoy!
+            </text>
+
+            <view id="clockintro" layout="axis:y" >
+                <text fgcolor="0x394660" fontstyle="bold">OpenLaszlo World Clock</text>
+                <text fgcolor="0x394660" multiline="true" width="178">
+                This sample OpenLaszlo application displays time around the world.
+                Check out the Demos and Sample Applications sections for more OpenLaszlo examples,
+                read the Developers Guide, and start creating your own OpenLaszlo applications.
+                </text>
+            </view>
+        </view>
+
+        <!-- MAP -->
+        <view id="map" x="15" y="${clockintro.parent.y + clockintro.parent.height + 10}" >
+            <view resource="images/lps_map.png" />
+
+            <!-- This instance is duplicated for each record contained in citydata.xml. -->
+            <cityspot id="citySpotSF"     datapath="cities:/cities/city[1]" />
+            <cityspot id="citySpotBoston" datapath="cities:/cities/city[2]" />
+            <cityspot id="citySpotLondon" datapath="cities:/cities/city[3]" />
+            <cityspot datapath="cities:/cities/city" />
+        </view>
+
+        <!-- CLOCKS -->
+        <view name="clocks" x="199" y="${clockintro.y + clockintro.parent.y + 14}" layout="axis:x; spacing: 5">
+
+            <!-- synced to SF permanently -->
+            <view id="sfoclock" layout="axis:y; spacing:4">
+                <view layout="axis:y"  width="100%">
+                    <text fgcolor="0x394660" fontstyle="bold" resize="true" align="center">Laszlo Systems</text>
+                    <text fgcolor="0x394660" resize="true" align="center">San Francisco</text>
+                </view>
+                <clock>
+                    <handler name="oninit" reference="canvas" >
+                        citySpotSF.syncclock( this )
+                    </handler>
+                </clock>
+            </view>
+
+            <!-- synced to BOSTON permanently -->
+            <view id="bosclock" layout="axis:y; spacing:4">
+                <view layout="axis:y" width="100%">
+                    <text fgcolor="0x394660" fontstyle="bold" resize="true" align="center">Laszlo Systems</text>
+                    <text fgcolor="0x394660" resize="true" align="center">Boston</text>
+                </view>
+                <clock >
+                    <handler name="oninit" reference="canvas" >
+                        citySpotBoston.syncclock( this )
+                    </handler>
+                </clock>
+            </view>
+
+            <!-- synced to user's choice -->
+            <view id="userclock" layout="axis:y; spacing:4" >
+                <!-- rclock can't be resized, so adjust position appropriately -->
+                <switch>
+                    <when runtime="dhtml">
+                        <attribute name="y" value="15"/>
+                    </when>
+                </switch>
+                <view layout="axis:y"  width="100%">
+                  <text fgcolor="0x394660" fontstyle="bold"  id="myclocktext"
+                        resize="true" align="center">London</text>
+                  <text fgcolor="0x394660" fontstyle="bold" resize="true" align="center"> </text>
+                </view>
+                <clock id="myclock"  >
+                    <!-- since we can't resize the clock in dhtml, make it the same size in all runtimes -->
+                    <!-- attribute name="width" value="${this.unstretchedwidth*.6}" / -->
+                    <handler name="oninit" reference="canvas" >
+                        citySpotLondon.activateclock( this )
+                    </handler>
+                </clock>
+            </view>
+        </view>
+
+        <!-- copyright art -->
+        <view resource="copyright" x="15" y="${map.y+310}" />
+
+    </view>
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2006 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->

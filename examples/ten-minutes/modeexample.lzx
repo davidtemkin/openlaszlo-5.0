@@ -1,0 +1,314 @@
+<!--=======================================================================-->
+<!--                                                                       -->
+<!-- modeexample.lzx                                                       -->
+<!--                                                                       -->
+<!-- Laszlo Application Language (LZX) Example                             -->
+<!--                                                                       -->
+<!--=======================================================================-->
+
+<canvas  bgcolor="#EAEAEA">
+    <font src="lztahoe8.ttf" name="tahoe" />
+    <debug  y="100"/>
+
+    <simplelayout axis="y" spacing="20" inset="30"/>
+    <constantlayout axis="x" value="30"/>
+
+    <view height="250">
+        <simplelayout axis="x" spacing="20"/>
+        <view height="50" width="150">
+            <button onclick="parent.simple_mode.open()">simple mode example</button>
+            <view y="-10" name="simple_mode" id="f" visible="false"
+                    clickable="true"
+                    width="180" height="${content.height+10}">
+                <view name="shadow" x="10" y="10" bgcolor="silver"
+                    width="${parent.width}" height="${parent.height}"/>
+                <view name="panel" bgcolor="0xffffaa"
+                    width="${parent.width}" height="${parent.height}"/>
+                <view x="5" name="content" width="${parent.width-10}">
+                    <simplelayout axis="y" spacing="10" inset="5"/>
+                    <text align="center">Simple Mode Example</text>
+                    <text x="5" width="${parent.width-5}" multiline="true">
+                        This is a simple example of a "fragile" mode.
+                        Clicking anywhere else will release the mode.
+                    </text>
+                    <text x="5" width="${parent.width-5}" multiline="true">
+                        You can click on a button and the event
+                        will be sent to that button.  This is done by
+                        returning true from passModeEvent.
+                    </text>
+                    <text onclick="parent.parent.close()" align="right"
+                        bgcolor="0xaaffaa">close</text>
+                </view>
+                <method name="passModeEvent" args="event_name, view">
+                    //Debug.write("passModeEvent", event_name, view);
+                    if (event_name == "onmousedown") {
+                        this.close();
+                    }
+                    return true;
+                </method>
+                <method name="open">
+                    lz.ModeManager.makeModal( this );
+                    this.bringToFront();
+                    parent.bringToFront();
+                    this.setAttribute('visible', true);
+                </method>
+                <method name="close">
+                    lz.ModeManager.release( this );
+                    setAttribute('visible', false);
+                </method>
+
+
+            </view>
+        </view>
+
+
+        <view name="modal_dialog_example" height="50">
+            <button onclick="canvas.dialog_example1.open()">show modal dialog</button>
+        </view>
+
+        <view>
+            <simplelayout spacing="2"/>
+            <text>complex mode example:</text>
+            <view name="complex_mode_example"  clip="true">
+                <attribute name="isopen" value="false"/>
+                <view name="tip" bgcolor="0xffffaa" height="50" width="210" visible="false">
+                    <text x="6" multiline="true" y="20">this could be some helpful text<br/>to tell you how to
+                          fill in this field</text>
+                    <text y="30" align="right" bgcolor="0xaaffaa" name="more"
+                        clickable="true" onclick="parent.animate('height',100, 500); this.setAttribute('visible', false)"
+                        text="moreinfo"/>
+                    <text x="6" y="52" multiline="true">more information about how to fill<br/>
+                        out this field could go into this expanded area</text>
+                    <handler name="onvisible" args="isvisible">
+                        if (isvisible) {
+                            more.setAttribute('visible', true);
+                            this.setAttribute('height', 50);
+                        }
+                    </handler>
+                </view>
+
+                <view name="framer" x="4" y="4" width="200" bgcolor="black" height="${input.height+2}">
+                    <inputtext x="1" y="1" bgcolor="white" width="198" name="input">type something here</inputtext>
+                </view>
+                <handler name="onfocus" reference="framer.input">
+                    //Debug.write('onfocus', this);
+                    this.open();
+                </handler>
+                <method name="open">
+                    if (!this.isopen) {
+                        this.isopen=true;
+                        tip.setAttribute('visible', true);
+                        lz.ModeManager.makeModal( this );
+                        if (typeof(this.tabDel) == "undefined") {
+                            this.tabDel = new LzDelegate( this , "releaseMode" );
+                            this.clickDel = new LzDelegate( this , "checkForClick" );
+                        }
+                        this.tabDel.register(lz.Keys, "onkeydown");
+                        this.clickDel.register(lz.GlobalMouse, "onmouseup");
+                    }
+                </method>
+                <method name="close">
+                    if (this.isopen) {
+                        this.isopen = false;
+                        tip.setAttribute('visible', false);
+                        lz.ModeManager.release( this );
+                        this.tabDel.unregisterAll();
+                    }
+                </method>
+                <handler name="onblur"  reference="framer.input">
+                    this.clickDel.unregisterAll();
+                </handler>
+                <method name="checkForClick" args="v"> <![CDATA[
+                    var xpos = this.getMouse('x');
+                    var ypos = this.getMouse('y');
+                    //Debug.write('checkForClick', xpos, ypos);
+
+                    if (xpos > 0 && xpos < this.width && ypos > 0 && ypos < this.height) {
+                          this.open();
+                    }
+                    ]]>
+                </method>
+                <method name="passModeEvent" args="event_name, view" >
+                    //Debug.write("passModeEvent", event_name, view);
+                    if (event_name == "onmousedown") {
+                        this.close();
+                    }
+                    return true;
+                </method>
+                <!-- if argument kc is provided,
+                            mode is released only if it equals tab (9)
+                    if no argument, mode is released unconditionally
+                -->
+                <method name="releaseMode" args="kc">
+                    //Debug.write('releaseMode', kc);
+                    if (kc == 9) {      // tab
+                        this.close();
+                    }
+                </method>
+            </view>
+        </view>
+    </view>
+
+    <view>
+        <view>
+            <simplelayout spacing="10"/>
+            <text>Use these views to test key and mouse events</text>
+            <view>
+                <simplelayout spacing="10" axis="x"/>
+                <inputtext id="a" bgcolor="white">input text (A)</inputtext>
+                <inputtext id="b" bgcolor="white">input text (B)</inputtext>
+                <text id="c" selectable="true">selectable text (C)</text>
+                <view bgcolor="white">
+                    <attribute name="focusable" value="true"/>
+                    <simplelayout/>
+                    <text>focusable view</text>
+                    <text>yellow=has focus</text>
+                    <handler name="onfocus">
+                        setBGColor(0xffff00);
+                    </handler>
+                    <handler name="onblur">
+                        setBGColor(0xffffff);
+                    </handler>
+                </view>
+            </view>
+            <view name="event_tester"
+                align="center"
+                clickable="true" bgcolor="#CCCCFF"
+                width="120" height="40"
+                pixellock="true"
+                onmouseover="report( 'onmouseover' ); "
+                onmouseout="report( 'Mouse Event Tester' ); "
+                onmousedown="report( 'onmousedown' ); "
+                onmouseup="report( 'onmouseup' ); " >
+
+                <text y="15" width="100" name="mytext">Mouse Event Tester</text>
+                <method name="report" args="t" >
+                    this.mytext.setAttribute('text', t );
+                </method>
+            </view>
+            <view name="global_mouse_tester"
+                    align="center"
+                    height="120" width="250" pixellock="true" bgcolor="silver">
+                <simplelayout spacing="3" inset="5"/>
+                <text align="center">-- global mouse event tester --</text>
+                <text width="240" bgcolor="white"
+                        oninit="createDelegates();" >
+                    <method name="createDelegates" >
+                        new LzDelegate( this , "globalMouseUp" , lz.GlobalMouse ,
+                                        "onmouseup" );
+                        new LzDelegate( this , "globalMouseDown" , lz.GlobalMouse,
+                                        "onmousedown" );
+                        new LzDelegate( this , "globalMouseRollover" , lz.GlobalMouse ,
+                                        "onmouseover" );
+                        this.cleard = new LzDelegate( this , "cleartext" )
+                    </method>
+
+                    <method name="globalMouseUp" args="vc">
+                        this.setAttribute('text', "mouseup from " + vc );
+                        lz.Timer.resetTimer( this.cleard , 3000 );
+                    </method>
+                    <method name="globalMouseDown" args="vc">
+                        this.setAttribute('text', "mousedown from " + vc );
+                    </method>
+
+                    <method name="globalMouseRollover" args="vc">
+                        this.setAttribute('text', "mouse over " + vc );
+                        lz.Timer.resetTimer( this.cleard , 3000 );
+                    </method>
+
+                    <method name="cleartext" >
+                        this.setAttribute('text', "" );
+                    </method>
+
+
+                </text>
+                <text width="${parent.width-5}" multiline="true">
+                    note: the lz.GlobalMouse service continues to send events
+                    even when someone has the mode, but only the view which
+                    has the mode receives view events</text>
+            </view>
+        </view>
+
+    </view>
+
+    <class name="simpledialog"
+        focustrap="true"
+        defaultplacement="content" options="ignorelayout"
+        visible="false"
+        width="${framer.content.width+20}" height="${framer.content.height+30}">
+        <attribute name="title" value="a dialog" type="string"/>
+        <attribute name="bgcolor" value="black"/>  <!-- border color -->
+        <view x="1" y="1" name="framer" bgcolor="white"
+            width="${parent.width-2}" height="${parent.height-2}">
+            <simplelayout spacing="2"/>
+            <text name="mytitle" text="${classroot.title}" align="center" resize="true"/>
+            <view x="10" width="${parent.width-20}" height="1" bgcolor="black"/>
+            <view x="10" name="content">
+                <!-- whatever is declared inside the simpledialogexample tag
+                     will be placed here -->
+            </view>
+        </view>
+        <method name="open">
+            lz.ModeManager.makeModal( this );
+            this.setAttribute('visible',  true );
+            this.bringToFront();
+            lz.Focus.setFocus(this);
+        </method>
+
+        <method name="close">
+            this.setAttribute('visible',  false );
+            lz.Focus.setFocus(null);
+            lz.ModeManager.release( this );
+        </method>
+
+        <method name="passModeEvent" args="event_name, view">
+            //Debug.write("passModeEvent", event_name, view);
+            return false;
+        </method>
+   </class>
+
+    <simpledialog title="modal dialog example" name="dialog_example1"
+        align="center" y="60" pixellock="true">
+        <view width="400">
+            <simplelayout spacing="10"/>
+            <text width="380" multiline="true">
+                Mouse events only go to the dialog view and its
+                children, because it returns false from passModeEvents.
+                The dialog also sets focustrap="true" so that focus is kept
+                within this view.
+            </text>
+            <text width="380" multiline="true" >
+               This simple dialog is declared on the canvas so that
+               it will float above all other views. Alternately, a class
+               can be created from script with its parent as the canvas.
+            </text>
+            <view x="50" width="250" height="50" bgcolor="silver">
+                <text x="20">test tabbing here:</text>
+                <view x="20" y="20">
+                <simplelayout axis="x" spacing="20"/>
+                <inputtext bgcolor="white">input text one</inputtext>
+                <inputtext bgcolor="white">input text two</inputtext>
+                <text selectable="true">selectable text</text>
+                </view>
+            </view>
+            <button onclick="canvas.simplemodaldialog.open()"
+                align="center">show another dialog</button>
+            <button x="320" onclick="parent.parent.close()">Close</button>
+        </view>
+    </simpledialog>
+    <simpledialog name="simplemodaldialog"
+        width="120" height="100"
+        align="center" y="100" pixellock="true" >
+        <simplelayout spacing="3"/>
+        <text width="100" multiline="true">
+            simple example to show that modes may be nested
+        </text>
+        <button x="60" onclick="parent.close()">OK</button>
+    </simpledialog>
+
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2008 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->

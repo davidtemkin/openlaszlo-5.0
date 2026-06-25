@@ -1,0 +1,140 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 12. Introduction to Classes and Object Oriented Programming</title><link rel="stylesheet" type="text/css" href="../../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="../index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="../developers.tutorials.html" title="Part II. Tutorial Introduction"><link rel="prev" href="data-tutorial.html" title="Chapter 11. Introduction to Databinding"><link rel="next" href="drawview-intro.html" title="Chapter 13. Introduction to Drawing"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 12. Introduction to Classes and Object Oriented Programming</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="data-tutorial.html">Prev</a> </td><th width="60%" align="center">Part II. Tutorial Introduction</th><td width="20%" align="right"> <a accesskey="n" href="drawview-intro.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="classes-tutorial"></a>Chapter 12. Introduction to Classes and Object Oriented Programming</h2></div></div></div><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="classes-tutorial.basics"></a>1. Introduction</h2></div></div></div><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>
+References to other chapters that deal with classes.
+</span></em></p><p>LZX is an object-oriented, prototype-based language that allows you to create custom, reusable classes to streamline and minimize code.</p><p> This tutorial shows you how to define and instantiate classes, as well as where to use them. 
+The <a class="indexterm" name="id4833"></a><code class="sgmltag-element">&lt;class&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag is used to define classes. Classes are instantiated when the tag is used.</p><div class="example"><a name="id4837"></a><p class="title"><b>Example 12.1. Simple Class Example</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="80"&gt;
+  &lt;class name="MyClass" width="80" height="25" bgcolor="#CFD9AB"&gt;
+    &lt;text align="center" valign="middle"&gt;Hello, World!&lt;/text&gt;
+  &lt;/class&gt;
+  
+  &lt;MyClass name="myFirstInstance"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>The <a class="indexterm" name="id4841"></a><code class="sgmltag-element">&lt;class&gt;</code> tag defined the class, and the <a class="indexterm" name="id4844"></a><code class="sgmltag-element">&lt;MyClass&gt;</code> tag <span class="i">instantiated</span> it. 
+Everything that was in the definition of the class is <span class="i">inherited</span> by each instance of it that is created.
+That is, the instance of MyClass inherits a width of 80, a height of 25, a background color, as well as some text. 
+The instance is named "myFirstInstance", in the same way we might name a <a class="indexterm" name="id4849"></a><code class="sgmltag-element">&lt;view&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+, or 
+a <a class="indexterm" name="id4853"></a><code class="sgmltag-element">&lt;window&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+.</p><p>In fact, when we write <a class="indexterm" name="id4858"></a><code class="sgmltag-element">&lt;window&gt;</code>, we are actually <span class="i">instantiating</span> the window class, 
+which is a pre-defined class.</p><p>In this example, there is only one element within the class (the <a class="indexterm" name="id4863"></a><code class="sgmltag-element">&lt;text&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ element). But classes can contain many objects;
+for example, views can contain many subviews. </p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1464"></a>1.1. The id attribute</h3></div></div></div><p>
+It's important to note that you should not assign an <a class="indexterm" name="id4870"></a><code class="sgmltag-attribute">id</code> attribute 
+in a class definition.  Each id should be unique; ids are global and if you were to include an id assignment in the class definition, then creating several instances of a class would several views with the same id, which would cause unpredictable behavior.</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="classes-tutorial.inheritance"></a>2. Inheritance</h2></div></div></div><p>As mentioned above, instances of <a class="indexterm" name="id4877"></a><code class="sgmltag-element">&lt;MyClass&gt;</code> are going to inherit from it. Just because we 
+didn't specify <a class="indexterm" name="id4880"></a><code class="sgmltag-attribute">x</code> and <a class="indexterm" name="id4883"></a><code class="sgmltag-attribute">y</code> coordinates in the class definition doesn't mean we can't give them to the instance:</p><p>The <a class="indexterm" name="id4887"></a><code class="sgmltag-element">&lt;class&gt;</code> tag defined the class, and the <a class="indexterm" name="id4890"></a><code class="sgmltag-element">&lt;MyClass&gt;</code> tag <span class="i">instantiated</span> it. Everything that was in the definition of the class is <span class="i">inherited</span> by the instance of it that we have created. i.e. The instance of <a class="indexterm" name="id4895"></a><code class="sgmltag-element">&lt;MyClass&gt;</code> inherits a width of 80, a height of 25, a background color, as well as some text. The instance is named "myFirstInstance", in the same way we might name a view, or a <a class="indexterm" name="id4898"></a><code class="sgmltag-element">&lt;window&gt;</code>.</p><p>The instances behave just like views. In fact, that's because we are <span class="i">extending</span> the view class. By default, the <a class="indexterm" name="id4903"></a><code class="sgmltag-element">&lt;class&gt;</code> tag extends the view class, so:</p><pre class="programlisting">&lt;class name="MyClass"&gt;</pre><p>… is the same as…</p><pre class="programlisting">&lt;class name="MyClass" <span class="em">extends="view"</span>&gt;</pre><p>It follows that you can extend any class you want:</p><div class="example"><a name="id4911"></a><p class="title"><b>Example 12.2. Extending the 'button' class</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="80"&gt;
+  &lt;class name="SpecialButton" extends="button" onclick="changeLabel()"&gt;
+    &lt;method name="changeLabel"&gt;
+      this.setAttribute('text', 'Clicked! ');
+    &lt;/method&gt;
+  &lt;/class&gt;
+  
+  &lt;SpecialButton&gt;Not clicked&lt;/SpecialButton&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>Since the <a class="indexterm" name="id4915"></a><code class="sgmltag-element">&lt;button&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ can take a text childnode that becomes its label, the <a class="indexterm" name="id4919"></a><code class="sgmltag-element">&lt;SpecialButton&gt;</code> class 
+that extends it can also take the text childnode. The method <a class="indexterm" name="id4922"></a><code class="methodname">changeLabel()</code> is also inherited by the instance.</p><p>Just as with attributes, methods can be overridden in instances:</p><div class="example"><a name="id4927"></a><p class="title"><b>Example 12.3. Overwriting methods</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="80"&gt;
+  &lt;class name="SpecialButton" extends="button" onclick="changeLabel()"&gt;
+    &lt;method name="changeLabel"&gt;
+      this.setAttribute('text', 'Clicked!');
+    &lt;/method&gt;
+  &lt;/class&gt;
+  
+  &lt;simplelayout axis="y" spacing="10"/&gt;
+  &lt;SpecialButton&gt;Not clicked&lt;/SpecialButton&gt;
+  &lt;SpecialButton&gt;
+    Click Me Now
+    &lt;method name="changeLabel"&gt;
+      this.setAttribute('text', 'Smashing!');
+    &lt;/method&gt;
+  &lt;/SpecialButton&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>Rewriting methods can be very handy when using both your own and pre-defined classes components, 
+but it's not practical for when you have a class for which every instance may need a particular argument. </p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="classes-tutorial.attributes"></a>3. Attributes</h2></div></div></div><p>We've used attributes before (e.g. width="160"), but these have been attributes that are present in the class we are extending. 
+As mentioned above, it is useful to be able to pass an instance of a class an argument when it is created:</p><div class="example"><a name="id4935"></a><p class="title"><b>Example 12.4. Passing an argument to a class instance</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="80"&gt;
+  &lt;class name="SpecialButton" extends="button" onclick="changeLabel()"&gt;
+    &lt;attribute name="changeToLabel" value="Clicked!" type="string"/&gt;
+    &lt;method name="changeLabel"&gt;
+      var newLabel = this.changeToLabel;
+      this.setAttribute('text', newLabel);
+    &lt;/method&gt;
+  &lt;/class&gt;
+  
+  &lt;simplelayout axis="y" spacing="10"/&gt;
+  &lt;SpecialButton&gt;Not clicked&lt;/SpecialButton&gt;
+  &lt;SpecialButton changeToLabel="Thank You!"&gt;Please click me!&lt;/SpecialButton&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>If we give the attribute a value, then that will be its default value, and will get assigned if we don't explicitly set it.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1465"></a>4. More Inheritance</h2></div></div></div><p>You can extend a class more than once. For example, an application might contain more than one kind of button:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>A standard button that is blue, then switches to green when we roll over it. Clicking this button writes out the name of a pet.</p></li><li class="listitem"><p>A special button, that is red, but also switches to green when we roll over it. Clicking this button writes out a day of the week.</p></li></ul></div><div class="example"><a name="id4947"></a><p class="title"><b>Example 12.5. Extending a class more than once</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;canvas width="100%" height="180"&gt;
+  &lt;resource name="standardButton"&gt;
+    &lt;frame src="resources/button_blue.gif"/&gt;
+    &lt;frame src="resources/button_green.gif"/&gt;
+  &lt;/resource&gt;
+
+  &lt;resource name="specialButton"&gt;
+    &lt;frame src="resources/button_red.gif"/&gt;
+    &lt;frame src="resources/button_green.gif"/&gt;
+  &lt;/resource&gt;
+
+  &lt;class name="MyButton" resource="standardButton" onclick="doAction()" onmouseover="doOver()"
+    onmouseout="doOut()"&gt;
+    &lt;method name="doAction"&gt; pet.addText("dog "); &lt;/method&gt;
+    &lt;method name="doOver"&gt; this.setAttribute('frame', 2); &lt;/method&gt;
+    &lt;method name="doOut"&gt; this.setAttribute('frame', 1); &lt;/method&gt;
+  &lt;/class&gt;
+
+  &lt;class name="MySpecialButton" extends="MyButton" resource="specialButton"&gt;
+    &lt;method name="doAction"&gt; weekday.addText("Monday "); &lt;/method&gt;
+  &lt;/class&gt;
+
+  &lt;view name="buttons" x="5" y="5"&gt;
+    &lt;simplelayout axis="y" spacing="10"/&gt;
+    &lt;MyButton/&gt;
+    &lt;text id="pet"/&gt;
+    &lt;MySpecialButton/&gt;
+    &lt;text id="weekday"/&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+  * Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+  * Use is subject to license terms.                                            *
+  * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>Here we only changed the <a class="indexterm" name="id4951"></a><code class="methodname">doAction()</code> method and the resource. The <a class="indexterm" name="id4955"></a><code class="methodname">doOver()</code> and <a class="indexterm" name="id4959"></a><code class="methodname">doOut()</code> methods remained the same, so there was no need to redefine them in the MySpecialButton definition.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="classes-tutorial.placing"></a>5. Placing views inside of classes</h2></div></div></div><p>Since we frequently write classes that extend view, at some stage we're going to need to place a view inside an instance of a class that we have created. For example, we may want to write a window class and put a text field inside of its title bar. Or we may want to put some content inside the middle of our window. There are two ways to do this: giving the subviews <a class="indexterm" name="id4967"></a><code class="sgmltag-attribute">placement</code> attributes, or giving the class the <a class="indexterm" name="id4970"></a><code class="sgmltag-attribute">defaultplacement</code> attribute.</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1466"></a>5.1. Placing views using the placement attribute</h3></div></div></div><p>If you had one view and you specifically wanted to place it in a particular subview of a class, you would use the <a class="indexterm" name="id4976"></a><code class="sgmltag-attribute">placement</code> attribute of that view. </p><p>An example is the title bar of a window: It's unlikely that you would need to place several things in the title bar of a window, so it's OK to have to add the <a class="indexterm" name="id4980"></a><code class="sgmltag-attribute">placement</code> attribute to the subview of the class that you want to place in the title bar.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1467"></a>5.2. Placing views by defining class with a defaultplacement attribute</h3></div></div></div><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>
+Link to other chapters where this is described
+</span></em></p><p>If you want every subview of a class to be placed in the same location, then you give the <span class="i">class definition</span> a defaultplacement attribute.</p><p>An example is the contents of a window class. If you built your own window class (see the window tutorial), you might well have an area for all window content. You might well place numerous subviews in that window, and you don't want to explicitly position <span class="i">each</span> one.</p><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>
+conclusion and link to next subjects.
+</span></em></p><p></p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="data-tutorial.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="../developers.tutorials.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="drawview-intro.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 11. Introduction to Databinding </td><td width="20%" align="center"><a accesskey="h" href="../index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 13. Introduction to Drawing</td></tr></table></div></body></html>

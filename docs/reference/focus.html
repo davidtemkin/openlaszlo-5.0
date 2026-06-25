@@ -1,0 +1,29 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>LzFocusService — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1>LzFocusService</h1><p class="short">Handles keyboard focus.</p><p class="meta">Extends <a ><code>LzEventable</code></a></p>
+        <p>
+          <code>lz.Focus</code>
+           is the single instance of the class
+ 
+          <code>lz.FocusService</code>
+          .
+        </p>
+         
+        <p>This service manages the keyboard focus.  At any time, at most one view
+ has the keyboard focus.  This is the view that receives key events
+ when a key is pressed.</p>
+         
+        <p>
+           See 
+          <a href="../developers/input-devices.html">The Software Developer's Guide</a>
+           for a discussion of keyboard focus.
+ 
+        </p>
+         
+        <p>Note that the view.getNextSelection() and view.getPrevSelection() methods can be overridden to change the tab order</p>
+      <h3>Events</h3><ul class="events"><li><code>onescapefocus</code> — Sent when the last focusable object has been reached.</li><li><code>onfocus</code> — Sent when the focus changes, with the argument being the view
+ that was just focused. If nothing is focused, this event is sent with null.</li></ul>
+</main><script src="_nav.js"></script></body></html>

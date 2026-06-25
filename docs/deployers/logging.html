@@ -1,0 +1,210 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 1. Logging</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo System Administrator's Guide"><link rel="up" href="deployers.server-integration.html" title="Part I. Managing OpenLaszlo Server Deployments"><link rel="prev" href="deployers.server-integration.html" title="Part I. Managing OpenLaszlo Server Deployments"><link rel="next" href="request-types.html" title="Chapter 2. OpenLaszlo Request Types"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 1. Logging</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="deployers.server-integration.html">Prev</a> </td><th width="60%" align="center">Part I. Managing OpenLaszlo Server Deployments</th><td width="20%" align="right"> <a accesskey="n" href="request-types.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="logging"></a>Chapter 1. Logging</h2></div></div></div><p>This chapter describes how to monitor and configure LPS logging as well
+as how to log events from your LZX application.  Some of the same
+details are covered in <a class="xref" href="deployers-guide.html" title="Chapter 3. Deploying OpenLaszlo Applications">Chapter 3, <i>Deploying OpenLaszlo Applications</i></a>.</p><p>Conventions used in this chapter:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>When file or directory path names are provided, unless otherwise
+    noted, we use the Unix convention for the separator character — the
+    forward slash ("<code class="literal">/</code>").  To translate the documentation for use on Windows
+    systems, simply replace every instance of "<code class="literal">/</code>" with "<code class="literal">\</code>".
+    </p></li><li class="listitem"><p>Environment variables are referred to via their Unix convention, e.g., <code class="literal">$<code class="varname">VARNAME</code></code>.
+    To translate the documentation for use on Windows systems, the variable
+    is <code class="literal">%<code class="varname">VARNAME</code>%</code>.
+    </p></li></ul></div><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1345"></a>1. Overview</h2></div></div></div><p>The LPS provides a highly configurable and efficient logging mechanism that you can
+use to debug and monitor server activities.  The LPS relies on the well-known
+<a class="ulink" href="http://logging.apache.org/log4j/docs/" target="_top">Log4j </a> package and
+this chapter touches on only a handful of the Log4j details you may need or want to know.
+Before we go on to discuss the LPS log in some detail, we will first briefly
+go over the logging details provided by the servlet container. 
+<a class="xref" href="../">???</a> explains what a container is and how LPS fits 
+inside it.
+</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="logging.container-log"></a>2. Servlet container logging</h2></div></div></div><p>The servlet container itself maintains logs of its activities that may be of interest
+for debugging or monitoring Laszlo applications.  These
+include:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>web application lifecycle events (and errors), </p></li><li class="listitem"><p>request/response details, </p></li><li class="listitem"><p>individual web-application logs, and,</p></li><li class="listitem"><p>other container-specific details.  </p></li></ul></div><p>
+The Jakarta Tomcat 5.0 container, by default, keeps its logs 
+in <code class="literal">$TOMCAT_HOME/logs</code>.   Depending on how tomcat was started, it may also display some of its
+logs in a console or terminal window as well.
+See the <a class="ulink" href="http://tomcat.apache.org/" target="_top">Tomcat web site</a> 
+for more information.  
+In general, see the documentation on your container for details on how to locate and configure these logs.
+</p><p class="fixme"><em><span class="remark"><span class="para-label">FIXME: </span>Update the above to the Tomcat 5.0 location.</span></em></p><p>
+Servlet containers do provide a mechanism for the LPS to write
+directly into the container logs.  In general though, the LPS does <span class="i">not</span> use this mechanism
+except at initialization time.  When the LPS starts up, it logs a short list of initialization details
+to the container's log.  In particular, it logs a message that describes where to find the 
+detailed LPS log, that contains the remainder of the LPS log messages.  
+</p><p> When the LPS is started successfully, you will see information such as the following in 
+the container's log.  
+</p><pre class="programlisting">
+2004-04-20 15:58:23 LPS: LPS_HOME is c:\Program Files\Laszlo Presentation Server 2.2\Server\lps-2.2
+2004-04-20 15:58:23 LPS: LPS config directory is: c:\Program Files\Laszlo Presentation Server 2.2\Server\lps-2.2\WEB-INF\lps\config
+2004-04-20 15:58:24 LPS: Detailed LPS log is at C:/Program Files/Laszlo Presentation Server 2.2/Server/lps-2.2/WEB-INF/lps/work/logs/lps.log
+2004-04-20 15:58:24 LPS: LPS log configured with c:\Program Files\Laszlo Presentation Server 2.2\lps-2.2\WEB-INF\lps\config\lps.xml
+</pre><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1346"></a>3. Java IO streams</h2></div></div></div><p>
+Since ultimately a Java servlet container is just a Java process, it 
+has standard IO streams, <code class="literal">stdout</code> and <code class="literal">stderr</code>, associated
+with it.  Some containers may provide configuration for the location
+of the files that these streams are written to.  In general, the LPS does not use these streams 
+for logging.  Your container may or may not use these streams.   Other server code in your 
+web application may use these streams.   We mention them briefly here
+as they can be helpful in debugging configuration or installation problems.
+</p><p class="fixme"><em><span class="remark"><span class="para-label">FIXME: </span>Not sure the following section belongs here. It could be useful in the install docs.</span></em></p><p>
+If you have set certain Java debugging options, you may find
+debug information in the <code class="literal">stderr</code> stream.  For example, if you are debugging
+Java <code class="literal">$CLASSPATH</code> and class loading issues, you may use <code class="literal">JAVA_OPTS="-verbose:class"</code>
+and you will want to locate the Java <code class="literal">stderr</code> stream for the verbose output.
+Jakarta Tomcat will often store these files its <code class="literal">$TOMCAT_HOME/logs</code> directory.
+(If you are on Windows and running Tomcat as an NT service, the location of these files
+will depend on how the NT service was created; these files 
+are in <code class="literal">C:\WINDOWS\system32\stderr.log</code> and <code class="literal">C:\WINDOWS\system32\stdout.log</code>).
+</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1347"></a>4. LPS logging</h2></div></div></div><p>
+The LPS log (referred to <a class="link" href="logging.html#logging.container-log" title="2. Servlet container logging">above</a> as the detailed
+LPS log) contains both request/response details as well as 
+debugging information.</p><p>
+The default location for the LPS log file is inside the web applications WEB-INF directory at
+<code class="literal">$LPS_HOME/WEB-INF/lps/work/logs/lps.log</code>.
+</p><p>
+For some deployments,  you may want to configure the log location
+to be something other than the default.  The LPS Log4j configuration
+is read from <code class="literal">$LPS_HOME/WEB-INF/lps/config/lps.xml</code>.
+If <code class="literal">$LPS_HOME/WEB-INF/lps/config/log4j.xml</code> settings are
+read from this file instead.
+</p><p>The LPS ships with its logger configured at the <code class="literal">INFO</code> level.  You may
+wish to change this to <code class="literal">WARN</code> or <code class="literal">ERROR</code> to see fewer details, or to <code class="literal">DEBUG</code>
+to see more details.  You can do this by changing the <code class="literal">priority</code>
+attribute of the <code class="literal">org.openlaszlo</code> logger defined in the
+default lps.xml file.  Below is an example of chaning the logger to <code class="literal">DEBUG</code>.
+The <code class="literal">DEBUG</code> level is extremely verbose. 
+</p><div class="example"><a name="id1520"></a><p class="title"><b>Example 1.1. Changing LPS log to DEBUG</b></p><div class="example-contents"><pre class="programlisting">
+&lt;logger name="org.openlaszlo" additivity="false"&gt;
+  &lt;priority value="debug"/&gt;
+  &lt;appender-ref ref="lps"/&gt;
+&lt;/logger&gt;
+</pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1349"></a>5. Log4j tidbits</h2></div></div></div><p class="fixme"><em><span class="remark"><span class="para-label">FIXME: </span>Is this worth it or can we just expect them to read the log4j docs? 
+most details can be 
+found at <a class="ulink" href="http://logging.apache.org/log4j/docs/manual.html" target="_top">Log4j docs</a>
+
+<div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>Overview</p></li><li class="listitem"><p>Loggers</p></li><li class="listitem"><p>Appenders
+    </p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: circle; "><li class="listitem"><p>Connecting to NT Event Logger</p></li></ul></div><p>
+    </p></li><li class="listitem"><p>Layouts
+    </p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: circle; "><li class="listitem"><p>ConversionPattern details </p></li></ul></div><p>
+    </p></li></ul></div>
+</span></em></p><p>
+If your container also uses Log4j to configure its own logging, there
+can be some interaction between the LPS logs and the container logs.
+<em><span class="remark">Remove this parag. or fill in how this works; the value of the appender's <code class="literal">additivity</code>
+attribute may cause log statements to show up in multiple logs.  The precise way this works
+is a bit confusing.  Also need to describe log4j stuff before going into this so maybe move down lower?.</span></em>
+</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1348"></a>5.1. Interactions between container and LPS logging</h3></div></div></div><p>
+If your container happens to also use Log4j as its logging mechanism (Tomcat 5.0 does), then 
+you may see interactions between the container and LPS logging depending on how the Log4j appenders
+are configured for the LPS.
+</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1350"></a>6. Logging from within LZX</h2></div></div></div><p>
+You can log events from your application to the server quite simply.   There are
+three steps.</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>Modify the log4j configuration</p></li><li class="listitem"><p>Create a logger jsp</p></li><li class="listitem"><p>Send messages to the logger from your LZX code</p></li></ul></div><p>You may want to log directly into the LPS log file.  Or you may want to
+log into a separate file.  You can set up the Log4j configuration to best suit
+your needs.  And the configuration can be changed after the application has been developed.
+</p><p>
+Log4j appenders can be used to control where log statements are emitted.  The example below creates a 
+new logger called <code class="literal">mylogger</code> that will append log statements to the <code class="literal">C:\mylog.txt</code> file.  
+(If you wanted your applications log statements to go directly into the LPS log file, you would configure
+your logger to use the <code class="literal">lps</code> appender that is already declared.)
+</p><div class="example"><a name="id1565"></a><p class="title"><b>Example 1.2. Log4j configuration: creating your own logger</b></p><div class="example-contents"><pre class="programlisting">
+&lt;log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j"&gt;
+
+  &lt;appender name="myappender" class="org.apache.log4j.RollingFileAppender"&gt;
+    &lt;layout class="org.apache.log4j.PatternLayout"&gt;
+      &lt;param name="ConversionPattern" 
+             value="%d{dd MMM yyyy HH:mm:ss} %-5p - %m%n"/&gt;
+    &lt;/layout&gt;	    
+    &lt;param name="File" value="c:\mylog.txt"/&gt;
+  &lt;/appender&gt;
+
+  &lt;appender name="lps" class="org.apache.log4j.RollingFileAppender"&gt;
+    &lt;!-- ==================================================== --&gt;
+    &lt;!-- By default, the LPS sets the log file in the servlet --&gt;
+    &lt;!-- container's temporary directory. See servlet context --&gt;
+    &lt;!-- log for the exact location.                          --&gt;
+    &lt;!-- If you wish to place that file somewhere else, like  --&gt;
+    &lt;!-- /var/adm/logs, then uncomment the line below.        --&gt;
+    &lt;!-- ==================================================== --&gt;
+    &lt;!--
+    &lt;param name="File" value="/var/adm/logs/lps.log"/&gt;
+    --&gt;
+
+    &lt;!--
+    &lt;param name="MaxFileSize" value="10MB"/&gt;
+    --&gt;
+    &lt;param name="MaxBackupIndex" value="10"/&gt;
+
+    &lt;layout class="org.apache.log4j.PatternLayout"&gt;
+        &lt;param name="ConversionPattern" 
+               value="%d{dd MMM yyyy HH:mm:ss} (%x) %-5p %-20c{2} - %m%n"/&gt;
+    &lt;/layout&gt;	    
+  &lt;/appender&gt;
+
+  &lt;logger name="mylogger" additivity="false"&gt;
+    &lt;priority value="debug"/&gt;
+    &lt;appender-ref ref="myappender"/&gt;
+  &lt;/logger&gt;
+
+  &lt;logger name="org.openlaszlo" additivity="false"&gt;
+    &lt;priority value="info"/&gt;
+    &lt;appender-ref ref="lps"/&gt;
+  &lt;/logger&gt;
+&lt;/log4j:configuration&gt;
+</pre></div></div><br class="example-break"><p>
+The following is a simple JSP that can be used to talk to a Log4j logger of a given 
+name and emit error, warn, info, or debug messages.
+</p><div class="example"><a name="id1569"></a><p class="title"><b>Example 1.3. Simple JSP logger</b></p><div class="example-contents"><pre class="programlisting">
+&lt;%@ page import="java.util.*" %&gt;
+&lt;%@ page import="java.io.*" %&gt;
+&lt;%@ page import="org.apache.log4j.*" %&gt;
+&lt;%
+  response.setContentType("text/xml");
+  response.setHeader("Expires", "Fri, 05 Oct 2001 00:00:00 GMT");
+
+  String loggerName = request.getParameter("logger");
+  Logger logger = Logger.getLogger(loggerName);
+  String msg = request.getParameter("msg");
+  String t = request.getParameter("type");
+
+  if (t.equalsIgnoreCase("debug")) {
+    logger.debug(msg);
+  } else if (t.equalsIgnoreCase("info")) {
+    logger.info(msg);
+  } else if (t.equalsIgnoreCase("error")) {
+    logger.error(msg);
+  } else if (t.equalsIgnoreCase("warn")) {
+    logger.warn(msg);
+  } else {
+    throw new Exception("unknown log type");
+  }
+%&gt;
+&lt;status&gt;ok&lt;/status&gt;
+</pre></div></div><br class="example-break"><div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Warning</h3><p>
+If you deploy something like the JSP above, you will likely want the JSP to require some authentication.
+<em><span class="remark">This is left as an exercise for the reader :-).  There should be a link to the authentication
+section in the data chapter. (jrs: what section is that??)</span></em>
+</p></div><p>
+The following is a simple Laszlo application that can be used with the above JSP and log configuration
+to emit messages to the <code class="literal">C:\mylog.txt</code> file.
+</p><div class="example"><a name="id1577"></a><p class="title"><b>Example 1.4. Log from LZX to the server</b></p><div class="example-contents"><pre class="programlisting">
+&lt;canvas&gt;
+  &lt;dataset name="ds" src="http:logger.jsp"/&gt;
+  &lt;form layout="axis: y" id="f"&gt;
+    &lt;edittext id="logger" width="200"&gt;mylogger&lt;/edittext&gt;
+    &lt;edittext id="msg"    width="300"&gt;Your message here &lt;/edittext&gt;
+    
+    &lt;radiogroup id="t"&gt;
+      &lt;radiobutton&gt;debug&lt;/radiobutton&gt; 
+      &lt;radiobutton&gt;warn&lt;/radiobutton&gt; 
+      &lt;radiobutton&gt;error&lt;/radiobutton&gt; 
+      &lt;radiobutton&gt;info&lt;/radiobutton&gt; 
+    &lt;/radiogroup&gt; 
+    &lt;button isdefault="true"&gt;Log message to server
+      &lt;handler name="onclick"&gt;
+        ds.setQueryParams({logger:logger.text, msg: msg.text, type:t.value}); 
+          ds.doRequest();
+      &lt;/handler&gt;
+    &lt;/button&gt;
+  &lt;/form&gt;
+&lt;/canvas&gt;
+</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/deployers/programs/inline-ffbbb5552a.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/deployers/programs/inline-ffbbb5552a.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1351"></a>7. Caveats</h2></div></div></div><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>The precise format of the LPS log may change from release to release.</p></li></ul></div><p></p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="deployers.server-integration.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="deployers.server-integration.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="request-types.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Part I. Managing OpenLaszlo Server Deployments </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 2. OpenLaszlo Request Types</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

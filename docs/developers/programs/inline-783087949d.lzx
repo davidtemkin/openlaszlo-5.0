@@ -1,0 +1,6 @@
+<soap wsdl="..."
+      service="..."
+      port="..."
+      autoload="[true|false]"
+      secure="[true|false]"
+      secureport="..." >

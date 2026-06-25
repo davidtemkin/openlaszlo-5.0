@@ -1,0 +1,545 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 38. Data Replication</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.data.html" title="Part V. Data and Databinding"><link rel="prev" href="databinding.html" title="Chapter 37. Data Access and Binding"><link rel="next" href="dataprovider.html" title="Chapter 39. Data Provider"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 38. Data Replication</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="databinding.html">Prev</a> </td><th width="60%" align="center">Part V. Data and Databinding</th><td width="20%" align="right"> <a accesskey="n" href="dataprovider.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="datareplication"></a>Chapter 38. Data Replication</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1865"></a>1. Introduction</h2></div></div></div><p>There are two types of data replication, 
+    <span class="emphasis"><em>implicit</em></span>and 
+    <span class="emphasis"><em>explicit</em></span>.</p><p>Implicit replication is the earlier form, and while it
+    works well, it has some problems:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>It can make the code harder to read.</p></li><li class="listitem"><p>It can be inefficient.</p></li><li class="listitem"><p>It can sometimes be fragile.</p></li></ul></div><p>The newly introduced explicit replication solves these
+    problems by mirroring the (final) runtime view structure in the
+    replicating declaration. We recommend that you use explicit
+    replication in all new code that you write. You can change from 
+    implicit to explicit replication by changing this:</p><pre class="programlisting">
+    &lt;view ... datapath="..."&gt;
+     ...
+    &lt;/view&gt;
+    </pre><p>to this:</p><pre class="programlisting">
+   &lt;replicator datapath="..."&gt;
+     &lt;view ...&gt;
+       ...
+     &lt;/view&gt;
+   &lt;/replicator&gt;
+    </pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1873"></a>2. Implicit Replication</h2></div></div></div><p>As shown in some of the examples above, datapaths that
+    match multiple nodes cause their nodes to be 
+    <a class="indexterm" name="id13749"></a>
+    <em class="glossterm">replicated</em>. By "replicated", we mean
+    that for each match of the XPath expression one instance of the
+    mapped view is created. This is one of the most important
+    features of the databinding facilities in LZX.</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1869"></a>2.1. Replication Manager</h3></div></div></div><p>A 
+      <a class="indexterm" name="id13755"></a>
+      <em class="glossterm">replication manager</em>is a runtime object
+      that is created automatically whenever data replication
+      occurs as a result of a datapath matching more than once.
+      When that happens, the 
+      <a class="indexterm" name="id13758"></a>
+      <code class="sgmltag-attribute">name</code>or 
+      <a class="indexterm" name="id13761"></a>
+      <code class="sgmltag-attribute">id</code>attribute of the
+      replicated view (if the view is named) is taken over by the
+      replication manager, and from then on referring to that name
+      will access the replication manager object, and not the view.
+      In order to reference the replicated views, known as 
+      <a class="indexterm" name="id13764"></a>
+      <em class="glossterm">clones</em>, you should use the 
+      <a class="indexterm" name="id13767"></a>
+      <code class="classname">lz.ReplicationManager</code>API.</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1866"></a>2.1.1. The 
+        <a class="indexterm" name="id13772"></a>
+        <code class="sgmltag-attribute">
+        replication</code>attribute</h4></div></div></div><p>If a datapath matches multiple nodes, it will create
+        a replication manager. If 
+        <a class="indexterm" name="id13776"></a>
+        <code class="sgmltag-attribute">replication</code>is 
+        <code class="literal">normal</code>(the default), then the
+        replication manager will be a direct instance of 
+        <a class="indexterm" name="id13780"></a>
+        <code class="classname">lz.ReplicationManager</code>. If it is 
+        <code class="literal">lazy</code>, it will instead create a 
+        <a class="indexterm" name="id13784"></a>
+        <code class="classname">lz.LazyReplicationManager</code>.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1867"></a>2.1.2. Clones and the 
+        <a class="indexterm" name="id13789"></a>
+        <code class="literal">onclones</code>event</h4></div></div></div><p>As mentioned above, when a view is replicated, its
+        copies are managed by the replication manager object. Once
+        clones are created, the instance of the replication manager
+        contains references to them in the 
+        <a class="indexterm" name="id13793"></a>
+        <code class="sgmltag-attribute">clones</code>property, which
+        is an array of views. Note that 
+        <a class="indexterm" name="id13796"></a>
+        <code class="classname">lz.ReplicationManager</code>extends 
+        <a class="indexterm" name="id13799"></a>
+        <code class="classname">lz.datapath</code>, and a cloned view along
+        with its datapath is replaced with the replication manager
+        object. Armed with this knowledge, we have a technique for
+        determining when a view is cloned. The example below
+        demonstrates the use of the clones property by declaring a
+        handler for the 
+        <a class="indexterm" name="id13802"></a>
+        <code class="literal">onclones</code>event on the view's
+        datapath.</p><div class="example"><a name="id13805"></a><p class="title"><b>Example 38.1. Using clones and the onclones event</b></p><div class="example-contents"><pre class="programlisting">
+            
+&lt;canvas width="100%" height="200"&gt;
+  &lt;dataset name="tabnames"&gt;
+    &lt;title name="Account Info"/&gt;
+    &lt;title name="Order History"/&gt;
+    &lt;title name="Preferences"/&gt;
+    &lt;title name="Shopping Cart"/&gt;
+  &lt;/dataset&gt;
+  &lt;simplelayout axis="x" spacing="25"/&gt;
+  &lt;button text="Create tabs"&gt;
+    &lt;handler name="onclick"&gt;
+      gs.pane.setAttribute('datapath', 'tabnames:/title')
+      bs.pane.setAttribute('datapath', 'tabnames:/title')
+    &lt;/handler&gt;
+  &lt;/button&gt;
+  
+  &lt;class name="repltabelt" extends="tabelement" text="$path{'@name'}" visible="true"/&gt;
+    &lt;tabslider width="150" name="gs" height="150" spacing="2"&gt;
+      &lt;repltabelt name="pane"&gt;
+        &lt;datapath&gt;
+          &lt;handler name="onclones"&gt;
+            if (!this['doneDel']) {
+              this.doneDel = new LzDelegate(this, 'openOH')
+              this.doneDel.register(clones[clones.length - 1], 'oninit')
+            }
+          &lt;/handler&gt;
+          &lt;method name="openOH"&gt;
+            parent.select(this.getCloneNumber(0))
+          &lt;/method&gt;
+        &lt;/datapath&gt;
+      &lt;/repltabelt&gt;
+    &lt;/tabslider&gt;
+      
+    &lt;tabslider width="150" name="bs" height="150" spacing="2"&gt;
+      &lt;repltabelt name="pane"&gt;
+        &lt;datapath&gt;
+          &lt;handler name="onclones"&gt;
+          parent.select(this.getCloneNumber(0))
+        &lt;/handler&gt;
+      &lt;/datapath&gt;
+    &lt;/repltabelt&gt;
+  &lt;/tabslider&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+          </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_24.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_24.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Because the 
+        <a class="indexterm" name="id13809"></a>
+        <code class="literal">onclones</code>event is sent when the 
+        <a class="indexterm" name="id13812"></a>
+        <code class="sgmltag-attribute">clones</code>attribute is
+        set, it only signals the start of view replication, but in
+        this example it is used to determine the exact moment when
+        replication is finished. Since replicated views are
+        initialized in the same order they are in inserted in the
+        clones array, we only need to wait for the oninit event for
+        the last clone in the list. This is necessary because
+        initialization of the 
+        <a class="indexterm" name="id13815"></a>
+        <code class="classname">tab</code>elements takes a non-zero amount
+        of time, and an attempt to perform an operation on their
+        container â€” tab slider
+        â€” before it is completed will leave the
+        component in an inconsistent state. For illustration
+        purposes, the second 
+        <a class="indexterm" name="id13818"></a>
+        <code class="classname">tabslider</code>has this problem, whereby
+        selecting the first 
+        <a class="indexterm" name="id13821"></a>
+        <code class="classname">tab</code>element too soon renders its
+        parent unusable (the other 
+        <a class="indexterm" name="id13824"></a>
+        <code class="classname">tabelement</code>s are gone).</p><p>This example also takes advantage of the fact that,
+        by default, views become visible when they consume data
+        (see section on visibility of datamapped views above).
+        Before the button is clicked, there is a single 
+        <a class="indexterm" name="id13828"></a>
+        <code class="classname">tabelement</code>object within the
+        tabslider. However, it is kept invisible until it receives
+        data, at which point its replication occurs, and its clones
+        are displayed.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1868"></a>2.1.3. Nodes and the 
+        <a class="indexterm" name="id13833"></a>
+        <code class="literal">onnodes</code>event</h4></div></div></div><p>Similarly to the 
+        <a class="indexterm" name="id13837"></a>
+        <code class="sgmltag-attribute">clones</code>property, 
+        <a class="indexterm" name="id13840"></a>
+        <code class="classname">lz.ReplicationManager</code>maintains a list
+        of matched data nodes in the 
+        <a class="indexterm" name="id13843"></a>
+        <code class="sgmltag-attribute">nodes</code>property. It is
+        an array of 
+        <a class="indexterm" name="id13846"></a>
+        <code class="classname">lz.DataElement</code>objects that are mapped
+        to the replicated views, and is available before any clones
+        are created. And as with the 
+        <a class="indexterm" name="id13849"></a>
+        <code class="literal">onclones</code>event, a handler for 
+        <a class="indexterm" name="id13852"></a>
+        <code class="literal">onnodes</code>may be declared to respond to
+        data replication in a custom way. The code below qualifies
+        the value of 
+        <a class="indexterm" name="id13855"></a>
+        <code class="sgmltag-attribute">name</code>attribute of each
+        replicated data node with the value of the text field, if
+        any.</p><div class="example"><a name="id13858"></a><p class="title"><b>Example 38.2. Using the nodes property</b></p><div class="example-contents"><pre class="programlisting">
+            
+&lt;canvas height="200" width="100%"&gt;
+  &lt;dataset name="tabnames"&gt;
+    &lt;title name="Account Info"/&gt;
+    &lt;title name="Order History"/&gt;
+    &lt;title name="Preferences"/&gt;
+    &lt;title name="Shopping Cart"/&gt;
+  &lt;/dataset&gt;
+  &lt;simplelayout axis="x" spacing="25"/&gt;
+  &lt;button text="Create tabs for user:"&gt;
+    &lt;handler name="onclick"&gt;
+      nav.pane.setDatapath('tabnames:/title')
+    &lt;/handler&gt;
+  &lt;/button&gt;
+  
+  &lt;edittext name="user" width="120" options="ignorelayout" y="25"/&gt;
+  &lt;tabslider width="150" name="nav" height="150" spacing="2"&gt;
+    &lt;tabelement name="pane" text="$path{'@name'}" visible="true"&gt;
+      &lt;datapath&gt;
+        &lt;handler name="onnodes"&gt;
+          if (user.text.length)
+            for (var i = 0; i &amp;lt; nodes.length ; i++) {
+              var title = nodes[i].getAttr('name')
+              pos = title.indexOf(':')
+              if (pos != -1)
+                title = user.text + title.substr(pos)
+              else 
+                title = user.text + ': ' + title
+              nodes[i].setAttr('name', title)
+            }
+        &lt;/handler&gt;
+      &lt;/datapath&gt;
+    &lt;/tabelement&gt;
+  &lt;/tabslider&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+          </pre></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="databinding.pooling"></a>2.2. Pooling</h3></div></div></div><p>If your application uses data replication and the data
+      backing replicated views changes at runtime, by default the
+      replication manager destroys and re-creates the replicated
+      views whose data has changed. The typical scenarios when this
+      will occur are a change in the datapath of the replicated
+      view, or deletion/addition of rows to the dataset. Because
+      the dataset may contain many data elements, this adjustment
+      is often an expensive operation that results in a noticeable
+      flicker of the user interface while view removal/creation
+      takes place.</p><p>In order to make updates to datamapped elements more
+      efficient, you can declare the datapath that will match
+      multiple nodes with the 
+      <a class="indexterm" name="id13866"></a>
+      <code class="sgmltag-attribute">pooling</code>attribute set to 
+      <code class="literal">true</code>. The effect of this is that the views
+      that have already been created as a result of replication
+      will be reused internally, instead of re-created. Since the
+      replication manager only needs to remap the changed data to
+      the existing clones, data updates are reflected in UI much
+      faster than they would be if the runtime had to create new
+      views. Consider the following example.</p><div class="example"><a name="id13870"></a><p class="title"><b>Example 38.3. Using pooling to optimize data updates</b></p><div class="example-contents"><pre class="programlisting">
+          
+&lt;canvas height="300" width="100%"&gt;
+  &lt;dataset name="phonebook" src="resources/phonebook.xml"/&gt;
+  
+  &lt;simplelayout axis="y" spacing="3"/&gt;
+  &lt;view&gt;
+    &lt;view name="newContact" datapath="new:/contact"&gt;
+      &lt;text&gt;First Name:&lt;/text&gt;
+      &lt;edittext name="firstName" datapath="@firstName" x="80"/&gt;
+      &lt;text y="25"&gt;Last Name:&lt;/text&gt;
+      &lt;edittext name="lastname" datapath="@lastName" x="80" y="25"/&gt;
+      &lt;text y="50"&gt;Phone:&lt;/text&gt;
+      &lt;edittext name="phone" datapath="@phone" x="80" y="50"/&gt;
+      &lt;text y="75"&gt;Email:&lt;/text&gt;
+      &lt;edittext name="email" datapath="@email" x="80" y="75"/&gt;
+      &lt;button width="80" x="200"&gt;Add
+        &lt;handler name="onclick"&gt;
+          parent.datapath.updateData();
+          var dp = phonebook.getPointer();
+          dp.selectChild();
+          dp.addNodeFromPointer(parent.datapath);
+          parent.setAttribute("datapath", "new:/contact");
+        &lt;/handler&gt;
+      &lt;/button&gt;
+    &lt;/view&gt;
+  &lt;/view&gt;
+  &lt;button text="Delete selected"&gt;
+    &lt;handler name="onclick"&gt;&lt;![CDATA[
+      for (var c = 0; c &lt; all.nodes.length;) {
+        var clone = all.clones[c];
+        if (clone.datapath.xpathQuery('@checked') == 'true') {
+          clone.datapath.deleteNode();
+        } else {
+          c += 1;
+        }
+      }
+    ]]&gt;&lt;/handler&gt;
+  &lt;/button&gt;
+  
+  &lt;view name="all"&gt;
+    &lt;datapath xpath="phonebook:/phonebook/contact" pooling="true"/&gt;
+    &lt;view&gt;
+      &lt;simplelayout axis="x"/&gt;
+      &lt;checkbox width="30" datapath="@checked"&gt;
+        &lt;handler name="onvalue"&gt;
+          datapath.updateData();
+        &lt;/handler&gt;
+        &lt;method name="updateData"&gt;
+          return String(this.value);
+        &lt;/method&gt;
+        &lt;method name="applyData" args="d"&gt;
+          this.setValue(d);
+        &lt;/method&gt;
+      &lt;/checkbox&gt;
+      &lt;text datapath="@firstName"/&gt;
+      &lt;text datapath="@lastName"/&gt;
+      &lt;text datapath="@phone"/&gt;
+      &lt;text datapath="@email"/&gt;
+    &lt;/view&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007-2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+        </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_26.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_26.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>In the code above, we handle data removal by going
+      through the list of data nodes, and deleting the nodes whose 
+      <a class="indexterm" name="id13874"></a>
+      <code class="sgmltag-attribute">checked</code>attribute is set
+      to "true". Note how this attribute is controlled by and
+      mapped to the value of the corresponding checkbox. Any change
+      in the state of the checkbox results in an update to the data
+      node attribute, and vice versa â€” when
+      views are created or reused (due to deletion), the appearance
+      of their checkboxes is unchecked because initially the
+      attribute is not set.</p><p>This kind of syncing to the underlying data is
+      generally required when pooling is in effect and the state of
+      the visual elements can be changed as a result of a user
+      interaction. In a simpler case, the UI would not be
+      modifiable by the user, so the data flow is one way only and
+      the views are completely data-driven, and therefore
+      consistency of data with its presentation would be maintained
+      automatically.</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1870"></a>2.2.1. When not to use pooling</h4></div></div></div><p>Pooling is generally a good optimization in cases
+        where the data completely informs the state of a replicated
+        view. If the view has additional state which can change
+        through user interaction or depends on setting attributes
+        at init time, then this option cannot usually be used. The
+        default value for the 
+        <a class="indexterm" name="id13881"></a>
+        <code class="sgmltag-attribute">pooling</code>on 
+        <a class="indexterm" name="id13884"></a>
+        <code class="sgmltag-element">&lt;dataset&gt;</code>is
+        "false", except when replication is set to 
+        <code class="literal">lazy</code>, in which case it must be true, as
+        described below.</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="databinding.lazy-replication"></a>2.3. Lazy replication</h3></div></div></div><p>If a datapath's 
+      <a class="indexterm" name="id13892"></a>
+      <code class="sgmltag-attribute">replication</code>attribute is
+      set to 
+      <code class="literal">lazy</code>, then a match to multiple nodes will
+      create an 
+      <a class="indexterm" name="id13896"></a>
+      <code class="classname">lz.LazyReplicationManager</code>instead of an 
+      <a class="indexterm" name="id13899"></a>
+      <code class="classname">lz.ReplicationManager</code>. This kind of
+      replication manager is called "lazy" because it doesn't do
+      the work of creating a view until it has to, and it does the
+      bare minimum of work. The lazy replication manager creates
+      only enough replicated views necessary to display the data,
+      so there is not a view for each data node. This enables the
+      display of very large datasets.</p><p>Because the 
+      <a class="indexterm" name="id13903"></a>
+      <code class="classname">lz.LazyReplicationManager</code>is relatively
+      specialized, there are several restrictions on its
+      use:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>The replicated views should be contained in a view
+          which is not the view that clips. The replicated views
+          can be positioned by moving this container. This
+          container will be sized to the size of the replicated
+          list.</p></li><li class="listitem"><p>The parent of the container must be a view that
+          clips (that is, its 
+          <a class="indexterm" name="id13911"></a>
+          <code class="sgmltag-attribute">clip</code>attribute is set
+          to "true".</p></li><li class="listitem"><p>The replicated view cannot change its size in the
+          replication axis, and the size cannot be a constraint. If
+          the replicated view is sized by its contents, then lazy
+          replication may not work in all cases.</p></li><li class="listitem"><p>The data should completely inform the display of
+          the view. Any attributes that are changed through
+          interaction with a replicated view should be stored in
+          the dataset.</p></li><li class="listitem"><p>Selection within the replicated views should be
+          controlled by a 
+          <a class="indexterm" name="id13920"></a>
+          <code class="classname">lz.dataselectionmanager</code>.</p></li></ul></div><p>This example shows use of the lazy replication manager
+      to display a large dataset. The replication does not create a
+      view for each node in the dataset; rather it only creates
+      enough views to fill the clipping view that contains it. As
+      you click the "Make it bigger" button, you will see that more
+      items from the list are shown. Notice also that these views
+      are actually being created when you press the button, as you
+      can see by then "number of subviews" value at the top of the
+      canvas.</p><div class="example"><a name="id13924"></a><p class="title"><b>Example 38.4. Using a lazyreplicationmanager to display a large
+        dataset</b></p><div class="example-contents"><pre class="programlisting">
+          
+&lt;canvas height="350" width="100%"&gt;
+  &lt;dataset name="vegetables"&gt;
+    &lt;celery/&gt; &lt;celeriac/&gt; &lt;carrot/&gt; &lt;florence_fennel/&gt; &lt;parsnip/&gt; 
+    &lt;parsley/&gt; &lt;winter_endive/&gt; &lt;witloof_chicory/&gt; &lt;cardoon/&gt; 
+    &lt;artichoke/&gt; &lt;head_lettuce/&gt; &lt;cos_lettuce/&gt; &lt;black_salsify/&gt; 
+    &lt;swedish_turnip/&gt; &lt;cauliflower/&gt; &lt;cabbage/&gt; &lt;brussels_sprouts/&gt; 
+    &lt;kohlrabi/&gt; &lt;broccoli/&gt; &lt;savoy_cabbage/&gt; &lt;turnip/&gt; &lt;radish/&gt; 
+    &lt;water_cress/&gt; &lt;garden_cress/&gt; &lt;foliage_beet/&gt; &lt;spinach/&gt; 
+    &lt;sweet_potato/&gt; &lt;watermelon/&gt; &lt;melon/&gt; &lt;cucumber/&gt; &lt;winter_squash/&gt; 
+    &lt;marrow/&gt; &lt;chickpea/&gt; &lt;lentil/&gt; &lt;runner_bean/&gt; &lt;common_bean/&gt; 
+    &lt;pea/&gt; &lt;faba_bean/&gt; &lt;leek/&gt; &lt;shallot/&gt; &lt;onion/&gt; &lt;salsify/&gt; 
+    &lt;welsh_onion/&gt; &lt;garlic/&gt; &lt;chives/&gt; &lt;asparagus/&gt; &lt;ladyfinger/&gt; 
+    &lt;sweet_corn/&gt; &lt;rhubarb/&gt; &lt;capsicum_pepper/&gt; &lt;tomato/&gt; &lt;eggplant/&gt;
+  &lt;/dataset&gt;
+
+  &lt;simplelayout spacing="10"/&gt;
+  &lt;text width="200"&gt;
+    &lt;handler
+            name="onaddsubview" reference="replicationParent"&gt;
+      this.setAttribute("text", 'number of subviews: ' + 
+                   replicationParent.subviews.length);
+    &lt;/handler&gt;
+  &lt;/text&gt;
+
+  &lt;view clip="true" width="100" height="100" id="clipper" bgcolor="silver"&gt;
+    &lt;view id="replicationParent"&gt;
+      &lt;text&gt;
+        &lt;datapath xpath="vegetables:/*/name()" replication="lazy"/&gt;
+      &lt;/text&gt;
+    &lt;/view&gt;
+    &lt;scrollbar/&gt;
+  &lt;/view&gt;
+  &lt;button&gt;Make it bigger
+    &lt;handler name="onclick"&gt;
+      clipper.setAttribute('height', clipper.height + 50);
+    &lt;/handler&gt;
+  &lt;/button&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+        </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_27.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_27.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>See the 
+      <a class="ulink" href="../../examples/paging.lzx" target="_top">paging.lzx
+      example</a>for another example of lazy
+      replication.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1871"></a>2.4. $path bindings and replication</h3></div></div></div><p>Only a datapath can cause replication. Although it
+      might seem that $path might be used to implicitly force
+      replication, it will not. A $path expression will only yield
+      a single value. If it matches multiple values, it is an error
+      and it will act as if it matched none. In the example below,
+      note that The $path constraint does not update when the
+      enclosing datapath is set.</p><div class="example"><a name="id13932"></a><p class="title"><b>Example 38.5. $path does not replicate</b></p><div class="example-contents"><pre class="programlisting">
+          
+ &lt;canvas height="300" width="100%" debug="true"&gt;
+   &lt;debug y="100" /&gt;
+   &lt;dataset name="ds"&gt;
+     &lt;data&gt;
+       &lt;person name="a assdfasfva asdf sad" surname="a surname"/&gt;
+       &lt;person name="b" surname="b surname"/&gt;
+       &lt;person name="c" surname="c surname"/&gt;
+     &lt;/data&gt;
+   &lt;/dataset&gt;
+   &lt;simplelayout axis="y"/&gt;
+   &lt;button onclick="thedata.setAttribute('datapath', 'ds:/')"&gt;Set datapath&lt;/button&gt;
+   &lt;view id="thedata" ondata="Debug.warn('data %#w', arguments[0])"&gt;
+     &lt;simplelayout axis="y"/&gt;
+     &lt;view&gt;
+       &lt;simplelayout axis="x"/&gt;
+       &lt;text&gt;Datapath:&lt;/text&gt;
+       &lt;view&gt;
+         &lt;simplelayout axis="y"/&gt;
+         &lt;text datapath='data/person/@name' resize="true"
+               ondata="Debug.warn('datapath.ondata')"
+               /&gt;
+       &lt;/view&gt;
+     &lt;/view&gt;
+     &lt;view&gt;
+       &lt;simplelayout axis="x"/&gt;
+       &lt;text&gt;$path:&lt;/text&gt;
+       &lt;view&gt;
+         &lt;simplelayout axis="y"/&gt;
+         &lt;text text="$path{'data/person/@name'}" resize="true"
+               ondata="Debug.warn('$path.ondata')"
+               /&gt;
+       &lt;/view&gt;
+     &lt;/view&gt;
+   &lt;/view&gt;
+ &lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+        </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_28.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_28.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1872"></a>2.5. $path syntax to determine order of replicated
+      views</h3></div></div></div><p>Sometimes you want to know the position of a view; for
+      example, say you wanted to alternate background colors. You
+      might think of checking for the position of the view in its 
+      <a class="indexterm" name="id13938"></a>
+      <code class="methodname">oninit()</code>method.</p><p>However, if you're using datapath pooling (you'll
+      probably want to for long lists), the 
+      <code class="literal">oninit</code>events for views created by data
+      replication don't necessarily fire because the views may be
+      reused. In that case, the 
+      <code class="literal">ondata</code>event will fire, so you might
+      consider using the 
+      <a class="indexterm" name="id13945"></a>
+      <code class="methodname">ondata()</code>handler. However,
+      incrementing a counter isn't the most reliable way to
+      determine order because views may not instantiate in linear
+      order.</p><p>That's why it's better to use a datapath expression.
+      Add attribute like this inside your replicated node:</p><pre class="programlisting">&lt;attribute name="pos"
+      value="$path{'position()'}"/&gt;</pre><p>This will tie the pos attribute to the physical
+      position in the data. You can then then tie the background
+      color like so:</p><pre class="programlisting">&lt;attribute name="bgcolor"
+      value="${this.pos % 2 == 0 ? 0x00EEEE :
+      0x00DDDD}"/&gt;</pre><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="databinding.procedural_and_replicated"></a>2.6. Be careful of mixing replication and classes declared
+      procedurally</h3></div></div></div><p>Views that you create procedurally are not the same as
+      "clones" created by data replication. In fact, data
+      replication overrides procedurally created views. For
+      example:</p><div class="orderedlist"><ol class="orderedlist compact" type="1"><li class="listitem"><p>Declare a view.</p></li><li class="listitem"><p>Add subviews to it (procedurally), and alter its
+          properties.</p></li><li class="listitem"><p>Set a datapath on the view (from step 1) that would
+          make it replicate.</p></li></ol></div><p>Changes made in step 2 will be ignored after
+      replication.</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1874"></a>3. Explicit Replication</h2></div></div></div><p>Explicit replication improves upon implicit replication
+    by adding a 
+    <code class="literal">replicator</code> tag representing a replication
+    manager:</p><pre class="programlisting">&lt;view&gt; &lt;replicator
+    datapath="ds:/people/person/"&gt; &lt;view
+    name="$path{'@name'}"/&gt; &lt;/replicator&gt;
+    &lt;/view&gt;</pre><p>The <code class="literal">replicator</code> tag has the following legal tag attributes
+    (in addition to those inherited from datapath):</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><code class="literal">sortpath</code>: xpath to the sort key</p></li><li class="listitem"><p><code class="literal">sortorder</code>: comparator function for sorting</p></li><li class="listitem"><p><code class="literal">datapath</code>: dataset:xpath</p></li></ul></div><p>`datapath` is a shorthand for
+    `data="${dataset.p.xpathQuery(xpath)}"` It constrains the
+    `data` attribute of the replicator to the result of the xpath
+    query on the dataset. Note that this meaning is different from
+    the meaning of `datapath` on a view, which implies old-style
+    implicit replication.</p><p>The single lexical subnode of the <code class="literal">replicator</code> tag is a
+    view that will be used as a template to be replicated zero or
+    more times, depending on the number of nodes the datapath
+    attribute matches. The <code class="literal">replicator</code> tag only permits a single
+    child node.</p><p>Note that inside a <code class="literal">replicator</code> tag, `${path}` constraints
+    are used to bind views to the data (`datapath` is not
+    used).</p><p>The replicator will be a child node of its parent view,
+    appearing in the parent's subnodes array (but not in the
+    parents subviews array). If named or given an identifier, it
+    can be queried and controlled via that name or
+    identifier.</p><p>For example, the code above might lead to the following
+    DOM structure at runtime:</p><pre class="programlisting">lz.view { … }
+  lz.ReplicationManager { datapath: { ... }, ... }
+  lz.view { name: 'Bob' }
+  ...
+  lz.view { name: 'Edna' }
+  </pre><p>The replicator has additional attributes and methods that
+    are accessible to Javascript:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><code class="literal">data</code>: array of dataelements the datapath matches
+        (possibly empty)</p></li><li class="listitem"><p><code class="literal">views</code>: array of views bound to the nodes (possibly
+        empty)</p></li></ul></div><p>There is a one-to-one correspondence between data elements and
+    views.</p><p>Replicator variants:</p><p>replicator can be subclassed. Two subclasses are
+    pre-defined:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><code class="literal">lazyreplicator</code>: only creates views that will be
+        visible within the parent view.</p></li><li class="listitem"><p><code class="literal">resizereplicator</code>: a lazy replicator where each view
+        may be of a different size.</p></li></ul></div><p>lazy replication implies that the views will be `pooled`.
+    There is no separate pooling (<a class="xref" href="datareplication.html#databinding.pooling" title="2.2. Pooling">Section 2.2, “Pooling”</a>) control in explicit
+    replication.</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="databinding.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.data.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="dataprovider.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 37. Data Access and Binding </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 39. Data Provider</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

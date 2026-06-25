@@ -1,0 +1,40 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>LzDataProvider — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1>LzDataProvider</h1><p class="short">An abstract class to represent backend data sources.</p><p class="meta">Extends <a ><code>LzEventable</code></a></p>
+        <p>
+           
+          <code>&lt;class&gt;lz.Dataprovider&lt;/class&gt;</code>
+           is an abstract class that can be extended to create new kinds 
+ of dataproviders, such as 
+          <code>lz.HTTPDataProvider</code>
+          . These dataproviders 
+ are the client's representation of a backend entity. There is no tag that 
+ corresponds to this class.
+ 
+        </p>
+         
+        <p>
+            Dataproviders represent queryable server-side data sources, capable of creating 
+  or changing Datasets.  Dataproviders are type-specific, i.e. http, jdbc or 
+  soap.
+  Dataproviders manage connections to the server,  and process requests which are submitted
+  via the 
+          <code>&lt;method&gt;doRequest&lt;/method&gt;</code>
+           method. The request is generated in an instance of 
+          <code>lz.DataRequest</code>
+          . 
+
+ A Dataprovider updates the 
+          <code>lz.DataRequest</code>
+           with loading and status information via the 
+          <code>&lt;event&gt;onstatus&lt;/event&gt;</code>
+           event of the 
+          <code>lz.DataRequest</code>
+          .
+ 
+        </p>
+      <h3>Methods</h3><ul class="methods"><li><code>abortLoadForRequest()</code></li><li><code>doRequest()</code></li></ul>
+</main><script src="_nav.js"></script></body></html>

@@ -1,0 +1,32 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;videoview&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>videoview<span class="ang">&gt;</span></h1><p class="short">Allows video playback.</p><p class="meta">Extends <code>view</code></p>
+                    
+        <p>
+          <code>videoview</code>
+           allows applications to play video from HTTP or RTMP servers.
+        </p>
+         
+
+            
+        
+          <pre><code>
+            &lt;canvas&gt;
+            &lt;videoview url="http://www.archive.org/download//JudgeMediaTestVideoFile_0/video.flv" type="http" autoplay="true" width="320" height="240"/&gt;
+            &lt;/canvas&gt;
+            </code></pre>
+        
+                
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">autoplay</td><td class="ty">expression</td><td class="ty">false</td><td>If true, video will start playing as soon as url is set.</td></tr><tr><td class="nm">buffertime</td><td class="ty">expression</td><td class="ty">0</td><td>If true, video will start playing as soon as url is set.</td></tr><tr><td class="nm">cam</td><td class="ty">expression</td><td class="ty">null</td><td>The camera object.</td></tr><tr><td class="nm">debug</td><td class="ty">expression</td><td class="ty">false</td><td>If true, Debug.write extra stuff (this may go away).</td></tr><tr><td class="nm">mic</td><td class="ty">expression</td><td class="ty">null</td><td>The microphone object.</td></tr><tr><td class="nm">playvolume</td><td class="ty">expression</td><td class="ty">1.0</td><td>The volume for video playback, a float from 0 to 1.</td></tr><tr><td class="nm">starttime</td><td class="ty">number</td><td class="ty">0</td><td>Show the frame from this time (in seconds) whenever the url 
+          is set for video playback.
+          Use -1 to show no frame (which will leave the image as it
+          was when switching videos)</td></tr><tr><td class="nm">stream</td><td class="ty">expression</td><td class="ty">false</td><td>The mediastream object.  A mediastream will be automatically generated if one is not specified at init time.</td></tr><tr><td class="nm">type</td><td class="ty">string</td><td class="ty">http</td><td>Protocol "rtmp" or "http".</td></tr><tr><td class="nm">url</td><td class="ty">string</td><td class="ty"/><td>The url of the video, may be a relative URL, 
+            for example: "http://localhost/myvideo.flv", 
+            or simply "myvideo.flv".
+
+            When type="rtmp", the url is always relative the rtmpconnection.
+            (Use only when you are not explicitly declaring the mediastream.)</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

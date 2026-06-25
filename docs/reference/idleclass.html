@@ -1,0 +1,35 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>LzIdleService — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1>LzIdleService</h1><p class="short">Idle service.</p><p class="meta">Extends <a ><code>LzEventable</code></a></p>
+        <p>
+          <code>lz.Idle</code>
+           is the single instance of the class
+ 
+          <code>lz.IdleService</code>
+          .
+        </p>
+         
+        <p>
+          The OpenLaszlo runtime generates idle events at a fixed,
+ unspecified frequency.  Here is a simple example that shows how to
+ receive the 
+          <code>&lt;event&gt;onidle&lt;/event&gt;</code>
+           event:
+        </p>
+         
+        
+          <pre><code>
+ &lt;canvas height="80"&gt;
+   &lt;text name="display" /&gt;
+   &lt;attribute name="counter" value="0" /&gt;
+   &lt;handler name="onidle" reference="LzIdleService.LzIdle"&gt;
+     display.format("Received %d idle events", ++counter);
+   &lt;/handler&gt;
+ &lt;/canvas&gt;
+ </code></pre>
+        
+      <h3>Events</h3><ul class="events"><li><code>onidle</code> — This is the idle event for the system, sent by this service</li></ul>
+</main><script src="_nav.js"></script></body></html>

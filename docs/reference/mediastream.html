@@ -1,0 +1,43 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;mediastream&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>mediastream<span class="ang">&gt;</span></h1><p class="short">Allows video playback, live broadcast or recording .</p><p class="meta">Extends <code>node</code></p>
+                
+        <p>
+          <code>mediastream</code>
+           allows applications to stream video from HTTP or RTMP servers.  Classes like 
+          <code>&lt;videoview&gt;</code>
+           use mediastreams to handle the connection to the server.
+        </p>
+         
+            
+        
+        
+          <pre><code>
+        &lt;canvas&gt;
+            &lt;mediastream name="ms" autoplay="true" type="http" url="http://www.archive.org/download//JudgeMediaTestVideoFile_0/video.flv"/&gt;
+            &lt;videoview type="http" autoplay="true" width="320" height="240" stream="canvas.ms"/&gt;
+        &lt;/canvas&gt;
+        </code></pre>
+        
+                
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">autoplay</td><td class="ty">boolean</td><td class="ty">false</td><td>If true, video will start playing as soon as url is set.</td></tr><tr><td class="nm">autoplayLength</td><td class="ty">expression</td><td class="ty">'end'</td><td>Autoplay length argument passed to mediastream.play(). 
+          See the mediastream.play documentation for its values.</td></tr><tr><td class="nm">autoplayPause</td><td class="ty">boolean</td><td class="ty">false</td><td>Autoplay pause argument passed to mediastream.play().
+          See the mediastream.play documentation for its values.</td></tr><tr><td class="nm">autoplayReset</td><td class="ty">expression</td><td class="ty">true</td><td>Autoplay reset argument passed to mediastream.play(). 
+          See the mediastream.play documentation for its values.</td></tr><tr><td class="nm">autoplayStart</td><td class="ty">expression</td><td class="ty">'either'</td><td>Autoplay start argument passed to mediastream.play().
+          See the mediastream.play documentation for its values.</td></tr><tr><td class="nm">autorewind</td><td class="ty">boolean</td><td class="ty">true</td><td>If true, video will automatically rewind to the beginning
+          (and remain in a paused state) when playback ends.</td></tr><tr><td class="nm">broadcasting</td><td class="ty">expression</td><td class="ty">(this.mode == 'broadcasting') || (this.mode == 'recording')</td><td>True if broadcasting right now.</td></tr><tr><td class="nm">buffertime</td><td class="ty">number</td><td class="ty">0.1</td><td>Amount of time (in seconds) to buffer before starting to display the 
+          stream.  For a publishing stream, bufferTime specifies how long the 
+          outgoing buffer can grow before the application starts dropping 
+          frames.</td></tr><tr><td class="nm">cam</td><td class="ty">expression</td><td class="ty">null</td><td>A reference to the camera. This must be set if broadcasting.
+          This is set automatically if the stream is a child of a videoview.</td></tr><tr><td class="nm">debug</td><td class="ty">expression</td><td class="ty">false</td><td>When true, print extra info to the debugger.</td></tr><tr><td class="nm">fps</td><td class="ty">number</td><td class="ty">0</td><td>The current frames per second for playing video.</td></tr><tr><td class="nm">mic</td><td class="ty">expression</td><td class="ty">null</td><td>A reference to the microphone. This must be set if broadcasting.
+          This is set automatically if the stream is a child of a videoview.</td></tr><tr><td class="nm">mode</td><td class="ty">string</td><td class="ty"/><td>Mode: "" if doing nothing, "playing" if playing,
+          "broadcasting" if can be received, "recording" if recording.
+          Recording also implies can be received, i.e., broadcasting. 
+          Pausing does not affect the mode, unlike stopping.</td></tr><tr><td class="nm">muteaudio</td><td class="ty">expression</td><td class="ty">false</td><td>True iff audio is muted.</td></tr><tr><td class="nm">mutevideo</td><td class="ty">expression</td><td class="ty">false</td><td>True iff video is muted.</td></tr><tr><td class="nm">paused</td><td class="ty">boolean</td><td class="ty">false</td><td>True to pause playback. Named this way to pun with paused for animators.</td></tr><tr><td class="nm">playing</td><td class="ty">expression</td><td class="ty">(this.mode == 'playing') &amp;&amp; (!this.paused)</td><td>True if playing right now.</td></tr><tr><td class="nm">progress</td><td class="ty">number</td><td class="ty">0</td><td>Progress of mediastream currently downloading.
+          (from 0 for none to 1 for all).</td></tr><tr><td class="nm">recording</td><td class="ty">expression</td><td class="ty">this.mode == 'recording'</td><td>True if recording right now.</td></tr><tr><td class="nm">rtmp</td><td class="ty">expression</td><td class="ty">null</td><td>The rtmp connection to use (defaults to the first one created).</td></tr><tr><td class="nm">streamname</td><td class="ty">string</td><td class="ty"/><td>The rtmp streamname (without .flv suffix).</td></tr><tr><td class="nm">time</td><td class="ty">number</td><td class="ty">0</td><td>Current time of mediastream currently playing or recording (in seconds)</td></tr><tr><td class="nm">totaltime</td><td class="ty">number</td><td class="ty">0</td><td>Total length (in seconds) of mediastream currently playing.</td></tr><tr><td class="nm">type</td><td class="ty">string</td><td class="ty">http</td><td>Protocol "rtmp" or "http".</td></tr><tr><td class="nm">url</td><td class="ty">string</td><td class="ty"/><td>The url of the mediastream, maybe be relative URL, 
+          for example: http://localhost/myvideo.flv, or simply myvideo.flv
+          when type="rtmp" the url is always relative to the rtmpconnection.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

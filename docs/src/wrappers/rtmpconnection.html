@@ -1,0 +1,58 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+</head>
+<body>
+
+<!-- ===================================================================== -->
+<!-- = XML information goes here                                         = -->
+<!-- ===================================================================== -->
+<lzelement title="rtmpconnection">
+    <lztier>Audio Video</lztier>
+    <lzcategory>audio video</lzcategory>
+    <lzshortdesc>
+        A connection to an RTMP server.
+    </lzshortdesc>
+    <lztag>extensions/av/rtmpconnection.xml</lztag>
+</lzelement>
+
+<p>An <classname>rtmpconnection</classname> represents a connection to an RTMP 
+server, such as the Flash Media Server or Red5, enabling two-way streaming
+audio/video. This allows you to broadcast and
+receive live audio and/or video, as well as recording video from a webcam or 
+audio from a microphone to files on the server.  Recorded files may be played
+back over http (using <classname>stream</classname> and 
+<tagname link="true">videoview</tagname> classes) or with RTMP to allow 
+seeking within and playback of long files that are impractical to load 
+into memory.</p>
+
+<example extract="false" title="Simple RTMP Connection">
+&lt;canvas&gt;
+     
+    &lt;simplelayout inset="10" spacing="10"/&gt;
+    &lt;rtmpconnection id="rtc" 
+        src="rtmp://localhost/test"
+        autoconnect="false"
+        debug="true"
+    /&gt;
+    &lt;view
+        layout="axis: x; spacing: 4"
+    &gt;
+        &lt;rtmpstatus/&gt;
+        &lt;text
+            text="${rtc.status}"
+            resize="true"
+        /&gt;
+    &lt;/view&gt;
+    &lt;button
+        onclick="rtc.connect()"
+    &gt;Click to Connect&lt;/button&gt;
+
+&lt;/canvas&gt;
+</example>
+
+</body>
+</html>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2006 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

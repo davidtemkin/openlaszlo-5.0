@@ -1,0 +1,47 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;resizestatemin&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>resizestatemin<span class="ang">&gt;</span></h1><p class="short">Standard resizing behavior with a minimum width and height.</p><p class="meta">Extends <code>resizestate</code></p>
+                    
+        <p>
+          <code>resizestatemin</code>
+           can be used to change the
+            width and height of a view in response to the movement of the
+            mouse.
+        </p>
+                    
+            
+        <p>
+          Like 
+          <code>resizestate</code>
+          , 
+            
+          <code>resizestatemin</code>
+           tracks differences in the 
+            mouse position from after it is applied, so the bottom right 
+            corner of the resizing view 
+          <em>does not</em>
+           snap to the
+            mouse position.
+        </p>
+                    
+        <p>Note that the red box can not be resized to be smaller than the default minimum width and height of 0.  The green box can only be resized to a minimum width of 100 and height of 50.</p>
+                    
+            
+        <pre class="example">
+                &lt;canvas&gt; 
+                    &lt;simplelayout spacing="10"/&gt;
+
+                    &lt;view bgcolor="red" width="200" height="200" onmousedown="this.res.setAttribute('applied', true)" onmouseup="this.res.setAttribute('applied', false)"&gt;
+                        &lt;resizestatemin name="res"/&gt;
+                    &lt;/view&gt;
+                    &lt;view bgcolor="green" width="200" height="200" onmousedown="this.res.setAttribute('applied', true)" onmouseup="this.res.setAttribute('applied', false)"&gt;
+                        &lt;resizestatemin name="res" resize_min_width="${100}" resize_min_height="${50}"/&gt;
+                    &lt;/view&gt;
+                &lt;/canvas&gt;
+            </pre>
+                  Resizes its immediateparent with a minimum size in response to mouse events, when applied.
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">height</td><td class="ty">expression</td><td class="ty">Math.max((this.immediateparent.getMouse( 'y' )- __resize_yroffset), resize_min_height || 0)</td><td/></tr><tr><td class="nm">resize_min_height</td><td class="ty">number</td><td class="ty">0</td><td>The minimum height to resize to</td></tr><tr><td class="nm">resize_min_width</td><td class="ty">number</td><td class="ty">0</td><td>The minimum width to resize to</td></tr><tr><td class="nm">width</td><td class="ty">expression</td><td class="ty">Math.max((this.immediateparent.getMouse( 'x' )- __resize_xroffset), resize_min_width || 0)</td><td/></tr></table>
+</main><script src="_nav.js"></script></body></html>

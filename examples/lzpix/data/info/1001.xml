@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1001">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Abandoned Truck Interior</title>
+  <description>Abandoned Truck Interior — from the OpenLaszlo sample image library.</description>
+  <dates posted="1490000000" />
+  <urls><url type="photopage">data/photos/1001.jpg</url></urls>
+  <tags><tag>abandoned</tag><tag>truck</tag><tag>interior</tag></tags>
+</photo>
+</rsp>

@@ -1,0 +1,120 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 55. The Backwards Transformation: From Reference Page to Source</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.doctools.html" title="Part IX. Contributor's Guide"><link rel="prev" href="doc-toolchain.html" title="Chapter 54. The Documentation Toolchain"><link rel="next" href="docbook-local.html" title="Chapter 56. Local Docbook Style Guide"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 55. The Backwards Transformation: From Reference Page to Source</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="doc-toolchain.html">Prev</a> </td><th width="60%" align="center">Part IX. Contributor's Guide</th><td width="20%" align="right"> <a accesskey="n" href="docbook-local.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="doc-backwards"></a>Chapter 55. The Backwards Transformation: From Reference Page to Source</h2></div></div></div><p>In this chapter, we will show where several elements on the end product reference page
+  can be traced back to their origins in the sources. </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>At this point we strongly, strongly encourage the reader 
+    to undergo an investigation of XPath 1.0 and to find an XML editor which is capable of doing live
+    XPath queries. (Oxygen XML Editor works.) Then, <span class="emphasis"><em>actually run some queries on a js2doc dataset</em></span>.
+    Without this exercise, the remainder of this chapter will be utter gobbledygook.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2091"></a>1. Page Header</h2></div></div></div><div class="figure"><a name="id18587"></a><p class="title"><b>Figure 55.1. Page Header</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/reference-header-explanation.png" alt="Page Header"></div></div></div><br class="figure-break"><div class="informaltable"><table class="informaltable" border="0"><colgroup><col class="Region"><col class="Docbook Element"><col class="js2doc2dbk template"><col class="js2doc Element"></colgroup><thead><tr><th align="left">Region</th><th align="left">Docbook Element</th><th align="left">Relevant Templates</th><th align="left">js2doc Element</th></tr></thead><tbody><tr><td>A</td><td>header navigation</td><td>parameters.xsl: navig.showtitles, suppress.header.navigation </td><td>-</td></tr><tr><td>B</td><td>&lt;refentry xreflabel="&lt;text&gt;"  id="LzText" ...&gt;</td><td>&lt;xsl:template match="property" mode="refentry"&gt; <span class="emphasis"><em>("main class template")</em></span></td><td>&lt;property id="LzText" name="LzText" .../&gt;</td></tr><tr><td>C</td><td>header navigation</td><td>parameters.xsl: navig.showtitles, suppress.header.navigation </td><td>-</td></tr><tr><td>D</td><td>&lt;refsynopsisdiv&gt;</td><td>js2doc2dbk.xsl: insert-refinfo</td><td> </td></tr><tr><td>E</td><td>&lt;refsect1&gt;</td><td>js2doc2dbk.xsl: generated in main class template</td><td> </td></tr><tr><td>F</td><td>&lt;refpurpose&gt;</td><td>js2doc2dbk.xsl: generated in main class template</td><td> </td></tr></tbody></table></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2095"></a>2. A Live Example</h2></div></div></div><div class="figure"><a name="id18637"></a><p class="title"><b>Figure 55.2. A Live Example</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/reference-example-explanation.png" alt="A Live Example"></div></div></div><br class="figure-break"><p>All of the elements in the live example are contained within a &lt;div class="informalexample"&gt; (in html) which comes from a <code class="literal">&lt;informalexample role="live-example"&gt; </code>docbook element. That, in turn, comes from an &lt;example&gt; in the js2doc, which appears as something that matches this XPath query: <code class="literal">"/js2doc/property/doc/text/example"</code>. All the way back in the source (<code class="literal">WEB-INF/lps/lfc/views/LzText.lzs</code>, in this case), here's what this started out as:</p><div class="informalexample"><pre class="programlisting">
+/**
+  * &lt;p&gt;This class is used for non-editable text fields (as opposed to
+  * &lt;tagname&gt;inputtext&lt;/tagname&gt;.  A text field can be initalized
+  * with text content at compile time.&lt;/p&gt;
+  * 
+  * &lt;example&gt;
+  * &amp;lt;canvas height="30"&amp;gt;
+  *   &amp;lt;text&amp;gt;Hello world!&amp;lt;/text&amp;gt;
+  * &amp;lt;/canvas&amp;gt;
+  * &lt;/example&gt;
+  ... */</pre></div><p>Many, many templates are involved in generating the inside of that live example. This is so complicated that we'll leave the table format used above, and instead break it down element by element, in excruciating detail.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2092"></a>2.1. Element H: The embedded OpenLaszlo application</h3></div></div></div><p>In the output HTML, there's just a little script here:        
+        </p><div class="informalexample"><pre class="programlisting">
+&lt;div class="embedded-canvas"&gt;
+    &lt;script language="JavaScript" type="text/javascript"&gt;
+        lz.embed.swf({url: 'programs/LFC-$10.lzx?lzt=swf', id: 'd0e165236SWF',
+                        history: false, width: 500, height: 30
+    });
+    &lt;/script&gt;
+&lt;/div&gt;</pre></div><p>
+        The <code class="literal">lz.embed.swf</code> function is defined in embed-compressed.js, which is included in the page's head. The embed-compressed.js file comes from <code class="literal">$LPS_HOME/lps/includes/embed-compressed.js</code>, and calling <code class="literal">lz.embed.swf</code> generates an embedded flash player: 
+        </p><div class="informalexample"><pre class="programlisting">
+&lt;div id="d0e165236SWFContainer" style="width: 500px; height: 30px;"&gt;
+    &lt;embed id="d0e165236SWF" width="500" height="30" align="middle" pluginspage="http://www.macromedia.com/go/getflashplayer"
+        type="application/x-shockwave-flash" allowscriptaccess="sameDomain" swliveconnect="true"
+        flashvars="lzt=swf&amp;lzr=swf8&amp;id=d0e165236SWF" name="d0e165236SWF" wmode="window"
+        bgcolor="#ffffff" quality="high" <span class="emphasis"><em>src="programs/LFC-$10.lzx?lzt=swf&amp;lzr=swf8"</em></span>/&gt;
+&lt;/div&gt;</pre></div><p>
+      </p><p>The highlighted section above is the important part; it tells the flash player what content to load. In this case, it's loading the results of an http query  <code class="literal">programs/LFC-$10.lzx?lzt=swf&amp;lzr=swf8</code>, which, if you remember your OpenLaszlo query args, means <span class="emphasis"><em>compile the program named programs/LFC-$10.lzx for the swf8 runtime and return it as a compiled object, with no wrapper</em></span>.</p><p>The file <code class="literal">programs/LFC-$10.lzx</code> contains just exactly the code that was in the <code class="literal">&lt;example&gt; </code>tag in the lzs source. Somehow, probably in <code class="literal">dbkpreprocessexamples.xsl</code>, the contents of the <code class="literal">&lt;example&gt;</code> tag were extracted and tucked away in <code class="literal">docs/src/build/developers/programs/LFC-$10.lzx</code>, and then that file was copied from the build directory to the output directory, as <code class="literal">docs/developers/programs/LFC-$10.lzx</code>.</p><p><code class="literal">lz.embed.swf</code> was inserted by a template in <code class="literal">common-html.xsl</code>:  <code class="literal"> &lt;xsl:template match="programlisting[@language='lzx' and textobject/textdata/@fileref]"&gt;</code>. This template both embeds the live example and handles the program listing and edit button, described below.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2093"></a>2.2. Element I: The program listing</h3></div></div></div><p>The program listing seems like it should be simple, but notice that it's pretty-printed. The html output here looks like this:
+        </p><div class="informalexample"><pre class="programlisting">
+&lt;pre class="programlisting"&gt;
+  &lt;span&gt;
+    &lt;span class="markup"&gt;&amp;lt;&lt;/span&gt;
+      &lt;code <span class="emphasis"><em>class="sgmltag-element"</em></span>&gt;canvas&lt;/code&gt;
+      &lt;code class="sgmltag-attribute"&gt;height&lt;/code&gt;="
+      &lt;code class="sgmltag-attvalue"&gt;30&lt;/code&gt;"
+      &lt;span class="markup"&gt;&amp;gt;&lt;/span&gt;</pre></div><p>
+        Notice that this <code class="literal">sgmltag</code> stuff isn't present in the lfcref.dbk intermediate file; it must be inserted by the docbook processing itself. Indeed, it is inserted by the docbook customization layer, in the <code class="literal">lzx-pretty-print.xsl</code> worksheet, which is included by <code class="literal">common-html.xsl</code>, which is in turn invoked in the ant task, <code class="literal">book.html.generate</code>.  
+      </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2094"></a>2.3. Element J: The edit button</h3></div></div></div><p>The edit button ties together a few separate threads of complexity. The windows builds, in particular, are subject to troubles here. The edit button must point an external jsp (editor.jsp) at the program file associated with this program listing. We leave the details of this as an exercise to the reader, except to note that the insertion of the edit button is guarded by the statement <code class="literal">&lt;xsl:if test="$live"&gt;</code> which in turn consults the value of a variable computed like this: 
+        </p><pre class="programlisting">
+&lt;xsl:variable name="live" select="ancestor::example[<span class="emphasis"><em>@role='live-example'</em></span>] or 
+    ancestor::informalexample[@<span class="emphasis"><em>role='live-example'</em></span>]"/&gt;</pre><p>
+        Remember the docbook element that we found in the docbook intermediate file? <code class="literal">&lt;informalexample role="live-example"&gt; </code> matches the second option in the XPath query for <code class="literal">$live</code> above, and that's why this example is live.       
+      </p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2096"></a>3. The Attributes Table</h2></div></div></div><div class="figure"><a name="id18691"></a><p class="title"><b>Figure 55.3. The Attributes Table</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/reference-attributes-explanation.png" alt="The Attributes Table"></div></div></div><br class="figure-break"><p>The attributes table is generated by a set of coherent templates and patterns. There's a lot of them, but they're not very complicated. It is all run by this template, in <code class="literal">js2doc2dbk.xsl</code>:
+</p><pre class="programlisting">&lt;xsl:template match="property" mode="refentry-details"&gt;</pre><p>
+    </p><p>
+      This template calls the <code class="literal">describe-members</code> template repeatedly with different parameters, depending on which kind of members are being described. For the attributes table, the <code class="literal">describe-members</code> template calls the <code class="literal">describe-members-grid</code> template, which generates a &lt;refsect2&gt; element, which in turn generates the "Attributes" header indicated in region P. Region Q is the &lt;thead&gt; element of a docbook &lt;informaltable&gt;, and regions R, S, and T are each instances of the docbook element &lt;row&gt;
+      
+      Each row (regions R, S, T) in the attributes table are elements of the result of this XPath, which is passed in as the <code class="literal">members</code> parameter to <code class="literal">describe-members-grid</code>:  
+      </p><pre class="programlisting">$ivars[not &amp;isevent;] | $svars[not &amp;isevent;]</pre><p><code class="literal">$ivars</code> is a local variable containing descriptions of the instance variables for the current class: 
+      </p><pre class="programlisting">&lt;xsl:variable name="ivars" select="&amp;objectvalue;/property[@name='__ivars__']/object/property[&amp;isvisible;]"/&gt;</pre><p>
+      and <code class="literal">$svars</code> is a local variable containing descriptions of the "setters" for the current class:      
+      </p><pre class="programlisting">&lt;xsl:variable name="svars" select="&amp;objectvalue;/property[@name='setters']/object/property[&amp;isvisible;]"/&gt;</pre><p>
+      The value of these variables is a result tree fragment; it's not just the name of the variables. This becomes important when we descend into the <code class="literal">describe-members</code> template.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>Review the table in <a class="xref" href="doc-toolchain.html#LFC-to-js2doc" title="3.2. JavaScript to js2doc">Section 3.2, “JavaScript to js2doc”</a> to get a feel for why these XPath's return the desired result sets.</p></div><p>This all ends up down in the <code class="literal">member-data-row</code> template in js2doc2dbk.xsl, which fill in columns K, L, M, N, and O in the diagram above. Turn to LzText.lzs, to find where these variables were declared:</p><div class="informalexample"><pre class="programlisting">
+/**  
+  * <span class="emphasis"><em>@lzxtype</em></span> numberExpression (region L)
+  * <span class="emphasis"><em>@modifiers</em></span> read-only (region O)
+  */
+  var <span class="emphasis"><em>maxlength</em></span>; (region K)</pre></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2097"></a>4. Method Details</h2></div></div></div><div class="figure"><a name="id18723"></a><p class="title"><b>Figure 55.4. Method Details</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/reference-methods-explanation.png" alt="Method Details"></div></div></div><br class="figure-break"><p>The reference for a function is generated by the call to <code class="literal">&lt;xsl:apply-templates select="." mode="describe-member"&gt;</code> in the template named <code class="literal">describe-members-list</code> in <code class="literal">js2doc2dbk.xsl</code>. <code class="literal">select="." mode="desribe-member"</code> means <span class="emphasis"><em>apply whatever templates match the current element in the describe-member mode.</em></span></p><p>That takes us to the template </p><pre class="programlisting">&lt;xsl:template match="initarg|property" mode="describe-member"&gt;</pre><p>
+      also in js2doc2dbk.xsl. Dancing through a variety of complex template matching, the XSL ends up examining mostly these elements of the js2doc:
+      </p><div class="informalexample"><pre class="programlisting">
+&lt;class extends="LzView" inherits="LzFormatter"&gt;
+  &lt;property access="private" id="LzText.tagname" <span class="emphasis"><em>name="tagname" value="text"&gt;</em></span>&lt;!-- region 6 --&gt;
+    &lt;doc&gt;
+      &lt;tag name="modifiers"&gt;
+        &lt;text&gt;override&lt;/text&gt;
+      &lt;/tag&gt;
+    &lt;/doc&gt;
+  &lt;/property&gt;
+  ...
+  &lt;property id="LzText.prototype" name="prototype" access="public"&gt;
+    &lt;object&gt;
+      &lt;property id="LzText.prototype.format" <span class="emphasis"><em>name="format"</em></span>&lt;!-- regions 1, 2 --&gt; 
+      access="public"&gt;
+        &lt;doc&gt;
+          <span class="emphasis"><em>&lt;text&gt;Formatted output.
+            Formats its arguments using &lt;xref linkend="LzFormatter.prototype.formatToString"/&gt; and sets the text of the
+            view to the result.&lt;/text&gt;</em></span>&lt;!-- region 7 --&gt;
+        &lt;/doc&gt;
+        &lt;function&gt;
+          <span class="emphasis"><em>&lt;parameter name="control"</em></span>  &lt;!-- region 3, 9 --&gt;        
+              <span class="emphasis"><em>type="string"&gt;</em></span> &lt;!-- region 10 --&gt; 
+            &lt;doc&gt;
+              <span class="emphasis"><em>&lt;text&gt;A control string where % indicates the
+                conversion of the corresponding argument&lt;/text&gt;</em></span>&lt;!-- region 11 --&gt;
+            &lt;/doc&gt;
+          &lt;/parameter&gt;
+          <span class="emphasis"><em>&lt;parameter name="args"</em></span>  &lt;!-- region 3, 9 --&gt;        
+              <span class="emphasis"><em>type="[*]"&gt;</em></span> &lt;!-- region 10 --&gt; 
+            &lt;doc&gt;
+              <span class="emphasis"><em>&lt;text&gt;arguments to be formatted according to the
+                control string&lt;/text&gt;</em></span>&lt;!-- region 11 --&gt;
+            &lt;/doc&gt;
+          &lt;/parameter&gt;
+        &lt;/function&gt;
+      &lt;/property&gt;
+      ...
+    &lt;/object&gt;
+  &lt;/property&gt;
+&lt;/class&gt;</pre></div><p>
+    </p><p>To carry this reasoning all the way back to the javascript code definining the method, in <code class="literal">WEB-INF/lps/lfc/views/LzText.lzs</code>:</p><pre class="programlisting">
+      <span class="emphasis"><em>/**</em></span>
+      * Formatted output.
+      * Formats its arguments using &lt;xref
+      * linkend="LzFormatter.prototype.formatToString"/&gt; and sets the text of the
+      * view to the result. 
+      *
+      * <span class="emphasis"><em>@param</em></span> string control: A control string where % indicates the
+      * conversion of the corresponding argument
+      *
+      * <span class="emphasis"><em>@param</em></span> [*] args: arguments to be formatted according to the
+      * control string
+      */
+      function <span class="emphasis"><em>format</em></span> (control:String, ...args) {
+        this.setAttribute('text', this.formatToString.apply(this, [control].concat(args)).toString().toHTML());
+      }</pre></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="doc-toolchain.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.doctools.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="docbook-local.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 54. The Documentation Toolchain </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 56. Local Docbook Style Guide</td></tr></table></div></body></html>

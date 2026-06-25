@@ -1,0 +1,42 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>LzCursorService — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1>LzCursorService</h1><p class="short">LzCursorService provides methods for changing the mouse cursor.</p><p class="meta">Extends <a ><code>LzEventable</code></a></p>
+        <p>
+          <code>lz.Cursor</code>
+           is the single instance of the class
+ 
+          <code>lz.CursorService</code>
+          .
+        </p>
+         
+        <p>This example shows how the cursor can be set on a view so that
+ it will change when the mouse is over that view:</p>
+         
+        <pre class="example">
+ &lt;canvas height="30"&gt;
+   &lt;resource name="waitcursor" src="resources/lzwaitcursor_rsc.swf"/&gt;
+   &lt;view bgcolor="yellow" cursor="waitcursor"&gt;
+     &lt;text&gt;Roll over to change the cursor&lt;/text&gt;
+   &lt;/view&gt;
+ &lt;/canvas&gt;
+ </pre>
+         
+        <p>This example changes the cursor for 1/2 second when the button is
+ clicked:</p>
+         
+        <pre class="example">
+ &lt;canvas height="30"&gt;
+   &lt;resource name="waitcursor" src="resources/lzwaitcursor_rsc.swf"/&gt;
+   &lt;button text="Click me to change the cursor for 1/2 second"&gt;
+     &lt;handler name="onclick"&gt;
+       lz.Cursor.setCursorGlobal('waitcursor');
+       var del = new LzDelegate(lz.Cursor, 'unlock');
+       lz.Timer.addTimer(del, 500);
+     &lt;/handler&gt;
+   &lt;/button&gt;
+ &lt;/canvas&gt;
+ </pre>
+</main><script src="_nav.js"></script></body></html>

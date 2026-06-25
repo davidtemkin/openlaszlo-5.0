@@ -1,0 +1,338 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 42. Audio and Video</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.advanced.html" title="Part VI. Advanced Topics"><link rel="prev" href="survey-chapter.html" title="Chapter 41. A Components-based application"><link rel="next" href="performance-tuning.html" title="Chapter 43. Performance Monitoring and Tuning"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 42. Audio and Video</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="survey-chapter.html">Prev</a> </td><th width="60%" align="center">Part VI. Advanced Topics</th><td width="20%" align="right"> <a accesskey="n" href="performance-tuning.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="video"></a>Chapter 42. Audio and Video</h2></div></div></div><p>
+This chapter discusses streaming audio and video in .flv and .mp3 formats that are rendered in the specialized <a class="indexterm" name="id14499"></a><code class="sgmltag-element">&lt;videoview&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+. More limited audio and visual capabilities can be obtained by attaching audio and visual sources as resources to regular <a class="indexterm" name="id14503"></a><code class="sgmltag-element">&lt;view&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+s. For discussion of that topic, see <a class="xref" href="media-resources.html" title="Chapter 18. Media Resources">Chapter 18, <i>Media Resources</i></a>. The video APIs described in this chapter work only in OpenLaszlo applications that are compiled for the Flash runtime target.
+</p><p>OpenLaszlo video APIs give you access to the full functionality of media players such as the <a class="ulink" href="http://www.adobe.com/products/flashmediaserver/" target="_top">Flash Media Server</a> and the <a class="ulink" href="http://www.osflash.org/red5" target="_top">Red5</a> media player. When your OpenLaszlo program is connected to a media server over a Real Time Media Protocol connection, you can not only receive and play audio and video (in mp3 and flv formats), you can also record your own audio and video locally and send it to the server, where it can be stored or shared in real time with other client programs.
+</p><p>
+In contrast to RTMP, files that are streamed over an HTTP connection allow more limited functionality.</p><p>This chapter explains the concepts of controlling streaming media over an HTTP connection and and bi-directional communication with a media server over an RTMP connection. </p><p class="fixme"><em><span class="remark"><span class="para-label">FIXME: </span>
+What happens if you compile for DHTML?  Compiler error? Warning?
+How this differs from earlier LPS, which did allow playing of video media.
+</span></em></p><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1913"></a>1. Overview</h2></div></div></div><p>
+There are two main ways that OpenLaszlo applications can interact with video media: as a basically passive recipient of streamed video served over HTTP, or, when a media server is present, the OpenLaszlo application can fully interact with the server, capturing video and audio data with local cameras and microphones and sending it back to the media server over RTMP.
+</p><p>
+Media servers do not only stream media content to the Flash plugin, they can also send instructions to be executed on the client and other kinds of data. Servers can receive video, audio and data from an OpenLaszlo application and either save it or rebroadcast it. These APIs allow you to manipulate the source video content on the client—for example, to rotate it, change its transparency, seek forward and back, and so forth.
+</p><p>
+This functionality makes possible entirely new types of web applications. For example:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>Video on demand</p></li><li class="listitem"><p>Video mail</p></li><li class="listitem"><p>Multi-user video chat</p></li><li class="listitem"><p>Video sharing and publishing</p></li><li class="listitem"><p>Conferencing</p></li><li class="listitem"><p>Broadcasting live streams of concerts</p></li><li class="listitem"><p>Recording audio</p></li></ul></div><p>
+OpenLaszlo APIs implement an abstraction layer so that you can use the same classes to manipulate video data regardless of its source. For example, you use a <a class="indexterm" name="id14537"></a><code class="sgmltag-element">&lt;videoview&gt;</code> to contain video data, regardless of the protocol (HTTP or RTMP) over which the data comes.  The <a class="indexterm" name="id14540"></a><code class="sgmltag-element">&lt;mediastream&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ associated with that <a class="indexterm" name="id14544"></a><code class="sgmltag-element">&lt;videoview&gt;</code> determines its properties.
+</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1918"></a>2. Architecture</h2></div></div></div><p>
+Depending on whether your application is a simple receptor of streams or a sender and receiver, the architecture of the application may be simple or complex.  In the simplest case, the LZX application merely catches and displays streamed files, and your programming options are limited.  In the more complex case, for example, a multi-point video chat, your application may be considered to have a central server component and any number of clients, which communicate with each other through the server. In such applications you need to handle such things as receiving and displaying streamed data, recording and broadcasting from local microphones and cameras, seeking forward and back in the stream, and so forth. We'll examine some of these cases in examples below.
+</p><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>
+Should there be an illustration? How would we illustrate the difference between streaming and full interaction?
+
+</span></em></p><p class="fixme"><em><span class="remark"><span class="para-label">FIXME: </span>
+etc
+
+FLV format.  What is it.  Reference Youtube, etc.
+</span></em></p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1914"></a>2.1. File Formats</h3></div></div></div><p>
+LZX videoviews can stream content in FLV or Mp3 format.  According to the <a class="ulink" href="http://en.wikipedia.org/wiki/FLV" target="_top">Wikipedia</a>,
+</p><p>
+<span class="i">
+FLV (Flash Video) is a proprietary file format used to deliver video over the Internet using Adobe Flash Player (also called Macromedia Flash Player) version 6, 7, 8, or 9. FLV content may also be embedded within SWF files. Notable users of the FLV format include Google Video, Reuters.com, YouTube and MySpace. Flash Video is viewable on most operating systems, via the widely available Macromedia Flash Player and web browser plug-in, or one of several third-party programs such as Media Player Classic (with the ffdshow codec installed), MPlayer, or VLC media player.
+</span>
+</p><p>
+The ubiquitous Mp3 format is <a class="ulink" href="http://en.wikipedia.org/wiki/Mp3" target="_top">described</a>:</p><p>
+<span class="i">
+MPEG-1 Audio Layer 3, more commonly referred to as MP3, is a popular digital audio encoding and lossy compression format, designed to greatly reduce the amount of data required to represent audio, yet still sound like a faithful reproduction of the original uncompressed audio to most listeners. It was invented by a team of German engineers who worked in the framework of the EUREKA 147 DAB digital radio research program, and it became an ISO/IEC standard in 1991.
+</span>
+</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1917"></a>2.2. Protocols</h3></div></div></div><p>
+Video content can be communicated from the server using either of two protocols:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>HTTP</p></li><li class="listitem"><p>Real Time Media Protocol(RTMP)</p></li></ul></div><p>
+Depending on where the media is being served from and what protocol connects the OpenLaszlo client to the sever, different capabilities are available in the client application.
+</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1915"></a>2.2.1. HTTP</h4></div></div></div><p>
+HTTP, the HyperText Transfer Protocol, is useful for downloading files to a client. However it's not interactive and has no special provisions for handling data in video format. When you load an URL that identifies a .flv or mp3 file, that file is downloaded. You have some control over when to start playing the download, but that's about it. From the point of view of the content provider, the most obvious value of using HTTP is that it requires no special media server. Also, HTTP is useful when bidirectional communication is not needed because videos downloaded on this protocol start fast.
+</p><p>
+When you download a file over HTTP, the entire file is loaded into memory. Once in memory you can quickly seek.  But because the files must all fit into memory, there is a limit on the size of files that you can handle in this way.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1916"></a>2.2.2. RTMP</h4></div></div></div><p>
+RTMP, the Real Time Messaging Protocol, was developed by Adobe (formerly Macromedia), in order to get around the limitations of HTTP when dealing with bi-directional ("full duplex") video data in real time. RTMP provides APIs for complex interactions, and because the connection allows you to download portions of the file as needed, you can handle larger files than can HTTP, which download the entire file.  With RTMP there is less memory usage, as only one frame is loaded into memory at a time. RTMP has been optimized for video, and has better compression rates. In order to use the RTMP protocol, you must establish a connection to an application on a server. You do this using the <a class="indexterm" name="id14582"></a><code class="sgmltag-element">&lt;rtmpconnection&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag.
+</p><p>
+For more information on the RTMP protocol, see <a class="ulink" href="http://www.adobe.com/cfusion/knowledgebase/index.cfm?id=tn_16458" target="_top">Adobe</a> and <a class="ulink" href="http://www.osflash.org/rtmp/protocol" target="_top">OS Flash</a> sites.
+</p><p>
+Each of these protocols has its uses. The RTMP protocol, coupled with a media server, provides a much more rich environment for creating interactive media applications.  On the other hand HTTP requires no special media server software, and for many simple streaming applications it provides faster startup.
+</p><p></p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1925"></a>3. The OpenLaszlo Video Client Model</h2></div></div></div><p>
+OpenLaszlo capabilities on the client are provided through a group of base classes and through two components that are built on top of these base classes.</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1921"></a>3.1. Overview of Base Classes</h3></div></div></div><p>
+The <a class="indexterm" name="id14596"></a><code class="sgmltag-element">&lt;videoview&gt;</code> is the visual object that is used to display audio and visual data. The <a class="indexterm" name="id14599"></a><code class="sgmltag-element">&lt;mediastream&gt;</code> associated with a <a class="indexterm" name="id14602"></a><code class="sgmltag-element">&lt;videoview&gt;</code> tells it where and how to get its content. You can attach devices to the <a class="indexterm" name="id14605"></a><code class="sgmltag-element">&lt;videoview&gt;</code>; as of OpenLaszlo 3.4 the two supported devices are <a class="indexterm" name="id14608"></a><code class="sgmltag-element">&lt;camera&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ and <a class="indexterm" name="id14612"></a><code class="sgmltag-element">&lt;microphone&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+. The classes <a class="indexterm" name="id14616"></a><code class="sgmltag-element">&lt;camera&gt;</code> and <a class="indexterm" name="id14619"></a><code class="sgmltag-element">&lt;microphone&gt;</code> are implemented as extensions of the base class <a class="indexterm" name="id14622"></a><code class="sgmltag-element">&lt;mediadevice&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+.
+</p><p>
+<a class="indexterm" name="id14627"></a><code class="sgmltag-element">&lt;videoview&gt;</code> is an extension of <a class="indexterm" name="id14630"></a><code class="sgmltag-element">&lt;view&gt;</code>. It's a visual object whose height, width, placement, etc, you can control just as you would any other view.
+</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1919"></a>3.1.1. The Videoview</h4></div></div></div><p>
+The <a class="indexterm" name="id14636"></a><code class="sgmltag-element">&lt;videoview&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ is a subclass of <a class="indexterm" name="id14640"></a><code class="sgmltag-element">&lt;view&gt;</code> that is optimized for audio/visual streaming.  In addition to the attributes inherited from <a class="indexterm" name="id14643"></a><code class="sgmltag-element">&lt;view&gt;</code>, this class has additional attributes that allow you to, for example identify a camera and microphone associated with it, to control whether media starts playing immediately or not, to determine play rates, and so forth.
+</p><p>
+Notice that unlike <a class="indexterm" name="id14647"></a><code class="sgmltag-element">&lt;view&gt;</code>, you cannot attach a resource to a <a class="indexterm" name="id14650"></a><code class="sgmltag-element">&lt;videoview&gt;</code>. 
+</p><p>
+<a class="indexterm" name="id14654"></a><code class="sgmltag-element">&lt;videoview&gt;</code> has methods parallel to those on <a class="indexterm" name="id14657"></a><code class="sgmltag-element">&lt;resource&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+.  For example, you use <a class="indexterm" name="id14661"></a><code class="methodname">play()</code> and <a class="indexterm" name="id14665"></a><code class="methodname">stop()</code> to control the video playback.
+ 
+</p><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1920"></a>3.1.2. The mediastream</h4></div></div></div><p>When you create a <a class="indexterm" name="id14672"></a><code class="sgmltag-element">&lt;videoview&gt;</code> and pass an URL and type (http or rtmp) to it, a stream is created, by default.  If you wish to have more control over the stream, you can define a <a class="indexterm" name="id14675"></a><code class="sgmltag-element">&lt;mediastream&gt;</code>.</p><p>
+The <a class="indexterm" name="id14679"></a><code class="sgmltag-element">&lt;mediastream&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag allows you to identify the type of stream to be associated with a given <a class="indexterm" name="id14683"></a><code class="sgmltag-element">&lt;videoview&gt;</code>. Using attributes of and methods on the <a class="indexterm" name="id14686"></a><code class="sgmltag-element">&lt;mediastream&gt;</code>, you can, for example, determine the frame rate and current time of the stream, set it to record or broadcast and so forth.
+</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1924"></a>3.2. Overview of Components</h3></div></div></div><p>
+OpenLaszlo provides two upper level components for managing connections and video objects.
+</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1922"></a>3.2.1. rtmpstatus</h4></div></div></div><p>
+The <a class="indexterm" name="id14695"></a><code class="sgmltag-element">&lt;rtmpstatus&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ component provides a visual indication of the status of the rtmp connection. 
+</p><p>
+This element causes a small indicator "light" to show the status of the connection:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>red: no connection</p></li><li class="listitem"><p>green: working connection</p></li></ul></div><p>
+The example below shows this component.
+</p><div class="example"><a name="id14706"></a><p class="title"><b>Example 42.1. Trivial rtmpstatus example</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="40" width="100%"&gt;
+   &lt;simplelayout spacing="5"/&gt;
+   &lt;text text="The indidcator light is red because there is no rtmp connection."/&gt;
+   &lt;rtmpstatus/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/video-_1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/video-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1923"></a>3.2.2. videoplayer</h4></div></div></div><p>
+The <a class="indexterm" name="id14712"></a><code class="sgmltag-element">&lt;videoplayer&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ component provides the a graphical representation of the essential controls for handling video and audio: play, stop, pause, seek forward, seek in reverse, and control volume.
+</p><p class="fixme"><em><span class="remark"><span class="para-label">FIXME: </span>
+We'll need to spruce this up, of course, when the real video player gets checked in.
+</span></em></p><p></p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1928"></a>4. Establishing a connection to an RTMP sever</h2></div></div></div><p>
+An <a class="indexterm" name="id14722"></a><code class="sgmltag-element">&lt;rtmpconnection&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ represents a connection to an application running on an RTMP server, such as the Flash Media Server or Red5, enabling two-way streaming of audio and video. This allows you to broadcast and receive live audio and and or video, as well as recording video from a webcam or audio from a microphone to files on the server. Recorded files may be played back over HTTP (using <a class="indexterm" name="id14726"></a><code class="sgmltag-element">&lt;mediastream&gt;</code> and <a class="indexterm" name="id14729"></a><code class="sgmltag-element">&lt;videoview&gt;</code> classes) or with RTMP to allow seeking within and playback of long files that are impractical to load into memory.
+</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1926"></a>4.1. Automatic connection to the RTMP service</h3></div></div></div><p>
+If there is only one rtmpconnection, the video object automatically hooks up to it:</p><div class="example"><a name="id14735"></a><p class="title"><b>Example 42.2. automatic connection to RTMP connection</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;rtmpconnection src="rtmp://mysite.com/myapp/" autoconnect="true"/&gt;
+   &lt;videoview url="myvideo.flv" type="rtmp" autoplay="true"/&gt;
+</pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1927"></a>4.2. Choosing between multiple connections</h3></div></div></div><p>
+When an application has more than one rtmp connection active, you chose among them by specifying the URL passed to the <a class="indexterm" name="id14741"></a><code class="sgmltag-element">&lt;videoview&gt;</code>.
+</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1933"></a>5. Cameras and Microphones</h2></div></div></div><p>
+OpenLaslzo implements the <a class="indexterm" name="id14747"></a><code class="sgmltag-element">&lt;camera&gt;</code> and <a class="indexterm" name="id14750"></a><code class="sgmltag-element">&lt;microphone&gt;</code> objects as subclasses of the <a class="indexterm" name="id14753"></a><code class="sgmltag-element">&lt;mediadevice&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ base class. Most of the methods and attributes that you use to control cameras and microphones are inherited from the base class. In order to ensure the privacy of computer users, camera and microphone objects must explicitly obtain permission from the user before they can be turned on (this ensures that people are not being spied upon without their knowledge). 
+</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1930"></a>5.1. Obtaining permission</h3></div></div></div><p>
+When your program instantiates a camera or microphone object, the Flash Player causes a dialogue to be appear on the screen. If the person using the application indicates that permission has been granted, the <a class="indexterm" name="id14760"></a><code class="sgmltag-attribute">allowed</code> attribute for every device is set to <code class="literal">true&gt;</code>
+</p><p>
+Note that it is not possible to allow permission on one device and not another. It's an all-or-nothing proposition. You grant access to all cameras and microphones, or to none.
+</p><p>Here's an illustration of a representative security dialogue the first time the camera is requested:
+</p><div class="figure"><a name="id14766"></a><p class="title"><b>Figure 42.1. Permission to record dialog</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/AdobeFlashPlayerSettings1.png" alt="Permission to record dialog"></div></div></div><br class="figure-break"><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1929"></a>5.1.1. Changing permissions</h4></div></div></div><p>
+You can change the permissions of a running application by using the right-click context menu on the video. Note that the menu may show the name of device <span class="i">drivers</span>, not the actual devices. A typical right-click menu is shown below.
+</p><div class="figure"><a name="id14775"></a><p class="title"><b>Figure 42.2. Permission to record dialogue</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/AdobeFlashPlayerSettings2.png" alt="Permission to record dialogue"></div></div></div><br class="figure-break"><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>
+Explain record versus broadcast
+Explain privacy policy, capturing and allowed attributes.
+</span></em></p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1932"></a>5.2. Recording Audio and Video</h3></div></div></div><p>
+Once you have attached a microphone and/or camera to a videoview and received permission from the user to turn them on, the application turns them on by setting <a class="indexterm" name="id14786"></a><code class="sgmltag-attribute">capturing</code> to <code class="literal">true</code>.
+</p><div class="example"><a name="id14790"></a><p class="title"><b>Example 42.3. Turning microphone and camera on</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;rtmpconnection src="rtmp://mysite.com/myapp/" autoconnect="true"/&gt;
+   &lt;videoview id="v" url="test.flv" type="rtmp"&gt;
+       &lt;camera show="true"/&gt;
+       &lt;microphone capturing="true"/&gt;
+   &lt;/videoview&gt;
+   &lt;!-- a progress indicator bar proportional to stream time--&gt;
+   &lt;view bgcolor="black" width="${v.stream.time/180*v.width}"/&gt;
+   &lt;!--methods on the stream automatically created by the videoview --&gt;
+   &lt;button text="record" onclick="v.stream.record()"/&gt;
+   &lt;button text="stop" onclick="v.stream.stop()"/&gt;
+</pre></div></div><br class="example-break"><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1931"></a>5.2.1. More than one camera or microphone attached to a view</h4></div></div></div><p>You can have more than one camera associated with a videoview. The following example shows how to use the <a class="indexterm" name="id14796"></a><code class="sgmltag-attribute">index</code> attribute of the of the camera object to control which camera is in use:</p><div class="example"><a name="id14799"></a><p class="title"><b>Example 42.4. Selecting which camera to use</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;rtmpconnection src="rtmp://mysite.com/myapp/" autoconnect="true"/&gt;
+   &lt;videoview x="10" id="v" url="test.flv" type="rtmp"&gt;
+       &lt;camera show="true" index="2"/&gt; 
+       &lt;microphone name="mic" capturing="false"/&gt;    
+   &lt;/videoview&gt;
+   &lt;view bgcolor="green" width="10" height="${v.mic.level/100*v.height}"/&gt;
+</pre></div></div><br class="example-break"><p>
+</p><p></p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1934"></a>6. Streaming Files over HTTP</h2></div></div></div><p>
+</p><p>
+To show a video from http server and play it automatically:</p><div class="example"><a name="id14807"></a><p class="title"><b>Example 42.5. Video Display over HTTP</b></p><div class="example-contents"><pre class="programlisting">
+&lt;videoview url="http://mysite.com/myvideo.flv" autoplay="true"/&gt;
+&lt;videoview url="myvideo.flv" autoplay="true"/&gt;  
+</pre></div></div><br class="example-break"><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>
+Using cameras and microphones on HTTP: mirror only.  For example, motion-detection, mirror playback, etc.
+</span></em></p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1936"></a>7. Bidirectional interaction over Real Time Media Protocol (RTMP)</h2></div></div></div><p>
+The Real Time Media Protocol, RTMP, is designed to handle efficiently high speed communication of audio and video information between a client application and a media server.
+</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1935"></a>7.1. Views with attached swf video resources</h3></div></div></div><p>
+<a class="indexterm" name="id14819"></a><code class="sgmltag-element">&lt;videoview&gt;</code>s do not accept files in .swf format. To play a movie clip in .swf file format, use a <a class="indexterm" name="id14822"></a><code class="sgmltag-element">&lt;view&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+, not a <a class="indexterm" name="id14826"></a><code class="sgmltag-element">&lt;videoview&gt;</code>. You would would attach the video as a resource to the view, as explained in the media chapter.
+</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1943"></a>8. Installing Video Cameras and Servers</h2></div></div></div><p>
+Here are some general guidelines for setting up video cameras and servers for OpenLaszlo applications.  You should of course consult the documentation for the individual servers too.
+</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1937"></a>8.1. Flash Media Server 2</h3></div></div></div><p>
+Install the Flash Media Server in:</p><pre class="programlisting">
+C:\Program Files\Macromedia\Flash Media Server 2\
+</pre><p>
+Create the test application directly and subdirectories:
+</p><pre class="programlisting">
+C:\Program Files\Macromedia\Flash Media Server 2\applications\test
+C:\Program Files\Macromedia\Flash Media Server 2\applications\test\streams
+C:\Program Files\Macromedia\Flash Media Server 2\applications\test\streams\instance1
+</pre><p>
+Copy the flash video test files into the test\streams\instance1 directory, from:
+</p><pre class="programlisting">
+$LZ_HOME/test/video/videos/*.flv
+</pre><p>
+If the media server fails to start on Windows, check to make sure
+that Emacs or another text editor did not change the ownership and
+permission of the configuration files. You may have to, for example, change permission on some of
+the Flash Media Server xml configuration files
+because the Flash server (which ran as another user) could not read
+them and would not start.
+</p><p>
+If the media server fails to work on Linux, make sure that you have
+the shared libraries from Firefox installed in /usr/lib. If you're
+missing the libraries, the server will run and appear to be working,
+and the admin interface actually will work, but none of the
+streaming video works. When you run the flash server startup
+command ("./server start"), it will complain about missing
+libraries. If this happens, download Firefox and copy all its shared libraries
+to /usr/lib.
+</p><pre class="programlisting">
+http://livedocs.macromedia.com/fms/2/docs/wwhelp/wwhimpl/common/html/wwhelp.htm?context=LiveDocs_Parts&amp;file=00000009.html
+</pre><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1938"></a>8.2. Red5</h3></div></div></div><p>
+OpenLaszlo applications can communicate with the Red5 media server, an open source Flash media server that uses rtmp. For more on Red5, see their <a class="ulink" href="http://osflash.org/red5" target="_top">website</a>.
+</p><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>
+Red5 setup instructions: TBD
+</span></em></p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1941"></a>8.3. Logitech QuickCam</h3></div></div></div><p>
+There is a QuickCam "Logitech Process Monitor" server (LvPrcSrv.exe)
+that interferes with Cygwin, the one that substitutes computer
+generated characters for the video stream, who track your motion and
+facial expressions. It causes cygwin to fail forking new
+processes. This manifests itself by build processes mysteriously
+failing, and Emacs having problem forking sub-processes in 
+shell windows. You have to disable the server to make Cygwin work
+again.
+</p><pre class="programlisting">
+http://blog.gmane.org/gmane.os.cygwin.talk
+http://www.cygwin.com/ml/cygwin/2006-06/msg00641.html
+</pre><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1939"></a>8.3.1. Adding playback controls to a videoview</h4></div></div></div><p>You control playing and stopping of the videostream by using the <a class="indexterm" name="id14857"></a><code class="methodname">play()</code> and <a class="indexterm" name="id14861"></a><code class="methodname">stop()</code> methods on the stream.
+
+
+</p><div class="example"><a name="id14865"></a><p class="title"><b>Example 42.6. Adding playback controls on a stream</b></p><div class="example-contents"><pre class="programlisting">
+  &lt;rtmpconnection src="rtmp://mysite.com/myapp/" autoconnect="true"/&gt;
+  &lt;videoview id="v" url="http://mysite.com/myvideo.flv"/&gt;
+  &lt;!--should stream be streamname?--&gt;
+  &lt;button text="play" onclick="v.stream.play()"/&gt;
+  &lt;button text="stop" onclick="v.stream.stop()"/&gt;
+</pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1940"></a>8.3.2. A Multi-party application</h4></div></div></div><p>
+In the example below, two videoviews are communicating with each other through a media server located at 127.0.0.1/test over the RTMP protocol. Each view specifies an URL to the other.
+</p><div class="example"><a name="id14871"></a><p class="title"><b>Example 42.7. A simple multi-party video application</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;rtmpconnection src="rtmp://127.0.0.1/test" autoconnect="true"/&gt;   
+   &lt;simplelayout/&gt;
+   &lt;rtmpstatus/&gt;
+   &lt;view layout="axis:x; inset:10; spacing:10"&gt;
+       &lt;videoview id="live" url="me" type="rtmp" oninit="this.stream.broadcast()" &gt;
+           &lt;camera show="true"/&gt;
+       &lt;/videoview&gt;
+       &lt;videoview id="vp" url="you" type="rtmp" oninit="this.stream.play()"/&gt;
+   &lt;/view&gt;
+</pre></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1942"></a>8.4. Control of muting, recording, and broadcasting</h3></div></div></div><p>
+
+</p><div class="example"><a name="id14877"></a><p class="title"><b>Example 42.8. control of Muting, Recording, Broadcasting</b></p><div class="example-contents"><pre class="programlisting">
+&lt;canvas debug="true"&gt;
+
+    &lt;rtmpconnection
+        src="rtmp://127.0.0.1/test" 
+        autoconnect="true"
+    /&gt;
+    &lt;mediastream name="s1" 
+        type="rtmp"
+    /&gt;
+    &lt;mediastream name="s2" 
+        type="rtmp"
+    /&gt;
+    &lt;simplelayout/&gt;
+    
+    &lt;text multiline="true" width="100%"&gt;
+    Instructions:&lt;br/&gt;
+    1. Either run a flash media server on localhost (127.0.0.1), or ssh tunnel to a media server at a known host&lt;br/&gt;
+    2. Press the broadcast button. (Grant camera access permission if needed.)
+       The button should change to say "stop broadcasting"&lt;br/&gt;
+    3. Press the receive button. You should be receiving audio and video from yourself and the
+       button should say "stop receiving."&lt;br/&gt;
+    4. Try out the audio and video mute buttons. The video mute should freeze the received picture.
+       The audio mute should silence the received sound.&lt;br/&gt;
+    5. Press the receive button. The received video should freeze and the button should say "stop receiving".&lt;br/&gt;
+    6. Press the receive button again. The video should resume and the button should say "receiving".&lt;br/&gt;
+    7. Press the broadcast button. The received video should freeze and the button should say "broadcast".&lt;/br&gt;
+    &lt;/br&gt;
+    The indicator below shows the status of the video connection. 
+       
+    &lt;/text&gt;
+    &lt;rtmpstatus/&gt;
+    &lt;view
+        layout="axis:x; inset:10; spacing:10"
+    &gt;
+        &lt;view id="v1" 
+            layout="axis:y; spacing:4"
+        &gt;
+            &lt;videoview id="live" 
+                type="rtmp" 
+                stream="$once{canvas.s1}"
+            &gt;
+                &lt;camera id="cam" 
+                    show="false"
+                /&gt;
+                &lt;microphone id="mic" capturing="false"/&gt;
+                
+            &lt;/videoview&gt;
+            &lt;edittext name="username"&gt;YourName&lt;/edittext&gt;
+            &lt;button
+                text="broadcast"
+            &gt;
+                &lt;attribute
+                    name="text" 
+                    value="${(s1.broadcasting == false) ? 'broadcast' : 'stop broadcasting'}"
+                /&gt;
+                &lt;handler name="onclick"&gt;&lt;![CDATA[
+                    if (cam.show == false) {
+                        live.stream.setAttribute('url', parent.username.text);
+                        live.stream.broadcast();
+                        cam.setAttribute('show', true);
+                    } else {
+                        live.stream.stop();
+                        cam.setAttribute('show', false);
+                    }
+                  ]]&gt;
+                &lt;/handler&gt;
+            &lt;/button&gt;
+            
+            &lt;checkbox onvalue="s1.setAttribute('muteaudio', value)"&gt;Mute Audio&lt;/checkbox&gt;
+            &lt;checkbox onvalue="s1.setAttribute('mutevideo', value)"&gt;Mute Video&lt;/checkbox&gt;
+        &lt;/view&gt;
+        &lt;view id="v2" 
+            layout="axis:y; spacing:4"
+        &gt;
+            &lt;videoview name="vid" 
+                type="rtmp" 
+                stream="$once{canvas.s2}"
+            /&gt;
+            &lt;edittext name="username"&gt;YourName&lt;/edittext&gt;
+            &lt;button
+                text="${s2.playing ? 'stop receiving' : 'receive'}"
+                onclick="s2.setAttribute('url', parent.username.text);
+                         if (s2.playing) s2.stop(); else s2.play();"
+            /&gt;
+        &lt;/view&gt;
+    &lt;/view&gt;
+
+&lt;/canvas&gt;
+</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/inline-89eccad566.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/inline-89eccad566.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1944"></a>9. Comparison of Views and Videoviews for Rendering Audio and Video</h2></div></div></div><p>
+Audio and video files that are attached as resources to regular <a class="indexterm" name="id14883"></a><code class="sgmltag-element">&lt;view&gt;</code>s are not described in this chapter.  However, here is a brief discussion of how they differ in terms of designing applications.
+</p><p>
+If you attach a resource to a view it's compiled into the swf, making the initial swf size larger, but then when the swf is fully loaded it is available to play instantaneously when needed. 
+</p><p>
+If you stream the mp3 it will usually be easier on the memory, but timing will be less reliable, as the player has to buffer the downloaded file. For example, consider how you might build a video editor. If you had two video clips on a server and you wanted to use two video views to overlay on top of one another so you could create a transition from one to the other (creating a virtual video editor), you could monitor the first video so you know when to start the second. However, the appearance of this transition would be unpredictable. If you were tell the second video to play while fading from one video view to another, the amount of time before the second video were to play would depend on the buffer amount and bandwidth, not on time, so you would not be able to pre-load it and pause it in order to control the precise moment for the second video to start playing. 
+</p><p>
+So you'd use the first approach, using files transcoded to .swf and attached as resources to <a class="indexterm" name="id14889"></a><code class="sgmltag-element">&lt;view&gt;</code> for mouse clicks and other places where precise timing is important and you'd use the second approach, streaming to <a class="indexterm" name="id14892"></a><code class="sgmltag-element">&lt;videoview&gt;</code>s for an mp3 or video player where the size of the file and memory efficiency becomes important. 
+</p><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>
+Do I say anything about proxies?
+Do I say anything about security?
+</span></em></p><p></p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="survey-chapter.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.advanced.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="performance-tuning.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 41. A Components-based application </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 43. Performance Monitoring and Tuning</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

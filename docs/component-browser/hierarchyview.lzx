@@ -1,0 +1,208 @@
+<library>
+
+    <include href="common.lzx" />
+
+    <class name="linktree" extends="basetree" xindent="27" yindent="20" 
+           layout="spacing: 5" > 
+
+        <attribute name="expander" value="lztree_arrow_rsc" type="string" />
+        <attribute name="file" value="" type="string" />
+        <attribute name="key" value="" type="string" />
+
+        <method name="init">
+            super.init();
+            if (this.key == "lfc") {
+                item.treeitem.text.setAttribute('bgcolor', canvas.lfccolor);
+            } else if (this.key == "base") { // base classes
+                item.treeitem.text.setAttribute('bgcolor', canvas.basecolor);
+            } else if (this.key == "lci") { // laszlo component intermediary classes
+                item.treeitem.text.setAttribute('bgcolor', canvas.lcicolor);
+            } else { // laszlo component direct classes
+                item.treeitem.text.setAttribute('bgcolor', canvas.lcdcolor);
+            }
+        </method>
+
+        <method name="_applystyle" args="s">
+            if (this.style != null) {
+                treeitem.text.setAttribute('fgcolor',s.textcolor);
+                setTint(treeitem.expander.expander, s.basecolor);
+            }
+        </method>
+
+        <!--- Focus the tree and toggle open, if this tree is not a leaf and is
+              not being multiselected. -->
+        <method name="toggleOpenAndFocus">
+        <![CDATA[
+            this.changeFocus(this);
+            if (! this.isleaf) {
+                if (! lz.Keys.isKeyDown("control") &&
+                    ! lz.Keys.isKeyDown("shift")) {
+                        this.setAttribute("open", ! this.open);
+                }
+            }
+        ]]>
+        </method>
+
+        <view name="treeitem" placement="item" layout="axis: x; spacing: 5">
+            <!-- Do this to get around resource and frame (constrained) onclick 
+                 view problem. (b 3466) -->
+            <view name="expander">
+                <handler name="onclick">
+                    if (! classroot.isleaf) {
+                        classroot.setAttribute("open", ! classroot.open);
+                    }
+                </handler>
+                <view name="expander"
+                      resource="$once{classroot.expander}"  
+                      frame="${classroot.isleaf ? 3
+                             :(classroot.open ? 2 : 1)}" />
+            </view>
+            <text name="text" text="${' ' + classroot.text + ' ' }" resize="true"
+                  onmouseover="setAttribute('fgcolor', classroot.style.texthilitecolor)"
+                  onmouseout="setAttribute('fgcolor', classroot.style.textcolor)"
+                  onmousedown="setAttribute('fgcolor', classroot.style.textselectedcolor)">
+                <handler name="onclick">
+                    var file = (classroot.file != '' ? classroot.file : classroot.text + '.html');
+                    var url = canvas.urlprefix + file;
+                    if ($runtime == 'dhtml') {
+                        lz.Browser.loadURL( url, "test","resizable=1,width=1000,height=700,left=0,top=0,screenX=0,screenY=0,menubar,location,status,scrollbars,toolbar,address");
+                    } else {
+                        lz.Browser.loadJS('window.open("' + url + '","test","resizable=1,width=1000,height=700,left=0,top=0,screenX=0,screenY=0,menubar,location,status,scrollbars,toolbar,address");');
+                    }
+                </handler>
+                <handler name="onmouseup">
+                    setAttribute('fgcolor', classroot.style.texthilitecolor)
+                </handler>
+            </text>
+        </view>
+
+    </class>
+
+    <class name="hierarchyview" width="350" height="300" bgcolor="0x404040">
+        <view x="1" y="1" width="${parent.width-2}" clip="true"
+              height="${parent.height-2}" bgcolor="white" >
+            <scrollbar name="mysc" />
+            <linktree x="5" text="node" key="lfc" open="true" file="lz.node.html">
+                <linktree text="view" key="lfc" open="true" file="lz.view.html">
+                    <linktree text="basecomponent" key="base" open="true" file="lz.basecomponent.html">
+                        <linktree text="basevaluecomponent" key="base" file="lz.basevaluecomponent.html">
+                            <linktree text="baseformitem" key="base" file="lz.baseformitem.html">
+                                <linktree text="checkbox" isleaf="true" file="lz.checkbox.html" />
+                                <linktree text="edittext" isleaf="true" file="lz.edittext.html" />
+                                <linktree text="basecombobox" key="base" file="lz.basecombobox.html">
+                                    <linktree text="combobox" isleaf="true" file="lz.combobox.html" />
+                                    <linktree text="datepickercombobox" isleaf="true">
+                                        <!-- there's no doc for datepickerday -->
+                                        <handler name="oninit">
+                                            this.treeitem.text.setAttribute('clickable', false);
+                                        </handler>
+                                    </linktree>
+                                </linktree>
+                                <linktree text="basedatacombobox" key="base" file="lz.basedatacombobox.html">
+                                    <linktree text="datacombobox" isleaf="true" file="lz.datacombobox.html" />
+                                </linktree>
+                                <linktree text="baselist" key="base" file="lz.baselist.html">
+                                    <linktree text="radiogroup" isleaf="true"
+                                              file="lz.radiogroup.html" />
+                                    <linktree text="basetabslider" key="base" file="lz.basetabslider.html">
+                                        <linktree text="tabslider" isleaf="true" file="lz.tabslider.html"/>
+                                    </linktree>
+                                   <linktree text="list" file="lz.list.html">
+                                   <linktree text="basefloatinglist" file="lz.basefloatinglist.html">
+                                            <linktree text="floatinglist" file="lz.floatinglist.html"
+                                                      isleaf="true" />
+                                            <linktree text="plainfloatinglist" file="lz.plainfloatinglist.html"
+                                                      isleaf="true" />
+                                    </linktree>
+                                    </linktree>
+                                    <linktree text="basetabsbar" key="base" file="lz.basetabsbar.html">
+                                        <linktree text="tabsbar" file="lz.tabsbar.html" 
+                                                  isleaf="true" key="lci" />
+                                    </linktree>
+                                </linktree> <!-- baselist -->
+                            </linktree>
+                            <linktree text="baselistitem" key="base" file="lz.baselistitem.html">
+                                <linktree text="radiobutton" isleaf="true" file="lz.radiobutton.html" />
+                                <linktree text="basetabelement" key="base" file="lz.basetabelement.html">
+                                    <linktree text="tabelement" isleaf="true" file="lz.tabelement.html"/>
+                                </linktree>
+                                <linktree text="listitem" key="lci" file="lz.listitem.html">
+                                    <linktree text="textlistitem" file="lz.textlistitem.html">
+                                        <linktree text="menuitem" file="lz.menuitem.html" 
+                                                  isleaf="true" />
+                                        <linktree text="datepickerlistitem" isleaf="true">
+                                            <!-- there's no doc for datepickerday -->
+                                            <handler name="oninit">
+                                                this.treeitem.text.setAttribute('clickable', false);
+                                            </handler>
+                                        </linktree>
+                                    </linktree>
+                                </linktree>                            
+                                <linktree text="basetab" key="base" file="lz.basetab.html">
+                                    <linktree text="tab" file="lz.tab.html" 
+                                              isleaf="true" key="lci" />
+                                </linktree>
+                            </linktree>
+                        </linktree>
+                        <linktree text="basebutton" key="base" file="lz.basebutton.html">
+                            <linktree text="button" isleaf="true" file="lz.button.html" />
+                        </linktree>
+                        <linktree text="basedatepicker" key="base" file="lz.basedatepicker.html">
+                            <linktree text="datepicker" isleaf="true" file="lz.datepicker.html" />
+                        </linktree>
+                        <linktree text="basetabs" key="base" file="lz.basetabs.html">
+                            <linktree text="tabs" isleaf="true" file="lz.tabs.html" />
+                        </linktree>
+                        <linktree text="basetabpane" key="base" file="lz.basetabpane.html">
+                            <linktree text="tabpane" file="lz.tabpane.html" 
+                                      isleaf="true" />
+                        </linktree>
+                        <linktree text="basewindow" key="base" file="lz.basewindow.html">
+                            <linktree text="windowpanel" key="lci" isleaf="true"
+                                      file="lz.windowpanel.html">
+                                <linktree text="window" isleaf="true" file="lz.window.html" />
+                                <linktree text="modaldialog" file="lz.modaldialog.html">
+                                    <linktree text="alert" isleaf="true" file="lz.alert.html" />
+                                </linktree>
+                            </linktree>
+                        </linktree>
+                        <linktree text="basescrollbar" key="base" file="lz.basescrollbar.html">
+                            <linktree text="scrollbar" isleaf="true" file="lz.scrollbar.html"/>
+                        </linktree>
+                        <linktree text="basetree" key="base" file="lz.basetree.html">
+                            <linktree text="tree" isleaf="true" file="lz.tree.html"/>
+                        </linktree>
+                        <linktree text="menu" file="lz.menu.html" isleaf="true" />
+                        <linktree text="menubar" file="lz.menubar.html" isleaf="true" />
+                        <linktree text="menuseparator" file="lz.menuseparator.html" isleaf="true" />
+                    </linktree> <!-- basecomponent -->
+                    <linktree text="baseform" key="base" open="true" file="lz.baseform.html">
+                        <linktree text="form" isleaf="true" file="lz.form.html" />
+                    </linktree>
+                    <linktree text="basedatepickerday" key="base" file="lz.basedatepickerday.html">
+                        <linktree text="datepickerday" isleaf="true">
+                            <!-- there's no doc for datepickerday -->
+                            <handler name="oninit">
+                                this.treeitem.text.setAttribute('clickable', false);
+                            </handler>
+                        </linktree>
+                    </linktree>
+                    <linktree text="basedatepickerweek" key="base" file="lz.basedatepickerweek.html">
+                        <linktree text="datepickerweek" isleaf="true">
+                            <!-- there's no doc for datepickerweek -->
+                            <handler name="oninit">
+                                this.treeitem.text.setAttribute('clickable', false);
+                            </handler>
+                        </linktree>
+                    </linktree>
+                </linktree> <!-- view -->
+                <linktree text="submit" isleaf="true" file="lz.submit.html"/>
+            </linktree> <!-- node -->
+        </view>
+    </class>
+
+</library>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2008 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

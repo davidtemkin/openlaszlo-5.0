@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2008 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!--DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd"-->
+<!-- 
+  To understand the documentation toolchain, please consult the developer's guide, 
+  in Part XI, Documentation Tools and Guidelines, and especially in 
+  Chapter 52, The Documentation Toolchain. 
+  
+  In a source build of OpenLaszlo, those chapters can be found at
+  http://localhost:8080/trunk/docs/developers/developers.doctools.html
+  
+  Currently, those chapters can be found live at the following URL
+  http://labs.openlaszlo.org/trunk-nightly/docs/developers/developers.doctools.html
+  
+  [bshine 12.29.2007]
+-->
+<book xmlns:xi="http://www.w3.org/2003/XInclude">
+  <?dbhtml dir="developers" ?>
+  <?dbhtml filename="index.html" ?>
+  <!-- change title per LPP-4804, IORIO 14 oct 2007 -->
+  <title>OpenLaszlo Application Developer's Guide</title>
+  <titleabbrev>Developer Guide</titleabbrev>
+  
+  <preface id="developers.preface">
+    <title>Preface</title>
+    <xi:include href="developers_guide_preface.dbk"/>
+  </preface>
+
+  <part id="developers.overview">
+    <title>Overview</title>
+
+    <xi:include href="architecture.dbk"/>
+    <xi:include href="language-preliminaries.dbk"/>
+    <xi:include href="designers.dbk"/>
+    <xi:include href="program-development.dbk"/>
+  </part>
+  
+  <part id="developers.tutorials">
+    <title>Tutorial Introduction</title>
+    <xi:include href="tutorials/laszlo_basics.dbk"/>
+    <xi:include href="tutorials/comp-intro.dbk"/>
+    <xi:include href="tutorials/views.dbk"/>
+    <xi:include href="tutorials/art_assets.dbk"/>
+    <xi:include href="tutorials/text.dbk"/>
+    <xi:include href="tutorials/scripting.dbk"/>
+    <xi:include href="tutorials/data.dbk"/>
+    <xi:include href="tutorials/classes.dbk"/>
+    <xi:include href="tutorials/drawview-intro.dbk"/>
+    <xi:include href="tutorials/calculator.dbk"/>
+    <!--xi:include href="tutorials/solo-intro.dbk"-->
+  </part>
+  
+  <part id="developers.building-apps">
+    <title>Fundamental Concepts</title>
+    <xi:include href="structure.dbk"/>
+    <xi:include href="comp-overview.dbk"/>
+    <xi:include href="layout-and-design.dbk"/>
+    <xi:include href="media-resources.dbk"/>
+    <xi:include href="css.dbk"/>
+    <xi:include href="colors.dbk"/>
+    <xi:include href="text.dbk"/>
+    <xi:include href="richtext.dbk"/>
+    <xi:include href="fonts.dbk"/>
+    <?ignore <xi:include href="web-services.dbk"/> ?>
+    <xi:include href="animation.dbk"/>
+  </part>
+  
+  <part id="developers.power">
+     <title>In Depth</title>
+     <xi:include href="proxied.dbk"/>
+     <xi:include href="views.dbk"/>
+     <xi:include href="constraints.dbk"/>
+     <xi:include href="classes-introductory.dbk"/>
+     <xi:include href="methods-events-attributes.dbk"/>
+     <xi:include href="delegates.dbk"/>
+     <xi:include href="input-gestures.dbk"/>
+     <xi:include href="states.dbk"/>
+     <xi:include href="classes-powerprogramming.dbk"/>
+     <xi:include href="components-design.dbk"/>
+     <xi:include href="browser-integration.dbk"/>
+  </part>
+  
+  <part id="developers.data">
+    <title>Data and Databinding</title>
+    <xi:include href="data-structures.dbk"/>
+    <!-- xi:include href="data-overview.dbk"/-->
+    <xi:include href="databinding.dbk"/>
+    <xi:include href="datareplication.dbk"/>
+    <xi:include href="dataprovider.dbk"/>
+    <xi:include href="data_app.dbk"/>
+    <!-- xi:include href="static-databinding.dbk"/ -->
+    <!-- xi:include href="dynamic-databinding.dbk"/ -->
+    <!-- xi:include href="two-way-databinding.dbk"/ -->
+    <!-- xi:include href="data-replication.dbk"/ -->
+    <!-- xi:include href="data-patterns-and-best-practices.dbk"/ -->
+    <!-- xi:include href="dataprovider.dbk"/ -->
+  </part>
+   
+  <part id="developers.advanced">
+    <title>Advanced Topics</title>
+    <xi:include href="survey-chapter.dbk"/>    
+    <xi:include href="video.dbk"/>
+    <xi:include href="performance.dbk"/>
+    <xi:include href="cookies.dbk"/>    
+  </part>
+   
+   
+  <?ignore 
+  <part id="developers.server-integration">
+    <title>Server Integration</title>
+    <!--xi:include href="integrating-existing.dbk"/-->
+    <!--xi:include href="persistent_connection.dbk"/-->
+    <!--xi:include href="logging.dbk"/-->
+    <!--xi:include href="lps-request-types.dbk"/-->
+    <!--xi:include href="soap-xmlrpc.dbk"/-->
+    <!--xi:include href="deployers-guide.dbk"/-->
+    <!--xi:include href="caching.dbk"/-->
+   </part>
+   ?>
+
+  <?part id="developers.advanced">
+    <title>Power Programming in LZX</title>
+    <!--Procedural Programming using Script-->
+  </part ?>
+
+  <?part id="developers.best-practices>
+    <!--xi:include href="focus-modality.dbk"/-->
+    <!--xi:include href="best-practices.dbk"/-->
+  </part ?>
+  
+  <part id="developers.laszlorpc">
+    <title>OpenLaszlo RPC</title>
+    <xi:include href="rpc.dbk"/>
+    <xi:include href="rpc-javarpc.dbk"/>
+    <xi:include href="rpc-soap.dbk"/>
+    <xi:include href="rpc-xmlrpc.dbk"/>
+  </part>
+
+  <part id="developers.methodology">
+    <title>Development Methodology</title>
+    <xi:include href="compiler.dbk"/>
+    <xi:include href="editing-lzx.dbk"/>
+    <xi:include href="debugging.dbk"/>
+    <xi:include href="lzunit.dbk"/>
+
+  </part>  
+  
+  <part id="developers.doctools">
+    <title>Contributor's Guide</title>
+    <xi:include href="source-build.dbk">
+      <xi:fallback><para>Missing: Building from Source</para></xi:fallback>
+    </xi:include>    
+    
+    <xi:include href="doc-toolchain.dbk">
+      <xi:fallback><para>Missing: Doc Tool Chain</para></xi:fallback>
+    </xi:include>
+
+    <xi:include href="doc-backwards-xform.dbk">
+      <xi:fallback><para>Missing: Doc Backwards Transformation</para></xi:fallback>
+    </xi:include>
+    
+    
+    <xi:include href="docbook-local.dbk">
+      <xi:fallback><para>Missing: Docbook Local Style Guide</para></xi:fallback>
+    </xi:include>
+    
+<!--    <xi:include href="docbook-code.dbk">
+      <xi:fallback><para>Missing: Docbook Code Comment Style Guide</para></xi:fallback>
+    </xi:include>-->
+    
+    <xi:include href="js2doc-ref.dbk">
+      <xi:fallback><para>Missing: JS2Doc Reference</para></xi:fallback>
+    </xi:include>
+    
+  </part>
+  
+  <part id="developers.appendices">
+    <title>Appendices</title>
+    <xi:include href="initialization-and-instantiation.dbk"/>
+    <xi:include href="ecmascript-and-lzx.dbk"/>
+    <xi:include href="licenses.dbk">
+      <xi:fallback><para>Missing: Licenses Reference</para></xi:fallback>
+    </xi:include>    
+  </part>
+
+  <!--index/-->
+
+<!--  <xi:include href="book-info.dbk"/>-->
+
+</book>

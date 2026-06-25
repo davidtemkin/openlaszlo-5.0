@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1027">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Hand on Rainy Window (2)</title>
+  <description>Hand on Rainy Window (2) — from the OpenLaszlo sample image library.</description>
+  <dates posted="1492246400" />
+  <urls><url type="photopage">data/photos/1027.jpg</url></urls>
+  <tags><tag>hand</tag><tag>rainy</tag><tag>window</tag></tags>
+</photo>
+</rsp>

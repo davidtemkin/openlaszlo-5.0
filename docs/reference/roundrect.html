@@ -1,0 +1,27 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;roundrect&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>roundrect<span class="ang">&gt;</span></h1><p class="short"/><p class="meta">Extends <code>drawview</code></p><h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">backgroundGradientOrientation</td><td class="ty">string</td><td class="ty">vertical</td><td>The background gradient orientation.  One of 'vertical' (the default)
+            and 'horizontal'.</td></tr><tr><td class="nm">backgroundStartColor</td><td class="ty">color</td><td class="ty">null</td><td>The background start color.  This is the color that is drawn at
+            the top or left of the view, depending on the value of
+            backgroundGradientOrientation.  If this and the backround stop color
+            are specified, a gradient background is drawn in the direction specified
+            by backgroundGradientOrientation.  If only one of the background start
+            and stop color are specified, a gradient of the same color that fades to
+            transparent at the unspecified end is drawn.  If a box shadow is drawn,
+            the background defaults to white.  Specify a start and stop opacity to
+            suppress this behavior.</td></tr><tr><td class="nm">backgroundStartOpacity</td><td class="ty">expression</td><td class="ty">1</td><td>The background start opacity.  This defaults to one (opaque) unless the
+            start color is not specified and the stop color is, in which case it
+            defaults to zero (fully transparent).</td></tr><tr><td class="nm">backgroundStopColor</td><td class="ty">color</td><td class="ty">null</td><td>The background stop color.  This is the color that is drawn at the
+            bottom or right of the view, depending on the value of
+            backgroundGradientOrientation.  See the documentation for
+            backgroundStartColor for additional documentation.</td></tr><tr><td class="nm">backgroundStopOpacity</td><td class="ty">expression</td><td class="ty">1</td><td>The background stop opacity.  This defaults to one (opaque) unless the
+            stop color is not specified and the start color is, in which case it
+            defaults to zero (fully transparent).</td></tr><tr><td class="nm">borderColor</td><td class="ty">color</td><td class="ty">black</td><td>The border color</td></tr><tr><td class="nm">borderOpacity</td><td class="ty">expression</td><td class="ty">1</td><td>The border opacity</td></tr><tr><td class="nm">borderRadius</td><td class="ty">expression</td><td class="ty">5</td><td>The rounding radius of the border corners.  Because the default
+            join type is a round join, even a radius of zero will product some
+            rounding.</td></tr><tr><td class="nm">borderWidth</td><td class="ty">expression</td><td class="ty">1</td><td>The width of the border.  If this is zero, no frame is drawn.</td></tr><tr><td class="nm">boxShadowColor</td><td class="ty">color</td><td class="ty">null</td><td>The box shadow color.  If this is specified, a box shadow is drawn.</td></tr><tr><td class="nm">boxShadowOpacity</td><td class="ty">expression</td><td class="ty">0.5</td><td>The box shadow opacity.</td></tr><tr><td class="nm">boxShadowX</td><td class="ty">expression</td><td class="ty">5</td><td>The x offset of the box shadow.  The box shadow is not drawn by default.
+            Specify a boxShadowColor in order to draw it.</td></tr><tr><td class="nm">boxShadowY</td><td class="ty">expression</td><td class="ty">5</td><td>The x offset of the box shadow.  The box shadow is not drawn by default.
+            Specify a boxShadowColor in order to draw it.</td></tr><tr><td class="nm">inset</td><td class="ty">size</td><td class="ty">5</td><td>The margin between the outside view and the content view</td></tr><tr><td class="nm">insetbottom</td><td class="ty">size</td><td class="ty">null</td><td/></tr><tr><td class="nm">insetleft</td><td class="ty">size</td><td class="ty">null</td><td/></tr><tr><td class="nm">insetright</td><td class="ty">size</td><td class="ty">null</td><td/></tr><tr><td class="nm">insettop</td><td class="ty">size</td><td class="ty">null</td><td/></tr><tr><td class="nm">oninset</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">oninsetbottom</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">oninsetleft</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">oninsetright</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">oninsettop</td><td class="ty">expression</td><td class="ty">null</td><td/></tr></table>
+</main><script src="_nav.js"></script></body></html>

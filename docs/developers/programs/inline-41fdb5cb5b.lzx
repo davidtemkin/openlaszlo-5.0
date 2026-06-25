@@ -1,0 +1,4 @@
+    // assume myrpc is a javarpc object and myrpc.proxy.myMethod is a function
+    // that expects a single double as a parameter
+    var mydouble = new lz.rpc.DoubleWrapper(1.0);
+    myrpc.proxy.myMethod([ mydouble ], new LzDelegate(...));

@@ -1,0 +1,7 @@
+<state name="flexistate">
+    <attribute name="width" value="${parent.width}" />
+</state>
+
+<state name="boringstate" apply="false">
+    <attribute name="width" value="50" />
+</state>

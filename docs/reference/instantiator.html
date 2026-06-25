@@ -1,0 +1,32 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>LzInstantiatorService — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1>LzInstantiatorService</h1><p class="short">Instatiation service.</p><p class="meta">Extends <a ><code>LzEventable</code></a></p>
+        <p>
+          <code>lz.Instantiator</code>
+           is the single instance of the class
+ 
+          <code>lz.InstantiatorService</code>
+          .
+        </p>
+         
+        <p>The instantiator is responsible for timing the creation and
+ initialization of Laszlo applications. Because of Laszlo's
+ declarative style, applications must be instantiated in two passes
+ -- one where all of the objects are created and another where all
+ of the references are resolved. This ensures that order rarely
+ matters in an lzx file, and allows objects to refer to one another
+ without making the programmer worry about initialization order or
+ messy callbacks.</p>
+         
+        <p>
+          If an OpenLaszlo application is slow to instantiate, LzNodes
+ supply the 
+          
+           attribute. The instantiator also has a few exposed methods and
+ attributes that can be used to control the instantiation behavior
+ of a Laszlo app.
+        </p>
+</main><script src="_nav.js"></script></body></html>

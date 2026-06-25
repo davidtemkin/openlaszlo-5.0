@@ -1,0 +1,7 @@
+<canvas height="120">
+   <script>
+     for (var i = 0; i <emphasis role="em">&lt;</emphasis> 11; i++) {
+       Debug.debug("%d", i);
+     }
+   </script>
+</canvas>

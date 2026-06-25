@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ItemLookupResponse><Items>
+  <Request><IsValid>True</IsValid></Request>
+  <Item>
+    <ASIN>B000002L2Z</ASIN>
+    <SmallImage><URL>data/covers/B000002L2Z.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B000002L2Z.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B000002L2Z.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>Scott Joplin</Artist>
+      <Manufacturer>Nonesuch</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>1999-04-06</ReleaseDate>
+      <Title>The Entertainer: Ragtime Classics</Title>
+      <ListPrice><Amount>1098</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$10.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$5.49</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$2.25</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$7.99</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Joplin’s syncopated rags — the irresistible soundtrack of the ragtime era.</Content></EditorialReview></EditorialReviews>
+  </Item>
+</Items></ItemLookupResponse>

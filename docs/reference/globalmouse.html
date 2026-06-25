@@ -1,0 +1,86 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>LzGlobalMouseService — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1>LzGlobalMouseService</h1><p class="short">Application-wide control of and information about the mouse.</p><p class="meta">Extends <a ><code>LzEventable</code></a></p>
+        <p>
+          <code>lz.GlobalMouse</code>
+           is the single instance of the class
+ 
+          <code>lz.GlobalMouseService</code>
+          .
+        </p>
+         
+        <p>
+          The 
+          <code>lz.GlobalMouse</code>
+           service sends events any time the
+ mouse button state changes, even if mouse events are locked using
+ the 
+          <code>lz.ModeManager</code>
+           API. The lz.GlobalMouse is
+ also useful for detecting when the mouse button goes up or down on
+ a non-clickable view.
+        </p>
+         
+        
+          <pre><code>
+ &lt;canvas height="100"&gt;
+   &lt;simplelayout inset="10" spacing="10"/&gt;
+
+   &lt;checkbox&gt;Lock mouse events
+     &lt;handler name="onvalue"&gt;
+       if (this.value){
+         lz.ModeManager.globalLockMouseEvents();
+       }
+     &lt;/handler&gt;
+
+     &lt;handler name="onclick" reference="lz.GlobalMouse" args="who"&gt;
+       //need to use lz.GlobalMouse, since we don't get clicks if we're
+       //checked. Note: lz.GlobalMouse sends its events before the view
+       //receives the events, so we can just unlock it here, and the
+       //checkbox can do its normal onclick handling.
+       if (this.value &amp;amp;&amp;amp; who == this){
+         lz.ModeManager.globalUnlockMouseEvents();
+       }
+     &lt;/handler&gt;
+   &lt;/checkbox&gt;
+
+   &lt;button&gt;click me!&lt;/button&gt;
+
+   &lt;text resize="true"&gt;
+     &lt;method name="showEvent" args="what, who"&gt;
+       this.format("%s: %w", what, who);
+     &lt;/method&gt;
+
+     &lt;handler name="onmouseover" reference="lz.GlobalMouse" args="who"&gt;
+       this.showEvent("mouseover" , who);
+     &lt;/handler&gt;
+     &lt;handler name="onmouseout" reference="lz.GlobalMouse" args="who"&gt;
+       this.showEvent("mouseout" , who);
+     &lt;/handler&gt;
+
+     &lt;handler name="onmousedown" reference="lz.GlobalMouse" args="who"&gt;
+       this.showEvent("mousedown" , who);
+     &lt;/handler&gt;
+     &lt;handler name="onmouseup" reference="lz.GlobalMouse" args="who"&gt;
+       this.showEvent("mouseup" , who);
+     &lt;/handler&gt;
+
+     &lt;handler name="onclick" reference="lz.GlobalMouse" args="who"&gt;
+       this.showEvent("mouseclick" , who);
+     &lt;/handler&gt;
+   &lt;/text&gt;
+ &lt;/canvas&gt;
+ </code></pre>
+        
+         
+        <p>
+          Use the lz.GlobalMouse service in conjunction with 
+          <code>lz.ModeManager</code>
+          's event lock.
+        </p>
+      <h3>Events</h3><ul class="events"><li><code>onclick</code> — Sent whenever the mouse button is clicked</li><li><code>ondblclick</code> — Sent whenever the mouse button is double-clicked</li><li><code>onmousedown</code> — Sent whenever the mouse button goes down</li><li><code>onmousedragin</code> — Sent whenever the mouse is dragged in to a view</li><li><code>onmousedragout</code> — Sent whenever the mouse is dragged out of a view</li><li><code>onmouseenter</code> — Sent whenever the mouse is moved over the canvas</li><li><code>onmouseevent</code> — Sent for all mouse events</li><li><code>onmouseleave</code> — Sent whenever the mouse is moved off the canvas</li><li><code>onmousemove</code> — Sent whenever the mouse moves</li><li><code>onmouseout</code> — Sent whenever the mouse leaves a view</li><li><code>onmouseover</code> — Sent whenever the mouse enters a view</li><li><code>onmouseup</code> — Sent whenever the mouse button goes up</li><li><code>onmouseupoutside</code> — Sent whenever the mouse button goes up outside the view where it
+ first went down</li></ul>
+</main><script src="_nav.js"></script></body></html>

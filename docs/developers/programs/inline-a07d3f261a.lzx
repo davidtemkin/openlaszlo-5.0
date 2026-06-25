@@ -1,0 +1,7 @@
+<library>
+  <resource name="r1" src="pic1.jpg"/>
+  <class name="c1">
+    <view name="v2"/>
+    <view name="v3"/>
+  </class>
+</library>

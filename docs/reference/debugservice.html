@@ -1,0 +1,126 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>LzDebugService — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1>LzDebugService</h1><p class="short">The Laszlo debugger</p><p class="meta">Extends <a ><code>LzBootstrapDebugService+debug</code></a></p>
+        <p>
+          <code>Debug</code>
+           is the single instance of the class
+ 
+          <code>lz.DebugService</code>
+          .
+        </p>
+         
+        <p>
+          There are three ways to enable the debugger, as described in
+ the 
+          <a >Debugging</a>
+           chapter of the Developer's Guide.
+        </p>
+         
+        <p>
+          The debugger can be useful in debugging your own code, but you
+ should also use debugging to report bugs.  The debugger method
+ 
+          
+           will output information
+ that can be cut and pasted into a bug report to aid in
+ diagnosing the bug.
+        </p>
+         
+        <p>
+          The debugger has a range of methods for formatting output to the
+ debugger console:
+ 
+          
+          ,
+ 
+          
+          ,
+ 
+          
+          , and
+ 
+          
+          .
+ Each of these is based upon the basic formatted output method
+ 
+          
+          .  The variants prefix their
+ message with a label (DEBUG, INFO, WARNING, or ERROR) and will
+ print in a distinct color.  When backtraces are enabled, these
+ debug messages will also give a source location.
+        </p>
+         
+        <p>
+          The debug messages can be silenced by setting
+ 
+          Debug.messageLevel
+          .
+        </p>
+         
+        <p>
+          Debugger messages are 
+          <em>inspectable</em>
+          , as the example below
+ demonstrates.  Clicking on the printed representation of the
+ object (in blue) will show the details of the object.  The
+ message itself can also be inspected.  When backtraces are
+ enabled, one component of the message will be a backtrace that
+ can be inspected to see the call chain and function arguments
+ that resulted in the message.
+        </p>
+         
+        
+          <pre><code>
+ &lt;canvas debug="true" height="150"&gt;
+   &lt;debug y="5%" height="90%" /&gt;
+   &lt;script&gt;
+     Debug.format("Hello %s!\n", 'world');
+     Debug.debug("Click there -&gt; %w to inspect the object", {a: 1, b: 2});
+   &lt;/script&gt;
+ &lt;/canvas&gt;
+ </code></pre>
+        
+         
+        <p>
+          The debugger can be used to trace method calls using
+ 
+          
+           and it can be used to monitor instance variables using
+ 
+          
+        </p>
+         
+        
+          <pre><code>
+ &lt;canvas debug="true" height="150"&gt;
+   &lt;debug y="5%" height="90%" /&gt;
+   &lt;script&gt;
+     var o = {a: 7, f: function (x) { return x * x;}};
+     Debug.monitor(o, 'a');
+     o.a = 42;
+     Debug.trace(o, 'f');
+     o.f(4);
+   &lt;/script&gt;
+ &lt;/canvas&gt;
+ </code></pre>
+        
+         By default, the debugger will intercept runtime errors (instances
+ of Error that are thrown by the runtime or program) and report
+ them.  These reports can be silenced by throwing values that are
+ not instances of Error, or by adding 
+        <code>#pragma
+ "throwsErrors=true"</code>
+         to the function or method containing the
+ throw.
+
+ 
+        <p>
+          The optional 
+          
+           tag controls the appearance of
+ the debugger console window when debugging is on.
+        </p>
+</main><script src="_nav.js"></script></body></html>

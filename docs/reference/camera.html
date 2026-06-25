@@ -1,0 +1,39 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;camera&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>camera<span class="ang">&gt;</span></h1><p class="short">A camera object that can be displayed
+            on a video view and/or broadcast to an rtmpserver.</p><p class="meta">Extends <code>mediadevice</code></p>
+                    
+        <p>
+          In order to use a camera in an LZX application, the 
+          <code>visible</code>
+           and 
+          <code>allowed</code>
+           attributes must be set to 
+          <code>true</code>
+          . The 
+          <code>visible</code>
+           indicates the program's intent and the 
+          <code>allowed</code>
+           attribute indicates the user's permission. To protect privacy, camera operation must be explicitly approved by the user.
+        </p>
+                    
+        <pre><code>
+    &lt;canvas height="100"&gt;
+        &lt;camera id="rtc" src="rtmp://localhost/test" autoconnect="false"/&gt;
+        &lt;text text="${rtc.status}"/&gt;
+        &lt;button onclick="rtc.connect()"&gt;Click to Connect&lt;/button&gt;
+    &lt;/canvas&gt;</code></pre>
+                    
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">bandwidth</td><td class="ty">expression</td><td class="ty">16384</td><td>Camera bandwidth (in bytes per second).</td></tr><tr><td class="nm">favorsize</td><td class="ty">expression</td><td class="ty">false</td><td>Often several capture modes are available per camera device.
+              These modes will allow capturing at a specific size (width/height)
+              and framerate.  If you specify both fps and width and height for
+              this camera, this attribute will control which capturing mode
+              for the camera device will be used.</td></tr><tr><td class="nm">fps</td><td class="ty">expression</td><td class="ty">null</td><td>The number of frames per second that will be captured 
+              by the camera.</td></tr><tr><td class="nm">height</td><td class="ty">expression</td><td class="ty">null</td><td>The height (resolution) that will be captured by the camera.</td></tr><tr><td class="nm">picturequality</td><td class="ty">expression</td><td class="ty">0</td><td>Camera picture quality: a value between 0 and 1, where 1
+              represents the highest quality (no compression). When
+              0 is passed, this indicates to use highest quality that
+              fits into the available bandwidth</td></tr><tr><td class="nm">show</td><td class="ty">expression</td><td class="ty">false</td><td>If true, show camera on immediateparent videoview.</td></tr><tr><td class="nm">width</td><td class="ty">expression</td><td class="ty">null</td><td>The width (resolution) that will be captured by the camera.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

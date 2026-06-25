@@ -1,0 +1,31 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;rtmpconnection&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>rtmpconnection<span class="ang">&gt;</span></h1><p class="short">Allows connections to RTMP servers</p><p class="meta">Extends <a href="view.html"><code>LzView</code></a></p>
+                        
+        <p>
+          <code>rtmpconnection</code>
+           allows applications to connect to RTMP servers, like http://osflash.org/red5 or http://www.wowzamedia.com/.  Note that you'll need a server running with the appropriate URLs set up for this example to work.
+        </p>
+         
+                
+                
+        
+          <pre><code>
+                &lt;canvas&gt;
+                    &lt;rtmpconnection src="rtmp://localhost:1935/simplevideostreaming/" autoconnect="true"/&gt;
+                    &lt;videoplayer url="Extremists.flv" type="rtmp" autoplay="true" width="320" height="240"/&gt;
+                &lt;/canvas&gt;
+                </code></pre>
+        
+                    
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">altsrc</td><td class="ty">string</td><td class="ty"/><td>Alternate application url, used if the connection for src 
+                fails for example : "rtmp:/appname" or 
+                "rtmp://myserver.com/myapp/".</td></tr><tr><td class="nm">autoconnect</td><td class="ty">boolean</td><td class="ty">true</td><td>Connect automatically during init. If false, you need to explicitly
+            call connect().</td></tr><tr><td class="nm">connectionparams</td><td class="ty">expression</td><td class="ty">null</td><td>Connection parameters that will be sent to the server when NetConnection.connect() is called</td></tr><tr><td class="nm">connectiontimeout</td><td class="ty">number</td><td class="ty">3000</td><td>Number of milliseconds to wait for connection at src before 
+                using altsrc URL</td></tr><tr><td class="nm">debug</td><td class="ty">expression</td><td class="ty">false</td><td>Turn on for verbose debugger output.</td></tr><tr><td class="nm">objectencoding</td><td class="ty">number</td><td class="ty">0</td><td>The AMF object encoding to use for this connection, either 0 or 3.</td></tr><tr><td class="nm">src</td><td class="ty">string</td><td class="ty"/><td>Application url, for example
+            "rtmp:/appname" or "rtmp://myserver.com/myapp/".</td></tr><tr><td class="nm">stage</td><td class="ty">number</td><td class="ty">0</td><td>Number to indicate what stage of connection we're in:
+            0: disconnected, 1: connecting, 2: connected.</td></tr><tr><td class="nm">status</td><td class="ty">string</td><td class="ty">disconnected</td><td>String to indicate connection status.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

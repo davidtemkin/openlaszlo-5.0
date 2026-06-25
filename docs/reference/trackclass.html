@@ -1,0 +1,123 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>LzTrackService — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1>LzTrackService</h1><p class="short">Enables tracking mouse events over a group of views.</p><p class="meta">Extends <a ><code>LzEventable</code></a></p>
+        <p>
+          <code>lz.Track</code>
+           is the single instance of the class
+ 
+          <code>lz.TrackService</code>
+          .
+        </p>
+         
+        <p>
+          This service helps tracking the mouse over a number of views, as in
+ common when implementing menus and drag-and-drop behaviors.  When the
+ mouse is down, standard view events such as 
+          <code>&lt;event&gt;onmousedragin&lt;/event&gt;</code>
+           and 
+          <code>&lt;event&gt;onmousedragout&lt;/event&gt;</code>
+           are only sent to the view which received
+ the onmousedown events.  When views are registered using the
+ 
+          <code>lz.Track</code>
+           service, they will receive events
+ independent of the mouse button state.
+
+ 
+        </p>
+         
+        <p>
+           In using lz.Track, views register with a particular group.
+ Activation of that group is typically triggered by a user event.  When a group
+ is active, the lz.Track service will send events to views in the active group, whenever
+ the mouse position enters (
+          <code>&lt;event&gt;ontrackover&lt;/event&gt;</code>
+          ), leaves (
+          <code>&lt;event&gt;ontrackout&lt;/event&gt;</code>
+          ) or when the mouse
+ button goes up (
+          <code>&lt;event&gt;ontrackup&lt;/event&gt;</code>
+          ).
+ 
+        </p>
+         
+        <code>&lt;h2&gt;Example: a simple color picker&lt;/h2&gt;</code>
+         
+        <p>
+ This simple color picker displays its color in a rectangle, then
+ when the mouse is down over the colored rectangle, a series of colors are
+ displayed (as displayed below).  While the mouse is down, the user may move
+ the mouse across the color choices.  When the mouse button goes up over a
+ color, that color is selected and the color menu disappears.
+ </p>
+         
+        
+         
+        <p>
+          The code below defines the class "colorspot" which represents a
+ tracked view.  This class handles visual state changes triggered by
+ the track events and sends an event to its parent when a new color is
+ selected.  
+          <code>&lt;method&gt;lz.Track.register&lt;/method&gt;</code>
+           is called by
+ 
+          <code>&lt;event&gt;oninit&lt;/event&gt;</code>
+           to add the instance of the view to its group.
+ The group name is defined as an attribute of the class, but simply
+ bound to an attribute of the parent.  For simple menu tracking, it is
+ typical for a set of sibling views to share the same track group;
+ however, tracked views that share the same trackgroup may be anywhere
+ in view hierarchy.
+        </p>
+         
+        <pre class="example">
+ &lt;canvas height="60"&gt;
+   &lt;class name="colorspot" clickable="true"
+     width="22" height="22" bgcolor="0x000000"&gt;
+     &lt;attribute name="mycolor"/&gt;
+
+     &lt;attribute name="trackgroup" type="string" value="${parent.trackgroup}"/&gt;
+     &lt;view name="spot" bgcolor="${parent.mycolor}"
+         x="2" y="2" width="18" height="18"/&gt;
+     &lt;handler name="oninit"&gt;
+         lz.Track.register(this, this.trackgroup);
+     &lt;/handler&gt;
+     &lt;handler name="onmousetrackover"&gt;
+         setAttribute('bgcolor', 0xdedede); // hilite: gray
+     &lt;/handler&gt;
+
+     &lt;handler name="onmousetrackout"&gt;
+         setAttribute('bgcolor', 0x000000); // normal: black
+     &lt;/handler&gt;
+     &lt;handler name="onmousetrackup"&gt;
+         parent.onnewcolor.sendEvent(this.spot.bgcolor);
+     &lt;/handler&gt;
+   &lt;/class&gt;
+
+   &lt;view bgcolor="0x0000ff" width="20" height="20"
+       onmousedown="this.colorpicker.setVisible(true); lz.Track.activate('mymenu');"
+       onmouseup="this.colorpicker.setVisible(false); lz.Track.deactivate('mymenu');"&gt;
+     &lt;view name="colorpicker" visible="false" x="10" y="10"&gt;
+       &lt;attribute name="trackgroup" value="mymenu" type="string"/&gt;
+       &lt;handler name="onnewcolor" args="newcolor"&gt;
+           parent.setAttribute('bgcolor', newcolor);
+       &lt;/handler&gt;
+
+       &lt;simplelayout axis="x"/&gt;
+       &lt;colorspot mycolor="0x0000ff"/&gt;
+       &lt;colorspot mycolor="0x00ff00"/&gt;
+       &lt;colorspot mycolor="0xffff00"/&gt;
+       &lt;colorspot mycolor="0xff0000"/&gt;
+       &lt;colorspot mycolor="0x00ffff"/&gt;
+
+     &lt;/view&gt;
+   &lt;/view&gt;
+   &lt;text&gt;Click on the square, then release the mouse button to select a new color.&lt;/text&gt;
+   &lt;simplelayout axis="y" spacing="20"/&gt;
+ &lt;/canvas&gt;
+ </pre>
+      <h3>Methods</h3><ul class="methods"><li><code>register()</code></li><li><code>unregister()</code></li></ul>
+</main><script src="_nav.js"></script></body></html>

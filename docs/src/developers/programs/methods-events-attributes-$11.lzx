@@ -1,0 +1,27 @@
+<canvas height="200" width="100%">
+  <class name="base" extends="button">
+    <handler name="onclick" method="handleonclick"/>
+    <method name="handleonclick" args="v">
+      Debug.debug("base click");
+    </method>
+  </class>
+  <simplelayout/>
+  <base id="yours" text="Yours">
+    <handler name="onclick">
+      message.addText("\nYour click");
+    </handler>
+  </base>  
+  <base text="Mine">
+    <method name="handleonclick" args="v">
+      message.addText("\nMy click");
+    </method>
+    <handler name="onclick" reference="yours">
+      message.addText("\nSomeone is pushing your buttons.");
+    </handler>
+  </base> 
+  <text id="message" y="40" multiline="true" />
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

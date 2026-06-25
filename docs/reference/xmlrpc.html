@@ -1,0 +1,117 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;xmlrpc&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>xmlrpc<span class="ang">&gt;</span></h1><p class="short">XML-RPC implementation</p><p class="meta">Extends <code>rpc</code></p>
+                        
+        <p>
+          XML-RPC is simple spec that describes how to invoke a remote operation using
+                    XML over HTTP. Laszlo XML-RPC is part of 
+          Laszlo RPC
+           and shares many of the same APIs and concepts. 
+                  Laszlo RPC includes 
+          SOAP
+           and 
+          JavaRPC
+          . For more information on XML-RPC,
+                    go to 
+          <a >XML-RPC.com</a>
+                          
+        </p>
+                        
+                
+                
+        <p>Most Laszlo RPC objects like JavaRPC and SOAP will set function stubs in the
+                    proxy property during load based on methods described by a class (for JavaRPC)
+                    or on a service description (using a WSDL in SOAP). Remotecall declarations
+                    refer to these function stubs and any remotecalls not pointing to a function
+                    stub that doesn't exist will generate an error/warning. In &lt;xmlrpc&gt;,
+                    function stubs are created based on remotecall declarations. Note that XML-RPC
+                    use dot notation for their operation names. Because that will conflict with the
+                    view system's notation, it's suggested that remotecalls are explictly named.</p>
+                        
+        <pre class="example">
+    &lt;canvas debug="true" height="400"&gt;
+    
+        &lt;debug x="10" y="40" width="450" height="350"/&gt;
+        
+        &lt;xmlrpc name="math" service="http://www.cookcomputing.com/xmlrpcsamples/math.rem"&gt;
+            
+            &lt;handler name="onload"&gt;
+                Debug.debug('math XML-RPC service loaded');
+                Debug.debug('proxy:');
+                Debug.inspect(this.proxy);
+            &lt;/handler&gt;
+            
+            &lt;handler name="ondata" args="data"&gt;
+                Debug.debug('got data: %w', data);
+            &lt;/handler&gt;
+            
+            &lt;handler name="onerror" args="error"&gt;
+                Debug.debug('onerror: %w', error);
+            &lt;/handler&gt;
+            
+            &lt;remotecall name="add" funcname="math.Add"/&gt;
+            &lt;remotecall name="subtract" funcname="math.Subtract"/&gt;
+            &lt;remotecall name="multiply" funcname="math.Multiply"/&gt;
+            &lt;remotecall name="divide" funcname="math.Divide"/&gt;
+            
+        &lt;/xmlrpc&gt;
+        
+        &lt;button text="100+200" x="10" y="10"&gt;
+            &lt;handler name="onclick"&gt;
+                Debug.debug('100+200');
+                math.add.invoke([100,200]);
+            &lt;/handler&gt;
+        &lt;/button&gt;
+    
+    &lt;/canvas&gt;
+                </pre>
+                        
+        <p>
+          <strong>See Also:</strong>
+        </p>
+                            
+        <ul>
+                                  
+          <li>
+                                        
+            <code>&lt;rpc&gt;</code>
+                                    
+          </li>
+                                  
+          <li>
+                                        
+            <code>&lt;javarpc&gt;</code>
+                                    
+          </li>
+                                  
+          <li>
+                                        
+            <code>&lt;soap&gt;</code>
+                                    
+          </li>
+                                  
+          <li>
+                                        
+            <code>&lt;remotecall&gt;</code>
+                                    
+          </li>
+                                  
+          <li>
+                                        
+            Developer's Guide: RPC chapter
+                                    
+          </li>
+                                  
+          <li>
+                                        
+            Developer's Guide: XMLRPC chapter
+                                    
+          </li>
+                              
+        </ul>
+                    
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">service</td><td class="ty">string</td><td class="ty">null</td><td>(Required) XML-RPC service URL. The URL must be http.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

@@ -1,0 +1,102 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>LzReplicationManager — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1>LzReplicationManager</h1><p class="short">The controller for views replicated by data.</p><p class="meta">Extends <a href="datapath.html"><code>LzDatapath</code></a></p>
+        <p>
+           When a view's datapath matches more than one data node, one instance
+ of the view is created for each match. The replicated views are
+ referred to as 
+          <code>&lt;glossterm&gt;clones&lt;/glossterm&gt;</code>
+          . When this happens, a
+ 
+          <code>&lt;glossterm&gt;replication manager&lt;/glossterm&gt;</code>
+           (or a subclass of
+ 
+          <code>lz.ReplicationManager</code>
+          ) is created to manage the
+ clones. Replication managers are never directly instantiated —
+ 
+ they are created when a datapath makes multiple matches.
+        </p>
+         
+ 
+        <p>If the replicated view was named, the clone manager takes over the
+ named spot in the parent. The example below demonstrates this, and
+ shows how to reference individual clones.</p>
+         
+ 
+        <p>
+          In the example that follows, a view, called
+ 
+          <code>replView</code>
+           is bound to a dataset
+ 
+          <code>somedata</code>
+          . For each matching node in the dataset, a
+ new view is created. These views contain the text of the dataset.  In
+ other words, the single line
+        </p>
+         
+ 
+        <pre>
+ &lt;view name="replView" datapath="somedata:/*"&gt;
+ 
+ </pre>
+         
+ 
+        <p>
+          causes the creation of five views (because there were five elements
+ in the dataset that matched the selection criteria). These "cloned"
+ views are numbered successively, starting with zero. The highlighted
+ section of the code below shows how to use the
+ 
+          <code>&lt;method&gt;getCloneNumber&lt;/method&gt;</code>
+           method to access each replicated
+ view.
+        </p>
+         
+ 
+        <pre class="example">
+           &lt;canvas height="140"&gt;
+   &lt;dataset name="somedata"&gt;
+     &lt;one/&gt; &lt;two/&gt; &lt;three/&gt; &lt;four/&gt; &lt;five/&gt;
+ 
+   &lt;/dataset&gt;
+   &lt;simplelayout/&gt;
+   &lt;button onclick="moveClone()"&gt;
+     Move clone 
+     
+          <em>&lt;method name="moveClone"&gt;&lt;![CDATA[
+       var nextClone = replView.getCloneNumber(this.cnum++);
+       if (nextClone == null) {
+         this.cnum = 0;
+         var nextClone = replView.getCloneNumber(this.cnum++);
+       }
+       nextClone.setAttribute('x', nextClone.x + 10);
+     ]]&gt;&lt;/method&gt;</em>
+               &lt;attribute name="cnum" value="0"/&gt;
+ 
+   &lt;/button&gt;
+   &lt;view name="replView" datapath="somedata:/*"&gt;
+     &lt;text datapath="name()"/&gt;
+   &lt;/view&gt;
+ &lt;/canvas&gt;
+ 
+        </pre>
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">visible</td><td class="ty">boolean</td><td class="ty">true</td><td>Globally controls the visibility of the clones this replication
+ manager creates.</td></tr></table><h3>Events</h3><ul class="events"><li><code>onclones</code> — 
+                Sent when 
+                <code>clones</code>
+                 is changed
+              </li><li><code>onnodes</code> — 
+                Sent when 
+                <code>nodes</code>
+                 is changed
+              </li><li><code>onvisible</code> — 
+                Sent when 
+                <code>visible</code>
+                 is changed
+              </li></ul>
+</main><script src="_nav.js"></script></body></html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;resizelayout&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>resizelayout<span class="ang">&gt;</span></h1><p class="short">A layout with fixed and stretchable views.</p><p class="meta">Extends <code>layout</code></p>
+                      
+        <code>resizelayout</code>
+         extends 
+        <code>&lt;layout&gt;</code>
+        , and therefore is responsible 
+              for arranging a set of views. Like simplelayout, 
+        <code>resizelayout</code>
+         positions a set of views vertically or horizontally 
+              depending on the axis specified. The difference is that 
+        <code>resizelayout</code>
+         can also stretch views.
+              
+        <pre class="example">
+&lt;canvas height="100"&gt;
+  &lt;view bgcolor="yellow" width="200"&gt;
+    &lt;view bgcolor="blue" height="30" width="50"/&gt;
+    &lt;view bgcolor="red" height="30" width="50"/&gt;
+    &lt;view bgcolor="blue" height="30" width="50"/&gt;
+    &lt;simplelayout axis="x" spacing="10"/&gt;
+  &lt;/view&gt;
+  
+  &lt;view y="40" bgcolor="yellow" width="200"&gt;
+    &lt;view bgcolor="blue" height="30" width="50"/&gt;
+    &lt;view bgcolor="red" height="30" options="releasetolayout"/&gt;
+    &lt;view bgcolor="blue" height="30" width="50"/&gt;
+    &lt;resizelayout axis="x"/&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+                     </pre>
+                      
+        <code>&lt;para&gt;
+          This example is similar to the one used in 
+          <code>&lt;stableborderlayout&gt;</code>
+          , and is in 
+              fact visually equivalent. This is because 
+          <code>&lt;stableborderlayout&gt;</code>
+           is a special case 
+              of 
+          <code>resizelayout</code>
+           that is optimized for the common occurrence of having two fixed views with one stretchable view between them.
+        &lt;/para&gt;</code>
+                      
+        <code>&lt;para&gt;
+          Unlike 
+          <code>&lt;stableborderlayout&gt;</code>
+          , 
+          <code>resizelayout</code>
+           works 
+              with any number of views. All the views that are controlled by a 
+          <code>resizelayout</code>
+           are assumed to be fixed size until defined differently. 
+              A view is defined as stretchable using the attribute 
+          <code>options="releasetolayout"</code>
+          . These views will stretch to fill in the space that is not 
+              taken by the fixed views. The 
+          <code>resizelayout</code>
+           uses the width (or height) of its view to determine the total amount of space to fill, and 
+              then those subviews are placed and stretched to fill that space. If there is more than one subview that is stretchable, then the available space is split 
+              evenly between those subviews.
+        &lt;/para&gt;</code>
+                                                              
+              
+        <code>&lt;para&gt;Then next example demonstrates what happens when two views are stretchable. The difference between the top and bottom views is only the spacing attribute.&lt;/para&gt;</code>
+                      
+        <pre class="example">
+&lt;canvas height="100"&gt;
+  &lt;view bgcolor="yellow" width="300"&gt;
+    &lt;view bgcolor="blue" height="30" width="50"/&gt;
+    &lt;view bgcolor="red" height="30" options="releasetolayout"/&gt;
+    &lt;view bgcolor="blue" height="30" width="50"/&gt;
+    &lt;view bgcolor="red" height="30" options="releasetolayout"/&gt;
+    &lt;resizelayout axis="x"/&gt;
+  &lt;/view &gt;
+
+  &lt;view y="40" bgcolor="yellow" width="300"&gt;
+    &lt;view bgcolor="blue" height="30" width="50"/&gt;
+    &lt;view bgcolor="red" height="30" options="releasetolayout"/&gt;
+    &lt;view bgcolor="blue" height="30" width="50"/&gt;
+    &lt;view bgcolor="red" height="30" options="releasetolayout"/&gt;
+    &lt;resizelayout axis="x" spacing="5"/&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+            </pre>
+                
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">axis</td><td class="ty">string</td><td class="ty">y</td><td>The axis in which this layout operates either 'x' or 'y'.</td></tr><tr><td class="nm">spacing</td><td class="ty">expression</td><td class="ty">0</td><td>A pixel amount to use between each view in the layout</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

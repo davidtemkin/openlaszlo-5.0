@@ -1,0 +1,29 @@
+<canvas width="800" height="600" debug="true">
+  <view name="mediaWindow" 
+        x="10" y="10"
+        width="200" height="150" 
+        clickable="true">
+    <emphasis role="em"><attribute name="minWindowWidth" value="150"/>
+    <attribute name="minWindowHeight" value="60"/></emphasis>
+
+    ... Top two rows removed for clarity ...
+
+    <method name="adjustSize">
+    <emphasis role="em"><![CDATA[</emphasis>
+      var newWidth = this.getMouse('x') + this.resizeOffsetX;
+      var newHeight = this.getMouse('y') + this.resizeOffsetY;
+      <emphasis role="em">if (newWidth > this.minWindowWidth) {
+        this.setAttribute('width', newWidth);
+      }
+      if (newHeight > this.minWindowHeight) {
+        this.setAttribute('height', newHeight);
+      }</emphasis>
+    <emphasis role="em">]]></emphasis>
+    </method>
+
+    <method name="stopResize">
+      this.sizerDel.unregisterAll();
+      this.sizerDel = null;
+    </method>
+  </view>
+</canvas>

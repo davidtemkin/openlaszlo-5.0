@@ -1,0 +1,15 @@
+myview {
+    logorsc: "resources/chocolate/logo.png";        
+    boxrsc: "resources/chocolate/box.png";
+    lightbgcolor: "#caa76b";
+    themename:  "Chocolate Tasties";
+
+}
+
+#gTitle {
+    xpos: 40;
+    ypos: 45;
+    textcolor:  "#441a0a";
+}
+
+/* Copyright 2008 Laszlo Systems */ 

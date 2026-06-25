@@ -1,0 +1,13 @@
+<canvas height="40">
+    <text>
+        Click me!
+        <handler name="onclick">
+            this.setAttribute('text', 'Hello World!');
+        </handler>
+    </text>
+</canvas>
+
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 - 2009 Laszlo Systems, Inc.  All Rights Reserved.            *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

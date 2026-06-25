@@ -1,0 +1,81 @@
+<canvas width="100%" height="630" debug="true">
+  <debug y="120" height="500" />
+
+  <stylesheet>
+    #vName {
+    bgcolorName : blue;
+    }
+    
+    #tName {
+    fgcolorName : silver;
+    }
+
+    #vHex {
+    bgcolorHex : #0000ff;
+    }
+    
+    #tHex {
+    fgcolorHex : #c0c0c0;
+    }
+
+    #vRGB {
+    bgcolorRGB : rgb(0,0,255);
+    }
+    
+    #tRGB {
+    fgcolorRGB : rgb(191,191,191);
+    }
+    
+  </stylesheet>
+
+  <view layout="axis: y; spacing: 10" >
+    <view layout="axis: x; spacing: 10">
+
+      <view id="vName" height="50" width="200" bgcolor="$style{'bgcolorName'}"
+            oninit="Debug.debug('Debug.explainStyleBindings(%w)', this);
+                    Debug.explainStyleBindings(this)">
+        <text id="tName" fontsize="30" fgcolor="$style{'fgcolorName'}"
+              oninit="Debug.debug('Debug.explainStyleBindings(%w)', this);
+                      Debug.explainStyleBindings(this)">style name</text>
+      </view>
+      <view id="vHex" height="50" width="200" bgcolor="$style{'bgcolorHex'}"
+            oninit="Debug.debug('Debug.explainStyleBindings(%w)', this);
+                    Debug.explainStyleBindings(this)">
+        <text id="tHex" fontsize="30" fgcolor="$style{'fgcolorHex'}"
+              oninit="Debug.debug('Debug.explainStyleBindings(%w)', this);
+                      Debug.explainStyleBindings(this)">style #hex</text>
+      </view>
+      <view id="vRGB" height="50" width="200" bgcolor="$style{'bgcolorRGB'}"
+            oninit="Debug.debug('Debug.explainStyleBindings(%w)', this);
+                    Debug.explainStyleBindings(this)">
+        <text id="tRGB" fontsize="30" fgcolor="$style{'fgcolorRGB'}"
+              oninit="Debug.debug('Debug.explainStyleBindings(%w)', this);
+                      Debug.explainStyleBindings(this)">style rgb()</text>
+      </view>
+    </view>
+    <view layout="axis: x; spacing: 10">
+
+      <view id="explicitVName" height="50" width="200" bgcolor="blue">
+        <text id="explicitTName" fontsize="30" fgcolor="silver">value name</text>
+      </view>
+      <view id="explicitVHex" height="50" width="200" bgcolor="#0000ff">
+        <text id="explicitTHex" fontsize="30" fgcolor="#c0c0c0">value #hex</text>
+      </view>
+      <view id="explicitVRGB" height="50" width="200" bgcolor="rgb(0,0,255)">
+        <text id="explicitTRGB" fontsize="30" fgcolor="rgb(191,191,191)">value rgb()</text>
+      </view>
+      <view id="explicitVExpression" height="50" width="200" bgcolor="255">
+        <text id="explicitTExpression" fontsize="30" fgcolor="${~4144959}">value expr</text>
+      </view>
+    </view>
+  </view>
+  
+  <script>
+
+  </script>
+
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+     * Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+     * Use is subject to license terms.                                            *
+     * X_LZ_COPYRIGHT_END ****************************************************** -->

@@ -1,0 +1,33 @@
+<canvas>
+  <dataset name="shelf">
+    <bookshelf>
+      <book binding="paperback">
+        <title>Acts of the Apostles</title>
+        <author>John F.X. Sundman </author>
+        <publisher>Rosalita Associates </publisher>
+        <price>15.00</price>
+        <year>1999</year>
+        <category>thriller</category>
+        <rating>4.5 </rating>
+      </book>
+      <book binding="casebound">
+        <title>Shock</title>
+        <author>Robin Cook </author>
+        <publisher>Putnam </publisher>
+        <price>24.95</price>
+        <year>2001</year>
+        <category>thriller</category>
+        <rating>3.5 </rating>
+      </book>
+      <book binding="paperback">
+        <title>Cheap Complex Devices</title>
+        <editor>John Compton Sundman </editor>
+        <publisher>Rosalita Associates </publisher>
+        <price>11.00</price>
+        <year>2002</year>
+        <category>metafiction</category>
+        <rating>5.0 </rating>
+      </book>
+    </bookshelf>  
+  </dataset>
+</canvas>

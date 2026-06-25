@@ -1,0 +1,135 @@
+<!--=======================================================================-->
+<!--                                                                       -->
+<!-- paging.lzx                                                            -->
+<!--                                                                       -->
+<!-- Laszlo Application Language (LZX) Example                             -->
+<!--                                                                       -->
+<!--=======================================================================-->
+
+<canvas bgcolor="#EAEAEA" debug="false" width="640" height="540" >
+    <dataset name="recs" >
+        <record name="firstone" email="poo@doo.slop" color="#FFAAAA" />
+        <record name="secondone" email="poo@doo.slop" color="#FFFFAA" />
+        <record name="3rdone" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="4thone" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="5thone" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="sixth" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="seventh" email="poo@doo.slop" color="#AAFFFF" />
+        <record name="eight" email="poo@doo.slop" color="#AAFFAA" />
+        <record name="niner" email="poo@doo.slop" color="#AAAAAA" />
+        <record name="twen" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="elven" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="twelve" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="thirteens" email="poo@doo.slop" color="#FFFFFF" />
+        <record name="fdourten" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="fivteen" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="sizteen" email="poo@doo.slop" color="#AAFFFF" />
+        <record name="iwghteen" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="nineten" email="poo@doo.slop" color="#FFFFAA" />
+        <record name="twenty" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="twenty1" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="22" email="poo@doo.slop" color="#AAFFAA" />
+        <record name="tewentyrthre" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="twentryfour" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="trenty five" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="26" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="2senve" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="thwenty eight" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="ewetny nine" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="rfritry" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="firthy 1" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="firth to last" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="fourth to last" email="poo@doo.slop" color="#FFAAFF" />
+        <record name="3rd top last" email="poo@doo.slop" color="#AAFFAA" />
+        <record name="sec2last" email="poo@doo.slop" color="#FFAAFF"/>
+        <record name="lastone" email="poo@doo.slop" color="#FFFFFF" />
+    </dataset>
+
+    <window resizable="true" width="230" height="238" x="30" y="70">
+        <view id="svpar">
+            <view height="20" clickable='true'
+                  width="200" name="sview"
+                  onmousedown="this.datapath.deleteNode()">
+                <datapath xpath="recs:/record" replication="lazy"
+                          spacing="4"/>
+                <attribute name="bgcolor" value="$path{'@color'}" />
+
+                <text width="100" datapath="@name" />
+
+                <text width="100" datapath="@email" />
+
+                <simplelayout axis="x" spacing="4"/>
+
+            </view>
+        </view>
+        <scrollbar/>
+
+    </window>
+    <button text="sortit" x="30" y="30" >
+        <attribute name="last" value="true" />
+        <attribute name="lastby" value="true" />
+        <handler name="onclick" >
+            var asc = this.last? "ascending" : "descending";
+            var by = !this.lastby? "@name" : "@color";
+            this.last = !this.last;
+            if ( !this.last ){
+               this.lastby = ! this.lastby;
+            }
+            svpar.sview.setOrder( by , asc)
+        </handler>
+    </button>
+
+    <view x="300" y="30" width="250" datapath="new:/record" >
+        <view>
+            <simplelayout axis="x" spacing="5" />
+            <text width="45" valign="middle">Name:</text>
+            <edittext width="200" datapath="@name" />
+        </view>
+        <view>
+            <simplelayout axis="x" spacing="5" />
+            <text width="45" valign="middle">Email:</text>
+            <edittext width="200" datapath="@email" />
+        </view>
+        <view>
+            <simplelayout axis="x" spacing="5" />
+            <text width="45" valign="middle">Color:</text>
+            <view width="200">
+                <view width="107" height="20" name="cview" datapath="@color"
+                      bgcolor="#FFAAAA">
+                    <method name="updateData">
+                        return String(this.bgcolor != null ? this.bgcolor :
+                                                          0xFFFFFF);
+                    </method>
+                </view>
+
+                <view bgcolor="#FFAAAA" width="20" height="20" clickable="true"
+                      onmouseup="parent.cview.setAttribute('bgcolor', this.bgcolor)"/>
+                <view bgcolor="#AAAAFF" width="20"   height="20" clickable="true"
+                      onmouseup="parent.cview.setAttribute('bgcolor', this.bgcolor)"/>
+                <view bgcolor="#FFFFAA" width="20" height="20" clickable="true"
+                      onmouseup="parent.cview.setAttribute('bgcolor', this.bgcolor)"/>
+                <view bgcolor="#DD80DD" width="20" height="20" clickable="true"
+                      onmouseup="parent.cview.setAttribute('bgcolor', this.bgcolor)"/>
+
+                <simplelayout axis="x" spacing="3" />
+            </view>
+        </view>
+
+        <button text="Add this person to the dataset" align="right">
+            <handler name="onclick">
+                this.parent.datapath.updateData();
+                var dp = canvas.datasets.recs.getPointer();
+                dp.addNodeFromPointer( this.parent.datapath );
+            </handler>
+        </button>
+
+        <simplelayout axis="y" spacing="2" />
+
+    </view>
+
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2008 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->

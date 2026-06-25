@@ -1,0 +1,20 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;chart&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>chart<span class="ang">&gt;</span></h1><p class="short">
+              a simple chart
+          </p><p class="meta">Extends <code>basecomponent</code></p>
+                    
+        <code>&lt;warning&gt;This component is of Beta quality and is subject to change.&lt;/warning&gt;</code>
+                  chart is the base class representing a chart. In general,
+        this class is not instantiated directly. A chart contains 
+            at least one dataseries element 
+            at least one axis element 
+        The chart needs to look at its dataseries children and pass 
+        the relevant dataseries to each axis. Relevent dataseries 
+        for the chart must have columns for each of the axes 
+        that the chart cares about.
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">bottomMargin</td><td class="ty">number</td><td class="ty">10</td><td>The blank space bordering the bottom of the chart area.</td></tr><tr><td class="nm">dataPointsEnabled</td><td class="ty">boolean</td><td class="ty">false</td><td>enable data point(data marker)</td></tr><tr><td class="nm">databorderEnabled</td><td class="ty">boolean</td><td class="ty">true</td><td/></tr><tr><td class="nm">datalabelColumn</td><td class="ty">string</td><td class="ty"/><td>data column name of the data label</td></tr><tr><td class="nm">datalabelEnabled</td><td class="ty">boolean</td><td class="ty">false</td><td>enable data label</td></tr><tr><td class="nm">datatipColumn</td><td class="ty">string</td><td class="ty"/><td>data column name of the tooltip</td></tr><tr><td class="nm">datatipEnabled</td><td class="ty">boolean</td><td class="ty">false</td><td>enable tooltip for data</td></tr><tr><td class="nm">defaultRightMargin</td><td class="ty">number</td><td class="ty">10</td><td>The default blank space bordering the right side of the chart area.</td></tr><tr><td class="nm">defaultstyle</td><td class="ty">expression</td><td class="ty">defaultchartstyle</td><td>The default style to be applied to the chart.</td></tr><tr><td class="nm">horizontalGap</td><td class="ty">number</td><td class="ty">5</td><td>The horizontal blank space between components.</td></tr><tr><td class="nm">initdone</td><td class="ty">boolean</td><td class="ty">false</td><td>subview have</td></tr><tr><td class="nm">leftMargin</td><td class="ty">number</td><td class="ty">10</td><td>The blank space bordering the left side of the chart area.</td></tr><tr><td class="nm">plotarea</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">rightMargin</td><td class="ty">number</td><td class="ty">10</td><td>The blank space bordering the right side of the chart area.</td></tr><tr><td class="nm">topMargin</td><td class="ty">number</td><td class="ty">10</td><td>The blank space bordering the top of the chart area.</td></tr><tr><td class="nm">valuelinesenabled</td><td class="ty">boolean</td><td class="ty">true</td><td>enable value lines</td></tr><tr><td class="nm">valuepointsenabled</td><td class="ty">boolean</td><td class="ty">true</td><td>enable value points</td></tr><tr><td class="nm">valueregionsenabled</td><td class="ty">boolean</td><td class="ty">true</td><td>enable value region</td></tr><tr><td class="nm">verticalGap</td><td class="ty">number</td><td class="ty">5</td><td>The vertical blank space between components.</td></tr><tr><td class="nm">zoomEnabled</td><td class="ty">boolean</td><td class="ty">false</td><td>enable zoom</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

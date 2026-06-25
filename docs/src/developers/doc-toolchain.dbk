@@ -1,0 +1,688 @@
+<?xml version="1.0"?>
+
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+  * Copyright 2007 Laszlo Systems, Inc.  All Rights Reserved.                   *
+  * Use is subject to license terms.                                            *
+  * X_LZ_COPYRIGHT_END ****************************************************** -->
+
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<chapter id="doc-toolchain">
+
+  <title>The Documentation Toolchain</title>
+  <para>The documentation for OpenLaszlo, including this chapter of the developer's guide, is built
+    with a federation of tools and technologies based on Java and XML. To understand the doc
+    toolchain at all, you'll need to be comfortable with the fundamental concepts employed in XSLT
+    1.0 and ant. The toolchain is too complicated to understand all at once, as you can see from the
+    figure below. This chapter will break it down into nearly-manageable chunks. 
+  </para>
+
+  <figure>
+    <title>Documentation Toolchain</title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="images/doc-toolchain.png"/>
+      </imageobject>
+    </mediaobject>
+  </figure>
+
+  <para>Some vocabulary will help you understand the diagram:</para>
+  <variablelist id="doctools-vocabulary">
+    <varlistentry>
+      <term>js2doc</term>
+      <listitem><para>Think of this as the xml schema to describe JavaScript 2. The '2' in the term
+          <literal>js2doc</literal> refers to the version of javascript, not to a transformation.
+        "js2doc files" refers to a collection of xml files which follow the js2doc
+      schema.</para></listitem>
+    </varlistentry>
+    <varlistentry>
+      <term>LFC</term>
+      <listitem><para>Laszlo Foundation Classes. For the purposes of the documentation toolchain, the LFC
+        consists of classes which are written in JavaScript.</para></listitem>
+    </varlistentry>
+    <varlistentry>
+      <term>Developer's Guide</term>
+      <listitem><para>The Developer's Guide, which you are reading, is a text about developing with
+        OpenLaszlo. It is mostly written as sentences and paragraphs by human technical writers. The
+        developer's guide is where one would look when trying to figure out how to improve startup
+        performance, how to debug a live application, or why to choose a SOLO deployment.</para></listitem>
+    </varlistentry>
+    <varlistentry>
+      <term>Reference Guide</term>
+      <listitem><para>The Reference Guide is a detailed reference manual of all of the public API's in
+        OpenLaszlo. It is where one would look to find out what methods are available on
+        <literal>drawview</literal>, or what events a <literal>button</literal> might
+        generate.</para></listitem>
+    </varlistentry>
+    <varlistentry>
+      <term>doc-comment</term>
+      <listitem><para>The term doc-comment is shorthand to refer to a special comment in a source file
+        whose purpose is to document the nearby code.</para> </listitem>
+    </varlistentry>
+  </variablelist>
+  
+  <para>With those definitions in mind, let's look at a simplified version of the rather
+    intimidating diagram above: <informalfigure>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/doc_overview_simple.png"/>
+        </imageobject>
+      </mediaobject>
+    </informalfigure>Much better: two rows, unified in one final step. The top row is how we build
+    the reference. The bottom row is how we build the developer's guide. The final transformation,
+    labeled DocBook processing, turns intermediate files into the output html that you are probably
+    reading right now. </para>
+  
+  <section id="figuring-things-out"><title>Figuring things out</title>
+    <para>The DocBook toolchain is long and complicated, and the builds take upwards of ten minutes, as much as 40 minutes for a complete build. Do not allow this slow debug-edit-compile loop to dictate the pace of your progress! This author found that it was very effective to work on well-formed subsets of the data, and transform those subsets through a driver stylesheet containing only the templates of interest. With this technique, a debug-edit-compile iteration can take seconds, not hours. The source code includes a simple driver, aptly named <literal>docs/src/xsl/simple-driver.xsl</literal>, which is currently configured to investigate methods of <literal>lz.Browser</literal> when applied to <literal>LaszloLibrary-verbose.js2doc</literal>.</para>
+    <para>A simpler way of figuring things out is just to run XPath queries against <literal>LaszloLibrary-verbose.js2doc</literal> Various XML editors support live XPath queries, including <ulink url="http://www.oxygenxml.com/">Oxygen XML Editor</ulink></para>
+  </section>  
+  
+  <section id="docbook-is-central">
+    <title>DocBook is the Center of the Documentation Toolchain</title>
+    <para>Another way to understand the documentation toolchain centers on DocBook. Various processes create DocBook files, then a giant XSL transformation converts those DocBook files into output HTML. This diagram shows the whole process from this point of view: 
+      <informalfigure>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/doc-toolchain-is-docbook.png"/>
+          </imageobject>
+        </mediaobject>
+      </informalfigure>
+    The rest of this document is structured like the image above: first we describe how to get to DocBook files for the reference, then for the developer's guide; then we describe how to generate HTML output from the DocBook files. Finally, we'll consider the "backwards" transformation, tracing elements in an output page of the reference back to their origins in comments.</para>
+  </section>
+
+  <section id="reference-toolchain-source-to-doc">
+    <title>The Reference Toolchain: From Source to DocBook</title>
+    <para>How do we build the reference? We build it from the source, of course. (Documentation
+      that's not in the source will fall out of date as soon as it's written. Documentation
+        <emphasis>in</emphasis> the source also tends to decay, but at least it's in the developer's
+      field of view while he's editing the code.) This section will walk you through the processes
+      which discover the documentation in various source materials, to an intermediate XML format
+      which we call "js2doc", to the end project: the HTML reference manual.</para>
+    <para>The OpenLaszlo platform is heterogeneous, so our reference toolchain must accept several
+      types of source as input: a basic language definition, JavaScript sources that implement the
+      Laszlo Foundation Classes, and lzx sources that implement the lion's share of the application
+      development classes. (For the purposes of this document, we'll ignore the Java API's for the
+      parser, compiler, and servlet. Those elements use a well-known javadoc workflow.)</para>
+    <para>Let's look at that top row of the diagram above. In more detail, it becomes three rows,
+      one for each variety of source code: <informalfigure>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/doc_reference_details.png"/>
+          </imageobject>
+        </mediaobject>
+      </informalfigure>
+    </para>
+    <para>This part of the toolchain unifies the various source material into js2doc format, then
+      joins them together into a massive XML file, <literal>LaszloLibrary-verbose.js2doc</literal>.
+      To understand those processes, please review <xref linkend="js2doc-schema"/> to grasp the kinds of
+      information that js2doc is trying to represent. The next three sections will walk through each
+      of the three paths in the diagram above: from langref.xml, from javascript code, and from lzx
+      source code, all to the js2doc intermediate format.</para>
+
+    <section id="langref.xml">
+      <title>Basic Language Constructs as js2doc</title>
+      <para><literal>langref.xml</literal> is an xml file which documents the lzx language itself:
+        things like attribute tag, the class tag, the event and handler tags, and so on. Find it in
+        the source distribution at <literal>$LPS_HOME/docs/src/reference/langref.xml</literal>.</para>
+      <para>
+        <literal>langref.xml</literal> is itself a js2doc file, so it doesn't need any processing to
+        go into the next phase (js2doc2dbk) of the reference toolchain. Consider the "method" tag. An example of a method tag would be the <literal>moveWindow</literal> method in the example in <xref linkend="tutorial-methods"/>. We're not talking about documenting an <emphasis>instance of the method tag</emphasis>; rather, we're talking about documenting <emphasis>the method tag itself:</emphasis> Here's the js2doc fragment
+        describing the method tag:</para>      
+      <programlisting language="lzx">            
+            &lt;property<emphasis> id=&quot;tag.method&quot;</emphasis> topic=&quot;LZX&quot; subtopic=&quot;Basics&quot; access=&quot;public&quot;&gt;
+              &lt;doc&gt;
+                &lt;tag name=&quot;shortdesc&quot;&gt;&lt;text&gt;Attaches a function or event handler to an object or class.&lt;/text&gt;&lt;/tag&gt;
+                &lt;tag name=&quot;lzxname&quot;&gt;&lt;text&gt;method&lt;/text&gt;&lt;/tag&gt;
+                &lt;text&gt;
+                  &lt;p&gt;Attaches a method to the object that contains this element.  The
+                    method must have a &lt;attribute&gt;name&lt;/attribute&gt;.&lt;/p&gt;
+                  
+                  &lt;p&gt;The &lt;attribute&gt;name&lt;/attribute&gt; attribute
+                    allows the method to be invoked from JavaScript with this name.
+                    For example, if a method is defined via:&lt;/p&gt;
+                  
+                  &lt;example extract=&quot;false&quot;&gt;
+                    &amp;lt;view id=&quot;obj&quot;&amp;gt;
+                    &amp;lt;method name=&quot;f&quot; args=&quot;a, b&quot;&amp;gt;
+                    return a+b;
+                    &amp;lt;/method&amp;gt;
+                    &amp;lt;/view&amp;gt;
+                  &lt;/example&gt;
+                  
+                  &lt;p&gt;
+                    then script code
+                    can invoke &lt;code&gt;obj.f(1, 2)&lt;/code&gt; to add two
+                    numbers.&lt;/p&gt;
+                &lt;/text&gt;
+              &lt;/doc&gt;
+              &lt;class&gt;
+                &lt;property name=&quot;__ivars__&quot; access=&quot;public&quot;&gt;
+                  &lt;object&gt; 
+                    &lt;property name=&quot;name&quot; modifiers=&quot;final&quot;&gt;
+                      &lt;doc&gt;
+                        &lt;tag name=&quot;lzxtype&quot;&gt;&lt;text&gt;token&lt;/text&gt;&lt;/tag&gt;
+                        &lt;text&gt;The name of the method.&lt;/text&gt;
+                      &lt;/doc&gt;
+                    &lt;/property&gt;
+                    &lt;property name=&quot;event&quot; type=&quot;String&quot;&gt;
+                      &lt;doc&gt;
+                        &lt;text&gt;The name of the event that this method is invoked in response
+                          to.&lt;/text&gt;
+                      &lt;/doc&gt;
+                    &lt;/property&gt;
+                    &lt;property name=&quot;reference&quot; type=&quot;Object&quot;&gt;
+                      &lt;doc&gt;
+                        &lt;tag name=&quot;lzxdefault&quot;&gt;&lt;text&gt;&quot;this&quot;&lt;/text&gt;&lt;/tag&gt;
+                        &lt;tag name=&quot;lzxtype&quot;&gt;&lt;text&gt;reference&lt;/text&gt;&lt;/tag&gt;
+                        &lt;text&gt;If this attribute is present, it is a JavaScript expression
+                          that evaluates to an object.  The code in this method executes
+                          when this object sends the event named by the @a{event}
+                          attribute.  This attribute may be present only if
+                          the @a{event} attribute is present too.&lt;/text&gt;
+                      &lt;/doc&gt;
+                    &lt;/property&gt;
+                    &lt;property name=&quot;args&quot; type=&quot;String&quot; modifiers=&quot;final&quot;&gt;
+                      &lt;doc&gt;
+                        &lt;text&gt;The parameter names of this method.  The value of this attribute
+                          is a comma-separated list of JavaScript identifiers.&lt;/text&gt;
+                      &lt;/doc&gt;
+                    &lt;/property&gt;
+                  &lt;/object&gt;
+                &lt;/property&gt;
+              &lt;/class&gt;
+            &lt;/property&gt;            
+      </programlisting>
+      <para>Later in this document, we'll see how this js2doc intermediate fragment becomes the reference
+        page for the method tag.</para></section>
+
+    <section id="LFC-to-js2doc">
+      <title>JavaScript to js2doc</title>
+      <para>The LFC (Laszlo Foundation Classes) are written in JavaScript, and their documentation
+        is inline with their implementation. <xref linkend="LzView" /> is an example of
+        an LFC class. In javascript, comments are indicated with the javadoc-style comment,
+        beginning with a slash followed by two asterisks. Here's an example, from LaszloView.lzs
+          (<literal>$LPS_HOME/WEB-INF/lps/lfc/views/LaszloView.lzs</literal>):</para>
+      <programlisting>
+            /**
+            * returns true if the point is contained within the view.
+            * <emphasis>@param Number x: an x value relative to the this view&apos;s coordinates</emphasis>
+            * <emphasis>@param Number y: an y value relative to the this view&apos;s coordinates</emphasis>
+            * <emphasis>@return Boolean: boolean indicating whether or not the point lies within the view</emphasis>
+            */
+            function containsPt( x,y ) {
+                return (((this.height&gt;= y) &amp;&amp; (y &gt;= 0)) &amp;&amp;
+                ((this.width&gt;= x) &amp;&amp; (x &gt;= 0)));
+            }            
+          </programlisting>
+      <para>Turning those structured comments into the js2doc intermediate format is achieved by a
+        java application called (not very helpfully) js2doc. This application is found in the source
+        tree in <literal>WEB-INF/lps/server/src/org/openlaszlo/js2doc</literal>. <emphasis>It's
+          really quite clever: the js2doc tool uses exactly the same parsing code as the OpenLaszlo
+          script compiler.</emphasis> Instead of emitting swf bytecodes representing the class as
+        defined in the parsed javascript, js2doc emits an xml description of the API defined in the
+        parsed javascript -- <emphasis>complete with the comments embedded as
+        documentation!</emphasis></para>
+      <para>This will make more sense when we look at the js2doc output from the containsPt code
+        above:
+        <programlisting>
+            &lt;property id=&quot;LzView.prototype.containsPt&quot; name=&quot;containsPt&quot;&gt;
+              &lt;doc&gt;
+                &lt;text&gt;returns true if the point is contained within the view.&lt;/text&gt;
+              &lt;/doc&gt;
+              &lt;function&gt;
+               <emphasis> &lt;parameter name=&quot;x&quot; type=&quot;Number&quot;&gt;</emphasis>
+                  &lt;doc&gt;
+                   <emphasis> &lt;text&gt;an x value relative to the this view&apos;s coordinates&lt;/text&gt;</emphasis>
+                  &lt;/doc&gt;
+                &lt;/parameter&gt;
+                <emphasis>&lt;parameter name=&quot;y&quot; type=&quot;Number&quot;&gt;</emphasis>
+                  &lt;doc&gt;
+                    <emphasis>&lt;text&gt;an y value relative to the this view&apos;s coordinates&lt;/text&gt;</emphasis>
+                  &lt;/doc&gt;
+                &lt;/parameter&gt;
+               <emphasis> &lt;returns type=&quot;Boolean&quot;&gt;</emphasis>
+                  &lt;doc&gt;
+                    <emphasis>&lt;text&gt;boolean indicating whether or not the point lies within the view&lt;/text&gt;</emphasis>
+                  &lt;/doc&gt;
+                &lt;/returns&gt;
+              &lt;/function&gt;
+            &lt;/property&gt;            
+          </programlisting>
+      </para>
+      <para>A note on id's: the <literal>id</literal> of a property in the js2doc structure is a globally-unique identifier. (At least, it is globally unique if the tools are all working correctly.) The form of the id is based on the semantics of the thing-it's-identifying. A few examples will clarify the patterns: </para>
+      <informaltable colsep="0" frame="none">
+        <tgroup cols="4">
+          <colspec colname="Example"/>
+          <colspec colname="Meaning"/>
+          <thead>
+            <row>
+              <entry align="left">Example id</entry>
+              <entry align="left">Meaning</entry>
+              <entry align="left">Comments</entry>              
+            </row>
+          </thead>      
+          <tbody>
+            <row>
+              <entry><literal>id="LzView"</literal></entry>
+              <entry>The <literal>lz.view</literal> class</entry>
+              <entry>The use of capital "Lz" indicates that the class lz.view is part of the LFC. </entry>
+            </row>            
+            <row>
+              <entry><literal>id="LzView.prototype.containsPt"</literal></entry>
+              <entry>The <literal>containsPt</literal> method of <literal>lz.view</literal></entry>
+              <entry>The presence of <literal>prototype</literal> means that the property being identified is present on all instances of the class. The use of capital "Lz" indicates that the class lz.view is part of the LFC. </entry>
+            </row>
+            <row>
+              <entry><literal>id="tag.method"</literal></entry>
+              <entry>The <literal>method</literal> tag</entry>
+              <entry>The <literal>tag.</literal> prefix means that the class being identified is a tag, part of the language. </entry>
+            </row>            
+            
+            <row>
+              <entry><literal>id="lz.basewindow"</literal></entry>
+              <entry>The <literal>&lt;basewindow&gt;</literal> class</entry>
+              <entry>The prefix <literal>lz.</literal> means that the class being identified is a vanilla tag, not part of the LFC.</entry>
+            </row>            
+            
+            <row>
+              <entry><literal>id="lz.basewindow.prototype.setWindowFocus"</literal></entry>
+              <entry>The <literal>setWindowFocus</literal> method of the <literal>basewindow</literal> class </entry>
+              <entry>The presence of <literal>prototype</literal> means that the property being identified is present on all instances of the class.</entry>
+            </row>
+            <row>
+              <entry><literal>id="lz.basewindow.__ivars__.minwidth"</literal></entry>
+              <entry>The <literal>minwidth</literal> attribute of an instance of the <literal>basewindow</literal> class </entry>
+              <entry>The <literal>__ivars__</literal> indicates that the property being identified is present on each individual instance of the <literal>basewindow</literal> class.</entry>
+            </row>
+            <row>
+              <entry><literal>id="lz.Browser+dhtml"</literal></entry>
+              <entry>the <literal>lz.Browser</literal> class, as it exists only in the dhtml runtime.</entry>
+              <entry>The <literal>+&lt;runtime&gt;</literal> suffix indicates runtime-specific behavior.</entry>
+            </row>
+            <row>
+              <entry><literal>id="lz.Browser+swf8+swf9"</literal></entry>
+              <entry>the <literal>lz.Browswer</literal> class, as it exists in the swf8, and swf9 runtimes.</entry>
+              <entry>Several runtimes can be appended to a class name to indicate that this behavior applies to all of the specified runtimes..</entry>
+            </row>            
+            <row>
+              <entry><literal>id="services.platform.dhtml.LzKeys.js"</literal></entry>
+              <entry>the file named <literal>LzKeys.js</literal></entry>
+              <entry>This is an id for a &lt;unit&gt;, not a &lt;property&gt; and refers to a file, not an API element</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+      <para>Throughout the entire toolchain, when you want to refer to a particular class, method, attribute, event, or file, you can specify it by id. For example, to link to the reference for the class <literal>basewindow</literal>, insert <literal>&lt;xref linkend=&quot;lz.basewindow&quot;/&gt;</literal> which yields this result: <xref linkend="lz.basewindow"/></para>          
+    </section>
+    <section id="lzx2js2doc">
+      <title>lzx2js2doc</title>
+      <para>Most code which application developers write, and which contributors will examine, is
+        lzx code. lzx is the language in which all of the components are described, all of the
+        extensions, all of the utilities, and so forth. When you think about developing an
+        OpenLaszlo application, you are probably thinking about writing lzx code. </para>
+      <para>The source for <xref linkend="lz.basewindow" />
+          (<literal>lps/components/base/basewindow.lzx</literal>) is a typical lzx file for which
+        the doctools generate documentation. In an lzx file, documentation comments are set apart by
+        beginning an XML comment with three hyphens, instead of the customary two. <xref
+          linkend="js2doc-reference" /> describes the available annotations within a doc comment in
+        lzx.</para>
+      <programlisting>&lt;!--- Brings the window to front when it has the
+windowfocus and sets the 'state' to 2, the selected state.
+Subclasses may override to create different behavior
+<emphasis>@param Boolean windowfocus: whether the window should be selected</emphasis>
+--&gt;
+&lt;method name="setWindowFocus" args="windowfocus"&gt;</programlisting>
+      <para>This example shows the doc-comment for the method <literal>setWindowFocus</literal> of
+        the <literal>basewindow</literal> class. It indicates that there is a single parameter,
+          <literal>windowfocus</literal> which should be a Boolean.</para>
+      <para>lzx2js2doc processes commented lzx source files into js2doc intermediate files. It is an
+        xsl worksheet, <literal>$LPS_HOME/docs/src/xsl/lzx2js2doc.xsl</literal>, which discovers the
+        doc comments in the lzx source, parses them, and outputs js2doc files. The js2doc output for
+        the setWindowFocus method above looks like this:
+        <programlisting>&lt;property <emphasis>id=&quot;lz.basewindow.prototype.setWindowFocus&quot;</emphasis> name=&quot;setWindowFocus&quot; access=&quot;public&quot;&gt;
+              &lt;function&gt;
+                &lt;parameter name=&quot;windowfocus&quot; type=&quot;Boolean&quot;&gt;
+                  &lt;doc&gt;
+                    &lt;text&gt;whether the window should be selected&lt;/text&gt;
+                  &lt;/doc&gt;
+                &lt;/parameter&gt;
+              &lt;/function&gt;
+              &lt;doc&gt;
+                &lt;tag name=&quot;lzxname&quot;&gt;
+                  &lt;text&gt;<emphasis>setWindowFocus</emphasis>&lt;/text&gt;
+                &lt;/tag&gt;
+                &lt;text&gt;<emphasis>Brings the window to front when it has the
+                  windowfocus and sets the &apos;state&apos; to 2, the selected state.
+                  Subclasses may override to create different behavior</emphasis>&lt;/text&gt;
+              &lt;/doc&gt;
+            &lt;/property&gt;
+            </programlisting>
+        (This fragment is in $LPS_HOME/docs/src/build/reference/LaszloLibrary-verbose.js2doc, an
+        intermediate file generated by the reference build.) </para>
+    </section>
+
+    <section id="js2doc2dbk">
+      <title>Turning the API into the Reference: js2doc2dbk</title>
+      <para>So far, we've seen how the js2doc intermediate form is generated from various source files. The next step in the transformation is to build a DocBook representation of the reference material. Let's look at the detailed diagram for this transformation:
+        <informalfigure>
+          <mediaobject>
+            <imageobject>
+              <imagedata fileref="images/js2doc2dbk.png"/>
+            </imageobject>
+          </mediaobject>
+        </informalfigure>That looks simple and straightforward, with just one path through the transformation. Actually, this transformation is the most complicated part of the documentation toolchain. The complexity is all located within the js2doc2dbk XSL transformation.</para>
+      <para>Consider this step abstractly: <emphasis>From a large, structured set of information, construct another large, structured set of information.</emphasis> The linear order in which XSL transformations execute isn't really important, but it helps to think of this transformation procedurally. (XSL's functional programming style can be very intimidating; it helps to trace it through as if it were procedural.) </para>
+      <orderedlist>
+        <listitem><para>For each section of the reference, create a DocBook file to contain the reference DocBook content for that section.  
+          (Sections are listed in <literal>docs/src/reference/index.dbk</literal>, and the section DocBook files are generated in 
+          <literal>docs/src/build/reference/[lfcref.dbk|lzxref.dbk|compref.dbk|...]</literal>.)</para>      
+          <orderedlist>
+            <listitem><para>Identify the pages in that section.</para></listitem>
+            <listitem><para>For each page in the reference:</para>
+              <orderedlist>
+                <listitem><para>Describe the class by name, inheritance chain, and introductory text.</para></listitem>
+                <listitem><para>List all of the attributes for that class. Also list all of the inherited attributes for that class.</para></listitem>
+                <listitem><para>List all of the methods for that class. Also list all of the inherited methods for that class.</para></listitem>
+                <listitem><para>List all of the events for that class. Also list all of the inherited events for that class.</para></listitem>            
+              </orderedlist>          
+            </listitem>
+          </orderedlist>
+        </listitem>
+      </orderedlist>
+      <para>Now consider this step concretely. This is the core of the documentation toolchain, so it is worth investigating in detail. First you must learn to navigate and understand the important stylesheets, which is the subject of the next section, <xref linkend="reading-js2doc2dbk-stylesheets"/></para>
+      
+      <section id="reading-js2doc2dbk-stylesheets">   
+        <title>Reading js2doc2dbk Stylesheets</title>
+        <para>The stylesheets in <literal>docs/src/xsl</literal> participate in all of the xsl transformations in the documentation toolchain: from lzx to js2doc, from js2doc to dbk, and from dbk to html (details on this later). When looking at a particular stylesheet, or looking <emphasis>for</emphasis> a particular template, it is useful to consider which stage of the transformation interests you. </para>
+        <section id="idioms-and-entities"><title>Idioms and Entities</title>
+          <para>Each xsl stylesheet begins by declaring several entities. These are XPath macros which make the templates that follow more succinct and hopefully readable. Take the time to read these over and grasp their meaning. </para>
+        </section>
+        <section id="main-stylesheets"><title>Main Stylesheets and Templates in js2doc2dbk</title>
+          <para>The main transformation lives in <literal>docs/src/xsl/js2doc2dbk.xsl</literal>, and within that, the main template for generating a complete reference page is <literal>&lt;xsl:template match=&quot;property&quot; mode=&quot;refentry&quot;&gt;</literal></para>
+        </section>
+        <section id="utility-stylesheets"><title>Utility Stylesheets and Templates in js2doc2dbk</title>
+          <itemizedlist>
+            <listitem><para>docs/src/xsl/js2doc2dbk/synopsis.xsl</para></listitem>
+            <listitem><para>docs/src/xsl/js2doc2dbk/utilities.xsl</para></listitem>          
+          </itemizedlist>
+          
+        </section>
+        <section id="modes-and-roles"><title>Modes and Roles</title>
+          <para>Modes and roles are attributes of xsl templates which provide another way to slice the same information, akin to double-dispatch: there are several ways to handle an element, and the appropriate one for a given moment depends both on the element (primary dispatch by XPath matching of the template) and on the current mode (secondary matching by mode). A single template may call other templates in various modes. This pattern is pervasive in the js2doc2dbk stylesheets, but it is not used much currently. It supports building <emphasis>multiple references from the same js2doc</emphasis>: different references for the swf runtime versus the dhtml runtime, different references for the public api's than for internal api's, and so on. In particular, the <literal>detailed-synopsis</literal> mode is unused.</para>
+        </section>
+        <section id="js2doc2dbk-params"><title>Parameters for controlling the js2doc2dbk transformation</title>
+          <itemizedlist>
+            <listitem><para>generating warnings, errors, fixme's</para></listitem>
+          </itemizedlist>        
+        </section>
+        <section id="js2doc2dbk-indices">
+          <title>Indicies, Appendices, Cross-references, etc</title>
+          <para></para>
+        </section>
+        <section id="very-complex-templates">
+          <title>Very complex templates</title>
+          <itemizedlist>
+            <listitem><para>Subclass and superclass chains</para></listitem>
+            <listitem><para>Attributes list (with lzxtype, final, read-only, initialize-only)</para></listitem>          
+          </itemizedlist>        
+        </section>
+      </section>
+      <section id="js2doc2dbk-walkthrough">
+        <title>js2doc2dbk walkthrough</title>
+        <note><para>Get a beverage and a comfortable chair, then turn off the phone and lock the door. The next section is the very heart of 
+          the reference toolchain, and understanding it requires holding a lot of context in your head all at once.</para></note>
+        <para>Let's look at the reference page for <xref linkend="LzText" />. The js2doc description of it is in <literal>docs/src/xsl/build/reference/LaszloLibrary-verbose.js2doc</literal>. Open that file and find the element describing <literal>lz.text</literal>. Copy that element into a smaller file so you can look at it in detail. The element describing the <literal>lz.text</literal> class begins with this line: 
+          <programlisting>&lt;<emphasis>property</emphasis> id=&quot;LzText&quot; name=&quot;LzText&quot; unitid=&quot;views.LzText.lzs&quot; access=&quot;public&quot; topic=&quot;LFC&quot; subtopic=&quot;Text&quot;&gt;</programlisting>
+        </para> 
+        <note><para>To find a particular item in the giant LaszloLibrary-verbose.js2doc file, just search for it by id. This works because id's 
+          are globally unique.</para> 
+        </note>      
+        <para>Notice that the containing element here is <literal>&lt;property&gt;</literal>. In js2doc, property is the element that represents a useful chunk of the api. This particular element describes everything there is to know about <literal>lz.text</literal>.</para>
+        
+        <para>The main template for generating a page in the reference is in the file <literal>docs/src/xsl/js2doc2dbk.xsl</literal>. We can tell from the js2doc output below, and our knowledge of DocBook, that the output begins with a &lt;refentry&gt; tag, so we can find the template that generates it by searching <literal>js2doc2dbk.xsl</literal> for <literal>&lt;refentry</literal> or by performing the equivalent XPath query: <literal>//refentry</literal>. This takes us to two templates, one that starts with     
+          <programlisting>&lt;xsl:template <emphasis>match=&quot;property&quot; </emphasis>mode=&quot;refentry&quot;&gt;</programlisting>
+          and another that starts with 
+          <programlisting>&lt;xsl:template <emphasis>match=&quot;unit&quot;</emphasis> mode=&quot;refentry&quot;&gt;</programlisting>
+          We're trying to match a <literal>property</literal> tag, so the first of those templates is the one that will match.</para>
+        <para>The beginning of that template declares several variables and determines their values:
+          <programlisting>        
+            &lt;xsl:variable name=&quot;<emphasis>jsname</emphasis>&quot; select=&quot;<emphasis>@name</emphasis>&quot;/&gt;
+            &lt;xsl:variable name=&quot;<emphasis>lzxname</emphasis>&quot; select=&quot;<emphasis>&amp;tagname</emphasis>;&quot;/&gt;
+          </programlisting>These lines establish variables named $jsname and $lzxname. For <literal>$jsname</literal>, <literal>select=&quot;@name&quot; </literal> means "run the XPath query <literal>'@name'</literal> on the current node, and set the value of the <literal>$jsname</literal> variable to the result of that query." In your XML editor, run that query yourself; the result should be <literal>lz.text</literal>. </para>        
+        <para>The declaration of <literal>$lzxname</literal> is more complicated, even though it looks just as simple as <literal>$jsname</literal>. Here we have <literal>select=&quot;&amp;tagname;&quot;</literal>. That's a reference to an entity; find that entity's definition at the beginning of js2doc2dbk.xsl:
+          <programlisting>&lt;!ENTITY tagname        &apos;(doc/tag[@name=&quot;lzxname&quot;]/text)&apos;&gt;</programlisting> 
+          Remember that entities are text substitutions, so after entity expansion, the lzxname declaration above would read:
+          <programlisting>&lt;xsl:variable name=&quot;lzxname&quot; select=&quot;(doc/tag[@name=&quot;lzxname&quot;]/text)/&gt;</programlisting>
+          That's an XPath query which means "find a child of the current node who has a child element of type <literal>tag</literal> who has an attribute <literal>name</literal> whose value is <literal>lzxname</literal>. Return the textual content of that tag node's child <literal>text</literal> node." Consulting the js2doc fragment for lz.text again, we can evaluate this query:
+          <informalexample><programlisting>
+            &lt;<emphasis>property</emphasis> id=&quot;LzText&quot; name=&quot;LzText&quot; unitid=&quot;views.LzText.lzs&quot; access=&quot;public&quot; topic=&quot;LFC&quot; subtopic=&quot;Text&quot;&gt;
+            &lt;<emphasis>doc</emphasis>&gt;
+            &lt;text&gt;
+            &lt;p&gt;This class is used for non-editable text .... 
+            &lt;/p&gt;
+            &lt;/text&gt;
+            &lt;tag name=&quot;shortdesc&quot;&gt;
+            &lt;text&gt;The basic text display element.&lt;/text&gt;
+            &lt;/tag&gt;
+            &lt;tag name=&quot;devnote&quot;&gt;
+            &lt;text&gt;This is for regular and input text.&lt;/text&gt;
+            &lt;/tag&gt;
+            <emphasis>&lt;tag</emphasis> <emphasis>name=&quot;lzxname&quot;&gt;</emphasis>
+            &lt;text&gt;<emphasis>text</emphasis>&lt;/text&gt;
+            &lt;/tag&gt;  
+            ...</programlisting></informalexample> 
+          So the value of <literal>$lzxname</literal> is "text".      
+        </para>      
+        <note><para>The double meaning of "text" and "tag" here is unavoidable. Keep track of when we're talking about a domain concept -- lz.text, aka "text," is a concept in the OpenLaszlo domain -- and when we're talking about a tools concept -- the text value of an XML element.</para></note>
+        
+        <para>Continuing our walkthrough of the main template for a reference entry in js2doc2dbk.xsl, skip over the next few variable declarations. Now we're at the first output instructions:
+          <programlisting>&lt;refentry id=&quot;{$id-for-output}&quot; xreflabel=&quot;{$desc}&quot;&gt;
+            &lt;xsl:if test=&quot;$lzxname&quot;&gt;&lt;anchor id=&quot;{concat(&apos;tag.&apos;,$lzxname)}&quot;/&gt;&lt;/xsl:if&gt; 
+            ...</programlisting>
+          <literal>$id-for-output</literal> was one of the variables we skipped over; experience reveals that <literal>$id-for-output</literal> evaluates to <literal>lz.text</literal> and that $desc  evaluates to <literal>&lt;text&gt;</literal>. The next line says, "if the variable named $lzxname has a non-null value, output an &lt;anchor&gt; tag with an id of 'tag.' + $lzxname." For lz.text, we figured out above that <literal>$lzxname</literal> is <literal>text</literal>.</para>
+        <para> Now we can predict the DocBook output from this part of the template:
+          <informalexample><programlisting>&lt;refentry xreflabel=&quot;&amp;lt;text&amp;gt;&quot; id=&quot;LzText&quot;&gt;
+            &lt;anchor id=&quot;tag.text&quot;/&gt;</programlisting></informalexample>
+        </para>
+        <para>To verify that's the output we'll get, look at the DocBook output for <emphasis>lz.text</emphasis>. If you've done a documentation build, the lz.text reference entry will be in <literal>docs/src/build/reference/lfcref.dbk</literal>. Open that file, and again find the <emphasis>lz.text</emphasis> section.</para>
+        <note><para>In DocBook files, the trick for finding a particular element is the same as in LaszloLibrary-verbose; just search for <literal>id="LzText"</literal></para></note>      
+        <informalexample><programlisting>&lt;<emphasis>refentry xreflabel=&quot;&amp;lt;text&amp;gt;&quot; id=&quot;LzText&quot;&gt;</emphasis>        
+          <emphasis>&lt;anchor id=&quot;tag.text&quot;/&gt;</emphasis>        
+          &lt;refnamediv&gt;
+          ...
+          &lt;refname role=&quot;javascript&quot;&gt;LzText&lt;/refname&gt;
+          &lt;refname role=&quot;lzx&quot;&gt;text&lt;/refname&gt;
+          &lt;refpurpose&gt;The basic text display element.&lt;/refpurpose&gt;
+          &lt;/refnamediv&gt;
+          ...</programlisting></informalexample>
+        <para>See if you can find where the <emphasis>refnamediv</emphasis> element in the listing above come from.</para>      
+        <note><para>A DocBook reference entry is a <literal>&lt;refentry&gt;</literal> tag. See <ulink url="http://www.docbook.org/tdg/en/html/refentry.html">the DocBook reference for refentry</ulink>.</para></note>  
+        <para>The DocBook output at this step is a semantic representation of the content we'll see on the output reference HTML pages. It is almost but not quite a listing of the words that will appear in the output HTML, with lots of semantic markup. The markup will give the final stage in the transformation (DocBook to html) information necessary to format the output nicely.</para>
+        <note><para>You can now open the door and turn your phone's ringer back on -- you're through the worst of it!</para></note>
+      </section>
+    </section>      
+  </section>
+  
+  <section id="developers-guide-toolchain">
+    <title>Developer's Guide Toolchain: Just DocBook</title>
+    <para>After all that, you may be relieved to learn that the developer's guide is far simpler. Chapters in the developer's guide are written as DocBook files directly, so no transformation is necessary to create DocBook files. The developer's guide DocBook files enter the docbook-xsl processing stage in the same conceptual role as do the reference guide DocBook files. </para>
+  </section>
+  
+  <section id="docbook-to-output">
+    <title>DocBook to Output, at Last!</title>
+    <para>The last step in the transformation process is not as complicated as the preceding steps. This final step is mostly just the vanilla transformation of DocBook files to html files, using the vanilla docbook-xsl transformations. <ulink url="http://www.sagehill.net/docbookxsl/">DocBook XSL: The Complete Guide by Bob Stayton</ulink> is an excellent reference on this topic.</para>
+    <para>There are two ways in which the OpenLaszlo DocBook to html transformation differs from the standard docbook-xsl transformation:
+      <orderedlist>
+        <listitem><para>Customizations to standard docbook-xsl templates, also known as the "DocBook customization layer." This is such a common pattern for customization that the DocBook-XSL book referenced above has a <ulink url="http://www.docbook.org/tdg/en/html/ch05.html">chapter about customizing DocBook</ulink>. We customize the standard DocBook by specifying parameters in <literal>docs/src/xsl/parameters.xsl</literal>.</para></listitem>        
+        <listitem><para>Inclusion of specially-formatted examples. DocBook includes the notion of program listings and embedded illustrations, but it doesn't know about <emphasis>live</emphasis> examples, or how to format lzx code, or how to emphasize parts of example listings. The step labeled "docbook-preprocess" in the diagram below represents some of this process, but the truth is more complicated.</para></listitem>                
+      </orderedlist>
+    </para>
+    <informalfigure><mediaobject><imageobject>
+      <imagedata fileref="images/docbook-to-html.png"/>
+    </imageobject>
+    </mediaobject></informalfigure>
+    
+    <itemizedlist>
+      <listitem><para>common-html.xsl</para></listitem>
+      <listitem><para>conditional-html.xsl</para></listitem>
+      <listitem><para>styles.css</para></listitem>
+      <listitem><para>lzx-pretty-print.css</para></listitem>
+      <listitem><para>dguide.xsl</para></listitem>
+      <listitem><para>dbkpreprocessexamples.xsl</para></listitem>
+      <listitem><para>lzx-pretty-print.xsl</para></listitem>      
+    </itemizedlist>
+  <section>
+  <title>How the copyright gets generated</title>
+ <para>There is a copyright notice at the bottom of every dguide and reference page. This notice is generated
+ during the DocBook transform by the template user.footer.content in the file common-html.xsl. To change
+ to copyright date for all generated documents, change the date in this template.</para>
+ <para>The copyright notice for files that are <emphasis>not generated</emphasis> is entered manually.</para>
+  </section>  
+  </section>
+  
+  
+
+  <section id="workflow-details">
+    <title>Workflow Details</title>
+    <section id="directory-structure">
+      <title>Directory Structure</title>
+      <para>There are several important directories for the documentation toolchain.</para>
+      <informaltable colsep="0" frame="none">
+        <tgroup cols="3">
+          <thead>
+            <row>
+              <entry align="left">Path</entry>
+              <entry align="left">Ant Property</entry>              
+              <entry align="left">Purpose</entry>     
+              <entry align="left">Ships in binary distros</entry>
+            </row>
+          </thead>      
+          <tbody>
+            <row>
+              <entry><literal>$LPS_HOME/docs/src/xsl</literal></entry>                            
+              <entry>(no associated property)</entry>
+              <entry>Holds the stylesheets that do the transformations</entry>
+              <entry>no</entry>
+            </row>                                
+            <row>
+              <entry><literal>$LPS_HOME/docs/src/developers</literal></entry>                            
+              <entry><literal>$developers.src.dir</literal></entry>
+              <entry>Holds the source for the developer's guide </entry>
+              <entry>no</entry>              
+            </row>                    
+            <row>
+              <entry><literal>$LPS_HOME/docs/src/build/developers</literal></entry>                            
+              <entry><literal>$developers.build.dir</literal></entry>
+              <entry>Holds intermediate files for the developer's guide build</entry>
+              <entry>no</entry>              
+            </row>        
+            <row>
+              <entry><literal>$LPS_HOME/docs/developers</literal></entry>                            
+              <entry><literal>$developers.output.dir</literal></entry>
+              <entry>Holds the output html for the developer's guide </entry>
+              <entry>yes</entry>              
+            </row>        
+            <row>
+              <entry><literal>$LPS_HOME/docs/src/reference</literal></entry>                            
+              <entry><literal>reference.src.dir</literal></entry>
+              <entry>Holds the source for the reference</entry>
+              <entry>no</entry>              
+            </row>                    
+            <row>
+              <entry><literal>$LPS_HOME/docs/src/build/reference</literal></entry>                            
+              <entry><literal>reference.build.dir</literal></entry>
+              <entry>Holds intermediate files for the reference build</entry>
+              <entry>no</entry>              
+            </row>        
+            <row>
+              <entry><literal>$LPS_HOME/docs/reference</literal></entry>                            
+              <entry><literal>reference.output.dir</literal></entry>
+              <entry>Holds the output html for reference</entry>
+              <entry>yes</entry>              
+            </row>                         
+            <row>
+              <entry><literal>$LPS_HOME/WEB-INF/lps/server/src/org/openlaszlo/js2doc</literal></entry>                            
+              <entry>(no associated property)</entry>
+              <entry>Contains the code for the js2doc java tool</entry>
+              <entry>no</entry>              
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+      
+      <para>Here's that same information, organized hierarchically:        
+        <itemizedlist>
+          <listitem><para>$LPS_HOME</para>          
+            <itemizedlist>
+              <listitem><para>docs</para>
+                <itemizedlist>
+                  <listitem><para>reference/ ($reference.output.dir)</para></listitem>
+      <listitem><para>developers/ ($developers.output.dir)</para></listitem>
+                  <listitem><para>src/  ($docs.src.dir)</para>
+                    <itemizedlist>
+                      <listitem><para>xsl/ (holds the xsl templates for both the conversion from lzx to js2doc, and from js2doc to DocBook)</para></listitem>
+                      <listitem><para>developers/  ($developers.src.dir)</para>
+                        <itemizedlist>
+                          <listitem><para>tutorials/</para>
+                            <itemizedlist>
+                              <listitem><para>programs</para></listitem>
+                              <listitem><para>images</para></listitem>              
+                            </itemizedlist>                  
+                          </listitem>
+                          <listitem><para>programs</para></listitem>
+                          <listitem><para>images</para></listitem>              
+                        </itemizedlist>                      
+                      </listitem>
+                      <listitem><para>reference/   ($reference.src.dir)</para>
+                        <itemizedlist>
+                          <listitem><para>images</para></listitem>
+                          <listitem><para>resources</para></listitem>
+                          <listitem><para>navbuilder/  command-line tool for building the left-nav in the reference</para></listitem>                
+                        </itemizedlist>              
+                      </listitem>
+                      <listitem><para>build/  (temporary) ($docs.build.dir)</para>
+                        <itemizedlist>
+                          <listitem><para>js2doc/ (js2doc.build.dir) holds the initial js2doc output</para> </listitem>
+                          <listitem><para>developers/  ($developers.build.dir) where the processed developers guide DocBook files go after they've had the examples and callouts inserted</para></listitem>
+                          <listitem><para>reference/  ($reference.build.dir) where the js2doc output is joined together into LaszloLibrary-verbose.js2doc, and where the processed reference guide DocBook files go after they've had the examples and callouts inserted</para></listitem>    
+                        </itemizedlist>
+                      </listitem>
+                    </itemizedlist>
+                  </listitem>
+                </itemizedlist>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+        </itemizedlist>  
+      </para>
+    </section>
+
+    <section id="how-ant-drives">
+      <title>How Ant Drives the Transformations</title>
+      <para>The build file in <literal>docs/src/build.xml</literal> is arguably the most complicated build file in the entire OpenLaszlo platform. It has several layers of abstraction, which, when combined with the doc toolchain's complexities we've already explored, make following the ant file nearly impossible. The way to make sense of the build file is to think of what we already have learned the process is, as described in the rest of this chapter. In this discussion, we'll favor concepts over details, lest we drown in details. You may also wish to try <ulink url="http://www.yworks.com/en/products_antexplorer_about.htm">yWorks Ant Explorer</ulink> which provides a visualization of the build file.</para>      
+      <para>The build file is composed of both specific targets and parameterized targets. The parameterized targets do most of the work, and the specific targets set up the right parameters with which to call the parameterized targets. In <xref linkend="directory-structure"/>, the ant properties corresponding to particular directories in the LPS tree are listed; understanding those mappings is crucial to being able to read and follow the build.</para> 
+        <para>In this diagram of the major targets in the reference build, parameterized targets are highlighted:
+        <informalfigure><mediaobject><imageobject>
+          <imagedata fileref="images/doc-ant-build.png"/>
+        </imageobject>
+        </mediaobject></informalfigure>
+      </para>
+      <para><literal>reference.js2doc.generate</literal> drives the creation of the js2doc intermediate file, <literal>LaszloLibrary-verbose.js2doc</literal>, from the several sources (langref.xml, lzx files, and js files).</para>
+      <para><literal>dbk.topic.generate</literal> drives the js2doc2dbk transformation. It says, "find all the elements in the input file ( <literal>LaszloLibrary-verbose.js2doc</literal> for the reference) that match the topic specified in the <literal>filter.topic</literal> parameter. Apply the transformations in <literal>js2doc2dbk.xsl</literal> to those elements, and output the results to the file specified in the <literal>local.output.file</literal>." </para>
+      <para><literal>book.html.generate</literal> drives the DocBook to HTML transformation.</para>
+      <para><literal>dbk.examples.preprocess</literal> prepares the examples in the specified DocBook for rendering and final output, by running the DocBook through <literal>xsl/dbkpreprocessexamples.xsl</literal>.</para>
+      <para>This diagram shows the major targets in the developer's guide build. As before, parameterized targets are highlighted:
+        <informalfigure><mediaobject><imageobject>
+          <imagedata fileref="images/doc-ant-build-developers.png"/>
+        </imageobject>
+        </mediaobject></informalfigure>        
+      </para>
+    </section>
+    
+    
+
+  </section>
+
+
+</chapter>

@@ -1,0 +1,360 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 20. Color</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.building-apps.html" title="Part III. Fundamental Concepts"><link rel="prev" href="css.html" title="Chapter 19. Cascading Style Sheets"><link rel="next" href="text.html" title="Chapter 21. Text Views"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 20. Color</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="css.html">Prev</a> </td><th width="60%" align="center">Part III. Fundamental Concepts</th><td width="20%" align="right"> <a accesskey="n" href="text.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="color"></a>Chapter 20. Color</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1546"></a>1. Overview</h2></div></div></div><p>This chapter gives a brief introduction to the use of colors in OpenLaszlo applications.
+         It explains the various syntaxes that are used to specify color, and gives general
+         guidelines for using color effectively.</p><p> OpenLaszlo uses the standard web color definitions, three hexadecimal values in a row,
+         representing red, green, and blue components of a color (all colors can be created by
+         mixing these three primary colors). Computer monitors are comprised of thousands of red,
+         green, and blue dots grouped so closely by threes that our eyes see them as one blended
+         color. </p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1547"></a>2. RGB or Red, Green, Blue</h2></div></div></div><p> Each red, blue, or green dot can have a value from 0 to 255. If the red dot is fully
+         "on" at 255, while blue and green are fully "off" at 0, we see red. The RBG color code for
+         red is 255,0,0. Blue is 0,255,0; green is 0,0,255. (Some graphics systems combine an RGB
+         triplet with an 8-bit alpha value, and get a 32-bit color word; in those systems, we think
+         of colors as RGBA.) </p><div class="example"><a name="id6797"></a><p class="title"><b>Example 20.1. RGB color values</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="125" width="100%"&gt;
+  &lt;simplelayout axis="x" spacing="10"/&gt;
+  &lt;class name="gView"&gt;
+    &lt;view height="100" width="100"/&gt;
+  &lt;/class&gt;     
+  &lt;gView id="red"   bgcolor="rgb(255,0,0)"/&gt;
+  &lt;gView id="blue"  bgcolor="rgb(0,255,0)"/&gt;
+  &lt;gView id="green" bgcolor="rgb(0,0,255)"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/color-_1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/color-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="specifycolor"></a>3. Different Ways to Specify Color</h2></div></div></div><p> OpenLaszlo enables coloring in four ways: 0x000000, #000000,
+         <code class="literal">rgb(0,0,0)</code>, and "black". Using the format 0x000000 only works for
+         explicit assignment; it does not work in CSS. Color assignment using
+         <code class="literal">rgb()</code> must be specified with decimal values from 0 - 255. </p><p> Coloring of text with <code class="literal">fgcolor="foo"</code> is enabled in the same fashion,
+         but with the same limitations. </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>CSS values in the style sheet should <span class="emphasis"><em>not</em></span> be quoted. They are not
+            strings, they are symbolic constants.</p></div><div class="example"><a name="id6810"></a><p class="title"><b>Example 20.2. Applying color explicitly and with CSS</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas width="100%" height="630" debug="true"&gt;
+  &lt;debug y="120" height="500" /&gt;
+
+  &lt;stylesheet&gt;
+    #vName {
+    bgcolorName : blue;
+    }
+    
+    #tName {
+    fgcolorName : silver;
+    }
+
+    #vHex {
+    bgcolorHex : #0000ff;
+    }
+    
+    #tHex {
+    fgcolorHex : #c0c0c0;
+    }
+
+    #vRGB {
+    bgcolorRGB : rgb(0,0,255);
+    }
+    
+    #tRGB {
+    fgcolorRGB : rgb(191,191,191);
+    }
+    
+  &lt;/stylesheet&gt;
+
+  &lt;view layout="axis: y; spacing: 10" &gt;
+    &lt;view layout="axis: x; spacing: 10"&gt;
+
+      &lt;view id="vName" height="50" width="200" bgcolor="$style{'bgcolorName'}"
+            oninit="Debug.debug('Debug.explainStyleBindings(%w)', this);
+                    Debug.explainStyleBindings(this)"&gt;
+        &lt;text id="tName" fontsize="30" fgcolor="$style{'fgcolorName'}"
+              oninit="Debug.debug('Debug.explainStyleBindings(%w)', this);
+                      Debug.explainStyleBindings(this)"&gt;style name&lt;/text&gt;
+      &lt;/view&gt;
+      &lt;view id="vHex" height="50" width="200" bgcolor="$style{'bgcolorHex'}"
+            oninit="Debug.debug('Debug.explainStyleBindings(%w)', this);
+                    Debug.explainStyleBindings(this)"&gt;
+        &lt;text id="tHex" fontsize="30" fgcolor="$style{'fgcolorHex'}"
+              oninit="Debug.debug('Debug.explainStyleBindings(%w)', this);
+                      Debug.explainStyleBindings(this)"&gt;style #hex&lt;/text&gt;
+      &lt;/view&gt;
+      &lt;view id="vRGB" height="50" width="200" bgcolor="$style{'bgcolorRGB'}"
+            oninit="Debug.debug('Debug.explainStyleBindings(%w)', this);
+                    Debug.explainStyleBindings(this)"&gt;
+        &lt;text id="tRGB" fontsize="30" fgcolor="$style{'fgcolorRGB'}"
+              oninit="Debug.debug('Debug.explainStyleBindings(%w)', this);
+                      Debug.explainStyleBindings(this)"&gt;style rgb()&lt;/text&gt;
+      &lt;/view&gt;
+    &lt;/view&gt;
+    &lt;view layout="axis: x; spacing: 10"&gt;
+
+      &lt;view id="explicitVName" height="50" width="200" bgcolor="blue"&gt;
+        &lt;text id="explicitTName" fontsize="30" fgcolor="silver"&gt;value name&lt;/text&gt;
+      &lt;/view&gt;
+      &lt;view id="explicitVHex" height="50" width="200" bgcolor="#0000ff"&gt;
+        &lt;text id="explicitTHex" fontsize="30" fgcolor="#c0c0c0"&gt;value #hex&lt;/text&gt;
+      &lt;/view&gt;
+      &lt;view id="explicitVRGB" height="50" width="200" bgcolor="rgb(0,0,255)"&gt;
+        &lt;text id="explicitTRGB" fontsize="30" fgcolor="rgb(191,191,191)"&gt;value rgb()&lt;/text&gt;
+      &lt;/view&gt;
+      &lt;view id="explicitVExpression" height="50" width="200" bgcolor="255"&gt;
+        &lt;text id="explicitTExpression" fontsize="30" fgcolor="${~4144959}"&gt;value expr&lt;/text&gt;
+      &lt;/view&gt;
+    &lt;/view&gt;
+  &lt;/view&gt;
+  
+  &lt;script&gt;
+
+  &lt;/script&gt;
+
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+     * Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+     * Use is subject to license terms.                                            *
+     * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/color-_3.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/color-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>You can also specify color using a number or an expression.
+         <code class="literal">presentValue()</code> is used in the following example to return
+         <code class="literal">value</code> according to <code class="literal">type</code> as a string.</p><div class="example"><a name="id6817"></a><p class="title"><b>Example 20.3. Specifying color with a numeric or computed value</b></p><div class="example-contents"><pre class="programlisting">
+         &lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;canvas height="150" width="100%"&gt;
+    &lt;simplelayout spacing="20"/&gt;
+    &lt;view id="swatch" width="300" height="100" bgcolor="${color.value}"/&gt;
+    &lt;view id="sliders"&gt;
+        &lt;simplelayout/&gt;
+        &lt;slider id="color" width="300" value="0" minvalue="0" maxvalue="0xffffff" type="color"/&gt;
+        &lt;text text="${color.presentValue()}"/&gt;
+    &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ********************************************************
+     * Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+     * Use is subject to license terms.                                            *
+     * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+      </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/colorswatch.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/colorswatch.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1548"></a>3.1. Mixing Colors</h3></div></div></div><p> To blend a color, combine the RGB values. Red (FF0000) plus blue (0000FF) equals
+            fuchsia (FF00FF): </p><div class="example"><a name="id6822"></a><p class="title"><b>Example 20.4. Blending Colors</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="150" width="100%"&gt;
+  &lt;view name="red" height="100" width="100" bgcolor="0xFF0000"/&gt;
+  &lt;view name="blue" x="50" y="50" height="100" width="100" bgcolor="0x0000FF"/&gt;
+  &lt;view name="fuchsia" x="50" y="50" height="50" width="50" bgcolor="0xFF00FF"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/color-_4.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/color-_4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="standardcolors"></a>3.2. Standard Web Colors</h3></div></div></div><p> The 16 basic web colors can be employed by name: </p><div class="example"><a name="id6828"></a><p class="title"><b>Example 20.5. Named colors</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="290"&gt; 
+    &lt;view x="10" y="10" width="100%" height="100%"&gt; 
+        &lt;wrappinglayout axis="y" spacing="10" /&gt; 
+        &lt;replicator nodes="$once{['black', 'maroon', 'green', 'navy', 'silver', 'red', 'lime', 'blue', 
+            'gray', 'purple', 'olive', 'teal', 'white', 'fuchsia', 'yellow', 'aqua']}"&gt; 
+            &lt;view width="60" height="60" 
+                bgcolor="black"&gt; 
+                &lt;view x="2%" y="2%" width="96%" height="96%" 
+                    bgcolor="${parent.data}"&gt; 
+                    &lt;text align="center" valign="middle" 
+                        bgcolor="white" 
+                        text="${parent.presentAttribute('bgcolor', 'color')}" 
+                    /&gt; 
+                &lt;/view&gt; 
+            &lt;/view&gt; 
+        &lt;/replicator&gt; 
+    &lt;/view&gt; 
+&lt;/canvas&gt; 
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2009 Laszlo Systems, Inc.  All Rights Reserved.             *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/color-_5.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/color-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="csscolors"></a>3.3. CSS3 Colors</h3></div></div></div><p>In addition to the standard web colors, you can also specify <a class="ulink" href="http://www.w3.org/TR/css3-color/#svg-color" target="_top">CSS3 colors</a> by name. Click
+         on the color name to see the hex value.</p><div class="example"><a name="id6835"></a><p class="title"><b>Example 20.6. CSS3 colors</b></p><div class="example-contents"><pre class="programlisting">
+            &lt;canvas height="674"&gt; 
+  &lt;view name="container" x="2" y="2" width="100%" height="100%"&gt; 
+    &lt;attribute name="colorNames" /&gt; 
+    &lt;attribute name="displayMode" value="0" /&gt; 
+    &lt;attribute name="_memo" value="[]" /&gt; 
+    &lt;method name="RGBtoHSV" args="rgb"&gt;&lt;![CDATA[ 
+      var hsv = _memo[rgb]; 
+      return hsv ? hsv : (_memo[rgb] = LzColorUtils.tohsv(rgb)); 
+    ]]&gt;&lt;/method&gt; 
+    &lt;method name="HSVcompare" args="a, b"&gt; 
+      var hsva = this.RGBtoHSV(lz.colors[a]); 
+      var hsvb = this.RGBtoHSV(lz.colors[b]); 
+      if (hsva.h == hsvb.h) { 
+      if (hsva.s == hsvb.s) { 
+      if (hsva.v == hsvb.v) { 
+      return 0; 
+      } 
+      return hsva.v &gt; hsvb.v ? 1 : -1; 
+      } 
+      return hsva.s &gt; hsvb.s ? 1 : -1; 
+      } 
+      return hsva.h &gt; hsvb.h ? 1 : -1; 
+    &lt;/method&gt; 
+    &lt;handler name="onconstruct"&gt;&lt;![CDATA[ 
+      var cn=[]; 
+      for (var k in lz.colors) { 
+        // This makes sure we don't pick up attributes that aren't 
+        // names of colors... 
+        if (!isNaN(lz.colors[k])) { cn.push(k); } 
+      } 
+      cn.sort(function (a, b) { return container.HSVcompare(a, b);}); 
+      this.setAttribute('colorNames', cn); 
+    ]]&gt;&lt;/handler&gt; 
+    &lt;wrappinglayout axis="y" spacing="2" /&gt; 
+    &lt;replicator nodes="${parent.colorNames}"&gt; 
+      &lt;view width="150" height="30" 
+        bgcolor="black" ondata="inset.display.setAttribute('text', data)"&gt; 
+        &lt;view name="inset" 
+          x="1" y="1" width="${parent.width - 2}" height="${parent.height - 2}" 
+          bgcolor="${parent.data}"&gt; 
+          &lt;attribute name="mode" value="${container.displayMode}" /&gt; 
+          &lt;handler name="onclick"&gt; 
+            if (lz.Keys.isKeyDown("shift")) { 
+            container.setAttribute('displayMode', (this.mode + 1) % 4); 
+            } else { 
+            this.setAttribute('mode', (this.mode + 1) % 4); 
+            } 
+          &lt;/handler&gt; 
+          &lt;text name="display" align="center" valign="middle" bgcolor="white" &gt; 
+            &lt;handler name="onmode" reference="parent" args="mode"&gt; 
+              switch (mode) { 
+              case 1: 
+              this.format("#%06X", parent.bgcolor); 
+              break; 
+              case 2: 
+              this.setAttribute('text', LzColorUtils.torgb(parent.bgcolor)); 
+              break; 
+              case 3: 
+              var hsv = container.RGBtoHSV(parent.bgcolor); 
+              this.format("h:%.0d\xB0 s:%.0d%% v:%.0d%%", hsv.h, hsv.s*100, hsv.v*100); 
+              break; 
+              default: 
+              this.setAttribute('text', parent.presentAttribute('bgcolor', 'color')); 
+              break; 
+              } 
+            &lt;/handler&gt; 
+          &lt;/text&gt; 
+        &lt;/view&gt; 
+      &lt;/view&gt; 
+    &lt;/replicator&gt; 
+  &lt;/view&gt; 
+&lt;/canvas&gt; 
+
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+  * Copyright 2007, 2009 Laszlo Systems, Inc.  All Rights Reserved.             *
+  * Use is subject to license terms.                                            *
+  * X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+         </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/csscolors.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/csscolors.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1549"></a>3.4. Nonstandard Colors</h3></div></div></div><p> To specify any color other than the <a class="link" href="color.html#standardcolors" title="3.2. Standard Web Colors">standard web
+               colors</a> or <a class="link" href="color.html#csscolors" title="3.3. CSS3 Colors">CSS3 colors</a>, which are usable by
+            name, use hex codes or <code class="literal">rgb()</code>. With <code class="literal">rgb()</code>, you can
+            specify values as decimal or as percents. </p><div class="example"><a name="id6844"></a><p class="title"><b>Example 20.7. Nonstandard colors</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="200" width="100%"&gt;
+  &lt;simplelayout axis="y"/&gt;
+  &lt;text&gt;using hex values&lt;/text&gt;
+  &lt;view&gt;
+    &lt;simplelayout axis="x"/&gt;
+    &lt;view width="50" height="50" bgcolor="#220099"/&gt;
+    &lt;view width="50" height="50" bgcolor="#770011"/&gt;
+    &lt;view width="50" height="50" bgcolor="#0022ff"/&gt;
+    &lt;view width="50" height="50" bgcolor="#ff2200"/&gt;
+    &lt;view width="50" height="50" bgcolor="#00ff22"/&gt;
+  &lt;/view&gt;
+  &lt;text&gt;same thing using rgb()&lt;/text&gt;
+  &lt;view&gt;
+    &lt;simplelayout axis="x"/&gt;
+    &lt;view width="50" height="50" bgcolor="rgb(34,0,153)"/&gt;
+    &lt;view width="50" height="50" bgcolor="rgb(119,0,17)"/&gt;
+    &lt;view width="50" height="50" bgcolor="rgb(0,34,255)"/&gt;
+    &lt;view width="50" height="50" bgcolor="rgb(255,34,0)"/&gt;
+    &lt;view width="50" height="50" bgcolor="rgb(0,255,34)"/&gt;
+  &lt;/view&gt;
+  &lt;text&gt;same thing using rgb() %&lt;/text&gt;
+  &lt;view&gt;
+    &lt;simplelayout axis="x"/&gt;
+    &lt;view width="50" height="50" bgcolor="rgb(13%,00%,60%)"/&gt;
+    &lt;view width="50" height="50" bgcolor="rgb(47%,00%,07%)"/&gt;
+    &lt;view width="50" height="50" bgcolor="rgb(00%,13%,100%)"/&gt;
+    &lt;view width="50" height="50" bgcolor="rgb(100%,13%,00%)"/&gt;
+    &lt;view width="50" height="50" bgcolor="rgb(00%,100%,13%)"/&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+  * Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+  * Use is subject to license terms.                                            *
+  * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/nonstandardcolors.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/nonstandardcolors.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1550"></a>3.5. Opacity</h3></div></div></div><p> In OpenLaszlo, a view has a color and an opacity which are handled separately. The
+               <code class="literal">opacity</code> attribute ranges from 0 (transparent) to 1 (opaque). </p><div class="example"><a name="id6850"></a><p class="title"><b>Example 20.8. Color and opacity</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="110" width="100%"&gt;
+  &lt;simplelayout axis="x" spacing="4"/&gt;
+  &lt;class name="fader"&gt;
+    &lt;view height="100" width="100"&gt;
+      &lt;handler name="onclick"&gt; immediateparent.animate('opacity', -.20, 25, true); &lt;/handler&gt;
+      &lt;handler name="onmouseout"&gt; immediateparent.animate('opacity', 1, 2500, false); &lt;/handler&gt;
+    &lt;/view&gt;
+
+  &lt;/class&gt;
+  &lt;fader name="houston" bgcolor="0xFF0000"&gt;
+    &lt;text text="Comet"/&gt;
+  &lt;/fader&gt;
+  &lt;fader name="sacramento" bgcolor="0x800080"&gt;
+    &lt;text fgcolor="0xFFFFFF" text="Monarch"/&gt;
+  &lt;/fader&gt;
+  &lt;fader name="seattle" bgcolor="0x008000"&gt;
+    &lt;text text="Storm"/&gt;
+  &lt;/fader&gt;
+  &lt;text multiline="true"&gt; 
+    Click on a view to reduce its opacity.&lt;br/&gt; 
+    Mouse out to restore 100% opacity. 
+  &lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+  * Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
+  * Use is subject to license terms.                                            *
+  * X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/color-_7.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/color-_7.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>When a view's <code class="literal">opacity</code> is set to 0, the <code class="literal">visible</code>
+            attribute of that view turns to false.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1553"></a>3.6. DHTML with Windows Internet Explorer: Opacity Issues</h3></div></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1551"></a>3.6.1. Internet Explorer: <code class="literal">overflow="visible"</code> Doesn't Work with
+                  <code class="literal">opacity</code></h4></div></div></div><p>If you use the IE alpha-filter to set the opacity, the overflow will always be
+               changed to <code class="literal">hidden</code>. The example below provides a workaround for
+               this issue:</p><pre class="programlisting">
+   &lt;canvas &gt;
+      &lt;!-- the image will be clipped in IE DHTML due to nested opacity --&gt; 
+      &lt;view opacity=".6" width="150" height="60" bgcolor="red"&gt; 
+         &lt;view width="${canvas.width}" height="60" resource="http:Unbenannt.png" stretches="both"/&gt; 
+      &lt;/view&gt; 
+      
+      &lt;!-- Moving the image to be a sibling fixes the issue--&gt; 
+      &lt;view y="200" opacity=".6" width="150" height="60" bgcolor="red"/&gt; 
+      &lt;view y="200" opacity=".6" width="${canvas.width}" height="60" resource="http:Unbenannt.png" stretches="both"/&gt; 
+   &lt;/canvas&gt;</pre></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1552"></a>3.6.2. Internet Explorer 7 DHTML Doesn't honor view opacity for stacked (overlayed)
+               views</h4></div></div></div><p>If you have a shadow view that uses a partial opacity setting underneath another
+               view to create a shadow effect, the topmost view overlaying the shadow disappears in
+               Windows Internet Explorer 7, using DHTML. The following example shows the problem:</p><pre class="programlisting">
+   &lt;canvas width="100%" height="100%" validate="false" debug="true" proxied="false" bgcolor="0x00aaaa"&gt; 
+      &lt;view width="300" height="100"&gt; 
+         &lt;view width="300" height="100" bgcolor="black" opacity="0.3"/&gt; 
+         &lt;view width="150" height="50" bgcolor="red"/&gt; 
+      &lt;/view&gt; 
+      &lt;button text="Click me" onclick="canvas.setAttribute('opacity', 0.50)"/&gt; 
+   &lt;/canvas&gt;</pre><p>In this test, the red view and the button disappear when the button is clicked,
+               instead of receiving 50% opacity. You can work around this issue in Internet Explorer
+               7 DHTML to get the same effect, as follows:</p><pre class="programlisting">
+   &lt;canvas width="100%" height="100%" validate="false" debug="true" proxied="false" bgcolor="0x00aaaa"&gt;
+      &lt;simplelayout/&gt;
+      &lt;!-- This example hides the red box when the button is clicked in IE DHTML --&gt;
+      &lt;view width="300" height="100" name="root"&gt;
+         &lt;view width="300" height="100" bgcolor="black" opacity="0.3"/&gt;
+         &lt;view width="150" height="50" bgcolor="red"/&gt;
+      &lt;/view&gt;
+      &lt;button text="Click me" onclick="root.setAttribute('opacity', 0.50)"/&gt;
+      &lt;!-- By avoiding nesting views with opacity, we can get the same effect and it works in IE DHTML--&gt;
+      &lt;view width="300" height="100" name="container"&gt;
+         &lt;view width="300" height="100" bgcolor="black" opacity="0.3"/&gt;
+         &lt;view width="300" height="100" name="root"&gt;
+            &lt;view width="150" height="50" bgcolor="red"/&gt;
+         &lt;/view&gt;
+      &lt;/view&gt;
+      &lt;button text="Click me" onclick="container.root.setAttribute('opacity', 0.50)"/&gt;
+   &lt;/canvas&gt;</pre></div></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="css.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.building-apps.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="text.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 19. Cascading Style Sheets </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 21. Text Views</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

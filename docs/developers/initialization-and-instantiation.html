@@ -1,0 +1,96 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Appendix A. Understanding Instantiation</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.appendices.html" title="Part X. Appendices"><link rel="prev" href="developers.appendices.html" title="Part X. Appendices"><link rel="next" href="ecmascript-and-lzx.html" title="Appendix B. ECMAScript"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Appendix A. Understanding Instantiation</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="developers.appendices.html">Prev</a> </td><th width="60%" align="center">Part X. Appendices</th><td width="20%" align="right"> <a accesskey="n" href="ecmascript-and-lzx.html">Next</a></td></tr></table><hr></div><div class="appendix"><div class="titlepage"><div><div><h2 class="title"><a name="initialization-and-instantiation"></a>Appendix A. Understanding Instantiation</h2></div></div></div><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2118"></a>1. Overview</h2></div></div></div><p> The instantiation of <code class="literal">lz.node</code> objects such as
+      <code class="literal">lz.view</code> and <code class="literal">lz.layout</code> is a multi-phase procedure, but in
+      general, you do not need to know the details of the instantiation of view objects; they "just
+      work". In rare cases, you will need to understand the details of the process. Parts of the
+      process can be deferred to speed startup of an application.</p><p> This chapter assumes you are familiar with classes and objects. In the descriptions
+      below, we distinguish between <span class="emphasis"><em>construction</em></span>, by which we mean storage for
+      the object is allocated and constant properties assigned (a process that cannot be customized)
+      and <span class="emphasis"><em>initialization</em></span>, by which we mean the instantiation of children and
+      the application of constraints and computed attributes, which can be customized (by overriding the
+        <code class="literal">init()</code> method). These two processes together are referred to as
+        <code class="literal">instantiation</code>.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2119"></a>2. When instances are instantiated</h2></div></div></div><p> At a high level, the initialization of a <code class="literal">lz.node</code>, the calling of its
+        <code class="literal">init()</code> method, and sending of the <code class="literal">oninit()</code> event is
+      under the control of its <code class="literal">initstage</code> attribute, as follows:</p><div class="table"><a name="id19056"></a><p class="title"><b>Table A.1. When instances are instantiated</b></p><div class="table-contents"><table class="table" summary="When instances are instantiated" cellpadding="2" border="1"><colgroup><col class="col1"><col class="col2"></colgroup><thead align="left"><tr><th align="left">Value</th><th align="left">Definition</th></tr></thead><tbody><tr><td>
+              <code class="literal">immediate</code>
+            </td><td>Initialization happens immediately as the last stage of
+              <code class="literal">instantiation</code>.</td></tr><tr><td>
+              <code class="literal">early</code>
+            </td><td>Initialization happens right after the view and its children have been
+                <code class="literal">created</code>.</td></tr><tr><td>
+              <code class="literal">normal</code>
+            </td><td>Initialization happens when the parent is <code class="literal">initialized</code>.</td></tr><tr><td>
+              <code class="literal">late</code>
+            </td><td>Initialization happens during idle time. To check whether the view has been
+              initialized, check the <code class="literal">isinited</code> property. Force initialization
+              using the <code class="literal">completeInstantiation()</code> method.</td></tr><tr><td>
+              <code class="literal">defer</code>
+            </td><td>Initialization will not happen unless explicitly requested by calling the
+                <code class="literal">completeInstantation()</code> method.</td></tr></tbody></table></div></div><br class="table-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2120"></a>3. How instances are instantiated</h2></div></div></div><p> When a <em class="glossterm">node</em> is instantiated, its attributes are the attributes
+      explicitly given in the object, plus any attributes that the class specifies. Similarly, its
+      children will be the children explicitly given in the object, plus any children that are
+      specified in the class. The class <a class="indexterm" name="id19096"></a><code class="methodname">construct()</code> method is called, with these attributes and
+      the parent view. </p><p>The steps happen in the following sequence:</p><div class="orderedlist"><ol class="orderedlist compact" type="1"><li class="listitem"><p>A single dictionary is created which combines the attributes of the instance with the
+          attributes of the class</p></li><li class="listitem"><p>A single array is created which combines the children of the instance with the
+          children of the class</p></li><li class="listitem"><p><code class="literal">construct(<code class="varname">args</code>, <code class="varname">parent</code>)</code> is
+          called. <code class="literal">
+            <code class="varname">args</code>
+          </code> is a dictionary of your attributes, <code class="literal">
+            <code class="varname">parent</code>
+          </code> is the lexical parent. This method can only be declared in a class, not in an
+          instance. You can modify the arguments or the parent before calling
+            <code class="literal">super.construct</code>.</p></li><li class="listitem"><p>Any <code class="literal">&lt;handler name="<code class="varname">...</code>"&gt;</code> for the
+          class or event handlers (e.g. onclick in the tag) for the class are created for the
+          instance</p></li><li class="listitem"><p>Attributes with <code class="literal">when="immediately"</code> values are applied </p><div class="orderedlist"><ol class="orderedlist compact" type="a"><li class="listitem"><p>Attributes with no setters are set</p></li><li class="listitem"><p>Special LFC attributes are set </p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>The <code class="literal">name</code> and <code class="literal">id</code> attributes</p></li><li class="listitem"><p>Event handlers and methods</p></li><li class="listitem"><p>The <code class="literal">classroot</code> attribute</p></li><li class="listitem"><p>Datapath children are created (datapath set using
+                        <code class="literal">&lt;datapath
+                    xpath="<code class="varname">...</code>"&gt;</code>)</p></li></ul></div><p>
+              </p></li><li class="listitem"><p>Attributes with setters (<code class="literal">&lt;attribute name="foo" value="0"
+                  setter="setfoo(foo)" /&gt;</code>). <code class="literal">setfoo(0)</code> will be
+                called before initialization and before children are instantiated, but after you
+                have a parent and the attributes mentioned above applied)</p></li></ol></div><p>
+        </p></li><li class="listitem"><p><code class="literal">createChildren()</code> is called with an array of children with the
+          superclass' children first (deepest first). There are two options for how children are
+          created: synchronously and asynchronously. When whichever method is chosen completes,
+            <code class="literal">__LZinstantiationDone</code> will be called on this instance. </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+                <em class="glossterm">Synchronous construction</em>
+              </span></dt><dd><p>No other code can run until all the children for this instance are created </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+                        <code class="literal">intstage="immediate"</code>
+                      </span></dt><dd><p><code class="literal">new <code class="varname">classname</code>(<code class="varname">parent</code>,
+                              <code class="varname">args</code>, <code class="varname">children</code>, false)</code>
+                          or any trailing args are omitted, e.g. <code class="literal">new
+                              classname(<code class="varname">parent</code>,
+                          <code class="varname">args</code>)</code></p></dd></dl></div><p>
+                </p></dd><dt><span class="term">
+                <em class="glossterm">Asynchronous construction</em>
+              </span></dt><dd><p>Children for this instance will be put on the <a class="indexterm" name="id19175"></a><code class="classname">LzInstantiator</code> queue and created later. </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+                        <code class="literal">initstage="early"</code>
+                      </span></dt><dd><p></p></dd><dt><span class="term">
+                        <code class="literal">initstage="normal"</code>
+                      </span></dt><dd><p>Children will be created at high priority</p></dd><dt><span class="term">
+                        <code class="literal">initstage="late"</code>
+                      </span></dt><dd><p>Children will be created at low priority</p></dd><dt><span class="term">
+                        <code class="literal">intstage="defer"</code>
+                      </span></dt><dd><p>Children are not created until
+                          <code class="literal">completeInstantiation()</code> is called</p></dd></dl></div><p>
+                </p></dd></dl></div><p>
+        </p></li><li class="listitem"><p>After the children have been created, initialization will happen if: </p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>
+                <code class="literal">initstage="early"</code>
+              </p></li><li class="listitem"><p>The instance's <code class="literal">immediateparent</code> has already been
+              initialized</p></li><li class="listitem"><p>The instance is the canvas</p></li><li class="listitem"><p>The <code class="literal">completeInstantiation()</code> was called</p></li></ul></div><p> otherwise initialization will be triggered by this instance's
+            <code class="literal">immediateparent</code> being initialized. </p></li><li class="listitem"><p>
+          <em class="glossterm">Initialization</em>
+          </p><div class="orderedlist"><ol class="orderedlist compact" type="a"><li class="listitem"><p>Resolve references: </p><div class="orderedlist"><ol class="orderedlist compact" type="1"><li class="listitem"><p>
+                      <code class="literal">$once{...}</code>
+                      </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>A <code class="literal">$once</code> constraint is an optimization: by using it you are telling
+                          the compiler <span class="emphasis"><em>not</em></span> to track changes in the values the constraint depends
+                          on. If the value depends on another constraint (including CSS constraints), which <span class="emphasis"><em>does</em></span> have
+                          dependencies in both applicability and value, the <code class="literal">$once</code> optimization is
+                          invalid.</p></div><p>
+                    </p></li><li class="listitem"><p>
+                      <code class="literal">$always{...}</code>
+                    </p></li><li class="listitem"><p>
+                      <code class="literal">&lt;method<em class="replaceable"><code>...</code></em>"
+                          reference="<em class="replaceable"><code>...</code></em>"&gt;</code>
+                    </p></li></ol></div><p>
+              </p></li><li class="listitem"><p>Initialize subviews that are not <code class="literal">initstage="late"</code> or
+                  <code class="literal">initstage="defer"</code></p></li><li class="listitem"><p>Call the <code class="literal">init()</code> method</p></li><li class="listitem"><p>Send the <code class="literal">oninit</code> event</p></li></ol></div><p>
+        </p></li></ol></div><p></p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="developers.appendices.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.appendices.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="ecmascript-and-lzx.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Part X. Appendices </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Appendix B. ECMAScript</td></tr></table></div></body></html>

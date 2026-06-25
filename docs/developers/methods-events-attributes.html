@@ -1,0 +1,840 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 29. Methods, Events, Handlers, and Attributes</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.power.html" title="Part IV. In Depth"><link rel="prev" href="introductory-classes.html" title="Chapter 28. Classes"><link rel="next" href="delegates.html" title="Chapter 30. Delegates"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 29. Methods, Events, Handlers, and Attributes</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="introductory-classes.html">Prev</a> </td><th width="60%" align="center">Part IV. In Depth</th><td width="20%" align="right"> <a accesskey="n" href="delegates.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="methods-events-attributes"></a>Chapter 29. Methods, Events, Handlers, and Attributes</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1692"></a>1.  Overview </h2></div></div></div><p> In LZX, the concepts of methods, events, handlers and attributes are related to each
+         other in a braid-like way. In this chapter we'll show you how they weave together. </p><p> Attributes, events, methods and handlers are all properties of classes that define how
+         instances of the class behave. Attributes represent the state of the instance. Events are
+         signifiers that communicate with the rest of the application when something about the
+         instance changes. Methods are blocks of JavaScript that are executed when the method is
+         invoked by name. Handlers are a special kind of method, each specifically tied to an event. </p><p> When an event occurs, any handler associated with that event gets called. Events may
+         have any number of handlers, and handlers can be used to glue events from one instance to
+         methods in another. </p><p> Because LZX allows you to add properties to instances, you can add attributes, events,
+         methods and handlers to any instance. (In the terms of other object oriented languages such
+         as Java, effectively LZX allows you to define a class of which there is exactly one
+         instance with the new properties.) </p><p> In LZX you use attributes, events, and handlers to describe how your application
+         responds to user input or other changes. In general, and to a first approximation, when an
+            <span class="em">attribute</span> changes value, it can generate an <span class="em">event </span>. (See below for an qualification of when setting an
+         attribute's value does and does not cause and event to be sent.) You can additionally
+         declare events with an <a class="indexterm" name="id9864"></a><code class="sgmltag-element">&lt;event&gt;</code><em><span class="remark">[unknown tag]</span></em>
+          tag. Your application's response to that event is determined by
+         the associated <em class="glossterm">event handler</em>, which is defined in a <a class="indexterm" name="id9869"></a><code class="sgmltag-element">&lt;handler&gt;</code><em><span class="remark">[unknown tag]</span></em>
+          tag. </p><p> Methods, events and attributes are the only concepts you need for many kinds of
+         applications. Certain kinds of more subtle event-driven situations require a fourth
+         concept, <span class="em">delegates</span>, which are described in <a class="xref" href="delegates.html" title="Chapter 30. Delegates">Chapter 30, <i>Delegates</i></a>. </p><p> In the discussion below we'll assume a commonsense understanding of the meaning of <a class="indexterm" name="id9877"></a><code class="sgmltag-element">&lt;attribute&gt;</code><em><span class="remark">[unknown tag]</span></em>
+          . Attributes are examined more thoroughly at the end of this
+         chapter. </p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1697"></a>2. Methods</h2></div></div></div><p> A <a class="indexterm" name="id9883"></a><code class="sgmltag-element">&lt;method&gt;</code><em><span class="remark">[unknown tag]</span></em>
+          is an 'action', expressed in JavaScript you can perform on an
+         instance. You can call it from any script. </p><p> Methods may be defined inside any <a class="indexterm" name="id9888"></a><code class="sgmltag-element">&lt;node&gt;</code><em><span class="remark">[unknown tag]</span></em>
+          or <a class="indexterm" name="id9892"></a><code class="sgmltag-element">&lt;view&gt;</code><em><span class="remark">[unknown tag]</span></em>
+          (or classes derived from them). When defining a method, you must
+         specify a value for the <a class="indexterm" name="id9896"></a><code class="sgmltag-attribute">name</code> attribute. The value of the <a class="indexterm" name="id9899"></a><code class="sgmltag-attribute">name</code> attribute represents the name by
+         which you will call this method in script. When you call the method, you use its name
+         followed by open and close parentheses -- any arguments to the method would be placed
+         within the parentheses. </p><p> You cannot include a <a class="indexterm" name="id9903"></a><code class="sgmltag-element">&lt;method&gt;</code> within a dataset --
+         if you do it will be considered data, not an operation to be performed. </p><p> In the following example, the <a class="indexterm" name="id9907"></a><code class="methodname">myMethod()</code> method is defined in the only node in the
+         example. It is called by the line in the script <code class="literal">myNode.myMethod()</code>. (By
+         using the ID, the node can be referenced from anywhere in the program, including this
+         script block). </p><div class="example"><a name="id9912"></a><p class="title"><b>Example 29.1. Defining a method</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="30" width="100%"&gt;
+  &lt;text id="message"&gt; 
+    &lt;method name="myMethod"&gt;
+      this.setAttribute('text', 'Nice day if it doesn\'t rain.');         
+    &lt;/method&gt;
+  &lt;/text&gt; 
+  &lt;script&gt;
+    message.myMethod()
+  &lt;/script&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1694"></a>2.1. Naming methods</h3></div></div></div><p> Choose method names carefully. Names should be descriptive, to help you and other
+            readers of your code understand what they do. You need also to keep in mind that when
+            you extend a class, your new class inherits the methods of the class from which it was
+            extended. If you give a new method the name of already existing method, the original
+            method will be overridden. To avoid such "naming collisions" you should consult the LZX
+            Reference, which lists all methods for all Laszlo Foundation Classes (LFC). </p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1693"></a>2.1.1. Overriding Methods</h4></div></div></div><p> When you create a class by extending another one, the new class inherits all the
+               methods of the original. You can then give a new definition to any of the inherited
+               methods; this is called overriding. See <a class="xref" href="class-inheritance.html" title="Chapter 33. Extending Classes">Chapter 33, <i>Extending Classes</i></a> for a
+               complete discussion. </p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1695"></a>2.2. Simple Arguments</h3></div></div></div><p> The method attribute <a class="indexterm" name="id9922"></a><code class="sgmltag-attribute">'args'</code> is used to pass arguments to a
+            method. The value of the 'args' attribute is a string containing variable names
+            separated by commas. In the following example, two arguments 'a' and 'b' are declared in
+            the args attribute of the method named 'add'. To call this method in script to add the
+            number 1 to the number 2, you would write <code class="literal">myNode.add(1, 2);</code>
+         </p><div class="example"><a name="id9926"></a><p class="title"><b>Example 29.2. Defining a method with arguments</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="50" width="100%"&gt;
+  &lt;text id="message"&gt;
+    &lt;method name="add" args="a,b"&gt;
+      var sum = a + b;
+      this.setAttribute('text', ('a + b = ' + sum));          
+    &lt;/method&gt;
+  &lt;/text&gt;
+  &lt;script&gt;
+    message.add(4,9)
+  &lt;/script&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_2.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1696"></a>2.3.  Return Values </h3></div></div></div><p> Sometimes when you write a method, you want the result to be returned to the calling
+            script for further processing. In the following example, <code class="literal">returnsum()</code>
+            method uses the 'return' keyword. In the script block, this value is used in turn to
+            compute another. </p><div class="example"><a name="id9932"></a><p class="title"><b>Example 29.3. Returning data from a method</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="50" width="100%"&gt;
+  &lt;text id="message" multiline="true"&gt;
+    &lt;method name="returnsum" args="a,b"&gt;
+      var sum = 3 + 4;
+      this.setAttribute('text', ('a + b = ' + sum));          
+      return sum;
+    &lt;/method&gt;
+  &lt;/text&gt;
+  &lt;script&gt;
+    var x = 5;
+    var y = message.returnsum();
+    var z = x + y;
+    message.addText('\nz equals ' +  z)
+  &lt;/script&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_3.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1702"></a>3. Events</h2></div></div></div><p> In LZX, changes in the status of objects are communicated through events. Events can be
+         used to trigger the execution of script. The script to be executed can be contained in an
+            <em class="glossterm">event handler</em>, as explained in this chapter, or in a method that
+         is invoked by a <em class="glossterm">delegate</em> as explained in <a class="xref" href="delegates.html" title="Chapter 30. Delegates">Chapter 30, <i>Delegates</i></a>. </p><p> Events can be defined either implicitly or explicitly. Implicit events are associated
+         with attributes. Explicit events are declared with the <a class="indexterm" name="id9941"></a><code class="sgmltag-element">&lt;event&gt;</code><em><span class="remark">[unknown tag]</span></em>
+          tag. </p><p> In addition to the events that you define, there are also events that are built into
+         the LFC but which are not associated with any attribute. Examples include <a class="indexterm" name="id9946"></a><code class="sgmltag-attribute">onclick</code> and <a class="indexterm" name="id9949"></a><code class="sgmltag-attribute">onfocus</code>. </p><p> Unlike events in similar systems, OpenLaszlo's events are point-to-point, meaning that
+         there is no general broadcast mechanism for events, and events do not trickle up or down
+         the instance hierarchy. Declaring an event that no handler (or delegate) is listening for
+         has no effect. This allows objects to publish many more events than they actually need to
+         create at runtime; this allows you flexibility in prototyping. </p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1698"></a>3.1. Implicit "on" events</h3></div></div></div><p> Any defined attribute has an associated event called "on" plus the name of the
+            attribute. Whenever the value of any attribute is updated using the <a class="indexterm" name="id9955"></a><code class="methodname">setAttribute()</code>, its associated "on" event is
+            generated. For example, the <code class="sgmltag-attribute">height</code> attribute of a
+            view has an associated <code class="sgmltag-attribute">onheight</code> event that is
+            generated whenever the view's height changes. These events are implicit in the sense
+            that they are built into the system — you don't have to declare them or send them. </p><p> Said another way, the default behavior of the <a class="indexterm" name="id9962"></a><code class="methodname">setAttribute()</code> method is to set the named property
+            and send the event. For instance, when a view changes its x position, it sends the event <a class="indexterm" name="id9966"></a><code class="sgmltag-attribute">onx</code> with the new value for its x
+            property. </p><p> In addition to the implicit event associated with each named attribute, LFC classes
+            have a variety of additional events associated with them. For example, the <a class="indexterm" name="id9970"></a><code class="sgmltag-element">&lt;view&gt;</code> tag has an <a class="indexterm" name="id9973"></a><code class="sgmltag-attribute">onclick</code> event that is generated
+            whenever the user clicks the mouse while the cursor is positioned over the view— even
+            though there is no attribute named "click". See the <a class="ulink" href="../reference/../reference/" target="_top">LZX Reference Manual</a>
+            for a complete list of events associated with LFC classes. </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1700"></a>3.2. The event tag</h3></div></div></div><p> In addition to built-in and implicit events, you can explicitly declare events with
+            the <a class="indexterm" name="id9979"></a><code class="sgmltag-element">&lt;event&gt;</code><em><span class="remark">[unknown tag]</span></em>
+             tag. </p><p> Note that in 3.n and earlier releases, you can send events that have not been
+            explicitly declared. However, this is not a good practice, and applications that rely on
+            this will break with release 4.0. Therefore, it's good to get in the habit of declaring
+            any events that you know you will send by calling <a class="indexterm" name="id9984"></a><code class="methodname">sendEvent()</code>. </p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1699"></a>3.2.1. Naming events</h4></div></div></div><p> As discussed in the section below on handlers, events and their associated
+               handlers must have the same name. </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3>Event names cannot start with a leading
+                  underscore.</div><p>
+            </p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1701"></a>3.3. LzEvent and the sendEvent method</h3></div></div></div><p> When you create an event using the <a class="indexterm" name="id9993"></a><code class="sgmltag-element">&lt;event&gt;</code>, you are creating
+            an instance of the class called <a class="indexterm" name="id9996"></a><code class="classname">LzEvent</code>. You can then call the <a class="indexterm" name="id9999"></a><code class="methodname">sendEvent()</code> on this class to explicitly cause the
+            event to be sent. </p><div class="example"><a name="id10003"></a><p class="title"><b>Example 29.4. sendEvent</b></p><div class="example-contents"><pre class="programlisting">
+&lt;button name="framitzbutton" onclick="sendframitz()"&gt;
+     Send framitz event
+     &lt;event name="framitz"/&gt;
+     &lt;method name="sendframitz"&gt;
+      framitz.sendEvent()
+     &lt;/method&gt;
+ &lt;/button&gt;
+</pre></div></div><br class="example-break"><p> You shouldn't send an event for which no handler has been defined. That is to say,
+            it is fine to <span class="i">define</span> an event (using the <a class="indexterm" name="id10008"></a><code class="sgmltag-element">&lt;event&gt;</code> tag) for which no
+            handler exists. This is often useful to to in prototyping. But don't send it unless you
+            know that there is a handler for it. </p><p> Note that there is virtually never any reason to create an event in script by
+            creating a new LzEvent. Likewise, there is virtually never any reason for you to use any
+            method on this event other than sendEvent. Other methods are used internally within the
+            Laszlo Foundation Classes; they are not intended for user code. </p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1712"></a>4. Event Handlers</h2></div></div></div><p> An event handler is the code that is executed when an event is received. An event can
+         have zero or more handlers. </p><p> There are two syntaxes that you can use to define handlers:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>"onevent" in the node creation tag</p></li><li class="listitem"><p>using the <a class="indexterm" name="id10020"></a><code class="sgmltag-element">&lt;handler&gt;</code> tag</p></li></ul></div><p> For convenience, you can use the onevent syntax for short handlers for some kinds of
+         events, such as onclick, as explained below. For readability, however, the <a class="indexterm" name="id10024"></a><code class="sgmltag-element">&lt;handler&gt;</code> syntax is often
+         better. </p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1703"></a>4.1. "onevent" open tag syntax</h3></div></div></div><p> The "onevent" syntax is available for attributes that correspond to the CSS event
+            model—onclick, onmouseover, and so forth. For such events, the simplest way to declare
+            an event handler is simply to include it in the definition tag of the node that contains
+            the attribute. This syntax does not work for other events generated by class attributes;
+            for those you must use the <a class="indexterm" name="id10029"></a><code class="sgmltag-element">&lt;handler&gt;</code> syntax. </p><p> In the example below, the event handler for the event generated by the user mouse
+            click changes the views's color from red to blue. </p><div class="example"><a name="id10033"></a><p class="title"><b>Example 29.5. Event handler defined in opening tag</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="50" width="100%"&gt;
+   &lt;view height="30" width="30" bgcolor="red" onclick="setAttribute('bgcolor', 'blue')"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007-2009 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_5.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1705"></a>4.2. The &lt;handler&gt; tag</h3></div></div></div><p>The <a class="indexterm" name="id10038"></a><code class="sgmltag-element">&lt;handler&gt;</code><em><span class="remark">[unknown tag]</span></em>
+             tag defines how an instance responds to an event. A handler
+            can either specify the code to handle an event or it can specify a method that should be
+            invoked to handle the event. Any event can have an unlimited number of handlers
+            associated with it. </p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1704"></a>4.2.1. Handler tag "name" attribute</h4></div></div></div><p> The <a class="indexterm" name="id10044"></a><code class="sgmltag-element">&lt;handler&gt;</code> tag defines
+               code that is executed when an event that has the name of the handler is fired. The
+               name of the handler is the same as the name of the event with which it is associated.
+               For example, the "onclick" event is handled by a handler also named "onclick". Event
+               handlers defined in this way are executed whenever their associated <a class="indexterm" name="id10047"></a><code class="sgmltag-attribute">event</code> occurs. </p><p> The following example shows how you might handle a button click: </p><div class="example"><a name="id10051"></a><p class="title"><b>Example 29.6. A simple handler</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="40" width="100%"&gt;
+  &lt;button text="not clicked"&gt;
+    &lt;handler name="onclick"&gt;
+      this.setAttribute('text', 'clicked'); 
+    &lt;/handler&gt;
+  &lt;/button&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;  
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_6.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_6.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1706"></a>4.3. Multiple handlers for the same event</h3></div></div></div><p> An event can have associated with it any number of handlers. When that event is
+            sent, all handlers associated with it are executed. </p><div class="example"><a name="id10056"></a><p class="title"><b>Example 29.7. Multiple handlers for single events</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="100"  width="100%"&gt;
+   &lt;text y="20" id="message" multiline="true" /&gt;
+   &lt;button&gt;
+      Howdy!
+      &lt;handler name="onclick"&gt;
+         message.addText("\nhandler one")
+      &lt;/handler&gt;
+      &lt;handler name="onclick"&gt;
+         message.addText("\nhandler two")
+      &lt;/handler&gt;
+      &lt;handler name="onclick"&gt;
+         message.addText("\nhandler three")
+      &lt;/handler&gt;
+   &lt;/button&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_7.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_7.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1707"></a>4.4. Handlers that call methods</h3></div></div></div><p> A handler may include JavaScript code to be executed when the associated event
+            occurs, or it may reference a method that contains the code to be executed. To reference
+            another method, use the <a class="indexterm" name="id10061"></a><code class="sgmltag-attribute">method</code> attribute of the <a class="indexterm" name="id10064"></a><code class="sgmltag-element">&lt;handler&gt;</code> tag.</p><div class="example"><a name="id10067"></a><p class="title"><b>Example 29.8. Calling a method from a handler</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="50" width="100%"&gt;
+  &lt;simplelayout/&gt;
+  &lt;view name="myview" height="30" width="30" bgcolor="blue"/&gt;
+  &lt;button&gt;
+    Make red the blue box!
+    &lt;handler name="onclick" method="redify"/&gt;
+    &lt;method name="redify" args="v"&gt;
+      parent.myview.setAttribute("bgcolor", "red")
+    &lt;/method&gt;
+  &lt;/button&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_8.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_8.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1708"></a>4.5. Handlers in class definitions</h3></div></div></div><p> A handler is not overridable in a subclass, so you can add as many handlers as you
+            like to an event and they will all fire. </p><p> If you want a subclass to be able to override the handling of an event in a
+            superclass, the superclass would associate a method with the event by: </p><pre class="programlisting">
+&lt;handler name="eventName" method="methodName" /&gt;
+</pre><p> And the subclass would overrride <code class="literal">methodName</code>. </p><p> Recall that a method is an 'action' you can perform on an instance, and that you can
+            call it from any script. You could call it from a handler. For example, the usage above
+            can be written longhand as: </p><pre class="programlisting">
+&lt;handler name="eventName"&gt;
+  this.methodName();
+&lt;/handler&gt;
+</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1709"></a>4.6. Overriding handlers</h3></div></div></div><p> If you want the superclass to define a handler that the subclass can override, you
+            would have the handler point to a method, and in the subclass you just override the
+            method. Let's repeat that to make it clear: when you want the subclass to have a
+            different behavior than the superclass, don't attempt to override the handler in the
+            subclass, and don't create a new handler in the subclass. Instead, have the handler in
+            the superclass call a method, and then in the subclass, override that method. Try this
+            example, which hopefully makes all clear:</p><div class="example"><a name="id10080"></a><p class="title"><b>Example 29.9. Overriding an event-handler method in a subclass</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="200" width="100%"&gt;
+  &lt;class name="base" extends="button"&gt;
+    &lt;handler name="onclick" method="handleonclick" /&gt;
+    &lt;method name="handleonclick" args="v"&gt;
+      message.addText("\nbase click");
+    &lt;/method&gt;
+  &lt;/class&gt;
+  
+  &lt;class name="subaccumulate" extends="base"&gt;
+    &lt;handler name="onclick"&gt;
+      message.addText("\nsubaccumulate click");
+    &lt;/handler&gt;
+  &lt;/class&gt;
+  
+  &lt;class name="suboverride" extends="base"&gt;
+    &lt;method name="handleonclick" args="v"&gt;
+      message.addText("\nsuboverride click");
+    &lt;/method&gt;
+  &lt;/class&gt;
+  &lt;subaccumulate&gt;accumulate&lt;/subaccumulate&gt;
+  &lt;suboverride&gt;override&lt;/suboverride&gt;
+  &lt;text id="message" multiline="true" /&gt;
+  &lt;simplelayout /&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_9.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_9.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> Here is the same example with instances: </p><div class="example"><a name="id10084"></a><p class="title"><b>Example 29.10. Overriding an event-handling method in an instance</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="200" width="100%"&gt;
+  &lt;class name="base" extends="button"&gt;
+    &lt;handler name="onclick" method="handleonclick" /&gt;
+    &lt;method name="handleonclick" args="v"&gt;
+      message.addText("\nbase click");
+    &lt;/method&gt;
+  &lt;/class&gt; 
+  &lt;base text="Accumulate"&gt;
+    &lt;handler name="onclick"&gt;
+      message.addText("\nsubaccumulate click");
+    &lt;/handler&gt;
+  &lt;/base&gt; 
+  &lt;base text="Override"&gt;
+    &lt;method name="handleonclick" args="v"&gt;
+      message.addText("\nsuboverride click");
+    &lt;/method&gt;
+  &lt;/base&gt;
+  &lt;text id="message" multiline="true" /&gt;
+  &lt;simplelayout /&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+  * Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+  * Use is subject to license terms.                                            *
+  * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_10.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_10.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> Suppose you want to handle, in one class, an event from some other object? In that
+            case, you would use the <a class="indexterm" name="id10088"></a><code class="sgmltag-attribute">reference</code> attribute: </p><pre class="programlisting">
+&lt;handler name="onclick" reference="yours"&gt;
+  Debug.debug("Someone is pushing your button");
+&lt;/handler&gt;
+</pre><p> Here's an example using <code class="literal">&lt;text&gt;</code>:</p><div class="example"><a name="id10094"></a><p class="title"><b>Example 29.11. Referencing an event in another object</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="200" width="100%"&gt;
+  &lt;class name="base" extends="button"&gt;
+    &lt;handler name="onclick" method="handleonclick"/&gt;
+    &lt;method name="handleonclick" args="v"&gt;
+      Debug.debug("base click");
+    &lt;/method&gt;
+  &lt;/class&gt;
+  &lt;simplelayout/&gt;
+  &lt;base id="yours" text="Yours"&gt;
+    &lt;handler name="onclick"&gt;
+      message.addText("\nYour click");
+    &lt;/handler&gt;
+  &lt;/base&gt;  
+  &lt;base text="Mine"&gt;
+    &lt;method name="handleonclick" args="v"&gt;
+      message.addText("\nMy click");
+    &lt;/method&gt;
+    &lt;handler name="onclick" reference="yours"&gt;
+      message.addText("\nSomeone is pushing your buttons.");
+    &lt;/handler&gt;
+  &lt;/base&gt; 
+  &lt;text id="message" y="40" multiline="true" /&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_11.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_11.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> Note that Mine handles a click on Yours. Even though the handler is in Mine, it only
+            runs when you click Yours. </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1710"></a>4.7. Comparing ways to send and handle events</h3></div></div></div><p> As has been discussed above, you can cause an event to be sent explicitly, by
+            defining the event and then calling the <a class="indexterm" name="id10100"></a><code class="methodname">sendEvent()</code> on it. Or, you can use the <a class="indexterm" name="id10104"></a><code class="methodname">setAttribute()</code> method to implicitly define and send
+            an event. A third way of defining events, using delegates, is explained in <a class="xref" href="delegates.html" title="Chapter 30. Delegates">Chapter 30, <i>Delegates</i></a>. </p><div class="example"><a name="id10109"></a><p class="title"><b>Example 29.12. Different ways to send events</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas width="100%" debug="true"&gt;  
+    &lt;class name="myclass_with_handler"&gt;
+        &lt;event name="myevent"/&gt;
+        &lt;handler name="myevent" args="myargs"&gt;
+            Debug.debug("%#w handling myevent, myargs = %w", this, myargs);
+        &lt;/handler&gt;       
+        &lt;attribute name="season" type="string" value="spring"/&gt;
+        &lt;event name="onseason"/&gt;
+        &lt;handler name="onseason" args="s"&gt;
+            Debug.debug("got season of %w, season is %w", s, season);
+        &lt;/handler&gt;
+    &lt;/class&gt;   
+    &lt;myclass_with_handler id="foo"/&gt;
+    &lt;simplelayout axis="x" spacing="5"/&gt;
+    &lt;button onclick="foo.myevent.sendEvent(12)" text="send the event"/&gt;
+    &lt;button onclick="foo.setAttribute('season', 'fall')" text="autumn"/&gt;
+    
+    &lt;!-- Don't do this! Setting an attribute directly with '=' shortcuts around
+        the event system. This is not right; use setAttribute instead --&gt;
+    &lt;button onclick="foo.season='winter'" text="evil"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_12.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_12.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1711"></a>4.8. Testing for existence of events in "legacy" code</h3></div></div></div><p> As is explained in <a class="xref" href="delegates.html" title="Chapter 30. Delegates">Chapter 30, <i>Delegates</i></a>, an event doesn't really exist unless
+            and until there is a delegate registered to receive it. In code that was written before
+            the <a class="indexterm" name="id10115"></a><code class="sgmltag-element">&lt;event&gt;</code> tag became part of
+            the language, before sending an event it was necessary to test whether the receiving
+            delegate existed; otherwise an error resulted. In order to create your own event, you
+            needed to create an attribute like this:</p><pre class="programlisting">
+&lt;attribute name="onsomeevent" value="null"/&gt;
+</pre><p> Then, you had to check to see if it was a valid LzEvent before calling <code class="methodname">sendEvent()</code> on it. Ways of making
+            that test look like this:</p><pre class="programlisting">
+    if ( onsomeevent instanceof LzEvent) {
+       onsomeevent.sendEvent();
+    }
+</pre><p> or like this: </p><pre class="programlisting">
+    if (classroot.onactivate) {
+       classroot.onactivate.sendEvent();
+    }
+</pre><p> If you use the <a class="indexterm" name="id10125"></a><code class="sgmltag-element">&lt;event&gt;</code> and <a class="indexterm" name="id10128"></a><code class="sgmltag-element">&lt;handler&gt;</code> syntax, you do
+            not have to worry about such tests. (The delegates are handled for you by the runtime.) </p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="methods-events-attributes.attribute-tag"></a>5. Introduction to attributes</h2></div></div></div><p>Attributes define properties of instances of classes. For example, consider the <code class="literal">&lt;view&gt;</code> element. It has more than forty defined attributes, such as <code class="literal">x</code>, <code class="literal">y</code>, and <code class="literal">bgcolor</code>. Some of these attributes are defined on <code class="literal">&lt;view&gt;</code>, and others are inherited from <code class="literal">&lt;node&gt;</code> from which it derives. These attributes are specified in the schema that defines the LZX tags. Each attribute has a type, for example: <code class="literal">number</code>, <code class="literal">boolean</code>, and <code class="literal">string</code>.</p><p> Once an attribute has been defined, you can use it in the open tag for that class. For
+         example, <code class="literal">name</code> is a defined attribute of view, so
+         you can write </p><pre class="programlisting">
+&lt;view name="charlie"/&gt;
+</pre><p> But, for example, <code class="literal">framitz</code> is not a defined attribute of
+            <code class="literal">&lt;view&gt;</code>, so this would generate an error: </p><pre class="programlisting">
+&lt;view framitz="whatnot"/&gt;.
+</pre><p> You can define new attributes using the <code class="literal">&lt;attribute&gt;</code>
+         tag, for example: </p><pre class="programlisting">
+&lt;view name="bob"&gt;
+   &lt;attribute name="framitz"/&gt;
+&lt;/view&gt;
+</pre><p>An attribute can be an element of a tag or a property of a JavaScript class. Attributes
+         are declared and set in tags, but they can also be set and read in script. Not all
+         attributes can be set in script, similarly not all attributes can be in tags. Attributes
+         are characterized based on this behavior into four categories, described in <a class="xref" href="methods-events-attributes.html#attributecategories" title="5.1. Categories of Attributes">Section 5.1, “Categories of Attributes”</a>.</p><p>An attribute can be declared in a tag header as follows:</p><div class="example"><a name="id10156"></a><p class="title"><b>Example 29.13. Setting an attribute value in the tag header</b></p><div class="example-contents"><pre class="programlisting">
+               &lt;canvas height="20" width="100%"&gt;
+  &lt;view width="20" height="20" bgcolor="red"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+            </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_13.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_13.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>An alternative (although more verbose) way to set the attribute is using the
+            <code class="literal">&lt;attribute&gt;</code> tag as a child of the tag whose attribute
+         is being set:</p><div class="example"><a name="id10161"></a><p class="title"><b>Example 29.14. Using the attribute element to set an attribute value</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="20" width="100%"&gt;
+  &lt;view&gt;
+    &lt;attribute name="width" value="20"/&gt;
+    &lt;attribute name="height" value="20"/&gt;
+    &lt;attribute name="bgcolor" type="color" value="red"/&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_14.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_14.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>This second example is the same as saying <code class="literal">&lt;view width="20" height="20"
+         bgcolor="red"/&gt;</code>. The <code class="literal">&lt;attribute&gt;</code> tag is useful for
+         writing classes as well as for performing complicated constraints of existing attributes.</p><p>In script, the values of most attributes can be retrieved using dot syntax:</p><div class="example"><a name="id10168"></a><p class="title"><b>Example 29.15. Using dot syntax to retrieve an attribute value</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="40"&gt;
+  &lt;simplelayout/&gt;
+  &lt;view name="myView" width="20" height="20" bgcolor="red"/&gt; 
+  &lt;text oninit="this.format('myView.width = %d', myView.width)"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007 - 2009 Laszlo Systems, Inc.  All Rights Reserved.            *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_15.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_15.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>All attributes that are settable in script (see below) can be set using  
+               <code class="literal">setAttribute()</code>:</p><div class="example"><a name="id10173"></a><p class="title"><b>Example 29.16. Using <code class="literal">setAttribute()</code> to set an attribute value</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="20" width="100%"&gt;
+  &lt;view width="20" height="20" bgcolor="red"
+      oninit="this.setAttribute('width', 50);"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_17.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_17.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="attributecategories"></a>5.1. Categories of Attributes</h3></div></div></div><p> Attributes can be placed into four categories according to how they are set, read,
+            and modified. </p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p><code class="literal">read/write</code> attributes</p></li><li class="listitem"><p><code class="literal">event-handler</code> attributes</p></li><li class="listitem"><p><code class="literal">initialize-only</code> attributes</p></li><li class="listitem"><p><code class="literal">read-only</code> attributes</p></li></ul></div><p>These are described briefly in the following sections.</p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="readwriteattributes"></a>5.1.1. <code class="literal">read/write</code> attributes</h4></div></div></div><p><code class="literal">read/write</code> attributes may be modified at runtime and be the
+               target of a constraint expression. When <code class="literal">setAttribute()</code> is called
+               the value of the attribute will be updated, along with any constraints that depend on
+               the attribute. The value of an attribute can be retrieved through script using dot
+               syntax, (for example, <code class="literal">myView.opacity</code>).</p><p>For example:</p><div class="example"><a name="id10202"></a><p class="title"><b>Example 29.17. <code class="literal">read/write</code> attributes</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="20"&gt;
+    &lt;view id="myView" onclick="setAttribute('opacity', 1.5 - this.opacity)" bgcolor="red"&gt;
+        &lt;text text="${'My opacity is ' + myView.opacity + '. Click to change it.'}"/&gt;
+    &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007 - 2009 Laszlo Systems, Inc.  All Rights Reserved.            *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_19.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_19.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="eventhandlerattributes"></a>5.1.2. <code class="literal">event-handler</code> attributes</h4></div></div></div><p><code class="literal">event-handler</code> attributes are instructions for what to perform
+               when a particular event happens. They always contain script, and cannot be changed at
+               run-time (that is, from script). Their values cannot (and do not need to) be
+               retrieved from script.</p><div class="example"><a name="id10211"></a><p class="title"><b>Example 29.18. <code class="literal">event-handler</code> attributes</b></p><div class="example-contents"><pre class="programlisting">
+      &lt;canvas height="150" debug="true"&gt;
+    &lt;view width="50" height="50" bgcolor="red" onclick="Debug.write('Hello, World!');"/&gt;
+&lt;/canvas&gt;
+
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 - 2009 Laszlo Systems, Inc.  All Rights Reserved.            *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_20.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_20.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>There is a long-hand version for <code class="literal">event-handler</code> attributes, just
+               like normal attributes:</p><div class="example"><a name="id10217"></a><p class="title"><b>Example 29.19. long-hand version for <code class="literal">event-handler</code> attributes</b></p><div class="example-contents"><pre class="programlisting">
+                  &lt;canvas height="40"&gt;
+    &lt;text&gt;
+        Click me!
+        &lt;handler name="onclick"&gt;
+            this.setAttribute('text', 'Hello World!');
+        &lt;/handler&gt;
+    &lt;/text&gt;
+&lt;/canvas&gt;
+
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 - 2009 Laszlo Systems, Inc.  All Rights Reserved.            *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+               </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/longhandevent.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/longhandevent.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="initializeonlyattributes"></a>5.1.3. <code class="literal">initialize-only</code> attributes</h4></div></div></div><p><code class="literal">initialize-only</code> attributes are declared and set in the tag, but
+               cannot be changed in using script. Good examples of
+               <code class="literal">initialize-only</code> attributes are <code class="literal">name</code> and
+                  <code class="literal">id</code>. They can be read from script using dot syntax.</p><div class="example"><a name="id10229"></a><p class="title"><b>Example 29.20. <code class="literal">initialize-only</code> attributes</b></p><div class="example-contents"><pre class="programlisting">
+                  &lt;canvas height="40"&gt;
+    &lt;text id="myID"&gt;
+        Click me!
+        &lt;handler name="onclick"&gt;
+            this.setAttribute('text', this.id);
+        &lt;/handler&gt;
+    &lt;/text&gt;
+&lt;/canvas&gt;
+
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 - 2009 Laszlo Systems, Inc.  All Rights Reserved.            *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+               </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/initializeonly.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/initializeonly.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="readonlyattributes"></a>5.1.4. <code class="literal">read-only</code> attributes</h4></div></div></div><p><code class="literal">read-only</code> attributes, sometimes called
+               <span class="emphasis"><em>fields</em></span>, are only accessible using script. Since they are
+                  <code class="literal">read-only</code>, they cannot be set in a &lt;tag&gt;. Their
+               values can be retrieved using dot syntax.</p><div class="example"><a name="id10240"></a><p class="title"><b>Example 29.21. <code class="literal">read-only</code> attributes</b></p><div class="example-contents"><pre class="programlisting">
+                  &lt;canvas height="130" debug="true"&gt;
+    &lt;debug y="30"/&gt;
+    &lt;text id="myID"&gt;
+        Click me!
+        &lt;handler name="onclick"&gt;
+            Debug.format("canvas.subviews: %w", canvas.subviews);
+        &lt;/handler&gt;
+    &lt;/text&gt;
+&lt;/canvas&gt;
+
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 - 2009 Laszlo Systems, Inc.  All Rights Reserved.            *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+               </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/readonly.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/readonly.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1723"></a>6. The <a class="indexterm" name="id10245"></a><code class="sgmltag-element">&lt;attribute&gt;</code> tag</h2></div></div></div><p>The <a class="indexterm" name="id10249"></a><code class="sgmltag-element">&lt;attribute&gt;</code> tag has two uses.</p><p>In a class definition, the <a class="indexterm" name="id10253"></a><code class="sgmltag-element">&lt;attribute&gt;</code><em><span class="remark">[unknown tag]</span></em>
+          tag defines attributes that can be set in instances of the
+         class. For example:</p><div class="example"><a name="id10257"></a><p class="title"><b>Example 29.22. Defining an attribute in a class</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="36" width="100%"&gt;
+  &lt;class name="diamond" width="${this.size}" height="${this.size}" rotation="45"&gt;
+    &lt;attribute name="size" type="number"/&gt;
+  &lt;/class&gt;
+  &lt;diamond size="25" x="36" bgcolor="red"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_21.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_21.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>You can also use an instance to extend a class, just like a new class would (but without
+         defining the class, if you only need one instance). So, just as in a class, the attribute
+         element can be used to define an additional attribute.</p><p>In an instance, the <a class="indexterm" name="id10262"></a><code class="sgmltag-element">&lt;attribute&gt;</code> element sets the
+         attribute of the object that it is attached to. In this use, the <a class="indexterm" name="id10265"></a><code class="sgmltag-element">&lt;attribute&gt;</code> element is
+         equivalent to the use of an attribute in a tag header. For example, the following program
+         uses a tag element to set the width of the view, and an <a class="indexterm" name="id10268"></a><code class="sgmltag-element">&lt;attribute&gt;</code> tag to set its
+         height.</p><div class="example"><a name="id10271"></a><p class="title"><b>Example 29.23. Defining an attribute in a view</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="25" width="100%"&gt;
+  &lt;view width="25" bgcolor="red"&gt;
+    &lt;attribute name="height" value="25"/&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_22.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_22.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> In the example above the width is set in the tag header and the height is set using the <a class="indexterm" name="id10275"></a><code class="sgmltag-element">&lt;attribute&gt;</code> tag. These
+         syntaxes are functionally equivalent for attributes that are defined in the LZX schema—that
+         is, attributes that are part of LZX. As we will show later, using the <a class="indexterm" name="id10278"></a><code class="sgmltag-element">&lt;attribute&gt;</code> can increase
+         readability. </p><p> You can also define new attributes. For these you must use the <a class="indexterm" name="id10282"></a><code class="sgmltag-element">&lt;attribute&gt;</code> tag.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1713"></a>6.1. Attributes and Constraints</h3></div></div></div><p>Attributes can be <span class="i">constrained</span> to the value of other
+            attributes. See the <a class="xref" href="constraints.html" title="Chapter 27. Constraints">Chapter 27, <i>Constraints</i></a> for details. </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="attribute-types"></a>6.2. Attribute types</h3></div></div></div><p> By default, attributes are of the JavaScript expression type, but in some cases the
+            default declaration doesn't give enough instruction to achieve the desired result. In
+            this example, the labels are undefined, so <code class="literal">undefined</code> is displayed in
+            the boxes: </p><div class="example"><a name="id10293"></a><p class="title"><b>Example 29.24. Incorrect attribute has no effect</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="300" width="100%"&gt;
+    &lt;simplelayout spacing="5"/&gt;
+    &lt;class name="box" height="100" width="100" bgcolor="red"&gt;
+       &lt;attribute name="label" value="Label"/&gt;
+       &lt;text text="${parent.label}" /&gt;
+    &lt;/class&gt;
+
+    &lt;box label="Box1"/&gt;
+    &lt;box/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_23.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_23.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> To make sure attributes do what you want them to do, assign a
+            <code class="literal">type</code> to your attributes when you declare them: </p><div class="example"><a name="id10298"></a><p class="title"><b>Example 29.25. Declaring attribute type</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="300" width="100%"&gt;
+    &lt;simplelayout spacing="5"/&gt;
+    &lt;class name="box" height="100" width="100" bgcolor="red"&gt;
+       &lt;attribute name="label" value="Label"  type="string"/&gt;
+       &lt;text text="${parent.label}" /&gt;
+    &lt;/class&gt;
+
+    &lt;box label="Box1"/&gt;
+    &lt;box/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_24.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_24.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1714"></a>6.2.1. Using the <code class="literal">type</code> attribute</h4></div></div></div><p> The <code class="literal">type</code> attribute specifies the type of the
+                  <code class="literal">&lt;attribute&gt;</code>'s value and affects how a value
+               expression will be parsed: </p><div class="table"><a name="id10306"></a><p class="title"><b>Table 29.1. Using the <code class="literal">type</code> attribute</b></p><div class="table-contents"><table class="table" summary="Using the type attribute" cellpadding="2" border="1"><colgroup><col class="col1"><col class="col2"></colgroup><thead><tr><th>Value</th><th>Definition</th></tr></thead><tbody><tr><td>
+                           <code class="literal">string</code>
+                        </td><td>An ECMAScript <code class="classname">String</code> in ECMAScript String literal syntax.
+                           To assign the value of an expression
+                           that yields a ECMAScript <code class="classname">String</code>, use
+                                 <code class="literal">value="${<code class="varname">expression</code>}"</code>.</td></tr><tr><td>
+                           <code class="literal">color</code>
+                        </td><td>A <code class="literal">colorLiteral</code> (see <a class="xref" href="methods-events-attributes.html#colorliterals" title="6.2.2. Summary of color literals">Section 6.2.2, “Summary of color literals”</a>). To assign the value of a JavaScript expression, use
+                                 <code class="literal">value="${<code class="varname">expression</code>}"</code>. The
+                           expression must yield a numeric color value.</td></tr><tr><td>
+                           <code class="literal">boolean</code>
+                        </td><td>"true" or "false"</td></tr><tr><td>
+                           <code class="literal">expression</code>
+                        </td><td>An ECMAScript expression</td></tr><tr><td>
+                           <code class="literal">number</code>
+                        </td><td>A <code class="literal">numberLiteral</code>, or an
+                           ${<code class="varname">expression</code>} which evaluates to a number.</td></tr><tr><td>
+                           <code class="literal">size</code>
+                        </td><td>A <code class="literal">sizeLiteral</code>, or an
+                           ${<code class="varname">expression</code>} which evaluates to a non-negative
+                        number</td></tr><tr><td>
+                           <code class="literal">text</code>
+                        </td><td>XML content</td></tr><tr><td>
+                           <code class="literal">html</code>
+                        </td><td>XML content</td></tr></tbody></table></div></div><br class="table-break"><p> All other types (<code class="literal">boolean</code>, <code class="literal">expression</code>,
+                  <code class="literal">number</code>, <code class="literal">size</code>, <code class="literal">text</code>) are
+               parsed as expressions of the specified type. </p><p class="fixme">
+               <em><span class="remark"><span class="para-label">FIXME: </span>ype='boolean |
+                  color | expression | number | size | string | text | html' </span></em>
+            </p><p> Note that in XML, types are specified in lower case, e.g.,
+               <code class="literal">string</code>. In JavaScript, types are capitalized, e.g.,
+                  <code class="literal">String</code> . The two types are equivalent in LZX, but you must use
+               the XML name in XML constructs and the JavaScript name in JavaScript constructs. </p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="colorliterals"></a>6.2.2. Summary of color literals</h4></div></div></div><p>Colors can have the following values:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">colorLiteral</span></dt><dd><p>A color of the form <code class="literal">#hhh</code>, <code class="literal">#hhhhhh</code>,
+                           <code class="literal">rgb(rv, gv, bv)</code> or a CSS color name, where
+                        <code class="varname">h</code> is a hexadecimal digit, <code class="varname">rv</code>,
+                           <code class="varname">gv</code>, and <code class="varname">bv</code> are numbers between 0.0
+                        and 1.0 inclusive, and the CSS color names are defined in
+                        <code class="literal">lz.colors</code>.</p></dd></dl></div><div class="table"><a name="id10389"></a><p class="title"><b>Table 29.2. CSS color names</b></p><div class="table-contents"><table class="table" summary="CSS color names" cellpadding="2" border="1"><colgroup><col><col></colgroup><thead><tr><th>CSS Name</th><th>Hex Value</th></tr></thead><tbody><tr><td>black</td><td>000000</td></tr><tr><td>green</td><td>008000</td></tr><tr><td>silver</td><td>C0C0C0</td></tr><tr><td>lime</td><td>00FF00</td></tr><tr><td>gray</td><td>808080</td></tr><tr><td>olive</td><td>808000</td></tr><tr><td>white</td><td>FFFFFF</td></tr><tr><td>yellow</td><td>FFFF00</td></tr><tr><td>maroon</td><td>800000</td></tr><tr><td>navy</td><td>000080</td></tr><tr><td>red</td><td>FF0000</td></tr><tr><td>blue</td><td>0000FF</td></tr><tr><td>purple</td><td>800080</td></tr><tr><td>teal</td><td>008080</td></tr><tr><td>fuchsia</td><td>FF00FF</td></tr><tr><td>aqua</td><td>00FFFF</td></tr></tbody></table></div></div><br class="table-break"></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1715"></a>6.2.3. JavaScript attribute types</h4></div></div></div><p>JavaScript types start with a capital letter. These may be one of the JavaScript
+               types, listed below or an LZX class. </p><div class="table"><a name="id10447"></a><p class="title"><b>Table 29.3. Native JavaScript types</b></p><div class="table-contents"><table class="table" summary="Native JavaScript types" cellpadding="2" border="1"><colgroup><col class="col1"><col class="col2"></colgroup><thead><tr><th>Type</th><th>Legal Values</th></tr></thead><tbody><tr><td>Boolean</td><td>true or false</td></tr><tr><td>String</td><td>single or double quotes may be used to specify a sequence of
+                           characters (e.g. var s = 'test' or var s = "test")</td></tr><tr><td>Number</td><td>used to specify simple values (e.g. var n = 4 or var n=4.2). Number
+                           type is also commonly used to specify a color, for which it is often
+                           convenient to use hexadecimal notation (e.g. var c = 0xFFFFFF for white,
+                           or 0x0099BB for turquoise)</td></tr><tr><td>Array</td><td>an ordered list of elements. The elements may be of any type and need
+                           not be of the same type. </td></tr></tbody></table></div></div><br class="table-break"><div class="table"><a name="id10469"></a><p class="title"><b>Table 29.4. Notes on Documentation</b></p><div class="table-contents"><table class="table" summary="Notes on Documentation" cellpadding="2" border="1"><colgroup><col class="col1"><col class="col2"></colgroup><thead><tr><th>Symbol</th><th>Notes</th></tr></thead><tbody><tr><td>[LzNode]</td><td>An LZX class enclosed in brackets indicates an Array of these
+                        types</td></tr><tr><td>dictionary</td><td>Also known as a hash, or JavaScript Object, the dictionary type
+                           indicates an unordered collection of name-value pairs. For Example:
+                           {width:100, height:50, title:"my title"} </td></tr><tr><td>any</td><td>JavaScript APIs wil ofter allow a parameter of any type. This is
+                           indicated by the word "any" in the type column</td></tr></tbody></table></div></div><br class="table-break"></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1716"></a>6.3. Attribute evaluation time</h3></div></div></div><p> The value of an attribute, whether set in an attribute element or start tag, is
+            evaluated according to the attribute <code class="literal">when</code> option.
+            <code class="literal">when</code> can be one of the following: </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+                  <code class="literal">immediately</code>
+               </span></dt><dd><p> initializes the attribute to the value of the expression when the enclosing
+                     element is defined. The value must be a constant expression and cannot depend
+                     on any other objects. <code class="literal">immediately</code> is currently the default
+                     value for <code class="literal">when</code>, but will be deprecated in a future release.
+                  </p></dd><dt><span class="term">
+                  <code class="literal">once </code>
+               </span></dt><dd><p> initializes the attribute to the value of the expression when the enclosing
+                     element is initialized. The expression cannot depend on the value of any other
+                     property of the element, nor can it depend on being evaluated in any particular
+                     order with respect to any other attributes: use an <code class="literal">init</code>
+                     method if ordered evaluation is required. </p></dd><dt><span class="term">
+                  <code class="literal">always</code>
+               </span></dt><dd><p> updates the attribute any time the value of the expression changes: the
+                     attribute is <span class="i">constrained</span> to follow the value of
+                     the expression. </p></dd></dl></div><p> The declared evaluation time of an attribute can be overridden when assigning a
+            value by using
+            <code class="literal">value="$<code class="varname">when</code>{<code class="varname">expression</code>}"</code> (or
+            in a start tag by <code class="literal">&lt;<code class="varname">tag</code>
+               <code class="varname">attribute</code>="$<code class="varname">when</code>{<code class="varname">expression</code>}"&gt;</code>),
+            where <code class="varname">when</code> is one of the possible <code class="literal">when</code> options. If
+            omitted, <code class="varname">when</code> defaults to <code class="literal">always</code>. </p><p>
+            <code class="literal">when</code> is a declaration and applies to any setting of the tag, not just
+            the initial one. For example, the <code class="literal">width</code> and <code class="literal">height</code>
+            attributes of <code class="literal">view</code> are declared <code class="literal">when="always"</code>: any
+            time you set width or height, it creates a constraint, even if you don't say
+                  <code class="literal">${<code class="varname">expression</code>}</code>. (The compiler is optimized to
+            evaluate constant constraints only once). </p><p>
+            <code class="literal">${<code class="varname">expression</code>}</code> can be used to override the
+            declaration at any site where you are setting the value of an attribute. For example,
+            the <code class="literal">title</code> attribute of <code class="literal">view</code> is declared
+               <code class="literal">when="once"</code>, so if you want to have a dynamically updating title,
+            you need to say <code class="literal">title=${<code class="varname">some.reference</code>}</code> to
+            constrain it to follow <code class="varname">some.reference</code>. </p><p> Note that an attribute that is not given an initial value will not be created in the
+            element by default: it should either be initialized in the <code class="literal">init</code>
+            method using
+            <code class="literal">this.<code class="varname">attrName</code>=<code class="varname">expression</code></code> or
+            made a required attribute using the <code class="literal">required="true"</code> option. </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1717"></a>6.4. Accessing attribute values from JavaScript</h3></div></div></div><p> Attributes can normally be referred to in class methods and expressions by their
+            name except when being initialized as above, in which case they must be referred to
+            using <code class="literal">this.</code>, in order to create the attribute in the element. </p><p> For example: </p><div class="example"><a name="id10552"></a><p class="title"><b>Example 29.26. attribute for internal flags</b></p><div class="example-contents"><pre class="programlisting">
+&lt;class name="myclass"&gt;
+  &lt;!-- 'foo' has an initial value of 1 --&gt;
+  &lt;attribute name="foo" value="1"/&gt;
+  &lt;!-- 'thing' is always four more than 'foo' --&gt;
+  &lt;attribute name="thing" value="foo + 4" when="always"/&gt;
+  &lt;!-- 'bar' is only declared, initialized below --&gt;
+  &lt;attribute name="bar"/&gt;
+
+  &lt;handler name="oninit"&gt;
+    &lt;!--
+      the attribute 'bar' will be created in the instance
+      sets its value to true
+      is appropriate for internal script flags
+    --&gt;
+    this.bar= true; 
+    &lt;!-- 
+      probably a mistake...
+      sets the value of attribute 'foo' to 4,
+      but does not update the constraint on 'thing'
+      use setAttribute, as below
+    --&gt;
+    this.foo = 4;            
+  &lt;/handler&gt;
+
+  &lt;method name="dothis"&gt;
+    if (bar) {
+      &lt;!--
+        sets the value of 'foo' to 6             
+        sends the event 'onfoo'
+        (which causes dependent constraints to be evaluated)
+        as a result 'thing' will equal 10
+      --&gt;
+      this.setAttribute("foo", 6);
+    }                
+  &lt;/method&gt;
+&lt;/class&gt;
+</pre></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1718"></a>6.5.  Defining <a class="indexterm" name="id10556"></a><code class="sgmltag-element">&lt;attribute&gt;</code> setters </h3></div></div></div><p> In many cases, specific code operations need to take place when an attribute is set.
+            For example, when the <a class="indexterm" name="id10560"></a><code class="sgmltag-attribute">width</code> attribute of a <a class="indexterm" name="id10563"></a><code class="sgmltag-element">&lt;view&gt;</code> is set, the view
+            needs to update the width of the parent view if clipping is set to false. Though it is
+            very convenient to simply handle the <a class="indexterm" name="id10566"></a><code class="literal">onwidth</code> event to execute the required code, there is no
+            guarantee as to order events will be called. This task is instead accomplished best
+            using the <a class="indexterm" name="id10569"></a><code class="methodname">setAttribute()</code> method of <a class="indexterm" name="id10573"></a><code class="sgmltag-element">&lt;view&gt;</code>, to set the width
+            attribute. </p><p> In the following example, the time between clicks is shown on a button. For every
+            click, the current time in milliseconds is stored in the time attribute. The custom
+            setter, <a class="indexterm" name="id10577"></a><code class="methodname">setTime()</code>, has been defined for the <a class="indexterm" name="id10581"></a><code class="sgmltag-attribute">time</code> attribute. </p><p> Normally, when an attribute is set by invoking <a class="indexterm" name="id10585"></a><code class="methodname">setAttribute()</code>, <a class="indexterm" name="id10589"></a><code class="methodname">setAttribute()</code> handles the tasks of setting the
+            value of the attribute, and sending the <code class="literal">onattribute</code> event. You can
+            change this behavior by using the <a class="indexterm" name="id10594"></a><code class="sgmltag-attribute">setter</code> attribute on the <a class="indexterm" name="id10597"></a><code class="sgmltag-element">&lt;attribute&gt;</code> tag. You would
+            then define a method that has the name of the setter. </p><p> When defining a custom setter for an attribute, you are responsible for setting the
+            value and sending the <a class="indexterm" name="id10601"></a><code class="sgmltag-attribute">onattribute</code> event, as shown in the
+            example below. If the <code class="literal">on<code class="varname">attribute</code></code> event isn't sent
+            in the custom defined settter, registered
+            <code class="literal">on<code class="varname">attribute</code></code> events will not fire, and constraints
+            tied to the attribute will not be updated when the value of the attribute is changed. </p><div class="example"><a name="id10608"></a><p class="title"><b>Example 29.27. Defining an explicit setter method</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="40" width="100%"&gt;
+  &lt;button text="click me"&gt;
+    &lt;attribute name="time" setter="setTime(time)"/&gt; 
+    &lt;attribute name="ontime" value="null"/&gt; 
+
+    &lt;handler name="onclick"&gt; 
+      Debug.debug('inited: %w', this.isinited); 
+      var now = (new Date()).getTime();
+      this.setAttribute("time", now); 
+    &lt;/handler&gt; 
+
+    &lt;method name="setTime" args="t"&gt; 
+      if (!this.isinited) {                                          //catch the case where this.time is being 
+        this.time = t;                                               //initialized during object instantiation
+        return;
+      } 
+
+      if (typeof this.time == "undefined" || this.time == null) {    //handle first set of time
+        this.setAttribute("text", "first click registered");
+      } 
+      else {
+        var diff = t - this.time;                                    //handle any additional setting of time
+        this.setAttribute("text", diff + " milliseconds between clicks");             
+      } 
+      this.time = t;                                                 //as this is the declared setter for 
+                                                                     //this.time, we have to set it
+
+      if (ontime)                                                    //required to update constraints and 
+        this.ontime.sendEvent();                                     //fire ontime event 
+    &lt;/method&gt; 
+  &lt;/button&gt; 
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_25.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_25.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1719"></a>6.6. oninit event vs init method</h3></div></div></div><p> Instances and subclasses of <a class="indexterm" name="id10613"></a><code class="classname">LzNode</code>, including <a class="indexterm" name="id10616"></a><code class="classname">LzView</code> and classes defined using <a class="indexterm" name="id10619"></a><code class="sgmltag-element">&lt;class&gt;</code><em><span class="remark">[unknown tag]</span></em>
+             , have both an <a class="indexterm" name="id10623"></a><code class="methodname">init()</code> method and an <a class="indexterm" name="id10627"></a><code class="literal">oninit</code> event. Since you do not have control over the
+            order that events are fired, you should put all initialization code in the <a class="indexterm" name="id10630"></a><code class="methodname">init()</code> method (and not, for example, in a handler
+            for <code class="literal">oninit</code>). </p><p> If you declare an <a class="indexterm" name="id10636"></a><code class="methodname">init()</code> method in a view or class, you are
+            effectively overriding the <a class="indexterm" name="id10640"></a><code class="methodname">init()</code> method in that object's super class. The <a class="indexterm" name="id10644"></a><code class="sgmltag-element">&lt;view&gt;</code> tag and all its
+            subclasses have important initialization code in the init method, and it is essential
+            that this code is executed when overriding <a class="indexterm" name="id10647"></a><code class="methodname">init()</code>. This is accomplished by using the
+               <code class="literal">super</code> keyword, which is a reference to the superclass. In the
+            example below, we override the init method in the <a class="indexterm" name="id10652"></a><code class="classname">button</code> class. Notice the call to
+               <code class="literal">super.init()</code>, which executes initialization code for the button.
+            The <a class="indexterm" name="id10656"></a><code class="methodname">init()</code> method for <a class="indexterm" name="id10660"></a><code class="classname">button</code> subsequently invokes
+            <code class="literal">super.init</code> on basebutton, and so on up to the execution of <a class="indexterm" name="id10664"></a><code class="methodname">LzNode.init()</code>. </p><div class="example"><a name="id10668"></a><p class="title"><b>Example 29.28. init() method vs oninit event</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="40" width="100%"&gt;
+  &lt;button&gt;
+    &lt;method name="init"&gt;
+      super.init(); //best practice to always call super.init() when declaring 
+                    //an init method
+      //do some init code here
+    &lt;/method&gt;
+    
+    &lt;handler name="oninit"&gt;
+      //this isn't fired in any particular order 
+      //use the init method instead
+    &lt;/handler&gt;
+  &lt;/button&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_26.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_26.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1720"></a>6.7. The keyword <code class="literal">this</code>
+         </h3></div></div></div><p> When setting variables local to the current class, node, or view, always refer to
+            those variables using the keyword <code class="literal">this</code>. </p><div class="example"><a name="id10675"></a><p class="title"><b>Example 29.29. Using "this" keyword</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="50" width="100%"&gt;
+   &lt;view x=" 10" height="30" width="30" bgcolor="red"
+   onclick="this.bringToFront()"/&gt;
+   &lt;view  height="30" width="30" bgcolor="blue"
+   onclick="this.bringToFront()"/&gt; 
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_27.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_27.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> Not using <code class="literal">this</code> can result in unpredictable results. </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1722"></a>6.8.  Different ways to get and set attributes </h3></div></div></div><p> There are four ways of getting and setting attributes in LZX, each with benefits and
+            drawbacks:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>Using <code class="methodname">setAttribute()</code> and the <code class="literal">.</code> operator</p></li><li class="listitem"><p>Using predefined "setters" for certain attributes, such as <a class="indexterm" name="id10689"></a><code class="methodname">onx()</code> and <a class="indexterm" name="id10693"></a><code class="methodname">ony()</code></p></li><li class="listitem"><p>using custom getter and setter methods, as explained above</p></li><li class="listitem"><p>Reading and writing attributes directly: that is, without using a setter or
+                  getter method</p></li></ul></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="setattribute"></a>6.8.1. setAttribute()</h4></div></div></div><p> The <span class="emphasis"><em>only</em></span> reliable way to set attributes is by invoking
+                  <code class="literal">setAttribute()</code> on the view, class, or node that contains the
+               target attribute. Invoking <a class="indexterm" name="id10706"></a><code class="methodname">setAttribute()</code> automatically fires the
+               associated 'on' event for the attribute in question. Having the associated event fire
+               is required for constraints tied to the attribute in question to function correctly. </p><div class="section"><div class="titlepage"><div><div><h5 class="title"><a name="id1721"></a>6.8.1.1. Setting attributes directly</h5></div></div></div><p>The only time you would set an attribute using `.` would be if you were the
+                  "owner" of the attribute (it is in a class or instance that you are writing). If
+                  the attribute is from a class that you are using or sub-classing, or an instance
+                  that is from code that you did not write (built-in, library, etc.) you
+                     <span class="emphasis"><em>must</em></span> use <code class="literal">setAttribute()</code> to set the
+                  value or you will surely break things.</p></div></div></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="introductory-classes.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.power.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="delegates.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 28. Classes </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 30. Delegates</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

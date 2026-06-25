@@ -1,0 +1,107 @@
+<library>
+
+    <class name="cdview" width="${parent.width}" height="82">
+
+        <resizelayout axis="x" spacing="8"/>
+        <view name="cover" datapath="SmallImage/URL/text()" y="7" width="50" height="50" stretches="both"
+            onmouseover="dragsmall.display(this, this.datapath.xpathQuery('text()'))"
+            onmouseout="dragsmall.hide()"
+            onmousedown="dragsmall.start()"
+            onmouseup="dragsmall.stopdrag(); this.itemDropped(parent.datapath);"
+            ondblclick="this.parent.getInfo()">
+            <attribute name="source" value="${this.data}"/>
+            <method name="itemDropped" args="dpath">
+                if (dragsmall.droppedInView(cart.parent.parent)) {
+                    cart.addItem(dpath);
+                } else if (dragsmall.droppedInView(wish.parent.parent)) {
+                    wish.addItem(dpath);
+                }
+            </method>
+        </view>
+
+        <view  y="7" options="releasetolayout" name="info">
+            <simplelayout axis="y" spacing="-3"/>
+            <text fontsize="12" fontstyle="bold" datapath="ItemAttributes/Title/text()"
+                  visible="${ width &gt; 40 }"
+                  multiline="true" name="title"
+                  width="${parent.width - 15}" fgcolor="#666699"/>
+            <text datapath="ItemAttributes/Artist[1]/text()" 
+                  visible="${ width &lt; parent.width - 5 &amp;&amp;
+                              parent.title.height &lt;40 }"
+                  resize="true"
+                  width="300"
+                  fgcolor="#666699"/>
+            <view fontsize="12" fontstyle="bold" 
+                  visible="${ parent.width &gt; 150 }"
+                  fgcolor="#666699">
+                <simplelayout axis="x" spacing="4"/>
+                <text>Our Price:</text>
+                <text datapath="Offers/Offer[1]/OfferListing/Price/FormattedPrice/text()" width="50"/>
+            </view>
+        </view>
+        <view y="${classroot.cover.height + 8}" 
+              x="${classroot.info.width &gt; this.width ? classroot.info.x : 0 }"
+              options="ignorelayout">
+            <simplelayout axis="x" spacing="4"/>
+            <mouseview resource="info_butt" onclick="classroot.getInfo()" 
+                       visible="${parent.wish.visible}"/>
+            <mouseview resource="cart_butt" width="54" height="18"
+                onclick="cart.addItem(classroot.datapath)"/>
+            <mouseview resource="wish_butt" width="54" height="18"
+                       name="wish"
+                       visible="${x + width &lt; classroot.width}"
+                onclick="wish.addItem(classroot.datapath)"/>
+        </view>
+
+        <method name="getInfo">
+            // Get more information about the current CD.
+            <![CDATA[
+                infoLoader.show();
+                var asin = this.datapath.xpathQuery("ASIN/text()");
+                // static build: per-ASIN detail file instead of ItemLookup
+                dsAsin.setAttribute('src', 'data/lookup/' + asin + '.xml');
+                dsAsin.doRequest();
+            ]]>
+
+        </method>
+
+    </class>
+
+
+    <class name="recommendationpanel" font="Arial,Helvetica"
+           fontsize="11" bgcolor="#CAD0EC" oninit="getRecommendations()">
+
+
+        <method name="getRecommendations">
+            <![CDATA[
+                // static build: the fixed 10-item recommendation set, pre-rendered
+                dsRecommend.setAttribute('src', 'data/recommend.xml');
+                dsRecommend.doRequest();
+            ]]>
+        </method>
+
+        <text y="20" x="10" fontstyle="bold" fontsize="16" 
+              fgcolor="#666699">Your Recommendations:</text>
+        <view x="20" y="46" width="${parent.width - x }">
+            <resizelayout axis="x" spacing="20"/>
+
+            <view options="releasetolayout">
+                <simplelayout axis="y" spacing="1"/>
+                <!-- Repeated view displaying the list of items matching the keyword search -->
+                <cdview datapath="dsRecommend:/ItemLookupResponse/Items/Item[1-5]"/>
+            </view>
+            <view options="releasetolayout">
+                <simplelayout axis="y" spacing="1"/>
+                <!-- Repeated view displaying the list of items matching the keyword search -->
+                <cdview datapath="dsRecommend:/ItemLookupResponse/Items/Item[6-10]"/>
+            </view>
+        </view>
+
+    </class>
+
+</library>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2009 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->

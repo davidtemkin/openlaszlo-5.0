@@ -1,0 +1,6 @@
+<library>
+  <class name="mywindow" extends="window"
+   title="MyTitle">
+    <button>Click me!</button>
+  </class>
+</library>

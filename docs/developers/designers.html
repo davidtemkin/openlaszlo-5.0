@@ -1,0 +1,90 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 3. OpenLaszlo for Designers</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.overview.html" title="Part I. Overview"><link rel="prev" href="language-preliminaries.html" title="Chapter 2. Language Preliminaries"><link rel="next" href="program-development.html" title="Chapter 4. Overview of OpenLaszlo Application Development"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 3. OpenLaszlo for Designers</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="language-preliminaries.html">Prev</a> </td><th width="60%" align="center">Part I. Overview</th><td width="20%" align="right"> <a accesskey="n" href="program-development.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="designers"></a>Chapter 3. OpenLaszlo for Designers</h2></div></div></div><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1396"></a>1. Overview</h2></div></div></div><p> This chapter discusses the OpenLaszlo platform from the point of view of the designer.
+   However your team is set up, somebody is responsible for the aesthetic experience of the
+   application you're building. This chapter is for them. We'll discuss OpenLaszlo's ability to
+   support designers and engineers in building innovative Internet applications. </p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1395"></a>1.1. Learning to Think Laszlorificly</h3></div></div></div><p> With OpenLaszlo technology, web application designers are freed from the familiar
+    limitations of static, linear, page-based task flow. Your visions of dynamic, data-driven,
+    concise and intelligent UI can become a reality. But you may need to change your thinking a
+    little bit, because things are possible with OpenLaszlo that aren't possible with most other
+    technologies. And while it is not necessary for you to learn to write code in order to be an
+    effective designer on an OpenLaszlo project, a familiarity with the basic structure and features
+    of the LZX language will help you understand how to approach your task. So we recommend that you
+    at least work through a few of the <a class="ulink" href="../developers/" target="_top">tutorials</a>. </p><p> Some thoughts on how OpenLaszlo is different as a web design technology:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>You have complete control of the end user experience. Most web design technologies cause
+      the application to look different depending on the OS and browser used to deliver it. This is
+      often a design challenge that can lead to unwanted compromises. With OpenLaszlo, especially
+      when you compile to SWF, you have control of every pixel and gesture.</p></li><li class="listitem"><p>Fast prototyping: OpenLaszlo offers a complete set of UI components that includes UI
+      controls supported by HTML (radio buttons, checkboxes, etc.) along with standard desktop UI
+      (windows, menus, tree control, tabs) and more. These components in the context of a concise
+      declarative XML for application layout and event-based interaction login allow for high
+      productivity. </p></li><li class="listitem"><p>Object oriented programming: You can organically move from prototyping to serious
+      application development though Laszlo's powerful class declarations that support full
+      inheritance. </p></li><li class="listitem"><p>In-page transactions: OpenLaszlo applications do not require a "page refresh" when you
+      get data from the server. This allows for data to be delivered to the user in a way that is
+      integrated seamlessly into the UI. It also allows for "ambient" data —data updates
+      asynchronously and is provided in context.</p></li></ul></div><p> When approaching a project, think about desktop applications that you were able to use
+    effortlessly and intuitively without ever picking up a manual. Recall a beautiful UI from some
+    Flash site and imagine it being successfully data-driven, scalable and easily modified. Spend
+    some time walking around the problem. Look at it sideways. Slice it into cross sections,
+    rearrange the pieces and then use those perceptions to drive your design. </p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1397"></a>2. Continuous interaction instead of page refresh</h2></div></div></div><p> Consider the task or tasks to be accomplished by the end-user, and the flow to completion.
+   One of the key benefits of using OpenLaszlo to build your project is its strength in
+   consolidating information through interaction and presentation. A process that might have taken
+   20 html pages to accomplish for the very patient user, might now be designed to occur within the
+   framework of a single "page" with small bits of information elegantly surfaced as needed. This
+   ability to present information in a useful, contextual manner, regardless of complexity, is the
+   foundation of a successful application. </p><div class="figure"><a name="id3090"></a><p class="title"><b>Figure 3.1. Continuous interaction</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/design_sec2_ill.jpg" alt="Continuous interaction"></div></div></div><br class="figure-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1398"></a>3. Design Process</h2></div></div></div><p> Design processes are unique to the experience and culture of a team. Overlapping skill sets
+   between designers who write code and engineers with design sensibility mean that there are often
+   no strict divisions of labor. Yet all teams need to spend time dissecting the problem,
+   brainstorming, and arriving at a unanimous understanding of, and agreement on the solution. </p><p> These are some time-prooven steps in the process: </p><div class="orderedlist"><ol class="orderedlist compact" type="1"><li class="listitem"><p><a class="indexterm" name="id3102"></a><em class="glossterm">Wire-frames</em>. Wire-frame examples of layouts will help begin
+     the visualization of the pieces as a whole.</p> These are basic definitions of placement for
+    the UI; often including navigation, branding and content. </li><li class="listitem"><p><a class="indexterm" name="id3107"></a><em class="glossterm">Storyboards</em>. Once a structure has been defined, storyboards
+     of both general and detailed task flow help to refine and communicate the vision of
+     interactivity. Storyboards can begin as simple flowcharts and evolve into pictures of each
+     state of each element. The complexity of the problem and solution will likely dictate how
+     obsessive the storyboarding needs to be.</p></li><li class="listitem"><p><a class="indexterm" name="id3112"></a><em class="glossterm">Animations</em>. Simple, linear animations of functionality and
+     process can help both engineers and designers evaluate and experiment with interactive
+     elements.</p></li><li class="listitem"><p><a class="indexterm" name="id3117"></a><em class="glossterm">Engineering prototypes</em>. Once all (or some subset) of these
+     are mapped and agreed upon, the engineering team can begin to block out the framework using
+     place-holder artwork or primitive shapes in LZX.</p></li></ol></div><div class="figure"><a name="id3120"></a><p class="title"><b>Figure 3.2. Design process</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/design_sec3_ill.jpg" alt="Design process"></div></div></div><br class="figure-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1399"></a>4.  How Does It Look? </h2></div></div></div><p> While engineering is busy developing the application's infrastructure, designers can resume
+   focus on the "look" of the application. Some designers prefer to have a fully flushed-out design
+   before any coding starts, but the reality of deadlines and the likelihood of iterative
+   modification means that visual design and production will likely happen in parallel to coding
+   efforts. Elemental design decisions need to be made. Are your users going to be more comfortable
+   with traditional UI elements, or is there room to experiment with new methods of representation,
+   interaction or display? Comps for the look and feel should be designed in the application you are
+   most comfortable with. </p><p>Bitmap and vector tools are equally viable, and resources of either format can be leveraged
+   when producing art resources.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1400"></a>5.  Using Resources </h2></div></div></div><p> Resources are the visual assets used by LZX code to construct the look of an application.
+   LZX supports numerous image formats, including bitmap (GIF, JPEG, PNG) and vector (SWF) files.
+   Animations and video (in the form of multi-frame SWF files) as well as audio (MP3 files) can also
+   be integrated into applications. Resources are often constructed of multiple pieces assembled to
+   create various UI and their states (up, down, rollover, etc). To enable these states LZX provides
+   multi-frame resources. It is also possible to use a single resource and affect its look via code
+   (eg: tinted, resized, repositioned, etc.). In the LZX language, color, tint, brightness and
+   opacity of resources can be modified programmatically. </p><div class="figure"><a name="id3132"></a><p class="title"><b>Figure 3.3. Using resources</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/design_sec5_ill.jpg" alt="Using resources"></div></div></div><br class="figure-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1401"></a>6.  Bitmap vs. Vector-Based Resource Files </h2></div></div></div><p> The decision to work with bitmap or vector files is dictated by the design and the runtime
+   to which you're compiling. If many complex, fixed-size objects, such as gradients, shadows and/or
+   alpha elements are used, bitmap resources are more appropriate. Vector files, though generally
+   physically smaller (file size), require more processing power to draw. The other major
+   consideration is whether the design requires the resizing of resources. If a resource must scale,
+   you should use a vector file, as it will do so without degrading. Scaling bitmap files to a size
+   larger than the original will cause interpolation and image degradation. </p><p> In general SWF files are the most flexible in applications compiled to run
+   in the Flash player. Although the obvious tool for creating SWF files is Macromedia Flash, many
+   vector-based applications, such as Adobe Illustrator allow export of files to this format. If the
+   option is given, SWF files should be saved as version 5.0. The exporter for Illustrator 10 does
+   not provide an option, but uses 5.0 by default.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>With the exception of the "stop" command, Flash ActionScript should not be used in SWF
+    files included in LZX.</p></div><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1402"></a>7.  Fonts </h2></div></div></div><p> Your options with regard to fonts differ greatly depending on whether the application will
+   be compiled to SWF or DHTML. In applications compiled to SWF, you have the option to include
+   virtually whatever font you like within the application. Applications that are to be compiled to
+   DHTML, on the other hand, are limited to those fonts that are commonly found in all runtime
+   environments (that is, all supported browsers and operating systems). </p><p> OpenLaszlo supports all True Type Format (TTF) fonts. In applications
+   compiled to SWF, embedded fonts ensure that the appearance of type within your application will
+   be consistent across all browsers and operating systems. </p><p>The default font in OpenLaszlo applications is the Ultra Pixel Font "Verity". The Flash
+   Plugin (which is responsible for rendering LZX files) displays small outline fonts poorly so
+   designers frequently use bitmap (aka pixel) fonts at small sizes (usually less than 12pt). Bitmap
+   fonts circumvent the rendering problem by eliminating anti-aliasing. Though quite legible,
+   traditional bitmap fonts lose the nuances of traditional typography. Ultra Pixel Fonts employ
+   fixed anti-aliasing, which maximizes legibility while retaining smooth characters and distinct
+   form. Verity was designed to mimic the Bitstream outline font "Vera" (also included in the
+   OpenLaszlo Server). </p><div class="figure"><a name="id3148"></a><p class="title"><b>Figure 3.4. Fonts</b></p><div class="figure-contents"><div class="mediaobject"><img src="images/design_sec7_ill.jpg" alt="Fonts"></div></div></div><br class="figure-break"><p> At larger sizes, Vera can be seamlessly integrated with Verity. Bitmap fonts such as Verity
+   only render correctly when specified at 8pt. The Verity TTF file (9pt or 11pt) must be used to
+   change size. Verity contains an unaccented subset of characters; for the full Windows Western
+   Unicode font set, use VerityPlus, which includes accented European characters. The Bitstream font
+   Vera was released as an open source font for the Gnome Project. The Ultra Pixel font Verity was
+   built by Christopher Lowery using technology produced by Truth in Design.</p><p> For more on fonts, see <a class="ulink" href="../developers/fonts.html" target="_top">OpenLaszlo Application Developer's Guide</a>.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1403"></a>8. Designing Custom Components</h2></div></div></div><p>For details on designing user-interface components in OpenLaszlo, see <a class="xref" href="custom-components.html" title="Chapter 34. Designing Custom Components">Chapter 34, <i>Designing Custom Components</i></a>. </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="language-preliminaries.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.overview.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="program-development.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 2. Language Preliminaries </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 4. Overview of OpenLaszlo Application Development</td></tr></table></div></body></html>

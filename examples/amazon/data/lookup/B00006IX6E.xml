@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ItemLookupResponse><Items>
+  <Request><IsValid>True</IsValid></Request>
+  <Item>
+    <ASIN>B00006IX6E</ASIN>
+    <SmallImage><URL>data/covers/B00006IX6E.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B00006IX6E.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B00006IX6E.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>Bolshoi Theatre Orchestra</Artist>
+      <Manufacturer>Melodiya</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>1997-09-16</ReleaseDate>
+      <Title>Swan Lake Suite</Title>
+      <ListPrice><Amount>1298</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$12.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$6.99</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$3.50</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$9.99</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Tchaikovsky’s shimmering ballet score in a sweeping, idiomatic performance.</Content></EditorialReview></EditorialReviews>
+  </Item>
+</Items></ItemLookupResponse>

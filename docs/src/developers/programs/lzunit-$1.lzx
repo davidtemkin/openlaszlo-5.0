@@ -1,0 +1,28 @@
+
+<canvas debug="true" width="100%">
+  <debug y="150"/>
+  <include href="lzunit"/>
+
+  <TestSuite>
+    <TestCase>
+      <attribute name="prop1" value="'foo'" when="once"/>
+      <text name="mytext" width="200" bgcolor="blue" text="LzUnit example"/>
+
+      <method name="testsuccess">
+        assertEquals(prop1, 'foo')
+      </method>
+      <method name="testfailure">
+        assertFalse(mytext.multiline, "This is not a multiline text field")
+      </method>
+      <method name="addTests"> 
+          this.addTest("testsuccess");
+          this.addTest("testfailure");
+          this.addTest("testerror");
+      </method> 
+    </TestCase>
+  </TestSuite>
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

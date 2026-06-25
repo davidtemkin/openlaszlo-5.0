@@ -1,0 +1,46 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;method&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>method<span class="ang">&gt;</span></h1><p class="short">Attaches a function or event handler to an object or class.</p>
+        <p>Attaches a method to the object that contains this element. The method must have a
+            <code>name</code>.</p>
+
+        <p>The <code>name</code> attribute allows the method to be invoked from JavaScript
+          with this name. For example, if a method is defined via:</p>
+
+        
+        <pre><code>
+&lt;view id="obj"&gt;
+  &lt;method name="f" args="a, b"&gt;
+    return a+b;
+  &lt;/method&gt;
+&lt;/view&gt;
+</code></pre>
+        
+
+        <p>then script code can invoke <code>obj.f(1, 2)</code> to add two numbers.</p>
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">allocation</td><td class="ty">"instance" | "class"</td><td class="ty">"instance"</td><td>One of: <dl>
+                  <dt>
+                    <code>class</code>
+                  </dt>
+                  <dd>The attribute will be an attribute of the class; to refer to it, you say
+                      <code>lz.classname.attributename</code>.</dd>
+                  <dt>
+                    <code>instance</code>
+                  </dt>
+                  <dd>Each instance will have a method with the specified properties
+                    (<code>name</code>, or <code>args</code>).</dd>
+                </dl>
+                <p>You can set <code>allocation</code> to <code>class</code> to get
+                  static attributes. Static properties are attached to the class itself, for example
+                    <code>lz.classname</code>.</p>
+                <pre><code>&lt;attribute name="allowed" value="false" type="boolean" allocation="class" /&gt;</code></pre>
+              </td></tr><tr><td class="nm">args</td><td class="ty">string</td><td class="ty"/><td>The parameter names of this method. The value of this attribute is a
+                comma-separated list of JavaScript identifiers.</td></tr><tr><td class="nm">name</td><td class="ty">token</td><td class="ty"/><td>The name of a variable that will be set to this object when the application is
+                started. If this element is directly within a <a >canvas</a> or <a href="">library</a> element, the global
+                variable and the canvas property with this name will be set to this object. If this
+                element is within another object, that object's property with this name will be set
+                to this object.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

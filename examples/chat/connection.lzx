@@ -1,0 +1,117 @@
+<!-- Persistent-connection client for DHTML — the LzConnection that OpenLaszlo only
+     ever shipped for Flash. Wraps a browser-native WebSocket and reproduces the
+     original API/behavior (login/connect/disconnect/logout + sendMessage/getList +
+     onconnect/ondisconnect/onerror/onuserdisconnect/onmessage/onuserconnect/onlist),
+     talking to the relay's connection server (connection.mjs). DHTML only. -->
+<library>
+<class name="lzconnection" extends="node">
+    <!--- WebSocket endpoint (relay connection server); ?app=<group>. -->
+    <attribute name="url" value="" type="string"/>
+    <attribute name="app" value="chat" type="string"/>
+    <!--- Receive userdisconnect notifications for the group. -->
+    <attribute name="receiveuserdisconnect" value="true" type="boolean"/>
+    <attribute name="connected" value="false" type="boolean"/>
+    <attribute name="username" value="" type="string"/>
+    <attribute name="_ws" value="null"/>
+
+    <!-- lifecycle / message events -->
+    <event name="onlogin"/>          <!-- (status:String) -->
+    <event name="onconnect"/>
+    <event name="ondisconnect"/>
+    <event name="onlogout"/>
+    <event name="onerror"/>          <!-- (message:String) -->
+    <event name="ontimeout"/>
+    <event name="onuserdisconnect"/> <!-- (user:String) -->
+    <event name="onmessage"/>        <!-- ({operation,from,body}) -->
+    <event name="onuserconnect"/>    <!-- (from:String) -->
+    <event name="onlist"/>           <!-- (users:Array) -->
+
+    <handler name="oninit"><![CDATA[
+        if (! $dhtml) return;
+        if (! this.url) {
+            // default to the relay connection server on this origin
+            var loc = global.window.location;
+            var scheme = loc.protocol === 'https:' ? 'wss:' : 'ws:';
+            this.url = scheme + '//' + loc.host + '/api/connection';
+        }
+    ]]></handler>
+
+    <!--- Open the socket. Resolves login() once open. @keywords private -->
+    <method name="_open" args="onopen"><![CDATA[
+        if (! $dhtml) return;
+        var self = this;
+        var ws = new global.window.WebSocket(this.url + '?app=' + encodeURIComponent(this.app));
+        this._ws = ws;
+        ws.onopen = function () { if (onopen) onopen(); };
+        ws.onerror = function () { if (self.onerror) self.onerror.sendEvent('connection error'); };
+        ws.onclose = function () {
+            var was = self.connected;
+            self.setAttribute('connected', false);
+            if (was && self.ondisconnect) self.ondisconnect.sendEvent();
+        };
+        ws.onmessage = function (e) {
+            var m; try { m = global.window.JSON.parse(e.data); } catch (err) { return; }
+            self._dispatch(m);
+        };
+    ]]></method>
+
+    <!--- Route an incoming server frame to the right event. @keywords private -->
+    <method name="_dispatch" args="m"><![CDATA[
+        var op = m.op;
+        if (op === 'login') {
+            if (this.onlogin) this.onlogin.sendEvent(m.status);
+        } else if (op === 'connect') {
+            this.setAttribute('connected', true);
+            if (this.onconnect) this.onconnect.sendEvent();
+        } else if (op === 'disconnect' || op === 'logout') {
+            this.setAttribute('connected', false);
+            if (op === 'logout' && this.onlogout) this.onlogout.sendEvent();
+            else if (this.ondisconnect) this.ondisconnect.sendEvent();
+        } else if (op === 'getList') {
+            if (this.onlist) this.onlist.sendEvent(m.users || []);
+        } else if (op === 'userdisconnect') {
+            if (this.onuserdisconnect) this.onuserdisconnect.sendEvent(m.user);
+        } else if (op === 'userconnect') {
+            if (this.onuserconnect) this.onuserconnect.sendEvent(m.from);
+        } else if (op === 'sendMessageDset') {
+            /* ack — ignored */
+        } else {
+            // any other operation is a delivered application message
+            if (this.onmessage) this.onmessage.sendEvent({ operation: op, from: m.from, body: m.body });
+        }
+    ]]></method>
+
+    <!--- Send a raw op to the server. @keywords private -->
+    <method name="_send" args="obj"><![CDATA[
+        if (this._ws && this._ws.readyState === 1) this._ws.send(global.window.JSON.stringify(obj));
+    ]]></method>
+
+    <!--- Log in (opens the socket if needed), then fire onlogin with the status. -->
+    <method name="login" args="user, password"><![CDATA[
+        if (! $dhtml) return;
+        this.setAttribute('username', user);
+        var self = this;
+        this._open(function () { self._send({ op: 'login', user: user, password: password }); });
+    ]]></method>
+
+    <!--- Join the group (presence). Fires onconnect. -->
+    <method name="connect"> this._send({ op: 'connect' }); </method>
+    <!--- Leave the group. Fires ondisconnect. -->
+    <method name="disconnect"> this._send({ op: 'disconnect' }); </method>
+    <method name="logout"><![CDATA[
+        this._send({ op: 'logout' });
+        if (this._ws) { try { this._ws.close(); } catch (e) {} }
+    ]]></method>
+
+    <!--- Send a message to target ("*" = everyone) with an operation name; recipients
+          receive it via onmessage with that operation. -->
+    <method name="sendMessage" args="target, body, operation"><![CDATA[
+        this._send({ op: 'sendMessage', target: target, operation: operation || 'message', body: body });
+    ]]></method>
+    <!--- Request the member list; result arrives via onlist. -->
+    <method name="getList" args="target"> this._send({ op: 'getList', target: target || '*' }); </method>
+
+    <!--- No-op auth param setter (kept for API compatibility with the original). -->
+    <method name="setAuthParam" args="name, value"/>
+</class>
+</library>

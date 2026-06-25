@@ -1,0 +1,268 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 27. Constraints</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.power.html" title="Part IV. In Depth"><link rel="prev" href="views.html" title="Chapter 26. Views"><link rel="next" href="introductory-classes.html" title="Chapter 28. Classes"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 27. Constraints</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="views.html">Prev</a> </td><th width="60%" align="center">Part IV. In Depth</th><td width="20%" align="right"> <a accesskey="n" href="introductory-classes.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="constraints"></a>Chapter 27. Constraints</h2></div></div></div><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1662"></a>1. Constraints defined</h2></div></div></div><p>In LZX, a <a class="indexterm" name="id9238"></a><em class="glossterm">constraint</em> is an attribute whose value is a function of one or
+   more other attribute's value(s).</p><p>Constraints help you quickly create dependencies without writing a lot of code. You can
+   specify that certain views are the same size or positioned relative to one another. Specific
+   elements can appear only under certain conditions; and those conditions may be declared with a
+   simple expression. Constraints may be used for non-visual attributes as well.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>You can only use constraints with read/write attributes.</p></div><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1667"></a>2. Syntax for creating and removing constraints</h2></div></div></div><p>Constraints may be created as follows:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>in a tag, using the ${} syntax to tie the value of one attribute to that of another (this
+     is the preferred method, and the most simple)</p></li><li class="listitem"><p>in script, using the <a class="indexterm" name="id9252"></a><code class="methodname">applyConstraintMethod()</code> method</p></li><li class="listitem"><p>in script, using delegates</p></li></ul></div><p>These are described in turn below.</p><p>There is no method for removing constraints. Therefore if you have a constraint that you
+   wish to sometimes be in force and other times not be in force, you should use <a class="indexterm" name="id9260"></a><code class="sgmltag-element">&lt;state&gt;</code><em><span class="remark">[unknown
+    tag]</span></em>
+    s.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1663"></a>2.1. Creating Constraints in Tags</h3></div></div></div><p>The syntax for coding a constraint is:</p><pre class="programlisting">$<em class="replaceable"><code>when</code></em>{<em class="replaceable"><code>expression</code></em>}</pre><p>where:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p><code class="literal">$</code> is the token indicating a constraint.</p></li><li class="listitem"><p><code class="literal">
+       <em class="replaceable"><code>when</code></em>
+      </code> is an optional compiler directive, and is one of:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><code class="literal">immediately</code>: evaluated at load time; it is the default, but should only be
+       used for constant expressions.
+       <code class="literal">$immediately{<em class="replaceable"><code>expression</code></em>}</code> is the same as <code class="literal">
+        <em class="replaceable"><code>expression</code></em>
+       </code>.</li><li class="listitem"><code class="literal">once</code>: evaluated at initialization time; it can refer to other
+       nodes that precede this one. <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>A <code class="literal">$once</code> constraint is an optimization: by using it you are telling
+         the compiler <span class="emphasis"><em>not</em></span> to track changes in the values the constraint depends
+         on. If the value depends on another constraint (including CSS constraints), which
+          <span class="emphasis"><em>does</em></span> have dependencies in both applicability and value, the
+          <code class="literal">$once</code> optimization is invalid.</p></div></li><li class="listitem"><code class="literal">always</code>: will track changes in the values referred to.
+         <code class="literal">$always{<em class="replaceable"><code>expression</code></em>}</code> can be abbreviated to
+         <code class="literal">${<em class="replaceable"><code>expression</code></em>}</code>. <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>An <code class="literal">always</code> constraint will only work on an object that is a subclass
+         of <code class="literal">lz.Eventable</code>; that is, an object that knows how to send an event. You
+         cannot use an <code class="literal">always</code> event on an object that is not a subclass of
+          <code class="literal">lz.Eventalble</code>. For example, you cannot use an <code class="literal">always</code>
+         constraint on <code class="literal">lz.Browser.getInitArg()</code>; you must use a <code class="literal">once</code>
+         constraint. For example, see <a class="xref" href="browser-integration.html#queryparameters" title="6.1. Query Parameters">Section 6.1, “Query Parameters”</a> in the <span class="emphasis"><em>Browser
+          Integration</em></span> chapter.</p></div></li></ul></div></li><li class="listitem"><p><code class="literal">{</code> and <code class="literal">}</code> are tokens delimiting the expression to be
+      evaluated</p></li><li class="listitem"><p><code class="literal">
+       <em class="replaceable"><code>expression</code></em>
+      </code> is a JavaScript expression</p></li></ul></div><p>The following example shows the use of constraints in tags:</p><div class="example"><a name="id9319"></a><p class="title"><b>Example 27.1. Constraints in tags</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;canvas height="160" width="100%"&gt;
+    &lt;simplelayout spacing="5" /&gt;
+    &lt;slider id = "m" value="25" minvalue="0" maxvalue="100" /&gt;
+    &lt;text text = "$immediately{'immediately: ' + (m?m.value:'undefined')}" /&gt;
+    &lt;text text = "$once{'once: ' + (m?m.value:'undefined')}" /&gt;
+    &lt;text text = "$always{'always: ' + (m?m.value:'undefined')}" /&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+  </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/tag_constraints.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/tag_constraints.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Here's what the different values for <code class="literal">when</code> do:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><code class="literal">immediately</code>: undefined, because the slider does not exist until the program
+     runs. If you run this example with the debugger on, you will see a warning.</li><li class="listitem"><code class="literal">once</code>: set to the slider value when the program loads.</li><li class="listitem"><code class="literal">always</code>: track changes in the slider value.</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1664"></a>2.2. Creating constraints from script</h3></div></div></div><p class="fixme">
+    <em><span class="remark"><span class="para-label">FIXME: </span> note the lousy explanation
+     below </span></em>
+   </p><p>The following example uses the <a class="indexterm" name="id9336"></a><code class="methodname">applyConstraintMethod()</code> method inherited from <a class="indexterm" name="id9340"></a><code class="classname">lz.node</code> in order to create a constraint at runtime. You'll
+    see that the <code class="literal">setAttribute()</code> method has the same effect as the simple
+    expression <code class="literal">y=${m.y}</code>
+   </p><div class="example"><a name="id9345"></a><p class="title"><b>Example 27.2. Runtime constraints with applyConstraintMethod</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas width="100%"&gt; 
+  &lt;view x="250" width="20" height="20" bgcolor="red" y="${m.y}"/&gt; 
+  &lt;view x="300" width="20" height="20" bgcolor="blue"&gt; 
+    &lt;handler name="oninit"&gt; 
+      var d = [m, "y"]; 
+      this.applyConstraintMethod("myConstraintMethod", d); 
+    &lt;/handler&gt; 
+    &lt;method name="myConstraintMethod" args="ignore"&gt; 
+      this.setAttribute("y", m.y); 
+    &lt;/method&gt; 
+  &lt;/view&gt; 
+  &lt;window id="m" x="10" title="Drag me" width="160" height="20"/&gt; 
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/constraints-_1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/constraints-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p><code class="literal">myConstraintMethod</code> is a callback function that is required for the <a class="indexterm" name="id9350"></a><code class="methodname">applyConstraintMethod()</code> method. <code class="varname">d</code> is an
+    array consisting of a pointer to a reference node, and the attribute to bind to.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1665"></a>2.3. Delegates and constraints</h3></div></div></div><p>OpenLaszlo applications can use something called a <em class="glossterm">delegate</em> in
+    script to associate a method or any global function with an event. When the event is triggered,
+    the method is called.</p><p> The above constraint expression could also be written in script as: </p><div class="informalexample"><pre class="programlisting">
+    &lt;handler name="oninit"&gt;
+      var y_del = new LzDelegate(this, "myConstraintMethod");
+      y_del.register(m, "ony");
+    &lt;/handler&gt; 
+    &lt;method name="myConstraintMethod" args="newValue"&gt;
+      this.setAttribute("y", m.y); 
+    &lt;/method&gt;
+</pre></div><p> You can read more about delegates in <a class="xref" href="delegates.html" title="Chapter 30. Delegates">Chapter 30, <i>Delegates</i></a>. </p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1666"></a>2.4. States: a quick look</h3></div></div></div><p>States are a convenient way to set and remove constraints at runtime.</p><p>You create states using the <a class="indexterm" name="id9368"></a><code class="sgmltag-element">&lt;state&gt;</code><em><span class="remark">[unknown tag]</span></em>
+     tag, for example:</p><div class="example"><a name="id9372"></a><p class="title"><b>Example 27.3. states and constraints</b></p><div class="example-contents"><pre class="programlisting">
+&lt;state name="flexistate"&gt;
+    &lt;attribute name="width" value="${parent.width}" /&gt;
+&lt;/state&gt;
+
+&lt;state name="boringstate" apply="false"&gt;
+    &lt;attribute name="width" value="50" /&gt;
+&lt;/state&gt;
+</pre></div></div><br class="example-break"><p>States are further explained in <a class="xref" href="states.html" title="Chapter 32.  States">Chapter 32, <i> States </i></a>.</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1669"></a>3. Constraints in action</h2></div></div></div><p>Whenever the value of an attribute changes, its <a class="indexterm" name="id9380"></a><code class="literal">on</code> event is generated. Because a constraint is an attribute whose
+   value is dependent upon the values of one or more other attribute(s), the value of the constraint
+   is recalculated whenever it receives the <a class="indexterm" name="id9383"></a><code class="literal">on</code> event for the attributes on which it depends. </p><p>Consider</p><div class="informalexample"><pre class="programlisting"> 
+&lt;view name="someView" 
+   width="${someAttribute + someOtherAttribute}" 
+   /&gt; 
+</pre></div><p>Then the value of <code class="literal">someView.width</code> would be recomputed whenever an <a class="indexterm" name="id9391"></a><code class="literal">onsomeAttribute</code> or <a class="indexterm" name="id9394"></a><code class="literal">onsomeOtherAttribute</code> event occurred.</p><p>So for example</p><div class="informalexample"><pre class="programlisting">
+&lt;view name="beatles" width="${this.paul.width + 28}"&gt;
+   &lt;view name="paul" onclick="clickhandler()"&gt;
+      &lt;!-- clickhandler method here to increase paul's width based on user clicking mouse --&gt;
+   &lt;/view&gt;
+&lt;/view&gt;
+</pre></div><p>The width of <code class="varname">beatles</code> will increase or decrease as a function of
+    <code class="varname">paul</code>'s width; the expression <code class="literal">this.paul.width + 28</code> is a
+   constraint.</p><p>This is a trivial example, but it serves to make the point that in declaring the structure
+   of your objects in LZX you also declare the rules by which they will relate to each other.
+   Constraints are a fundamental concept in LZX programming, and learning to "think in LZX" is a
+   mostly a matter of learning to properly model your system's behavior in terms of the constraints
+   on its constituent parts.</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1668"></a>3.1. Modeling real system constraints</h3></div></div></div><p>You can think about constraints as modeling real system interrelationships. A constraint
+    expression can establish that two objects are connected.</p><p>In the example below, the visibility of the blue square is connected to the value of the
+    checkbox. When you toggle the checkbox, the visibility of the blue square automatically switches
+    as well.</p><div class="example"><a name="id9409"></a><p class="title"><b>Example 27.4. An element appears when a checkbox is set</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="120" width="100%"&gt;
+  &lt;checkbox id="cb" text="Show Blue Square"/&gt;
+  &lt;view visible="${cb.value}"
+        width="30" height="30" bgcolor="blue"/&gt;
+  &lt;simplelayout/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/ex.constraints.1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/ex.constraints.1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>In the example below, the position of the blue square is connected to the position of the
+    mouse. If you move the mouse inside the canvas, the blue square will move as the mouse moves,
+    floating relative to the position of the mouse. In this case, the constraint expression includes
+    a method call, but it works in the same way as the simple attribute expression in the previous
+    example.</p><div class="example"><a name="id9413"></a><p class="title"><b>Example 27.5. Constrain to mouse position</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="120" width="100%"&gt;
+  &lt;view bgcolor="blue" width="40" height="40"
+        x="${parent.getMouse('x')}"
+        y="${parent.getMouse('y')}"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/ex.constraints.2.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/ex.constraints.2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>The constraint expression may be almost any Javascript expression. For example, you could
+    change the y value in the previous example to
+    <code class="literal">y="${immediateparent.getMouse('y')+10}"</code> and cause the blue square to float
+    below the mouse. If you centered the blue square at the mouse position by setting the y value
+    with <code class="literal">y="${immediateparent.getMouse('y') - this.width/2}"</code> — if the width of
+    the blue square changes, the y value with be updated to position the blue square relative to the
+    new width and the mouse position.</p><p> See <a class="link" href="constraints.html#constraints.functions">Constraints and Functions</a>, below, for
+    limitations on the types of expression you can use in constraints. </p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1670"></a>4. Events and Dependencies</h2></div></div></div><p>Every constraint has one or more dependencies. For example, the constraint expression:</p><div class="informalexample"><pre class="programlisting">
+width="${parent.width}"
+</pre></div><p>creates a dependency on the parent's width attribute. As explained in <a class="xref" href="methods-events-attributes.html" title="Chapter 29. Methods, Events, Handlers, and Attributes">Chapter 29, <i>Methods, Events, Handlers, and Attributes</i></a>, whenever an attribute is set by calling
+    <code class="literal">setAttribute('whatever', 4) </code> an <a class="indexterm" name="id9429"></a><code class="literal">onwhatever</code> event is sent. Following the above example for the <a class="indexterm" name="id9432"></a><code class="sgmltag-attribute">width</code> attribute, an <a class="indexterm" name="id9435"></a><code class="literal">onwidth</code> event is sent whether the attribute has been set with
+    <code class="literal">setAttribute, setWidth()</code> or by another constraint.</p><p>When you use a constraint expression, a function is automatically generated to set the value
+   of the attribute. That function is then called whenever an event is triggered on which the
+   constraint has a dependency.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1671"></a>5. Multiple Dependencies</h2></div></div></div><p>Constraints can have dependencies on multiple attributes. In the code below, the <a class="indexterm" name="id9443"></a><code class="sgmltag-attribute">width</code> attribute is dependent on the
+   immediateparent's <code class="literal">width</code> attribute and the parent's
+   <code class="literal">bordersize</code> attribute. When either attribute is set the <a class="indexterm" name="id9448"></a><code class="sgmltag-attribute">width</code> updates. Immediateparent.width is used
+   instead of parent.width, because immediateparent, in this case, is the interior view of the
+   window, while parent is the whole window.</p><div class="informalexample"><pre class="programlisting">
+width="${immediateparent.width - parent.bordersize * 2}"
+</pre></div><p>Experiment with the working example below to see multiple dependencies in action. Resizing
+   the window will resize the blue bar. You can also move the slider to adjust the border size.</p><div class="example"><a name="id9454"></a><p class="title"><b>Example 27.6. Multiple Dependencies</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="300" width="100%"&gt;
+  &lt;window width="400" height="200" resizable="true"&gt;
+    &lt;attribute name="bordersize" value="${editor.bordersize.value}"/&gt;
+    &lt;view y="20" name="editor" layout="axis:x; spacing:10; inset:10"&gt;
+      &lt;text y="-4" resize="true"&gt;bordersize:&lt;/text&gt;
+      &lt;slider name="bordersize" value="10"/&gt;
+    &lt;/view&gt;
+
+    &lt;view bgcolor="0xFFC834" y="80"
+          width="${immediateparent.width}" height="10" /&gt;
+    &lt;view x="${parent.bordersize}" y="80"
+             width="${immediateparent.width - parent.bordersize * 2}"
+             height="10" bgcolor="blue" /&gt;
+    
+  &lt;/window&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/constraints-_10.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/constraints-_10.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1672"></a>6. Circular Constraints</h2></div></div></div><p>A constraint loop exists when the value of an attribute <code class="varname">A</code> depends on
+    <code class="varname">B</code>, and <code class="varname">B</code> depends on <code class="varname">A</code>. It's actually a
+   very natural thing to do in LZX. For example, in the Laszlo application below, the
+   <code class="literal">y</code> values of the red and blue squares are constrained to each other. </p><div class="example"><a name="id9465"></a><p class="title"><b>Example 27.7. Circular constraints</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="120" width="100%"&gt;
+  &lt;include href="lz/slider.lzx"/&gt;
+  &lt;view name="redview" bgcolor="red"
+        width="40" height="40" x="${blueview.x - 300}"&gt;
+  &lt;/view&gt;
+  &lt;view name="blueview" bgcolor="blue"
+        width="40" height="40" x="${redview.x + 300}"&gt;
+  &lt;/view&gt;
+
+  &lt;slider x="10" y="50" value="50" onvalue="redview.setAttribute('x', this.value)"
+          showvalue="false" showrange="false"/&gt;
+  &lt;slider x="310" y="50" value="50" onvalue="blueview.setAttribute('x', this.value + 300)"
+          showvalue="false" showrange="false"/&gt;
+
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/constraints-_11.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/constraints-_11.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> How does it work? When you drag the red view to change its own y position, it sends an <a class="indexterm" name="id9469"></a><code class="literal">ony</code> event. The blue view is listening for the red view's <a class="indexterm" name="id9472"></a><code class="literal">ony</code> event and responds by updating its own y position. The red
+   view is listening for the blue view's <a class="indexterm" name="id9475"></a><code class="literal">ony</code> event; however, it doesn't respond to that event because an
+   event handler only gets called one time on each event.</p><p class="fixme">
+   <em><span class="remark"><span class="para-label">FIXME: </span> That above explanation is
+    pretty lame. </span></em>
+  </p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1676"></a>7. Performance Considerations</h2></div></div></div><p> Constraints are an effective way to write user interface code and in some cases to manage
+   non-visual application state. As with any code, you will want to understand the performance
+   implications, as well as when it is best to use constraints as opposed to alternate methods of
+   achieving similar effects. </p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1673"></a>7.1. Declaring When Constraints are to be evaluated</h3></div></div></div><p> Often you will want to use constraint expressions to create the initial state of your
+    application, but you don't need attributes to update dynamically while the application is in
+    use. In this case, you can improve startup time performance by declaring <code class="literal">when</code>
+    the expression should be evaluated. </p><p class="fixme">
+    <em><span class="remark"><span class="para-label">FIXME: </span> Need a table of values for
+     when </span></em>
+   </p><p>When you write a constraint using the <code class="literal">${...}</code> syntax (as in the example
+    below), <code class="literal">when="always"</code> is the default.</p><pre class="programlisting">
+&lt;view width="${parent.width}" height="10" bgcolor="yellow"/&gt;
+</pre><p>To optimize this expression for the case when the dependency will not change, you will want
+    to specify <code class="literal">when="once"</code>:</p><pre class="programlisting">
+&lt;view width="$once{parent.width}" height="10" bgcolor="yellow"/&gt;
+</pre><p>When declaring class attributes, the attribute is typically declared using an <a class="indexterm" name="id9499"></a><code class="sgmltag-element">&lt;attribute&gt;</code><em><span class="remark">[unknown tag]</span></em>
+     tag, where the <code class="literal">when</code> value may be declared
+    explicitly:</p><pre class="programlisting">
+&lt;class name="myclass"&gt;
+  &lt;attribute name="width" value="${parent.width}" when="once"/&gt;
+&lt;/class&gt;
+</pre><p> In this case if <code class="literal">
+     <em class="replaceable"><code>when</code></em>
+    </code> is not specified, the value is <code class="literal">immediately</code>, which means that it
+    initializes the attribute to the value of the expression when the enclosing element is defined.
+    The value must be a constant expression and cannot depend on any other objects.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1674"></a>7.2. When to use Layouts instead of Constraints</h3></div></div></div><p> Constraints can be very useful for positioning and determining the size of views. However,
+    if you have a large number of views updating based on the same information, it is better to use
+    a <a class="indexterm" name="id9512"></a><code class="sgmltag-element">&lt;layout&gt;</code><em><span class="remark">[unknown tag]</span></em>
+     instead of writing a complex constraint system. There are quite a few
+    layouts available in the OpenLaszlo platform, and furthermore you can write your own if none of
+    these meet your needs. See <a class="xref" href="layout-and-design.html" title="Chapter 17. Layout and Design">Chapter 17, <i>Layout and Design</i></a> for more on this subject. </p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1675"></a>7.3. When to use events and methods instead of constraints</h3></div></div></div><p>Generally, if you have a lot of different things that need to be updated based on a single
+    dependency, it is optimal to write a setter for the dependent attribute and in that setter take
+    appropriate actions. See <a class="xref" href="methods-events-attributes.html" title="Chapter 29. Methods, Events, Handlers, and Attributes">Chapter 29, <i>Methods, Events, Handlers, and Attributes</i></a> for more on this subject.</p><a name="constraints.functions"></a><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1677"></a>8. Constraints and Functions</h2></div></div></div><p> Take care when using JavaScript functions inside of constraints. </p><p> In general, there are only a limited number of LZX functions that have dependency functions
+   and can be expected to correctly participate in a constraint. No ECMAScript functions have
+   dependency functions, so none of them will work properly in a constraint. </p><p> More precisely, ECMAScript functions will work properly if they are stateless (they depend
+   only on the values of their arguments), so, for example, <code class="literal"> value="Math.max(parent.width,
+    parent.height)"</code> will do the right thing. (Any stateless function works.) However, many
+   apparently simple functions do not work within constrains. </p><p>Consider</p><pre class="programlisting">
+     &lt;param value="${escape(canvas.options.serialize())}"/&gt;
+</pre><p> in which the value of a parameter is constrained to that returned by a serializing
+   function. Upon inspection, we see that the dependencies of </p><pre class="programlisting">
+     value="${escape(canvas.options.serialize())}"
+</pre><p> will be calculated as:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>the dependencies of <code class="methodname">escape()</code> (which includes the value of
+      <code class="methodname">canvas.options.serialize()</code>)</p></li><li class="listitem"><p>the dependencies of <code class="methodname">serialize()</code></p></li></ul></div><p>In this case, <code class="literal">value</code> gets evaluated too early (i.e. before the dataset has
+   any data) and that's why you don't see any data. Instead, you would use <a class="indexterm" name="id9543"></a><code class="methodname">getValue()</code> which acts as a getter for <code class="sgmltag-element">&lt;param&gt;</code>, instead of using a constraint.</p><p> In evaluating dependencies in constraints, the OpenLaszlo compiler only looks at the 'tail'
+   of a chain, so if you have an expression a.b.c, only c will be depended on. For a function, the
+   function itself computes its dependencies, based on its arguments. In the case of
+   <code class="literal">escape</code>, it doesn't have a dependency function, nor does
+   <code class="literal">serialize</code>, so in this particular example, there will be no dependencies at
+   all. </p><p> EXCEPT that the constraint mechanism only looks at a tail, so for example NEITHER
+    <code class="literal">value="parent.selected.width"</code> NOR <code class="literal">value="Math.max(parent.width,
+    parent.selected.width"</code> will work if <code class="literal">parent.selected</code> changes value
+   (it's fine if <code class="literal">parent.selected</code> stays the same but
+    <code class="literal">parent.selected.width</code> changes). </p><p> The bottom line is that the constraint calculator is not really designed to be used in
+   functions. It works for many situations, but not for anything complex.</p><p></p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="views.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.power.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="introductory-classes.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 26. Views </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 28. Classes</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

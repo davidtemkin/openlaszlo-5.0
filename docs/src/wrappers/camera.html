@@ -1,0 +1,35 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+</head>
+<body>
+
+<!-- ===================================================================== -->
+<!-- = XML information goes here                                         = -->
+<!-- ===================================================================== -->
+<lzelement title="camera">
+    <lztier>Audio Video</lztier>
+    <lzcategory>audio video</lzcategory>
+    <lzshortdesc>
+        A camera that can be connected to a rtmpserver.
+    </lzshortdesc>
+    <lztag>extensions/av/camera.xml</lztag>
+</lzelement>
+
+<p>
+In order to use a camera in an LZX application, the <attribute>visible</attribute> and <attribute>allowed</attribute> attributes must be set to <code>true</code>.  The <attribute>visible</attribute> indicates the program's intent and the <attribute>allowed</attribute> attribute indicates the user's permission. To protect privacy, camera operation must be explicitly approved by the user.
+</p>
+
+<example class="program" extract="false">
+&lt;canvas height="100"&gt;
+  &lt;camera id="rtc" src="rtmp://localhost/test" autoconnect="false"/&gt;
+  &lt;text text="${rtc.status}"/&gt;
+  &lt;button onclick="rtc.connect()"&gt;Click to Connect&lt;/button&gt;
+&lt;/canvas&gt;
+</example>
+
+</body>
+</html>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2006 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

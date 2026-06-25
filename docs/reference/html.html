@@ -1,0 +1,47 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;html&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>html<span class="ang">&gt;</span></h1><p class="short">Adds the capability to display HTML pages.</p><p class="meta">Extends <code>view</code></p>
+                
+        <p>
+          <code>html</code>
+           is a 
+          <code>&lt;view&gt;</code>
+           that displays HTML pages.
+        </p>
+         
+        
+        
+        <p>
+          For best results in Flash, set the wmode attribute to 'transparent' when embedding the application.  See examples/extensions/html-swf.jsp for an example.  See examples/extensions/html.lzx for an example of embedding 
+          <code>html</code>
+           in a window.
+        </p>
+                
+        
+        
+          <pre><code>
+&lt;canvas&gt; 
+    &lt;view y="50" width="100%" height="300" bgcolor="blue" onmousedown="res.apply()" onmouseup="res.remove()"&gt;
+        &lt;resizestate name="res"/&gt;
+        &lt;dragstate name="drg"/&gt;
+        &lt;text width="100%" bgcolor="gray" onmousedown="parent.drg.apply()" onmouseup="parent.drg.remove()"&gt;Drag here&lt;/text&gt;
+        &lt;html id="ht" src="http://google.com/" x="15" y="15" width="${parent.width - 30}" height="${parent.height - 30}"/&gt;
+    &lt;/view&gt;
+&lt;/canvas&gt;
+        </code></pre>
+        
+                        
+        
+        <p>
+          <code>html</code>
+           extends 
+          <code>&lt;view&gt;</code>
+          ,
+        which is the fundamental visual class of LZX. Note that child views aren't supported.
+        </p>
+              
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">focusable</td><td class="ty">boolean</td><td class="ty">true</td><td/></tr><tr><td class="nm">framename</td><td class="ty">string</td><td class="ty"/><td>Sets the name/target of the html iframe.</td></tr><tr><td class="nm">history</td><td class="ty">expression</td><td class="ty">true</td><td>If true, the html tag will set browser history.</td></tr><tr><td class="nm">html</td><td class="ty">html</td><td class="ty"/><td>The HTML that the iframe starts out containing.</td></tr><tr><td class="nm">iframeid</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">loading</td><td class="ty">boolean</td><td class="ty">false</td><td>If true, the html tag is currently loading</td></tr><tr><td class="nm">minimumheight</td><td class="ty">number</td><td class="ty">0</td><td>The minimum height of the iframe: embedded swfs won't load with a size less than 1</td></tr><tr><td class="nm">minimumwidth</td><td class="ty">number</td><td class="ty">0</td><td>The minimum width of the iframe: embedded swfs won't load with a size less than 1</td></tr><tr><td class="nm">mouseevents</td><td class="ty">boolean</td><td class="ty">true</td><td>If true, attempt to listen for mouse events on the iframe.  Cross-domain security restrictions apply, so if the content loaded in the iframe is from a different domain, mouse events won't be sent.</td></tr><tr><td class="nm">ready</td><td class="ty">expression</td><td class="ty">false</td><td>If true, the html tag is ready to receive commands</td></tr><tr><td class="nm">rpcmethods</td><td class="ty">expression</td><td class="ty">null</td><td>Contains a list of method names available to call with callRPC().</td></tr><tr><td class="nm">scrollbars</td><td class="ty">boolean</td><td class="ty">true</td><td>If true, the html tag will have scrollbars.</td></tr><tr><td class="nm">shownativecontextmenu</td><td class="ty">boolean</td><td class="ty">true</td><td>If true, show native context menus in the iframe.  Otherwise, show OpenLaszlo context menus.  Note that this only works in DHTML because it's not possible to programatically display a context menu in Flash.</td></tr><tr><td class="nm">src</td><td class="ty">text</td><td class="ty"/><td>Sets the URL the html tag should load</td></tr><tr><td class="nm">target</td><td class="ty">expression</td><td class="ty">this.parent</td><td>Sets the view to listen to for x/y/width/height change events.  Defaults to this.parent.</td></tr><tr><td class="nm">visible</td><td class="ty">boolean</td><td class="ty">true</td><td>Sets the visibility of the html tag</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

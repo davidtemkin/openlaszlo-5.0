@@ -1,0 +1,127 @@
+<!--=======================================================================-->
+<!--                                                                       -->
+<!-- musiclib.lzx                                                          -->
+<!--                                                                       -->
+<!-- Laszlo Application Language (LZX) Example                             -->
+<!--                                                                       -->
+<!--=======================================================================-->
+
+<library>
+    <include href="base/multistatebutton.lzx"/>
+    <!-- OL4: redmond skin dropped; <include href="redmond/redmondbutton.lzx"/> -->
+
+    <!-- HTML5 audio player with the frame-based mediaplayer transport shims
+         (vframe/vtotalframes/vloadperc/onframe/stopAt/setVolume), analogous to dashvideoview.
+         The stock Flash sound (setSource/play) is a no-op in DHTML; this actually plays the mp3.
+         Uses loadAudio()/stopAt() (NOT setSource/stop, which are reserved LzView methods). -->
+    <class name="htmlaudioview" extends="view" width="1" height="1" visible="false">
+        <attribute name="playvolume" value="1.0" type="number"/>
+        <attribute name="_audio" value="null"/>
+        <attribute name="vframe" value="0" type="number"/>
+        <attribute name="vtotalframes" value="1" type="number"/>
+        <attribute name="vloadperc" value="0" type="number"/>
+        <event name="onframe"/>
+        <event name="onplay"/>
+        <event name="onstop"/>
+        <event name="onpause"/>
+        <event name="onend"/>
+        <handler name="oninit"><![CDATA[
+            if (! $dhtml) return;
+            var doc = global.window.document;
+            var a = doc.createElement('audio');
+            a.preload = 'metadata'; a.style.display = 'none'; doc.body.appendChild(a);
+            var self = this;
+            a.addEventListener('loadedmetadata', function () {
+                self.setAttribute('vtotalframes', Math.max(1, Math.round((a.duration || 0) * (canvas.framerate || 30))));
+                self.setAttribute('vloadperc', 1);
+            });
+            a.addEventListener('timeupdate', function () {
+                self.setAttribute('vframe', Math.round((a.currentTime || 0) * (canvas.framerate || 30)));
+                if (self.onframe.ready) self.onframe.sendEvent(self.vframe);
+            });
+            a.addEventListener('play',  function () { if (self.onplay.ready)  self.onplay.sendEvent(); });
+            a.addEventListener('pause', function () { if (self.onpause.ready) self.onpause.sendEvent(); });
+            a.addEventListener('ended', function () { if (self.onend.ready) self.onend.sendEvent(); if (self.onstop.ready) self.onstop.sendEvent(); });
+            a.volume = this.playvolume;
+            this._audio = a;
+        ]]></handler>
+        <method name="loadAudio" args="u"><![CDATA[ if (this._audio && u) this._audio.src = u; ]]></method>
+        <method name="play"><![CDATA[ if (this._audio) { var pr = this._audio.play(); if (pr && pr['catch']) pr['catch'](function(){}); } ]]></method>
+        <method name="pause"> if (this._audio) this._audio.pause(); </method>
+        <method name="seek" args="t"> if (this._audio) this._audio.currentTime = t; </method>
+        <method name="stopAt" args="f=null"><![CDATA[
+            if (f == null || f <= 1) { if (this._audio) { this._audio.pause(); this._audio.currentTime = 0; } this.setAttribute('vframe', 0); }
+            else { this.seek(f / (canvas.framerate || 30)); this.pause(); }
+            if (this.onstop.ready) this.onstop.sendEvent();
+        ]]></method>
+        <method name="setVolume" args="v">
+            this.setAttribute('playvolume', Math.max(0, Math.min(1, v)));
+            if (this._audio) this._audio.volume = this.playvolume;
+        </method>
+    </class>
+
+    <!-- LASZLO CLASSES -->
+    <class name="image">
+        <method name="applyData" args="d" >
+           if (d == null) { return; }
+            setSource( d );
+        </method>
+    </class>
+
+    <class name="music">
+        <view name="shadowBox" x="6" y="5" bgcolor="#826886" 
+                width="32" height="32"/>
+        <view name="icon" x="4" y="3" stretches="both" 
+                width="32" height="32"/>
+
+        <htmlaudioview id="audioviewer">
+            <method name="playMedia" args="mediaDatapath">
+                // load + play the mp3 via the HTML5 audio element
+                this.loadAudio(mediaDatapath.getNodeAttribute('url'));
+
+                //Load the icon into the current icon spot
+                parent.icon.setSource(
+                                mediaDatapath.getNodeAttribute('imageurl'));
+
+                // Set the text to display the info about the selected track
+                parent.player.setAttribute( "label" ,
+                                    mediaDatapath.getNodeAttribute('info'));
+                this.play();
+            </method>
+        </htmlaudioview>
+
+        <mediaplayer name="player" width="${parent.width}"  
+                     media="audioviewer"
+                     y="${parent.icon.height}" 
+                     label="Choose a track below."/>
+
+        <view name="media" 
+              width="${parent.width}" 
+              height="${parent.height-108}" 
+              bgcolor="#ffffff"
+              y="${parent.player.height+parent.player.y}"
+              clip="true">
+            <view width="${parent.width-10}">
+                <view datapath="music:/track" width="68" clip="true" height="68" >
+                    <image name="icon" datapath="@imageurl" 
+                           width="40" height="40" stretches="both" 
+                           onclick="popupwindow.setup(this.datapath,media,this,'audio');" 
+                           x="12" y="9"/>
+                    <text y="50" datapath="@label"
+                          resize="true" align="center"
+                          font="kroe" fontsize="8"
+                          onclick="popupwindow.setup(this.datapath,media,parent.icon,'audio');" >
+                    </text>
+                </view>
+                <wrappinglayout xspacing="8" yspacing="0"/>
+            </view>
+            <scrollbar axis="y" oninit="setColorTint(this,'8F748B',-70);"/>
+        </view>
+    </class>
+
+</library>    
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2004 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->

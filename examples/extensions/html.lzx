@@ -1,0 +1,153 @@
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007-2010 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<canvas width="100%" height="100%">
+    <include href="extensions/html.lzx"/>
+
+    <class name="browser" extends="window" resizable="true" bgcolor="silver">
+        <simplelayout axis="y" spacing="2"/>
+        <hbox width="100%">
+            <edittext name="txt" text="html-test.html" width="300"/> 
+            <button>Set HTML
+                <handler name="onclick">
+                    <![CDATA[
+                    if (classroot.main) {
+                        classroot.main.setAttribute('html', '<html><head><script>alert("hello script injection")</script></head><body><b>Setting HTML</b></body></html>');
+                    }
+                    ]]>
+                </handler>
+            </button> 
+            <button>Load
+                <handler name="onclick">
+                    if (classroot.main) {
+                        classroot.main.setAttribute('src', parent.txt.getText()); 
+                        classroot.main.setAttribute('visible', true); 
+                        classroot.main.callJavascript('setBGColor', null, '#ddddff'); 
+                    }
+                </handler>
+            </button> 
+            <button>Clear
+                <handler name="onclick">
+                    if (classroot.main) {
+                        classroot.main.setAttribute('visible', false);
+                        classroot.main.setAttribute('src', 'javascript:""'); 
+                    }
+                </handler>
+            </button> 
+            <button>Scroll
+                <handler name="onclick">
+                    if (classroot.main) {
+                        classroot.main.scrollBy(10, 10); 
+                    }
+                </handler>
+            </button> 
+            <button>Call method
+                <handler name="onclick">
+                    <![CDATA[
+                    if (classroot.main) {
+                        var color = classroot.main.callJavascript('setBGColor', null, '#ffff00'); 
+                        if (! (color === '#ffff00')) {
+                            if ($debug) {
+                                Debug.warn('Callback failed:', color);
+                            } else if ($dhtml) {
+                                if (window.console && console.error) {
+                                    console.error('Callback failed:', val);
+                                }
+                            }
+                        }
+                    }
+                    ]]>
+                </handler>
+            </button> 
+            <button>Call RPC
+                <handler name="onclick">
+                    <![CDATA[
+                    if (classroot.main) {
+                        var callback = function(val) {
+                            if (! (val === 'func3 called with color: #00ff00, arg2: arg2, arg3: arg3')) {
+                                if ($debug) {
+                                    Debug.warn('Callback failed:', val);
+                                } else if ($dhtml) {
+                                    if (window.console && console.error) {
+                                        console.error('Callback failed:', val);
+                                    }
+                                }
+                            }
+                        }
+                        classroot.main.callRPC('func3', callback, '#00ff00', 'arg2', 'arg3'); 
+                    }
+                    ]]>
+                </handler>
+            </button> 
+            <button>Call invalid method
+                <handler name="onclick">
+                    if (classroot.main) {
+                        classroot.main.callJavascript('nomethodwiththisname', null, '#ffff00'); 
+                    }
+                </handler>
+            </button> 
+            <button>Call invalid RPC
+                <handler name="onclick">
+                    <![CDATA[
+                    if (classroot.main) {
+                        classroot.main.callRPC('nomethodwiththisname', null, '#ffff00'); 
+                    }
+                    ]]>
+                </handler>
+            </button> 
+            <button>Invalid size
+                <handler name="onclick">
+                    if (classroot.main) {
+                        classroot.main.setWidth(-100);
+                    }
+                </handler>
+            </button> 
+            <button>Destroy
+                <handler name="onclick">
+                    if (classroot.main) {
+                        classroot.main.destroy();
+                    }
+                </handler>
+            </button> 
+            <button>Toggle native context menus (DHTML only)
+                <handler name="onclick">
+                    if (classroot.main) {
+                        classroot.main.setAttribute('shownativecontextmenu', ! classroot.main.shownativecontextmenu); 
+                    }
+                </handler>
+            </button> 
+            <text name="status" y="3" fontstyle="bold" visible="${classroot.main.loading}">Loading...</text>
+        </hbox>    
+        <html name="main" history="false" width="100%" height="${classroot.height - this.y - 44}" html="Hello Laszlo!">
+            <handler name="onmessage" args="m">
+                <![CDATA[
+                if ($debug) {
+                    Debug.debug('Got onmessage event:', m);
+                } else if ($dhtml) {
+                    if (window.console && console.log) {
+                        console.log('Got onmessage event:', m);
+                    }
+                }
+                ]]>
+            </handler>
+            <handler name="oninit">
+                this.bringToFront();
+            </handler>
+            <handler name="oniframe">
+                Debug.write('oniframe');
+            </handler>
+            <handler name="onsrc" args="s">
+                Debug.write('onsrc', s);
+            </handler>
+            <handler name="onload">
+                Debug.write('onload');
+            </handler>
+            <method name="mouseevent" args="ename">
+                super.mouseevent(ename);
+            </method>
+        </html>
+    </class>
+
+    <browser width="100%" height="100%"/>
+</canvas>    

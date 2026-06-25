@@ -1,0 +1,27 @@
+<canvas width="800" height="600">
+  <view name="mediaWindow" 
+        x="10" y="10"
+        width="200" height="150" 
+        clickable="true">
+
+    <simplelayout axis="y"/>
+
+    <view name="topRow">
+      <view name="topLeft"/>
+      <view name="topCenter"/>
+      <view name="topRight"/>
+    </view>
+
+    <view name="body">
+      <view name="leftSide"/>
+      <view name="content"/>
+      <view name="rightSide"/>
+    </view>
+
+    <view name="bottomRow">
+      <view name="bottomLeft"/>
+      <view name="bottomCenter"/>
+      <view name="bottomRight"/>
+    </view>
+  </view>
+</canvas>

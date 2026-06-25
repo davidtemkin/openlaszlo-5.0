@@ -1,0 +1,65 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;stableborderlayout&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>stableborderlayout<span class="ang">&gt;</span></h1><p class="short">Keeps the width of two outer sibling views constant, while stretching the innermost one.</p><p class="meta">Extends <code>layout</code></p>
+                      
+        <code>&lt;para&gt;
+          <code>stableborderlayout</code>
+           extends 
+          <code>&lt;layout&gt;</code>
+          , and is therefore 
+              responsible for arranging a set of views. Unlike like most layouts, 
+          <code>stableborderlayout</code>
+           only manipulates the first three 
+              subviews. All of the other subviews are ignored. 
+          <code>stableborderlayout</code>
+           is very similar to 
+              
+          <code>&lt;simplelayout&gt;</code>
+           in that it arranges views vertically or horizontally depending 
+              on the axis specified. The difference is that 
+          <code>stableborderlayout</code>
+           stretches the second view so that the total combined width 
+              (or height) of these three subviews matches the width (or height) of their parent.
+        &lt;/para&gt;</code>
+                      
+        <code>&lt;para&gt;
+          The following example demonstrates the differences between 
+          <code>simplelayout</code>
+           and 
+          <code>stableborderlayout.</code>
+        &lt;/para&gt;</code>
+                      
+        <pre class="example">
+&lt;canvas height="100"&gt;
+  &lt;view bgcolor="yellow" width="200"&gt;
+    &lt;view bgcolor="blue" height="30" width="50"/&gt;
+    &lt;view bgcolor="red" height="30" width="50"/&gt;
+    &lt;view bgcolor="blue" height="30" width="50"/&gt;
+    &lt;simplelayout axis="x" spacing="10"/&gt;
+  &lt;/view&gt;
+  
+  &lt;view y="40" bgcolor="yellow" width="200"&gt;
+    &lt;view bgcolor="blue" height="30" width="50"/&gt;
+    &lt;view bgcolor="red" height="30"/&gt;
+    &lt;view bgcolor="blue" height="30" width="50"/&gt;
+    &lt;stableborderlayout axis="x"/&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+              </pre>
+                      
+        <code>&lt;para&gt;
+          Note that there is no spacing parameter allowed in 
+          <code>stableborderlayout</code>
+          . Also, notice that each parent 
+              view has a width of 200. In the top view this information is ignored, which is why yellow can be seen extending past the last subview. 
+              In the bottom view no yellow can be seen because it is covered up by the blue and red views. Finally, take note that the second red 
+              view has no width assigned to it, because 
+          <code>stableborderlayout</code>
+           controls that value directly.
+        &lt;/para&gt;</code>
+                
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">axis</td><td class="ty">string</td><td class="ty"/><td>The axis in which this layout operates. One of 'x' or 'y'.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

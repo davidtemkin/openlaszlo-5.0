@@ -1,0 +1,136 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;basescrollbar&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>basescrollbar<span class="ang">&gt;</span></h1><p class="short">Provides non-visual aspects of scrollbar.</p><p class="meta">Extends <code>basecomponent</code></p>
+                    
+        <p>
+          If you want to create a scrollbar with a custom look, you can use
+            
+          <code>basescrollbar</code>
+           along with helper classes
+            
+          <code>basescrolltrack</code>
+          ,
+            
+          <code>basescrollthumb</code>
+          , and
+            
+          <code>basescrollarrow</code>
+          . These classes will allow you
+            to change resources, colors, and the position or presence of various
+            elements.
+            
+        </p>
+                    
+            
+            
+        <pre class="example">
+            &lt;canvas height="120" bgcolor="silver"&gt;
+              &lt;class name="myscrollbar" extends="basescrollbar" width="20"&gt;
+                &lt;view name="scrolltrack" width="100%" options="releasetolayout"&gt;
+                  &lt;basescrolltrack x="5" direction="-1"
+                      width="${parent.width-10}" height="${parent.thumb.y}"
+                      bgcolor="yellow"/&gt;
+                  &lt;basescrollthumb name="thumb" x="1" width="${parent.width-2}"
+                      bgcolor="green" /&gt;
+                  &lt;basescrolltrack x="5" direction="1"
+                      y="${parent.thumb.y+parent.thumb.height}"
+                      width="${parent.width-10}"
+                      height="${parent.height - parent.thumb.y - parent.thumb.height}"
+                      bgcolor="yellow"/&gt;
+                &lt;/view&gt;
+            
+                &lt;basescrollarrow direction="-1"
+                    x="2" bgcolor="yellow" &gt;
+                    &lt;text&gt;up&lt;/text&gt;
+                    &lt;/basescrollarrow&gt;
+            
+                &lt;basescrollarrow direction="1"
+                    x="2" bgcolor="yellow" &gt;
+                  &lt;text&gt;dn&lt;/text&gt;
+                  &lt;/basescrollarrow&gt;
+                &lt;resizelayout spacing="4"/&gt;
+              &lt;/class&gt;
+            
+              &lt;view x="10" y="10" bgcolor="white"
+                    width="200" height="100" clip="true"&gt;
+                &lt;text multiline="true" width="180"&gt;
+                  Man through his scientific genius has been able to draw distance and
+                  save time and space. He has been able to carry highways through the
+                  stratosphere. We read just the other day that a rocket plane went 1900
+                  miles in one hour. Twice as fast as the speed of sound. This is the
+                  new age. Bob Hope has described this new age, this jet age; it is an
+                  age in which planes will be moving so fast that we will have a
+                  non-stop flight from New York to Los Angeles, when you start out you
+                  might develop the hiccups and you will hic in New York and cup in Los
+                  Angeles. This is an age in which it will be possible to leave Tokyo on
+                  a Sunday morning and arrive in Seattle, Washington on the preceding
+                  Saturday night. When your friends meet you at the airport and ask what
+                  time did you leave Tokyo, you will have to say I left tomorrow. That
+                  is this new age.  We live in one world geographically. We face the
+                  great problem of making it one spiritually.
+                  &lt;br/&gt;
+                  Through our scientific means we have made of the world a
+                  neighborhood and now the challenge confronts us through our
+                  moral and spiritual means to make of it a brotherhood. We must
+                  live together, we are not independent we are interdependent. We
+                  are all involved in a single process. Whatever affects one
+                  directly affects all indirectly for we are tied together in a
+                  single progress. We are all linked in the great chain of
+                  humanity.
+                  &lt;br/&gt;
+                  Martin Luther King, Jr.
+                  &lt;br/&gt;
+                  11 August 1956
+                &lt;/text&gt;
+                &lt;myscrollbar/&gt;
+              &lt;/view&gt;
+            &lt;/canvas&gt;
+            </pre>
+                    
+            
+        <p>
+          Scrollbar arrows are optional or may be placed anywhere within the
+            scrollbar.  The thumb and track elements expect to be inside a view
+            named 
+          <code>scrolltrack</code>
+          .  It may seem odd that the
+            scrolltrack is placed twice, but this allows a more flexible
+            appearance as well as particular behaviors that you may want to
+            trigger differently when the user clicks the track to scroll up or
+            down.
+        </p>
+                    
+            
+        <p>
+          For another example of using 
+          <code>basescrollbar</code>
+          ,
+            you can look at lps/components/lz/scrollbar.lzx to see the code for
+            the lz 
+          <code>scrollbar</code>
+           class.  An easy way to make
+            your own scrollbar is to copy that file and replace resources and
+            modify attributes or views to suit your design goals.
+            
+        </p>
+                  Contains non-visual aspects of a scrollbar. Subclasses are expected to
+          define this.thumb and this.scrolltrack to reference the views that
+          perform those functions.
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">axis</td><td class="ty">string</td><td class="ty">y</td><td>Axis may be "x" or "y", controls the orientation and default
+              scrollattr</td></tr><tr><td class="nm">clipSizeDel</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">focusview</td><td class="ty">expression</td><td class="ty">null</td><td>The view to which the scrollbar should listen for focus 
+            events. If not set, it will be set to the scrolltarget
+            or the immediateparent of the scrollbar,
+            whichever is focusable</td></tr><tr><td class="nm">heightDel</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">mousewheelactive</td><td class="ty">boolean</td><td class="ty">false</td><td>If true, the mousewheel is active for the focusview.</td></tr><tr><td class="nm">mousewheelevent_off</td><td class="ty">string</td><td class="ty">onblur</td><td>The event that deactivates the mousewhen when sent from the focusview</td></tr><tr><td class="nm">mousewheelevent_on</td><td class="ty">string</td><td class="ty">onfocus</td><td>The event that activates the mousewhen when sent from the focusview</td></tr><tr><td class="nm">otherSizeAxis</td><td class="ty">string</td><td class="ty"/><td/></tr><tr><td class="nm">othersb</td><td class="ty">expression</td><td class="ty">null</td><td>Reference to the other scrollbar, if there is one.
+              This value is set oninit.</td></tr><tr><td class="nm">pagesize</td><td class="ty">number</td><td class="ty">null</td><td>The maximum distance to scroll, default: the height or width
+              of the scrollbar.</td></tr><tr><td class="nm">scrollable</td><td class="ty">expression</td><td class="ty">true</td><td>True if the scrolltarget is bigger than the containing view
+              therefore the scrollbar is active. The scrollbar appears disabled
+              when scrollable is false. You can make the scrollbar invisible
+              when there is nothing to scroll by setting visible="${scrollable}"</td></tr><tr><td class="nm">scrollattr</td><td class="ty">string</td><td class="ty"/><td>The attribute of the scrolltarget that is modified by the scrollbar,
+              default: value of axis attribute.</td></tr><tr><td class="nm">scrollmax</td><td class="ty">number</td><td class="ty">null</td><td>The maximum distance to scroll, default: the height or width
+              of the scrolltarget.</td></tr><tr><td class="nm">scrolltarget</td><td class="ty">expression</td><td class="ty">null</td><td>The view that is controlled by the scrollbar.</td></tr><tr><td class="nm">sizeAxis</td><td class="ty">string</td><td class="ty"/><td/></tr><tr><td class="nm">stepsize</td><td class="ty">expression</td><td class="ty">10</td><td>The amount that the scrolltarget is moved when the user clicks on
+              the scrolltrack or when the step method is called.</td></tr><tr><td class="nm">targetHeightDel</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">targetPosDel</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">thumb</td><td class="ty">expression</td><td class="ty">null</td><td/></tr><tr><td class="nm">usemousewheel</td><td class="ty">expression</td><td class="ty">true</td><td>If true, this scrollbar listens for mousewheel events</td></tr><tr><td class="nm">usetargetsize</td><td class="ty">expression</td><td class="ty">false</td><td>If scrollmax is not defined and this is true, use the target
+              height or width to determine scrollmax.</td></tr></table><h3>Methods</h3><ul class="methods"><li><code>onscrollmax()</code></li></ul>
+</main><script src="_nav.js"></script></body></html>

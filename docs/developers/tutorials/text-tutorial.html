@@ -1,0 +1,386 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 9. Introduction to Text and Fonts</title><link rel="stylesheet" type="text/css" href="../../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="../index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="../developers.tutorials.html" title="Part II. Tutorial Introduction"><link rel="prev" href="art_assets.html" title="Chapter 8. Introduction to Media and Art Assets"><link rel="next" href="scripting-tutorial.html" title="Chapter 10. Introduction to Scripting"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 9. Introduction to Text and Fonts</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="art_assets.html">Prev</a> </td><th width="60%" align="center">Part II. Tutorial Introduction</th><td width="20%" align="right"> <a accesskey="n" href="scripting-tutorial.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="text-tutorial"></a>Chapter 9. Introduction to Text and Fonts</h2></div></div></div><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1445"></a>1. Introduction</h2></div></div></div><p>This tutorial shows how to work with text and fonts in OpenLaszlo applications. Later chapters on 
+<a class="xref" href="../text.html" title="Chapter 21. Text Views">Chapter 21, <i>Text Views</i></a> and <a class="xref" href="../fonts.html" title="Chapter 23. Fonts">Chapter 23, <i>Fonts</i></a>
+explain more advanced topics.</p><p>
+Note that the behavior of LZX applications differs between applications compiled for the Flash Player (SWF format) and those compiled for DHTML. Certain APIs are available in only one or the other runtime. We'll call attention to these subjects in the sections that follow.
+</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="text-tutorial.basics"></a>2. The &lt;text&gt; tag</h2></div></div></div><p>Entering text is easy with the <a class="indexterm" name="id4038"></a><code class="sgmltag-element">&lt;text&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag:</p><div class="example"><a name="id4042"></a><p class="title"><b>Example 9.1. The simple &lt;text&gt; tag</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="100" width="100%"&gt;
+  &lt;text&gt;
+    Hello, World!
+  &lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>Text that is between the <a class="indexterm" name="id4046"></a><code class="sgmltag-element">&lt;text&gt;</code> tags is normalized, meaning that preceding and trailing whitespace is ignored, as are multiple whitespace elements between words. i.e. if you put several spaces between words, the output will still be a single space. If you put a line break in the text, it will be rendered as a single whitespace element (i.e. a space), and text fields will stretch to fit their contents.</p><p>The default OpenLaszlo font is used (LzTahoe), at its default size (10pt).</p><p>The <a class="indexterm" name="id4051"></a><code class="sgmltag-element">&lt;text&gt;</code> tag is a view, so it can be treated as one. It can be given all the default view attributes, such as width, x, y and so forth.</p><div class="example"><a name="id4054"></a><p class="title"><b>Example 9.2. &lt;text&gt; is a &lt;view&gt;</b></p><div class="example-contents"><pre class="programlisting">
+     
+&lt;canvas height="100" width="100%"&gt;
+  &lt;text x="15" y="20" width="150"&gt;
+    Hello, World!
+    We would like to welcome you to the launch of the OpenLaszlo 
+    Server.
+  &lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+     </pre></div></div><br class="example-break"><p>Notice how the text gets cut off because we set the width attribute? </p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="text-tutorial.multiline"></a>3. Multiline text</h2></div></div></div><p>Having multiline areas of text is just as easy. All we do is set the <a class="indexterm" name="id4062"></a><code class="sgmltag-attribute">multiline</code> attribute to <code class="literal">true</code>:</p><div class="example"><a name="id4066"></a><p class="title"><b>Example 9.3. Multiline text</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="100" width="100%"&gt;
+  &lt;text x="15" y="20" width="150" multiline="true"&gt;
+    Hello, World!
+    We would like to welcome you to the launch of the OpenLaszlo 
+    Server.
+  &lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>The text still follows the same normalization rules, so in this case the text wraps at 150px (because we explicitly set the width of the <a class="indexterm" name="id4070"></a><code class="sgmltag-element">&lt;text&gt;</code> tag to that), and stretches vertically as far as it needs to go.</p><p>The line breaks are still being ignored, but we can fix that by entering them manually:</p><div class="example"><a name="id4074"></a><p class="title"><b>Example 9.4. Inserting line breaks</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="100" width="100%"&gt;
+   &lt;text x="15" y="20" width="150" multiline="true"&gt;
+      Hello, World!&lt;br /&gt;&lt;br /&gt;
+      We would like to welcome you to OpenLaszlo 4.
+   &lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>The <a class="indexterm" name="id4078"></a><code class="sgmltag-element">&lt;br&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag is used to denote a single line break. This may be familiar to you from HTML. Just be careful to note that since we are working in XML, empty elements have to be closed with a forward slash: <code class="literal">&lt;br/&gt;</code>. (This is the same as in XHTML.)</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1448"></a>4. Including HTML markup in OpenLaszlo applications</h2></div></div></div><p>Openlaszlo provides support for incorporating HTML. Here's a list of tags that are supported:</p><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>Find out if P tag has been made obsolete.</span></em></p><div class="informaltable"><table class="informaltable" border="1"><colgroup><col><col></colgroup><thead><tr><th>Tag</th><th>Meaning</th></tr></thead><tbody><tr><td>
+    <a class="indexterm" name="id4098"></a><code class="sgmltag-element">&lt;a&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+
+  </td><td>
+    <p>Hypertext Link</p>
+  </td></tr><tr><td>
+    <a class="indexterm" name="id4106"></a><code class="sgmltag-element">&lt;b&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+
+  </td><td>
+    <p>Bold Text</p>
+  </td></tr><tr><td>
+    <a class="indexterm" name="id4114"></a><code class="sgmltag-element">&lt;font&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+
+  </td><td>
+    <p>Defines and implements fonts</p>
+  </td></tr><tr><td>
+    <a class="indexterm" name="id4122"></a><code class="sgmltag-element">&lt;i&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+
+  </td><td>
+    <p>Italic text</p>
+  </td></tr><tr><td>
+    <a class="indexterm" name="id4130"></a><code class="sgmltag-element">&lt;p&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+
+  </td><td>
+    <p>Paragraph</p>
+  </td></tr><tr><td>
+    <a class="indexterm" name="id4138"></a><code class="sgmltag-element">&lt;u&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+
+  </td><td>
+    <p>Underline</p>
+  </td></tr><tr><td>
+    <a class="indexterm" name="id4146"></a><code class="sgmltag-element">&lt;img&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+
+  </td><td>
+    <p>image</p>
+  </td></tr></tbody></table></div><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1446"></a>4.1. Including links</h3></div></div></div><div class="example"><a name="id4154"></a><p class="title"><b>Example 9.5. Specifying a font</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="150" width="100%"&gt;
+  &lt;font name="default" style="bold" /&gt;
+  &lt;text x="15" y="20" width="150" multiline="true"&gt;
+    &lt;b&gt;Hello, &lt;font color="#ff0000"&gt;World!&lt;/font&gt;&lt;/b&gt;&lt;br /&gt;&lt;br /&gt;
+&lt;font size="16"&gt;We&lt;/font&gt; would like to welcome &lt;u&gt;you&lt;/u&gt; to the 
+      launch of the &lt;a href="http://www.openlaszlo.org/" target="_blank"&gt;OpenLaszlo&lt;/a&gt; 
+      Server.
+  &lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>The word "OpenLaszlo" becomes a hyperlink because of the <a class="indexterm" name="id4158"></a><code class="sgmltag-element">&lt;a&gt;</code> tag. It does not get underlined as it might in a browser. We can do that ourselves by nesting a <a class="indexterm" name="id4161"></a><code class="sgmltag-element">&lt;u&gt;</code> tag inside it. However, it is important to note that tags must be nested correctly:</p><pre class="programlisting">&lt;a href="..."&gt;<span class="em">&lt;u&gt;</span>Link<span class="em">&lt;/u&gt;</span>&lt;/a&gt;</pre><p>is correct, but</p><pre class="programlisting">&lt;a href="..."&gt;<span class="em">&lt;u&gt;</span>Link&lt;/a&gt;<span class="em">&lt;/u&gt;</span></pre><p>is wrong because the <a class="indexterm" name="id4172"></a><code class="sgmltag-element">&lt;a&gt;</code> tag was closed before the <a class="indexterm" name="id4175"></a><code class="sgmltag-element">&lt;u&gt;</code> tag.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1447"></a>4.2. The &lt;html&gt; tag</h3></div></div></div><p>The <a class="indexterm" name="id4181"></a><code class="sgmltag-element">&lt;html&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag allows you to include complete html pages within an OpenLaszlo application.  In the example below, the <a class="indexterm" name="id4185"></a><code class="sgmltag-element">&lt;html&gt;</code> tag is used inside an OpenLaszlo window, which automatically provides scrollbars. Don't worry if you don't understand how the code in this example works; the concepts will be explained in later chapters. The key thing to note is that you can embed entire HTML pages.
+</p><div class="example"><a name="id4188"></a><p class="title"><b>Example 9.6. The &lt;html&gt; tag</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas width="100%" height="400"&gt;
+    &lt;include href="extensions/html.lzx"/&gt;
+    &lt;class name="browser" extends="window" resizable="true" bgcolor="silver"&gt;
+        &lt;simplelayout axis="y" spacing="2"/&gt;
+        &lt;hbox width="100%"&gt;
+            &lt;edittext name="txt" text="http://www.openlaszlo.org/" width="300"/&gt;
+            &lt;button&gt;Load &lt;handler name="onclick"&gt; if (classroot.main) {
+                    classroot.main.setAttribute('src', parent.txt.getText());
+                    classroot.main.setAttribute('visible', true); } &lt;/handler&gt;
+            &lt;/button&gt;
+        &lt;/hbox&gt;
+        &lt;html name="main" history="false" width="100%" height="${classroot.height - this.y - 44}"&gt;
+            &lt;handler name="oninit"&gt; this.bringToFront(); &lt;/handler&gt;
+        &lt;/html&gt;
+    &lt;/class&gt;
+    &lt;browser width="100%" height="100%"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+   </pre></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="text-tutorial.fonts"></a>5. Fonts</h2></div></div></div><p>
+OpenLaszlo provides capabilities for specifying the which fonts will appear in your application. All applications can use fonts that are provided by the local system. In addition, applications compiled to SWF can also embed fonts.
+</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1450"></a>5.1. Fonts in SWF applications</h3></div></div></div><p>
+In applications compiled to SWF, OpenLaszlo supports both <span class="i">embedded </span>fonts, which are downloaded with your application, and <span class="i">client</span> fonts, which reside natively on the machines on which your application is used. By default, client fonts are used. Client fonts have certain limitations; for example they cannot be rotated or changed in opacity (due to a limitation of the Flash Player).  See <a class="xref" href="../fonts.html" title="Chapter 23. Fonts">Chapter 23, <i>Fonts</i></a>.
+</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1449"></a>5.1.1. Including Fonts</h4></div></div></div><p>
+When compiling to SWF, you can embed fonts using the <a class="indexterm" name="id4204"></a><code class="sgmltag-attribute">src</code> of the <a class="indexterm" name="id4207"></a><code class="sgmltag-element">&lt;font&gt;</code> tag.
+</p><div class="example"><a name="id4210"></a><p class="title"><b>Example 9.7. Using the src attribute to specify font</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="150" width="100%"&gt;
+  &lt;font name="default" style="bold" src="lztahoe8b.ttf"/&gt;
+  &lt;text x="15" y="20" width="150" multiline="true"&gt;
+    &lt;b&gt;Hello, &lt;font color="#ff0000"&gt;World!&lt;/font&gt;&lt;/b&gt;&lt;br /&gt;&lt;br /&gt;
+&lt;font size="16"&gt;We&lt;/font&gt; would like to welcome &lt;u&gt;you&lt;/u&gt; to the 
+      launch of the &lt;a href="http://www.openlaszlo.org/" target="_blank"&gt;OpenLaszlo&lt;/a&gt; 
+      Server.
+  &lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>OpenLaszlo supports TrueType fonts, and the simplest way to use one is as follows:</p><div class="example"><a name="id4214"></a><p class="title"><b>Example 9.8. Naming a font family</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="100" width="100%"&gt;
+   &lt;font name="serifFont" src="timmonsr.ttf"/&gt;
+   &lt;text width="150" height="20"&gt;
+      &lt;font face="serifFont" size="14"&gt;Hello, World!&lt;/font&gt;
+   &lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>We called this font <span class="i">serifFont</span>, but we could call it whatever we wanted, and that is what will be used to declare its use elsewhere in the application.</p><p>The font TTF files can be located in the current directory or another one and referenced relatively (<code class="literal">src="../fonts/..."</code>). Otherwise they are included in the LPS webapp directory of the installation under WEB-INF/lps/fonts. timonnsr is a font that comes packaged with the OpenLaszlo Server in this location.</p><p>A TrueType file is required for each style of font (e.g. italic, bold, regular), which is how fonts are actually packaged. So the following code will <span class="b">not</span> work:</p><div class="informalexample"><pre class="programlisting">
+&lt;canvas&gt;
+   &lt;!-- WARNING: Bad example! --&gt;
+   &lt;font name="serifFont" src="timmonsr.ttf"/&gt;
+   &lt;text width="150" height="20"&gt;
+      &lt;font face="serifFont" size="14"&gt;Hello, <span class="em">&lt;b&gt;</span>World!<span class="em">&lt;/b&gt;</span>&lt;/font&gt;
+   &lt;/text&gt;
+&lt;/canvas&gt;
+</pre></div><p>To correct this, we need to add one line of code to include the bold font:</p><div class="example"><a name="id4228"></a><p class="title"><b>Example 9.9. Including bold font</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="100" width="100%"&gt;
+   &lt;font name="serifFont"&gt;
+      &lt;face src="timmonsr.ttf"/&gt;
+      &lt;face src="timmonsb.ttf" style="bold"/&gt;
+   &lt;/font&gt;
+   &lt;text width="150" height="20"&gt;
+      &lt;font face="serifFont" size="14"&gt;Hello, &lt;b&gt;World!&lt;/b&gt;&lt;/font&gt;
+   &lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>The plain font style does not need to be explicitly set; <code class="literal">style="plain"</code> is implied. This method of markup is not always the best solution, because it depends on writing cumbersome <a class="indexterm" name="id4233"></a><code class="sgmltag-element">&lt;font&gt;</code> tags. </p><p>Instead we can tell the <a class="indexterm" name="id4237"></a><code class="sgmltag-element">&lt;text&gt;</code> tag what fonts and sizes to use:</p><div class="example"><a name="id4240"></a><p class="title"><b>Example 9.10. Assigning fonts to &lt;text&gt; tag</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="100" width="100%"&gt;
+   &lt;font name="serifFont"&gt;
+      &lt;face src="timmonsr.ttf"/&gt;
+      &lt;face src="timmonsb.ttf" style="bold"/&gt;
+   &lt;/font&gt;
+
+   &lt;text width="150" height="150"
+   font="serifFont" fontsize="15" multiline="true"&gt;
+      Hello, &lt;b&gt;World!&lt;/b&gt;&lt;br /&gt;
+         Sometimes it is easier to avoid writing extra &lt;u&gt;font&lt;/u&gt; tags.
+   &lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>In fact, we can do this with any view (including <a class="indexterm" name="id4244"></a><code class="sgmltag-element">&lt;window&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tags, and so forth) tag, and its children will inherit the fonts that were set:</p><div class="example"><a name="id4248"></a><p class="title"><b>Example 9.11. Views inherit font properties</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="100" width="100%"&gt;
+   &lt;font name="serifFont"&gt;
+      &lt;face src="timmonsr.ttf"/&gt;
+      &lt;face src="timmonsb.ttf" style="bold"/&gt;
+   &lt;/font&gt;
+
+   &lt;view name="grandParent" font="serifFont" fontsize="15"&gt;
+      &lt;view name="firstView" bgcolor="#FFCCCC" height="20"&gt;
+         &lt;text&gt;Hello&lt;/text&gt;
+      &lt;/view&gt;
+      &lt;view x="80" name="secondView" bgcolor="#CCCCFF" height="20"&gt;
+         &lt;text&gt;World&lt;/text&gt;
+      &lt;/view&gt;
+   &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>The font here is specified in the <span class="i">grandParent</span> view, and it is inherited by both text fields.</p><p>Of course font specifications can be overridden further down the hierarchy, both through the use of <a class="indexterm" name="id4254"></a><code class="sgmltag-element">&lt;font&gt;</code> tags, and by defining font specifications of child views:</p><div class="example"><a name="id4257"></a><p class="title"><b>Example 9.12. Overwriting font specifications</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="100" width="100%"&gt;
+  &lt;font name="serifFont"&gt;
+    &lt;face src="timmonsr.ttf"/&gt;
+    &lt;face src="timmonsb.ttf" style="bold"/&gt;
+  &lt;/font&gt;
+  
+  &lt;font name="sansSerifFont" src="helmetr.ttf" /&gt;
+  
+  &lt;view name="grandParent" font="serifFont" fontsize="15"&gt;
+    &lt;view name="firstView" bgcolor="#FFCCCC" height="20"&gt;
+      &lt;text&gt;
+        &lt;font color="#CC6600" size="12"&gt;Hello&lt;/font&gt;
+      &lt;/text&gt;
+    &lt;/view&gt;
+    &lt;view x="80" name="secondView" bgcolor="#CCCCFF" height="20"&gt;
+      &lt;text font="sansSerifFont"&gt;World&lt;/text&gt;
+    &lt;/view&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>Both the text fields here have overridden some of the font specs. The ones that aren't overridden (such as the face in the left example and the size in the right example) are inherited.</p><p></p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="text-tutorial.changing"></a>6. Changing Text</h2></div></div></div><p>The <a class="indexterm" name="id4265"></a><code class="sgmltag-element">&lt;text&gt;</code> element has two methods for reading and writing contents:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p><a class="indexterm" name="id4271"></a><code class="methodname">getText()</code></p></li><li class="listitem"><p><a class="indexterm" name="id4277"></a><code class="methodname">setAttribute()</code></p></li></ul></div><p>The <a class="indexterm" name="id4282"></a><code class="methodname">getText()</code> method returns the contents of the text box, and the <a class="indexterm" name="id4286"></a><code class="methodname">setAttribute()</code> method takes an argument of the string to put in the text field:</p><div class="example"><a name="id4290"></a><p class="title"><b>Example 9.13. Getting and setting text</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="200" width="100%" debug="true"&gt;
+   &lt;debug x="200"/&gt;
+   &lt;button x="15" y="15"
+      onclick="Debug.debug('%s', canvas.theField.getText());"&gt;
+      Get Text 
+   &lt;/button&gt;
+
+   &lt;button x="100" y="15"
+      onclick="canvas.theField.setAttribute('text', 'Hello, Laszlo!');"&gt;
+         Set Text
+   &lt;/button&gt;
+
+   &lt;button x="180" y="15"
+      onclick="addText();"&gt;
+         Add Text
+   &lt;/button&gt;
+
+   &lt;script&gt;
+      function addText() {
+      var origText = canvas.theField.getText();
+      var newText = origText + " And on.";
+           canvas.theField.setAttribute('text', newText);
+      }
+   &lt;/script&gt;
+
+   &lt;text x="45" y="60" width="150" height="75" multiline="true"
+      name="theField"&gt;Some sample text.&lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>Using these two methods it is possible to concatenate text and work with it as a string.</p><p>An important thing to remember when working with text is that everything between the <a class="indexterm" name="id4295"></a><code class="sgmltag-element">&lt;text&gt;</code> tags is returned by <a class="indexterm" name="id4298"></a><code class="methodname">getText()</code>.</p><div class="example"><a name="id4302"></a><p class="title"><b>Example 9.14. Text returned</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="200" width="100%" debug="true"&gt;
+    &lt;debug x="200"/&gt;
+   &lt;font name="sansSerifFont" src="helmetr.ttf" /&gt;
+
+   &lt;script&gt;
+      function writeOutBit() {
+      var myText = canvas.theField.getText();
+      Debug.debug("%s", myText);
+   }
+   &lt;/script&gt;
+
+   &lt;button x="15" y="15"
+      onclick="writeOutBit();"&gt;
+         Write part of line
+   &lt;/button&gt;
+  
+   &lt;text x="45" y="60" width="150" height="75" multiline="true"
+      name="theField"&gt;
+      &lt;font face="sansSerifFont" size="12"&gt;Some lovely sample 
+      text.
+      &lt;/font&gt;
+   &lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>This can be both useful and a nuisance. If we were to start parsing the string that is returned by the <a class="indexterm" name="id4306"></a><code class="methodname">getText()</code> method, then we would have to compensate for the markup tags. To avoid it, set the font in the <a class="indexterm" name="id4310"></a><code class="sgmltag-element">&lt;text&gt;</code> tag.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="text-tutorial.input"></a>7. Input Text</h2></div></div></div><p>The simplest way to provide users with a text field is with the <a class="indexterm" name="id4317"></a><code class="sgmltag-element">&lt;inputtext&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag:</p><div class="example"><a name="id4321"></a><p class="title"><b>Example 9.15. Using &lt;inputtext&gt;</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="200" width="100%" debug="true"&gt;
+   &lt;inputtext name="myText" x="10" y="15"&gt;Enter text here&lt;/inputtext&gt;
+   &lt;button x="45" y="45"
+      onclick="Debug.debug('%s', canvas.myText.getText());"&gt;
+         Write out text 
+   &lt;/button&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>The <a class="indexterm" name="id4325"></a><code class="sgmltag-element">&lt;inputtext&gt;</code> field gives no indication that the text can be selected and edited, other than an insert cursor when the user rolls over it. The <a class="indexterm" name="id4328"></a><code class="sgmltag-element">&lt;inputtext&gt;</code> element can accept all the <a class="indexterm" name="id4331"></a><code class="sgmltag-element">&lt;text&gt;</code> attributes, as well as fonts:</p><div class="example"><a name="id4334"></a><p class="title"><b>Example 9.16. &lt;inputtext&gt; accepts &lt;text&gt; attributes</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="100" width="100%"&gt;
+  &lt;font name="Helmet" src="helmetr.ttf" /&gt;
+  &lt;inputtext name="myText" x="10" y="15"
+      font="Helmet" fontsize="12"
+      width="200" height="50" multiline="true"&gt;
+         Enter very large quantities of text here.
+  &lt;/inputtext&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p><code class="literal">getText()</code> and <code class="literal">setArgument()</code> methods will work on <a class="indexterm" name="id4340"></a><code class="sgmltag-element">&lt;inputtext&gt;</code> fields as well.</p><p>To overcome the problem of the text field not being recognizable, OpenLaszlo provides the <a class="indexterm" name="id4344"></a><code class="sgmltag-element">&lt;edittext&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag:</p><div class="example"><a name="id4348"></a><p class="title"><b>Example 9.17. Using &lt;edittext&gt;</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="160" width="100%"&gt;
+   &lt;edittext name="myText" x="10" y="15"&gt;Enter text here&lt;/edittext&gt;
+
+   &lt;edittext name="myBigText" x="10" y="45"
+      width="250" height="100" multiline="true"&gt;
+         Enter a lot more text here
+   &lt;/edittext&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>The <a class="indexterm" name="id4352"></a><code class="sgmltag-element">&lt;edittext&gt;</code> tag can be multiline, and can be adjusted in size.</p><p></p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="art_assets.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="../developers.tutorials.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="scripting-tutorial.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 8. Introduction to Media and Art Assets </td><td width="20%" align="center"><a accesskey="h" href="../index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 10. Introduction to Scripting</td></tr></table></div></body></html>

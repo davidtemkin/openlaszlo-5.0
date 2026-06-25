@@ -1,0 +1,30 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;hbox&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>hbox<span class="ang">&gt;</span></h1><p class="short">A horizontal box</p><p class="meta">Extends <a href="view.html"><code>LzView</code></a></p>
+                    
+        <p>
+                      The 
+          <code>hbox</code>
+           provides a convenient way to organize a simple horizontal layout.
+            
+          <pre class="example">
+            &lt;canvas height="30" &gt;
+                &lt;hbox spacing="10"&gt;
+                    &lt;handler name="onclick"&gt;
+                        this.animate('spacing', this.spacing == 10 ? 0 : 10, 1000);
+                    &lt;/handler&gt;
+                    &lt;text&gt;click&lt;/text&gt;
+                    &lt;text&gt;to&lt;/text&gt;
+                    &lt;text&gt;animate&lt;/text&gt;
+                    &lt;text&gt;spacing&lt;/text&gt;
+                &lt;/hbox&gt;
+            &lt;/canvas&gt;
+            </pre>
+                      
+        </p>
+                  
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">inset</td><td class="ty">expression</td><td class="ty">0</td><td/></tr><tr><td class="nm">spacing</td><td class="ty">expression</td><td class="ty">0</td><td/></tr></table>
+</main><script src="_nav.js"></script></body></html>

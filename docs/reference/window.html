@@ -1,0 +1,73 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;window&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>window<span class="ang">&gt;</span></h1><p class="short">
+                A window.
+            </p><p class="meta">Extends <code>windowpanel</code></p>
+                        
+        <p>
+          The 
+          <code>window</code>
+           tag creates a floating view that may be moved and optionally resized by the user. Set the 
+          <code>closeable</code>
+           attribute to 
+          <code>true</code>
+           in order to show a window close button.
+        </p>
+            
+        <pre class="example">&lt;canvas height="250"&gt;
+    &lt;window x="10" y="10" width="300" height="200"
+        title="my window"
+        resizable="true" closeable="true"&gt;
+        &lt;text&gt;Hello&lt;/text&gt;
+    &lt;/window&gt;
+&lt;/canvas&gt;
+    </pre>
+                        
+        <p>
+          Views placed within a 
+          <code>window</code>
+           tag will be placed inside the smaller content area within the window. Because of this, you will often want to constrain to the dimensions of the content area, rather than to the window dimensions. To do this, tags placed within a window can use the 
+          <code>immediateparent</code>
+           property rather than the 
+          <code>parent</code>
+           property.
+        </p>
+                        
+        <pre class="example">&lt;canvas height="150"&gt;
+    &lt;window x="10" y="10" width="200" height="100"
+        resizable="true"&gt;
+        &lt;button width="${immediateparent.width}"
+            height="${immediateparent.height}"&gt;
+            This is a really big button
+        &lt;/button&gt;
+    &lt;/window&gt;
+&lt;/canvas&gt;
+                </pre>
+                        
+        <p>
+          <strong>See also:</strong>
+        </p>
+                        
+        <ul>
+                              
+          <li>
+            <p>
+              <a href="modaldialog.html">
+                <code>modaldialog</code>
+              </a>
+               and 
+              <a href="alert.html">
+                <code>alert</code>
+              </a>
+            </p>
+          </li>
+                          
+        </ul>
+                        
+            
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">defaultplacement</td><td class="ty">string</td><td class="ty">wcontent</td><td/></tr><tr><td class="nm">resizable</td><td class="ty">expression</td><td class="ty">false</td><td>If true, a resize control will appear in the lower-right corner,
+              allowing the user to resize the window.</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1028">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Highway Light Trails</title>
+  <description>Highway Light Trails — from the OpenLaszlo sample image library.</description>
+  <dates posted="1492332800" />
+  <urls><url type="photopage">data/photos/1028.jpg</url></urls>
+  <tags><tag>highway</tag><tag>light</tag><tag>trails</tag></tags>
+</photo>
+</rsp>

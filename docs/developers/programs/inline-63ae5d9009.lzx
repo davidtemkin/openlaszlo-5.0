@@ -1,0 +1,4 @@
+<textText>some text</textText> <!-- valid -->
+<textText>some <i>fancy</i> text</textText> <!-- invalid -->
+<htmlText>some text</htmlText> <!-- valid -->
+<htmlText>some <i>fancy</i> text</htmlText> <!-- valid -->

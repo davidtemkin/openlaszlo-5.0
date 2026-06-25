@@ -1,0 +1,102 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;event&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>event<span class="ang">&gt;</span></h1><p class="short">The sender in Laszlo's point-to-point event system.</p><p class="meta">Extends <a href="declaredeventclass.html"><code>LzDeclaredEventClass</code></a></p>
+        <p>
+          Events underly most of the functionality in OpenLaszlo
+ applications.  Unlike events in similar systems, OpenLaszlo's
+ events are point-to-point, meaning that there is no general
+ broadcast mechanism for events, and events do not trickle up or
+ down the instance hierarchy. Instead, objects called 
+          
+          s use 
+          
+           to register to receive
+ events.
+        </p>
+         
+        <p>
+          An event is implicitly declared for every attribute of a class
+ or instance and sent when that attribute is changed.  So, for
+ instance, if a class has an attribute 
+          <code>foo</code>
+          , you can
+ receive events when foo changes by registering for the
+ 
+          <code>onfoo</code>
+           event.
+        </p>
+         
+        <p>
+          Events are sent with a single argument, which usually conveys
+ information about the property that changed. The default behavior
+ of the 
+          
+           method is
+ to set the named property and send the event called "on" +
+ property. This is general mechanism that updates constraints in a
+ OpenLaszlo programs. For instance, when a view changes its
+ 
+          <code>x</code>
+           position, it sends the event
+ 
+          <code>&lt;event&gt;onx&lt;/event&gt;</code>
+           with the new value for its
+ 
+          <code>x</code>
+           property.
+        </p>
+         
+        <pre class="example">
+ &lt;canvas height="40"&gt;
+   &lt;simplelayout/&gt;
+   &lt;button name="eventSender"
+           onmouseover="this.setAttribute('avalue', this.avalue + 10)"
+           onmouseout="this.setAttribute('avalue', this.avalue + 5)"&gt;
+     &lt;attribute name="avalue" value="0"/&gt;
+   &lt;/button&gt;
+
+   &lt;view bgcolor="red" width="20" height="20"&gt;
+     // Handle the implicit `onavalue` event of the `eventSender` button
+     &lt;handler name="onavalue" reference="eventSender" args="v"&gt;
+       this.setAttribute('x' , v);
+     &lt;/handler&gt;
+
+   &lt;/view&gt;
+ &lt;/canvas&gt;
+ </pre>
+         
+        <p>
+          An event can be explicitly declared using the 
+          <code>event</code>
+           tag and the 
+          <code>&lt;method&gt;sendEvent&lt;/method&gt;</code>
+           method is used to explicitly send an event.
+        </p>
+         
+        <pre class="example">
+ &lt;canvas height="140" debug="true"&gt;
+   &lt;simplelayout/&gt;
+   &lt;button name="eventSender"
+           onmouseover="this.customevent.sendEvent('over')"
+           onmouseout="this.customevent.sendEvent('out')"&gt;
+     &lt;event name="customevent"/&gt;
+   &lt;/button&gt;
+
+   &lt;view bgcolor="red" width="20" height="20"&gt;
+     &lt;handler name="customevent" reference="eventSender" args="event"&gt;
+       Debug.debug("event: %s", event);
+       this.setAttribute('x', this.x + 10);
+     &lt;/handler&gt;
+   &lt;/view&gt;
+ &lt;/canvas&gt;
+ </pre>
+         
+        <p>Sending an event that no delegate is listening for has nearly
+ no cost, thus objects can freely publish events.</p>
+         
+        <p>See the Developer's Guide for more detailed information on
+ using events and delegates.</p>
+</main><script src="_nav.js"></script></body></html>

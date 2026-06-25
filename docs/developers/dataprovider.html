@@ -1,0 +1,55 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 39. Data Provider</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.data.html" title="Part V. Data and Databinding"><link rel="prev" href="datareplication.html" title="Chapter 38. Data Replication"><link rel="next" href="data_app.html" title="Chapter 40. Building Data-Driven Applications"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 39. Data Provider</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="datareplication.html">Prev</a> </td><th width="60%" align="center">Part V. Data and Databinding</th><td width="20%" align="right"> <a accesskey="n" href="data_app.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="dataprovider"></a>Chapter 39. Data Provider</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1875"></a>1. Introduction</h2></div></div></div><p>A 
+    <span class="emphasis"><em>dataprovider</em></span> (DataProvider) specifies the
+    transport mechanism and policies for communicating data
+    requests from the client to the server. For example,
+    dataproviders may batch requests, whitelist/blacklist
+    URIs.</p><p>Datasets make data requests through dataproviders. The
+    transport mechanism is abstracted away from the dataset. That
+    is, a dataset could use a dataprovider that uses HTTP in one
+    instance, and then swap out to another dataprovider that uses
+    XMPP as its transport as long as the dataprovider can support
+    the dataset's request.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1876"></a>2. DataProvider</h2></div></div></div><p>A dataprovider must implement this interface:</p><pre class="programlisting">interface DataProvider { function doRequest(
+    dataRequest : DataRequest ); }</pre><p>Callers of the dataprovider invoke 
+    <code class="literal">doRequest()</code>with a DataRequest object. A
+    datarequest instance implements a DataRequest interface with
+    which a dataprovider can make a data request on behalf of the
+    caller.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1878"></a>3. DataRequest</h2></div></div></div><p>The interface for DataRequest looks like this:</p><pre class="programlisting">interface DataRequest { var requestor : Object;
+    var src : String; var timeout : Number; var status : String;
+    var onstatus : Event; var error : String; var rawdata : String;
+    }</pre><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1877"></a>3.1. Datarequest Properties</h3></div></div></div><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><code class="literal">requestor</code>: An optional property that's the object
+          using the DataRequest to pass into the dataprovider's
+          doRequest method.</p></li><li class="listitem"><p><code class="literal">src</code>: A URI, like
+          "http://host.com:80/path?query=value" or "ftp://". A
+          dataprovider may support only a certain set of
+          protocols.</p></li><li class="listitem"><p><code class="literal">timeout</code>: The length of time that the request should
+          be made before the request should be aborted.</p></li><li class="listitem"><p><code class="literal">status</code>: A read-only attribute which can be one of
+          "ready" (default), "success", "error", "timeout".</p></li><li class="listitem"><p><code class="literal">onstatus</code>: The event sent whenever the status
+          changes. The event SHOULD be sent with the DataRequest
+          instance.</p></li><li class="listitem"><p><code class="literal">error</code>: Error messages from the dataprovider are
+          stored here.</p></li><li class="listitem"><p><code class="literal">rawdata</code>: The raw data received from a server.</p></li></ul></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1881"></a>4. Dataset</h2></div></div></div><p>In addition to the current dataset API:</p><pre class="programlisting">class Dataset { var dataprovider :
+    DataProvider; var multirequest : Boolean; var datarequest :
+    DataRequest; var datarequestclass : String; function doRequest(
+    dataRequest : DataRequest ); function handleResponse(
+    dataRequest: DataRequest ); }</pre><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1879"></a>4.1. New dataset properties</h3></div></div></div><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><code class="literal">dataprovider</code>: The dataprovider which will handle the
+          dataset's request.</p></li><li class="listitem"><p><code class="literal">multirequest</code>: True if multiple sequential requests
+          can be made without overriding previous requests. Default
+          is false for backward compatibility.</p></li><li class="listitem"><p><code class="literal">datarequest</code>: The current datarequest instance to be
+          used by the dataset to call the dataprovider with. Other
+          methods like setQueryParam() and setSrc() set properties
+          of dataRequest.</p></li><li class="listitem"><p><code class="literal">datarequestclass</code>: The default datarequest class to
+          be used by the dataset.</p></li></ul></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1880"></a>4.2. New dataset methods</h3></div></div></div><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><code class="literal">doRequest</code>: (DataRequest) behaves the same way as
+          the previous doRequest except a DataRequest instance may
+          be passed in. If passed in, the dataRequest param is used
+          to call into the dataprovider, otherwise the dataset's
+          dataRequest instance is used.</p></li><li class="listitem"><p><code class="literal">handleResponse</code>: (DataRequest) the callback handler
+          for doRequest().</p></li></ul></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1882"></a>5. Data request sequence</h2></div></div></div><p>The request life cycle begins with the
+    <code class="literal">dataset.doRequest()</code> method. In <code class="literal">doRequest()</code>, a DataRequest
+    instance is generated to call into the dataprovider with.
+    Before the dataprovider is invoked, the DataRequest is filled
+    in with enough data for the dataprovider to handle the request.
+    In turn, the dataprovider sets a data callback on the
+    DataRequest instance and then, using request information
+    provided by the DataRequest, makes a server data request. When
+    the server responds, the callback handler of the DataRequest
+    instance is invoked, which then calls the calling dataset's
+    handleResponse method.</p><div class="mediaobject"><img src="images/datarequest.png"></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="datareplication.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.data.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="data_app.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 38. Data Replication </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 40. Building Data-Driven Applications</td></tr></table></div></body></html>

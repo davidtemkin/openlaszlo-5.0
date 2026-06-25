@@ -1,0 +1,194 @@
+<!-- parameter 'target' is used to cause the links to open in a particular frame -->
+<!-- so call this with ?target=myframe to make the reference material load into  -->
+<!-- a frame named myframe --> 
+<canvas width="100%" height="100%" title="LZX Reference Navigation">
+  <include href="lz/tree.lzx"/>
+  <attribute name="target" value="$once{lz.Browser.getInitArg('target')}" />
+
+  <dataset name="tocdata" src="toc.xml"/>
+  <dataset name="classesdata" src="classes.xml"/>
+  <dataset name="tagsdata" src="tags.xml"/>
+  
+  <class name="link" extends="text"
+         onmouseover="setAttribute('fgcolor', 'blue')"
+         onmouseout="setAttribute('fgcolor', 'black')"
+         onclick="lz.Browser.loadURL(this.href, canvas.target)">
+    <attribute name="href" value="" type="string"/>
+  </class>
+
+  <class name="wheelscrollbar" extends="scrollbar" mousewheelactive="true">
+    <handler name="onmousewheeldelta" reference="lz.Keys" method="mousewheelUpdate"/>
+  </class>
+
+  <!-- Create linktree so we can keyboard navigate. -->
+  <class name="linktree" extends="basetree" isleaf="true" recurse="false" >
+      <attribute name="datasel" value="$path{'@datasel'}" type="boolean" />
+      <setter name="datasel" args="dsel" >
+          this.datasel = dsel;
+          this.setAttribute('selected', dsel);
+          if (dsel) {
+              this.changeFocus(null);
+          }
+      </setter>
+      <method name="keySelect">
+          super.keySelect();
+          lz.Browser.loadURL(this.datapath.xpathQuery('@href'), canvas.target);
+      </method>
+      <text text="${parent.text}" placement="item"
+            onmouseover="setAttribute('fgcolor', classroot.style['texthilitecolor'])"
+            onmouseout="setAttribute('fgcolor', classroot.selected 
+                                                ? 'blue'
+                                                : (classroot.focused 
+                                                    ? classroot.style['texthilitecolor']
+                                                    : classroot.style['textcolor'] ))"
+            fgcolor="${classroot.selected
+                        ? 'blue'
+                        : (classroot.style
+                            ? (classroot.focused
+                                ? classroot.style['texthilitecolor']
+                                : classroot.style['textcolor'])
+                            : 'black')}"
+            >
+          <handler name="onclick">
+              lz.Browser.loadURL(classroot.datapath.xpathQuery('@href'), canvas.target);
+              classroot.setAttribute('selected', true);
+              classroot.changeFocus(null);
+          </handler>
+      </text>
+  </class>
+
+  <simplelayout axis="y"/>
+  <tabs x="5" width="${canvas.width-10}" height="${canvas.height}">
+    <tabpane width="${parent.width}">
+      Contents
+      <view name="search" width="${parent.width}">
+        <simplelayout axis="x"/>
+        <edittext name="token" width="120" >
+            <handler name="onkeydown" args="k">
+                if ( k == 13 ) parent.doClick();
+            </handler>
+        </edittext>
+        <button height="${parent.token.height}" name="find" onclick="parent.doClick()">
+            Find
+        </button>
+        <method name="doClick">
+          parent.treeparent.findNext( token.getText() );
+        </method>
+      </view>
+      <link text="Welcome" href="ref.preface.html"/>
+      <view name="treeparent" clip="true" width="${parent.width - 20}"
+            height="${Math.max(0,parent.parent.height - parent.search.height - 80)}">
+        <attribute name="lastCategory" value="0" type="number" />
+        <attribute name="lastItem" value="-1" type="number" />
+        <attribute name="lastData" value="null" />
+        <method name="findNext" args="tok"><![CDATA[
+            if (tok) {
+                tok = tok.toLowerCase();
+
+                var afterLast = true;
+                var categories = tocdata.getFirstChild().getElementsByTagName("category");
+                for (var i = this.lastCategory; true; ) {
+                    var items = categories[i].getElementsByTagName("item");
+                    if (this.lastCategory == i) {
+                        // same category as last matched category
+                        if (afterLast) {
+                            // check only entries after last match
+                            var startAt = this.lastItem + 1;
+                            var endAt = items.length;
+                        } else {
+                            // check only entries before last match
+                            var startAt = 0;
+                            var endAt = this.lastItem;
+                        }
+                    } else {
+                        // search in full range
+                        var startAt = 0;
+                        var endAt = items.length;
+                    }
+                    for (var j = startAt; j < endAt; ++j) {
+                        var title = items[j].getAttr("title") || "";
+                        if (title.toLowerCase().indexOf(tok) > -1) {
+                            if (this.lastData) {
+                                // clear last match
+                                this.lastData.setAttr("datasel", "false");
+                            }
+                            // memorize new match
+                            this.lastCategory = i;
+                            this.lastItem = j;
+                            this.lastData = items[j];
+                            var catTree = this.top.children.subviews[i];
+                            catTree.setAttribute("open", true);
+                            catTree.changeFocus(null);
+                            items[j].setAttr("datasel", "true");
+                            return;
+                        }
+                    }
+                    if (!afterLast && i == this.lastCategory) {
+                        // found no entries, stop search
+                        return;
+                    } else {
+                        i += 1;
+                        if (i == categories.length) {
+                            // restart at 0
+                            i = 0;
+                            // this time check only entries before last match
+                            afterLast = false;
+                        }
+                    }
+                }
+            }
+        ]]></method>
+
+        <tree datapath="tocdata:/toc" showroot="false" name="top" autoscroll="true"
+              text="$path{'@title'}">
+            <tree datapath="category" text="$path{'@title'}"
+                  xindent="20" yindent="18" closesiblings="true">
+                <attribute name="createdItems" value="false" type="boolean" />
+                <handler name="onopen" args="o"><![CDATA[
+                    if (o && !this.createdItems) {
+                        this.createdItems = true;
+                        this.items.setAttribute("datapath", "item");
+                    }
+                ]]></handler>
+                <linktree name="items" text="$path{'@title'}" />
+            </tree>
+        </tree>
+        <wheelscrollbar/>
+      </view>
+      <simplelayout spacing="8"/>
+    </tabpane>
+    <tabpane width="${parent.width}">
+      Classes
+      <view clip="true" height="${parent.parent.height - 50}"
+            width="${parent.width-20}">
+          <view layout="axis:y" width="${parent.width - 20}">
+            <link text="$path{'@title'}" href="$path{'@href'}">
+              <datapath xpath="classesdata:/index/item" replication="lazy"/>
+            </link>
+          </view>
+          <wheelscrollbar/>
+      </view>
+    </tabpane>
+    <tabpane width="${parent.width}">
+      Tags
+      <view clip="true" height="${parent.parent.height - 50}"
+            width="${parent.width-20}">
+          <view layout="axis:y" width="${parent.width - 20}">
+            <link text="$path{'@title'}" href="$path{'@href'}">
+              <setter name="text" args="t" >
+                super.setAttribute("text", this.escapeText(t));
+              </setter>
+              <datapath xpath="tagsdata:/index/item" replication="lazy"/>
+            </link>
+          </view>
+          <wheelscrollbar/>
+      </view>
+    </tabpane>
+  </tabs>
+
+  
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2001-2009 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

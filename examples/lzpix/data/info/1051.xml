@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1051">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Roman Cobblestone Street</title>
+  <description>Roman Cobblestone Street — from the OpenLaszlo sample image library.</description>
+  <dates posted="1494320000" />
+  <urls><url type="photopage">data/photos/1051.jpg</url></urls>
+  <tags><tag>roman</tag><tag>cobblestone</tag><tag>street</tag></tags>
+</photo>
+</rsp>

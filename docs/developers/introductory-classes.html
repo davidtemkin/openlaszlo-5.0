@@ -1,0 +1,400 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 28. Classes</title><link rel="stylesheet" type="text/css" href="../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="developers.power.html" title="Part IV. In Depth"><link rel="prev" href="constraints.html" title="Chapter 27. Constraints"><link rel="next" href="methods-events-attributes.html" title="Chapter 29. Methods, Events, Handlers, and Attributes"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 28. Classes</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="constraints.html">Prev</a> </td><th width="60%" align="center">Part IV. In Depth</th><td width="20%" align="right"> <a accesskey="n" href="methods-events-attributes.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="introductory-classes"></a>Chapter 28. Classes</h2></div></div></div><p>
+This chapter begins with a concise summary of basic features of our class system, and concludes with an essay 
+about how LZX allows you to develop efficiently.</p><p>This chapter explains the essential concepts of object oriented
+programming in OpenLaszlo applications, and the <a class="indexterm" name="id9563"></a><code class="sgmltag-element">&lt;class&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag in particular.</p><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1678"></a>1. Overview</h2></div></div></div><p>
+Classes are at the heart of LZX programming. Depending on your background, you may consult any of several
+discussions in the OpenLaszlo documentation to learn how to use classes effectively in your applications.
+</p><p>To get a feel for how to use classes in OpenLaszlo applications, you
+may want to start with the tutorial: <a class="xref" href="tutorials/classes-tutorial.html" title="Chapter 12. Introduction to Classes and Object Oriented Programming">Chapter 12, <i>Introduction to Classes and Object Oriented Programming</i></a> .  That's the best place to start learning, especially if
+you've never done any <em class="glossterm">object oriented</em> ("OO")
+programming.</p><p>The chapter you're now reading contains a more concise exposition
+of Laszlo classes and explains LZX in relation to other OOP systems.
+In particular, this chapter assumes that you've mastered the concepts
+covered in the tutorial. In this chapter we'll go beyond some of the
+mechanics of how to create and extend classes and explore how the
+design of LZX supports rapid application development.</p><p><a class="xref" href="class-inheritance.html" title="Chapter 33. Extending Classes">Chapter 33, <i>Extending Classes</i></a> is for more experienced
+developers.  It explains advanced techniques.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1681"></a>2. Summary of Class syntax</h2></div></div></div><p>In its simplest form, a class can be used as a macro, where a
+complex structure can be reduced to a single tag. The following
+example defines a class square, and instantiates it twice.</p><div class="example"><a name="id9579"></a><p class="title"><b>Example 28.1. Defining a new tag</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="20" width="100%"&gt;
+  &lt;class name="square" width="20" height="20" bgcolor="red"/&gt;
+  &lt;square/&gt;
+  &lt;square x="30"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/introductory-classes-_1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/introductory-classes-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>This program is equivalent to the following program, but is shorter
+and easier to maintain.</p><div class="example"><a name="id9583"></a><p class="title"><b>Example 28.2. Without the class tag</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="20" width="100%"&gt;
+  &lt;view width="20" height="20" bgcolor="red"/&gt;
+  &lt;view x="30" width="20" height="20" bgcolor="red"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/introductory-classes-_2.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/introductory-classes-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>In addition, the class definition in the first program can be moved
+to a separate file, through the use of the <a class="indexterm" name="id9587"></a><code class="sgmltag-element">&lt;library&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ and <a class="indexterm" name="id9591"></a><code class="sgmltag-element">&lt;include&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tags:</p><div class="example"><a name="id9595"></a><p class="title"><b>Example 28.3. Defining a new tag in a library file</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="20" width="100%"&gt;
+  &lt;include href="square.lzx"/&gt;
+  &lt;square/&gt;
+  &lt;square x="30"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/introductory-classes-_3.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/introductory-classes-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="informalexample"><pre class="programlisting">
+&lt;library&gt;
+  &lt;class name="square" width="20" height="20" bgcolor="red"/&gt;
+&lt;/library&gt;
+</pre></div><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1679"></a>2.1. Attributes</h3></div></div></div><p>The attributes of the class are the default attributes for each instance.  The instance can override these attributes by supplying its own attributes:</p><div class="example"><a name="id9603"></a><p class="title"><b>Example 28.4. Overriding a class attribute</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="20" width="100%"&gt;
+  &lt;include href="square.lzx"/&gt;
+  &lt;square/&gt;
+  &lt;square x="30" bgcolor="green"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/introductory-classes-_5.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/introductory-classes-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>A class can introduce a new attribute with the <a class="indexterm" name="id9607"></a><code class="sgmltag-element">&lt;attribute&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ element:</p><div class="example"><a name="id9611"></a><p class="title"><b>Example 28.5. Defining an attribute</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="20" width="100%"&gt;
+  &lt;class name="square" width="${this.size}" height="${this.size}" bgcolor="red"&gt;
+    &lt;attribute name="size" value="20"/&gt;
+  &lt;/class&gt;
+  &lt;square/&gt;
+  &lt;square size="15" x="30"/&gt;
+  &lt;square size="10" x="50"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/introductory-classes-_6.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/introductory-classes-_6.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>For more information about attributes and class definitions, see
+the <a class="indexterm" name="id9615"></a><code class="sgmltag-element">&lt;attribute&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag and <a class="xref" href="tutorials/classes-tutorial.html" title="Chapter 12. Introduction to Classes and Object Oriented Programming">Chapter 12, <i>Introduction to Classes and Object Oriented Programming</i></a>.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1680"></a>2.2. Children</h3></div></div></div><p>If a class definition contains children, these children are copied
+for each instance:</p><div class="example"><a name="id9623"></a><p class="title"><b>Example 28.6. Class children</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="20" width="100%"&gt;
+  &lt;class name="myframe" width="20" height="20" bgcolor="red"&gt;
+    &lt;view x="2" y="2" width="16" height="16" bgcolor="blue"/&gt;
+  &lt;/class&gt;
+  &lt;myframe/&gt;
+  &lt;myframe x="30"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/introductory-classes-_7.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/introductory-classes-_7.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="example"><a name="id9626"></a><p class="title"><b>Example 28.7. Using attributes and class children together</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="40" width="100%"&gt;
+  &lt;class name="myframe" extends="view"&gt;&lt;?lzx-co N10086 ?&gt;
+    &lt;attribute name="bgcolor" value="red"/&gt;
+    &lt;view x="5" y="5" width="${parent.width-10}" 
+          height="${parent.height-10}" 
+          bgcolor="blue"/&gt;
+  &lt;/class&gt;
+  
+  &lt;myframe width="40" height="40"/&gt;&lt;?lzx-co N10090 ?&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><p>???</p></td><td valign="top" align="left"><p>
+    The <a class="indexterm" name="id9632"></a><code class="sgmltag-attribute">extends</code> is optional here.  The default base class is <a class="indexterm" name="id9635"></a><code class="classname">lz.view</code>.</p></td></tr><tr><td width="5%" valign="top" align="left"><p>???</p></td><td valign="top" align="left"><p>
+    Create an instance of <a class="indexterm" name="id9640"></a><code class="classname">myframe</code>.</p></td></tr></table></div><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="introductory-classes.methods"></a>2.3. Methods</h3></div></div></div><p>Methods defined within classes are available to all instances of
+the class, and the over-ridden superclass methods can be called with
+the <code class="literal">super</code> keyword.</p><p>Unlike many other OO systems, Laszlo allows you to override class
+methods in an instance.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="introductory-classes.text-classes"></a>2.4. Text Classes</h3></div></div></div><p>The <a class="indexterm" name="id9653"></a><code class="sgmltag-element">&lt;text&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ and <a class="indexterm" name="id9657"></a><code class="sgmltag-element">&lt;inputtext&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tags are unique among the built in
+classes in that they can hold textual content:</p><div class="example"><a name="id9661"></a><p class="title"><b>Example 28.8. Built-in text classes</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="50" layout="y"&gt;
+  &lt;inputtext&gt;plain text&lt;/inputtext&gt;
+  &lt;text&gt;&lt;i&gt;styled&lt;/i&gt; text&lt;/text&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/introductory-classes-_9.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/introductory-classes-_9.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>The <a class="indexterm" name="id9665"></a><code class="sgmltag-element">&lt;text&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ may contain character text,
+as well as certain XHTML markup tags (<a class="xref" href="text.html" title="Chapter 21. Text Views">Chapter 21, <i>Text Views</i></a>).  The
+<a class="indexterm" name="id9670"></a><code class="sgmltag-element">&lt;inputtext&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag may contain character
+text.</p><p>Classes that extend the <a class="indexterm" name="id9675"></a><code class="sgmltag-element">&lt;text&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ and
+<a class="indexterm" name="id9679"></a><code class="sgmltag-element">&lt;inputtext&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ classes may contain XHTML and
+plain text, respectively.  The text content is available as the
+<a class="indexterm" name="id9683"></a><code class="sgmltag-attribute">text</code> attribute of such a class.</p><div class="example"><a name="id9686"></a><p class="title"><b>Example 28.9. Extending the built-in text classes</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="50" layout="y"&gt;
+  &lt;class name="mytext" extends="text"/&gt;
+  &lt;class name="myinputtext" extends="inputtext"/&gt;
+  &lt;myinputtext&gt;plain text&lt;/myinputtext&gt;
+  &lt;mytext&gt;&lt;i&gt;styled&lt;/i&gt; text&lt;/mytext&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/introductory-classes-_10.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/introductory-classes-_10.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>A tag may also contain text if it defines an attribute named
+<a class="indexterm" name="id9690"></a><code class="sgmltag-attribute">text</code> with a value of <code class="literal">text</code> (for
+plain text) or <code class="literal">html</code> (for XHTML text), or if it extends a
+class that does so.  This technique may be used to define a tag that
+contains text but does not extend <a class="indexterm" name="id9695"></a><code class="sgmltag-element">&lt;text&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+
+or <a class="indexterm" name="id9699"></a><code class="sgmltag-element">&lt;inputtext&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+.</p><div class="example"><a name="id9703"></a><p class="title"><b>Example 28.10. Defining new text classes</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas width="100%" height="50" layout="y"&gt;
+  &lt;class name="mytext"&gt;
+    &lt;attribute name="text" type="html"/&gt;
+    &lt;text text="${parent.text}"/&gt;
+  &lt;/class&gt;
+  &lt;class name="myinputtext"&gt;
+    &lt;attribute name="text" type="html"/&gt;
+    &lt;inputtext text="${parent.text}"/&gt;
+  &lt;/class&gt;
+  &lt;mytext&gt;&lt;i&gt;styled&lt;/i&gt; text&lt;/mytext&gt;
+  &lt;myinputtext&gt;plain text&lt;/myinputtext&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/introductory-classes-_11.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/introductory-classes-_11.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="introductory-classes.placement"></a>2.5. Placement</h3></div></div></div><p>The internal structure of a class is generally not visible to its
+hierarchical children. By default, instances which appear inside a
+class are made children of the top level instance of the class. This
+is generally not desirable for container classes. e.g.:</p><div class="example"><a name="id9710"></a><p class="title"><b>Example 28.11. Default placement of children in a class</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="50" width="100%"&gt;
+  &lt;class name="myframe" extends="view"&gt;
+    &lt;attribute name="bgcolor" value="red"/&gt;
+    &lt;view x="5" y="5" width="${parent.width-10}"
+          height="${parent.height-10}"
+          bgcolor="#FFFFCC" /&gt;
+  &lt;/class&gt;
+  
+  &lt;!-- Create an instance of myframe with text inside it--&gt;
+  &lt;myframe width="220" height="20"&gt;
+    &lt;text&gt;This is some text&lt;/text&gt;
+  &lt;/myframe&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-2.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>This behavior can be changed using the
+<a class="indexterm" name="id9714"></a><code class="sgmltag-attribute">node.defaultplacement</code> attribute or the
+<a class="indexterm" name="id9717"></a><code class="methodname">lz.node.determinePlacement()</code> method. Using
+<a class="indexterm" name="id9721"></a><code class="sgmltag-attribute">defaultplacement</code> is simple — this is a
+class attribute that identifies by name the subview where a child
+should be attached.  In this example, the interior view is named and
+the defaultplacement attribute is given that name.</p><div class="example"><a name="id9724"></a><p class="title"><b>Example 28.12. Using placement within a class</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="50" width="100%"&gt;
+  &lt;class name="myframe" extends="view"&gt;
+    &lt;attribute name="bgcolor" value="red"/&gt;
+    &lt;attribute name="defaultplacement" value="insideview"/&gt;
+    &lt;view x="5" y="5" width="${parent.width-10}" name='insideview'
+          height="${parent.height-10}" 
+          bgcolor="#FFFFCC"/&gt;
+  &lt;/class&gt;
+  
+  &lt;!-- Create an instance of myframe with text inside it--&gt;
+  &lt;myframe width="220" height="50"&gt;
+    &lt;text&gt;This is some text&lt;/text&gt;
+  &lt;/myframe&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-3.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1684"></a>3. Constraints in class definitions</h2></div></div></div><p>
+Constraints are a general mechanism for relating the value of one attribute to that of another, as explained in <a class="xref" href="constraints.html" title="Chapter 27. Constraints">Chapter 27, <i>Constraints</i></a>.
+</p><p>
+Take care when using constraints in class definitions.  Depending on the syntax you use to specify the constraint, you will either 
+cause the creation of:
+</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>a single entity to be shared among all instances of the class, or </p></li><li class="listitem"><p>a unique entity for each instance of the class.</p></li></ul></div><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1682"></a>3.1. Creating objects to be shared</h3></div></div></div><p>
+If, in a class definition, you say any of:</p><pre class="programlisting">
+value="[]"
+value="new Array()"
+value="{}"
+value="new Object()"
+</pre><p>
+you will get a single array or object that is shared by all instances.
+</p><p class="fixme"><em><span class="remark"><span class="para-label">FIXME: </span>
+Need examples!
+</span></em></p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1683"></a>3.2. Creating unique objects for each instance</h3></div></div></div><p>
+If, in a class definition, you say any of:
+</p><pre class="programlisting">
+value="${[]}"
+value="${new Array()}"
+value="${{}}"
+value="${new Object()}"
+</pre><p>each instance will get its own array or object.
+</p><p>
+Note that <code class="literal">
+ ${}</code> is equivalent to <code class="literal">$always{}</code>, but since the expression inside has no dependencies, it is also equivalent to 
+<code class="literal">$once{}</code>. It's therefore perhaps more "honest" (and also marginally more efficient), to use the <code class="literal">$once{}</code> syntax. 
+This will also improve readability.
+</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1686"></a>4. Creating objects from script</h2></div></div></div><p>LZX is designed to be a declarative language, so instantiating
+views from script is not the recommended method for creating Laszlo
+applications. Of course, from time to time you need to create views
+on-the-fly -- that's why it is supported -- so you need to know how to
+pass pointers to views in LZX.  There's a couple of ways you
+could do that in this scenario:</p><div class="orderedlist"><ol class="orderedlist compact" type="1"><li class="listitem"><p>The "right" way. In the <a class="indexterm" name="id9761"></a><code class="classname">PopupWindow</code> class declare an attribute that
+will be a pointer to some view:</p><div class="example"><a name="id9764"></a><p class="title"><b>Example 28.13. Defining a pointer in a class definition</b></p><div class="example-contents"><pre class="programlisting">
+&lt;class name="PopupWindow"
+       extends="windowpanel"
+       width="160"
+       height="160"&gt;
+  &lt;attribute name="viewToAffect" type="expression"/&gt;
+  —
+</pre></div></div><br class="example-break"><p class="remark"><em><span class="remark">
+The following paragraph is pretty jargonny!
+</span></em></p><p>Then when you instantiate that class, pass a pointer to the view into its constructor function:</p><div class="example"><a name="id9769"></a><p class="title"><b>Example 28.14. passing a pointer in constructor function</b></p><div class="example-contents"><pre class="programlisting">
+var c = new lz.PopupWindow(canvas, {title:'popupbutton', 
+                                 height:200, 
+                                 width:200, viewToAffect: RootWindow.winbutton}); 
+</pre></div></div><br class="example-break"><p>Then you could reference the view that was passed in from anywhere
+in the <a class="indexterm" name="id9773"></a><code class="classname">PopupWindow</code> class:</p><pre class="programlisting">classroot.viewToAffect.setAttribute('text', newText);</pre><p>Now if you had just instantiated the <a class="indexterm" name="id9778"></a><code class="classname">RootWindow</code> class, you could pass the variable <code class="varname">b</code> into the constructor function for the PopupWindow:</p><div class="example"><a name="id9782"></a><p class="title"><b>Example 28.15. passing a parameter to a constructor function</b></p><div class="example-contents"><pre class="programlisting">
+var b = new lz.window(canvas, {height:80,width:80});
+var c = new lz.PopupWindow(canvas, {title:'popupbutton',
+                                 height:200,
+                                 width:200,
+                                 viewToAffect: b}); 
+</pre></div></div><br class="example-break"></li><li class="listitem"><p>The quick and easy way: You could always store a pointer as a global variable, e.g.</p><pre class="programlisting">canvas.targetWindow = new lz.window(canvas, {height:80,width:80});</pre><p>or</p><pre class="programlisting">canvas.targetWindow = RootWindow.winbutton;</pre></li></ol></div><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1685"></a>4.1. Reference views by name</h3></div></div></div><p>
+You can also give a view a name no matter how you instantiate it (whether you use the constructor function or the tag), and reference it as follows: 
+</p><div class="example"><a name="id9793"></a><p class="title"><b>Example 28.16. Accessing views by name</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="75" width="100%"&gt;
+  &lt;script&gt;
+    var foo = new lz.view(canvas, {width: 50, height: 50, 
+                                  x: 150, y: 0,
+                                  bgcolor: 0,
+                                  name: "myview"});
+  &lt;/script&gt;
+  
+  &lt;button&gt;Make window red
+    &lt;handler name="onclick"&gt;
+      var nameOfView = "myview";
+      canvas[nameOfView].setAttribute('bgcolor', 0xff0000);
+    &lt;/handler&gt;
+  &lt;/button&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/introductory-classes-_17.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/introductory-classes-_17.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1691"></a>5. A Prototype-based language</h2></div></div></div><p>
+LZX is a prototype-based language: any attribute that can be attached to a class definition, can be attached to an instance of that 
+class instead.  
+This is handy in UI programming, where there are a number of objects with one-off behaviors.  It is also handy in prototyping and 
+incremental program development, where it creates the possibility for a novel kind of refactoring.</p><p>The following two XML documents are complete LZX applications.  Each defines a view named <code class="varname">myview</code>, that contains a method named <a class="indexterm" name="id9801"></a><code class="methodname">f()</code>.  Evaluating <code class="literal">myview.f()</code> in either application will result in <code class="literal">100</code>.</p><p>A trivial method:</p><pre class="programlisting">
+&lt;canvas&gt;
+  &lt;view id="myview"&gt;
+    &lt;method name="f"&gt;return 100;&lt;/method&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;</pre><p>A trivial method in a class:</p><pre class="programlisting">
+&lt;canvas&gt;
+  &lt;class name="myclass"&gt;
+    &lt;method name="f"&gt;return 100;&lt;/method&gt;
+  &lt;/class&gt;
+  &lt;myclass id="myview"/&gt;
+&lt;/canvas&gt;</pre><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1688"></a>5.1. Instance-First Development</h3></div></div></div><p>The equivalence between the two programs above supports a development strategy we call <a class="indexterm" name="id9814"></a><em class="glossterm">instance-first development</em>.  
+In instance-first development, you implement functionality for a single instance, and then "refactor" the instance into a class that 
+supports multiple instances.</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1687"></a>5.1.1. Global variables</h4></div></div></div><p>One instance-first development technique is to use global variables.  It is often easier to develop and debug a program that 
+stores state in global variables than it is to attach variables to a state, session, or user object.  
+This avoids threading the state object through all the API calls, and it makes it easier to find and manipulate the state during 
+interactive debugging (<a class="xref" href="debugging.html" title="Chapter 51. Debugging">Chapter 51, <i>Debugging</i></a>).</p><p class="fixme"><em><span class="remark"><span class="para-label">FIXME: </span>
+Can we make this a little less abstract, please? Some code, maybe?
+</span></em></p><p>Eventually you can refactor the globals into members of a state
+object, but this refactoring is relatively easy, especially if you
+have written the program with the knowledge that this would eventually
+happen.</p><p>This technique is cheaper than maintaining the state threading and
+writing the extra access during all the other refactoring of the
+program (as extra parameter to each method that is added or
+refactored).  This is a special case of the principle that if you are
+going to refactor a program anyway, you can optimize the order in
+which the refactorings are applied, and where within the development
+pipeline they occur.</p><p>In the global variable approach to instance-first development, the entire program is an instance.  Prototype-based programming supports 
+another approach, that doesn’t rely on global variables.  With prototype-based programming, you can add functionality to and interact 
+with a single instance of an object, refactoring its members and functionality into a class when another instance with the same or 
+similar functionality is called for.   This avoids a pitfall of programming, <a class="indexterm" name="id9827"></a><em class="glossterm">premature abstraction</em>, where behavior is generalized 
+too early and has to be rewritten at the framework level, where it’s difficult to reason and expensive to debug, rather than at 
+the level of the specific instance.  <span class="em">It’s easier to generalize from two examples than from one.</span></p><p>In a language without prototypes, you can apply this strategy for instance-driven development by implementing "singleton" classes.  
+Prototypes simply cut out the middleman, reducing the line count, the abstraction, and the indirection that is necessary during development. 
+ This is particularly useful during user interface programming, where there may be a number of one-off visual objects.  
+Using a singleton class for each of these can increase the size of a program (and therefore the development time) substantially, 
+but you want the freedom to rapidly refactor these into classes.  Prototypes in a language that also supports classes lets you seamlessly
+ move between these representations.</p><p>Instance-first development is similar to test-driven development, but is orthogonal to it. 
+(Instance-first development can be used independently from test-driven development, or to complement it.)  
+In test-driven development, you incrementaly add test-specific functionality to encompass a growing test suite.  
+In instance-first development, you add instance-specific functionality to an instance and then generalizes from it.  
+Both are cases of implementing specific cases first and then generalizing from them.</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1689"></a>5.2. The Instance Substitution Principal</h3></div></div></div><p>In LZX, classes are user-defined XML tags that have functionality  
+ equivalent to class definitions in non-XML languages.  However, LZX already has methods and attributes (similar to fields or properties in other languages) 
+on instances definitions, so class definitions look like instance definitions.</p><p>In understanding the semantics of LZX class definitions, you may find the following principle useful:</p><div class="blockquote"><blockquote class="blockquote"><p><a class="indexterm" name="id9839"></a><em class="glossterm">Instance substitution principal</em>: An instance of a class can be replaced by the definition of the instance,
+  without changing the program semantics.</p></blockquote></div><p>The two programs at the beginning of this entry illustrate the instance substitution principle.</p><p>The instance substitution principle can be applied at the level of semantics, or at the level of syntax. 
+ At the level of semantics, it means that a member can equivalently be attached either to a class or its instance. 
+ At the level of syntax, it means that the means of defining a class member and an instance member are syntactically parallel.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1690"></a>5.3. Comparison of LZX to other languages</h3></div></div></div><p>Many prototype-based languages don't obey the instance substitution
+principle, either because they don't have classes, or because class
+and instance definitions are not parallel.  (Typically there's not a
+declarative means for defining an instance member.)  JavaScript
+versions 1.0 through 1.5 (the versions in browsers) is also a
+prototype-based language, but lacks classes as a first-class syntactic
+entity, and lacks the hierarchical syntax that Java, C++, and LZX use
+to define class members.  JavaScript 2.0, JScript.NET, and Python have
+a class definition syntax, but don’t use the same syntax to
+define instance members.  For example, contrast the following two
+Python programs, which parallel the LZX programs above.</p><div class="informalexample"><pre class="programlisting">
+myobject = object()
+myobject.f = lambda f: 100
+</pre></div><div class="informalexample"><pre class="programlisting">
+class MyClass(object):
+  def f():
+    return 100
+myobject = MyClass()
+</pre></div><p>The syntactic version of the instance substitution principle makes a class look like a function or a macro.  
+Class, function, and macro definitions 
+are all mechanisms for abstracting program structure so that it can be reused. 
+ </p><p>
+ Some languages hide this, because they're missing mechanisms to the specific or general case.  
+ For example, the instance substitution principle only makes sense in a language with both prototypes and classes; 
+the derivation of a function definition from a sequence of statements is muddier in a language such as C++ or Java that 
+is missing anonymous functions to represent the intermediate step.</p><p></p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="constraints.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.power.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="methods-events-attributes.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 27. Constraints </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 29. Methods, Events, Handlers, and Attributes</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

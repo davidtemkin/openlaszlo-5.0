@@ -1,0 +1,36 @@
+<class name="myclass">
+  <!-- 'foo' has an initial value of 1 -->
+  <attribute name="foo" value="1"/>
+  <!-- 'thing' is always four more than 'foo' -->
+  <attribute name="thing" value="foo + 4" when="always"/>
+  <!-- 'bar' is only declared, initialized below -->
+  <attribute name="bar"/>
+
+  <handler name="oninit">
+    <!--
+      the attribute 'bar' will be created in the instance
+      sets its value to true
+      is appropriate for internal script flags
+    -->
+    this.bar= true; 
+    <!-- 
+      probably a mistake...
+      sets the value of attribute 'foo' to 4,
+      but does not update the constraint on 'thing'
+      use setAttribute, as below
+    -->
+    this.foo = 4;            
+  </handler>
+
+  <method name="dothis">
+    if (bar) {
+      <!--
+        sets the value of 'foo' to 6             
+        sends the event 'onfoo'
+        (which causes dependent constraints to be evaluated)
+        as a result 'thing' will equal 10
+      -->
+      this.setAttribute("foo", 6);
+    }                
+  </method>
+</class>

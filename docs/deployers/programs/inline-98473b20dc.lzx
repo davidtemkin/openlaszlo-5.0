@@ -1,0 +1,7 @@
+      <canvas debug="true">
+        <script>
+          var wookieName = LzBrowser.getInitArg('wookie');
+          Debug.write("The Wookie's Name: " + wookieName);
+        </script>
+      </canvas>
+    

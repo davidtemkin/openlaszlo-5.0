@@ -1,0 +1,110 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;inputtext&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>inputtext<span class="ang">&gt;</span></h1><p class="short">The basic input-text element.</p><p class="meta">Extends <a href="text.html"><code>LzText</code></a></p>
+        <p>
+          This tag creates an area of the canvas that the user can use to
+ edit text.  It is equivalent to the HTML 
+          <code>&lt;input
+ type="text"&gt;</code>
+          , 
+          <code>&lt;input type="password"&gt;</code>
+          ,
+ and 
+          <code>textarea</code>
+           tags.
+        </p>
+         
+        <p>
+          See the documentation for the 
+          <code>&lt;text&gt;</code>
+           tag for a description of the 
+          <code>width</code>
+           and 
+          <code>height</code>
+           attributes,
+ and of scrolling.
+        </p>
+         
+        <code>&lt;h2&gt;Single-line input text&lt;/h2&gt;</code>
+         
+ 
+        <p>
+          With the 
+          <code>multiline</code>
+           and
+ 
+          <code>password</code>
+           attributes set to 
+          <code>false</code>
+           (the default), this tag is similar to the HTML 
+          <code>&lt;input
+ type="text"&gt;</code>
+           tag.  In this use, long lines of text are
+ clipped according to the 
+          <code>width</code>
+           attribute.
+        </p>
+         
+ 
+        
+          <pre><code>&lt;canvas height="50"&gt;
+   &lt;inputtext width="150"&gt;This text is editable.&lt;/inputtext&gt;
+ &lt;/canvas&gt;</code></pre>
+        
+         
+ 
+        <code>&lt;h2&gt;Multi-line input text&lt;/h2&gt;</code>
+         
+ 
+        <p>
+          With the 
+          <code>multiline</code>
+           attribute set to
+ 
+          <code>true</code>
+          , this tag is similar to the HTML
+ 
+          <code>&lt;textarea&gt;</code>
+           tag.  In this use, text is wrapped to
+ the length of the 
+          <code>width</code>
+           attribute, and the user
+ can press Enter to create multiple lines of input.
+        </p>
+         
+ 
+        
+          <pre><code>&lt;canvas height="50"&gt;
+   &lt;inputtext width="150" multiline="true"&gt;This text is editable.&lt;/inputtext&gt;
+ &lt;/canvas&gt;</code></pre>
+        
+         
+ 
+        <code>&lt;h2&gt;Passwords&lt;/h2&gt;</code>
+         
+ 
+        <p>
+          With 
+          <code>password</code>
+           set to 
+          <code>true</code>
+          , this
+ tag is similar to the HTML 
+          <code>&lt;input type="password"&gt;</code>
+           tag.  Input characters are displayed as the asterisk
+ ('
+          <code>*</code>
+          ') character.
+        </p>
+         
+ 
+        
+          <pre><code>&lt;canvas height="20"&gt;
+   &lt;inputtext width="100" password="true"&gt;password.&lt;/inputtext&gt;
+ &lt;/canvas&gt;</code></pre>
+        
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">enabled</td><td class="ty">boolean</td><td class="ty"/><td>If true, the inputtext will be enabled</td></tr><tr><td class="nm">password</td><td class="ty">boolean</td><td class="ty"/><td>If true, the inputtext contents will be obscured</td></tr></table><h3>Events</h3><ul class="events"><li><code>onenabled</code> — Sent whenever the text field is enabled.</li></ul><h3>Methods</h3><ul class="methods"><li><code>updateData()</code></li></ul>
+</main><script src="_nav.js"></script></body></html>

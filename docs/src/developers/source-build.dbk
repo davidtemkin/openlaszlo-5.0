@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<chapter id="source-build">
+<title>Building OpenLaszlo from Source</title>
+<para>The instructions for building OpenLaslo from source are maintained on the OpenLaszlo
+Wiki here:</para>
+  <para>
+  <ulink url="http://wiki.openlaszlo.org/SubversionBuildInstructions">http://wiki.openlaszlo.org/SubversionBuildInstructions</ulink>
+</para>
+</chapter>

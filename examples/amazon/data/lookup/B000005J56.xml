@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ItemLookupResponse><Items>
+  <Request><IsValid>True</IsValid></Request>
+  <Item>
+    <ASIN>B000005J56</ASIN>
+    <SmallImage><URL>data/covers/B000005J56.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B000005J56.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B000005J56.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>English Chamber Orchestra</Artist>
+      <Manufacturer>EMI Classics</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>1998-06-09</ReleaseDate>
+      <Title>Brandenburg Concertos</Title>
+      <ListPrice><Amount>1998</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$19.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$11.00</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$5.75</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$15.99</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Bach’s six concertos sparkle with counterpoint — a cornerstone of the Baroque repertoire.</Content></EditorialReview></EditorialReviews>
+  </Item>
+</Items></ItemLookupResponse>

@@ -1,0 +1,17 @@
+<library>
+    <resource name="lzradio_rsrc">
+        <frame src="resources/radiobutton/radio_btn_dsclt.png"/>
+        <frame src="resources/radiobutton/radio_btn_dslct_mo.png"/>
+        <frame src="resources/radiobutton/radio_btn_slct.png"/>
+        <frame src="resources/radiobutton/radio_btn_dslct_dsbl.png"/>
+        <frame src="resources/radiobutton/radio_btn_slct.png"/>
+        <frame src="resources/radiobutton/radio_btn_slct.png"/>
+        <frame src="resources/radiobutton/radio_btn_slct.png"/>
+        <frame src="resources/radiobutton/radio_btn_slct_dsbl.png"/>
+    </resource>
+</library>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2006 Laszlo Systems, Inc. All Rights Reserved.                    *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->

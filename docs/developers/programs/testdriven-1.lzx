@@ -1,0 +1,18 @@
+<canvas debug="true" width="100%">
+<debug y="150"/>
+<include href="lzunit"/>
+<simplelayout axis="y" spacing="10"/>
+
+<TestSuite>
+    <TestCase>
+        <method name="testGoButtonTrue">
+            assertTrue(goButton.go);
+        </method>
+        <method name="addTests"> 
+            this.addTest("testGoButtonTrue");
+        </method> 
+    </TestCase>   
+</TestSuite>
+
+</canvas>
+<!-- Copyright 2001-2008 Laszlo Systems, Inc. -->

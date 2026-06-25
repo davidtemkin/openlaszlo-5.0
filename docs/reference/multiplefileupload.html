@@ -1,0 +1,40 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>&lt;multiplefileupload&gt; — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1><span class="ang">&lt;</span>multiplefileupload<span class="ang">&gt;</span></h1><p class="short">A swf8-specific class for uploading multiple files to a server</p><p class="meta">Extends <a href="view.html"><code>LzView</code></a></p>
+                        
+        <p>
+                A class for uploading a single file using the Flash 8 file upload api. This only works with
+                the swf8 runtime, that is, with lzr=swf8.
+                </p>
+                        
+        <p>
+                          Using this class requires a service to which to upload. A sample upload jsp is provided,
+                which uses the cos.jar library from servlets.com. To use the example, copy cos.jar from
+                
+          <a >servlets.com</a>
+           into $TOMCAT_HOME/common/lib
+                and rename lps/components/incubator/uploader/example/upload.jsp.txt to upload.jsp.
+                Restart tomcat, so it will see the new jar, then visit
+                
+          <a >
+                    http://localhost:8080/legals/lps/components/incubator/uploader/example/test-multiplefileupload.lzx?lzr=swf8</a>
+                          
+        </p>
+                        
+        <p>(The terms of the servlets.com license forbid it from being redistributed 
+                with Open Laszlo.)
+                </p>
+                        
+                
+        <p>
+                              To upload a single file, see 
+          <code>fileupload</code>
+          .
+                
+        </p>
+                    
+      <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">erroroccured</td><td class="ty">boolean</td><td class="ty">false</td><td>Error occured</td></tr><tr><td class="nm">numfields</td><td class="ty">expression</td><td class="ty">1</td><td>numbers of fileuploadlist</td></tr></table>
+</main><script src="_nav.js"></script></body></html>

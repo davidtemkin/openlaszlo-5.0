@@ -1,0 +1,4 @@
+     <method name="handleClick">
+         super.handleClick();
+         Debug.debug('new click');
+     </method>

@@ -1,0 +1,19 @@
+mainApplication640.lzx:
+<canvas width="640" height="480">
+  <include href="mainApplication.lzx"/>
+</canvas>
+
+mainApplication800.lzx:
+<canvas width="800" height="600">
+  <include href="mainApplication.lzx"/>
+</canvas>
+
+mainApplication1024.lzx:
+<canvas width="1024" height="768">
+  <include href="mainApplication.lzx"/>
+</canvas>
+
+mainApplication1280.lzx:
+<canvas width="1280" height="1024">
+  <include href="mainApplication.lzx"/>
+</canvas>

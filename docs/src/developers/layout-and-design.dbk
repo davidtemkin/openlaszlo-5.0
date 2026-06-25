@@ -1,0 +1,407 @@
+<chapter id="layout-and-design">
+ 
+<title>Layout and Design</title>
+<!-- remove commented out sample code that was ignored by the build. IORIO 20 nov 2007 -->
+<para>
+LZX enables the creation of applications that have high design values and fluid, graceful interaction.  
+In this chapter we discuss some basic tools for layout and design.  For more advanced topics and exploration of the aesthetics of OpenLaszlo application design, see the <ulink url="../design/" type="">Designer's Guide</ulink>.
+</para>
+<para/><section><title>Declarative positioning of views using layouts</title>
+<para>
+By default, all views position themselves at x="0" y="0" in their coordinate space. That means 
+that two sibling views will sit on top of each other. Aside from explicitly positioning the views so they don't overlap, 
+the easiest way to separate the siblings is to use a <indexterm><primary>simplelayout</primary></indexterm><classname>simplelayout</classname>:</para>
+
+
+<para>
+Instead of specifying each view's coordinates (either through a
+constraint or absolutely), you can declare a layout that decides how
+sibling views position themselves relative to one another. The
+simplest layout is <indexterm><primary>simplelayout</primary></indexterm><classname>simplelayout</classname>, which
+positions sibling elements beneath (or to the right of) each other:
+</para>
+
+<example role="live-example">
+   <title>Simple Layout</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/layout-and-design-$1.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>
+Here's an example that shows how to use layouts to resize views in response to user actions:
+</para>
+
+<example role="live-example">
+   <title>Adding a view to a layout</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/layout-and-design-$2.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+
+
+<para>Like all layouts, <indexterm><primary>simpleLayout</primary></indexterm><classname>simpleLayout</classname> affects how <glossterm>sibling</glossterm> views relate to one another. This remains true even if views are dynamically instantiated. You can set both the axis of a simplelayout as well as the distance between the elements. Also note layouts update as the dimensions of the affected views change.</para>
+
+<para>If you need a specific group of views to be affected by a
+simplelayout, but want them to be isolated from the rest of the
+application, encase them in a <glossterm>parent view</glossterm>. You
+can then specify coordinates on the parent view:</para>
+
+<example role="live-example">
+   <title>Isolating views</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/layout-and-design-$3.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<!-- added the following para and example to fix LPP-1030: IORIO 26 sep 2007 -->
+<para>There may be times when you would like to select between more than one 
+layout in which to display your view. Options are a good way to do this
+You then override addSubview in your layout as shown in the code below. To get
+a better idea of what's going on, run the program with the debugger on.</para>
+<example role="live-example">
+   <title>Choosing between layouts</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/layout-and-design-$19.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+</section><section><title>Horizontal and Vertical Boxes</title>
+<para>
+In addition to layouts, LZX includes the <indexterm><primary>hbox</primary></indexterm><sgmltag class="element">&lt;hbox&gt;</sgmltag><remark role="fixme">[unknown tag]</remark>
+<!--unknown tag: hbox-->
+ and <indexterm><primary>vbox</primary></indexterm><sgmltag class="element">&lt;vbox&gt;</sgmltag><remark role="fixme">[unknown tag]</remark>
+<!--unknown tag: vbox-->
+ tags that allow you to group views horizontally and vertically. Unlike layouts, which are objects that affect the behavior of their siblings, <indexterm><primary>hbox</primary></indexterm><sgmltag class="element">&lt;hbox&gt;</sgmltag> and <indexterm><primary>vbox</primary></indexterm><sgmltag class="element">&lt;vbox&gt;</sgmltag> are themselves views that constrain the layout of their children. Each <indexterm><primary>hbox</primary></indexterm><sgmltag class="element">&lt;hbox&gt;</sgmltag> or <indexterm><primary>vbox</primary></indexterm><sgmltag class="element">&lt;vbox&gt;</sgmltag> contains a layout, and the tag syntax allows you to set the layout attributes directly on the hbox or vbox.
+</para>
+<para>You can also combine <indexterm><primary>hbox</primary></indexterm><sgmltag class="element">&lt;hbox&gt;</sgmltag> and <indexterm><primary>vbox</primary></indexterm><sgmltag class="element">&lt;vbox&gt;</sgmltag> elements to form tables. The following example illustrates this. (There are more elegant ways to achieve this effect; we include it here to illustrate the principles.)</para>
+
+<example role="live-example">
+   <title>hbox and vbox</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/layout-and-design-$4.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+
+<para/></section><section id="layout-and-design.variations"><title>Variations on Layout</title>
+<para>
+As mentioned previously, layouts act upon sibling elements, but they can control more than just spacing. For example, they can
+be used to cause views to grow and shrink, as shown below.
+</para>
+
+
+<para/><section id="layout-and-design.stableborderlayout"><title>StableBorderLayout</title>
+<para>
+A frequent layout problem when designing GUIs is to have an element stretch while its two surrounding siblings maintain a constant size across the stretch axis. LZX solves this problem with the <indexterm><primary>stableborderlayout</primary></indexterm><classname>stableborderlayout</classname>:</para>
+
+<example role="live-example">
+   <title>Stableborder Layout</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/layout-and-design-$5.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>
+As the name suggests, this layout can be used to create a border with
+a stable dimension (width or
+height). <indexterm><primary>stableborderlayout</primary></indexterm><classname>stableborderlayout</classname> is very useful for
+creating borders, frames and windows. In this example,
+<indexterm><primary>stableborderlayout</primary></indexterm><classname>stableborderlayout</classname> is combined with some
+constraints to create a 5 pixel blue border:</para>
+
+<example role="live-example">
+   <title>Creating a border</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/layout-and-design-$6.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>
+If you wanted to use the above code to frame a particular view irrespective of where it was in the view hierarchy, a good 
+way would be to use a <link linkend="layout-and-design.floatingviews">floating view</link>:
+</para>
+
+<example role="live-example">
+   <title>Using a floating view</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/layout-and-design-$7.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para/></section><section id="layout-and-design.constantlayout"><title>Constant Layout</title>
+<para>
+The <indexterm><primary>constantlayout</primary></indexterm><sgmltag class="element">&lt;constantlayout&gt;</sgmltag><remark role="fixme">[unknown tag]</remark>
+<!--unknown tag: constantlayout-->
+ tag is a way of defining a margin. For example, if all of the children of a container needed to be
+ indented 10 pixels from the left hand edge of the container:
+</para>
+
+<example role="live-example">
+   <title>Constant Layout</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/layout-and-design-$8.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>Here <indexterm><primary>constantlayout</primary></indexterm><sgmltag class="element">&lt;constantlayout&gt;</sgmltag> and
+<indexterm><primary>simplelayout</primary></indexterm><sgmltag class="element">&lt;simplelayout&gt;</sgmltag><remark role="fixme">[unknown tag]</remark>
+<!--unknown tag: simplelayout-->
+ are combined so that the
+<indexterm><primary>constantlayout</primary></indexterm><sgmltag class="element">&lt;constantlayout&gt;</sgmltag> controls the left, whereas
+the<indexterm><primary>simplelayout</primary></indexterm><sgmltag class="element">&lt;simplelayout&gt;</sgmltag> dictates the vertical spacing between the
+siblings.
+</para>
+
+
+<para/></section></section><section id="layout-and-design.designconsiderations"><title>Design considerations in LZX programs</title>
+<para>
+This section 
+discusses <literal>layouts</literal>, which are constructs that allow you to focus on larger design issues by freeing you from the 
+tedium of positioning views. Layouts are implemented with <literal>constraints</literal>, which are described in 
+<xref linkend="constraints"/>.
+For more on designing the "look and feel" of OpenLaszlo applications, please see
+<xref linkend="designers"/>.
+</para>
+
+
+<para/><section><title>The view hierarchy</title>
+<para>
+Views can be nested inside one another, and they can reference other parts of the view hierarchy using 
+dot syntax and/or IDs. 
+The view hierarchy helps you define how the various elements of your application relate to one another. 
+It is helpful to break your application into various elements. Consider a photo-viewing application that has a list of images in 
+a right-hand column, and a main stage area for displaying the images to the left. There is also a trash area that we'll cover later. 
+At a very high level, you might break your application up as follows:
+</para>
+
+<example role="live-example">
+   <title>Outline of photo application</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/layout-and-design-$9.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>
+You can use views with background colors when mocking up applications as shown above, to make them easier to prototype.</para>
+
+<para>If you approach the application in this manner, you've effectively broken it up into manageable pieces already. <varname>listOfImages</varname>, <varname>stage</varname> and <varname>trash</varname> could all be developed independently of one another. <varname>listOfImages</varname> would contain the text-list of images that are bound to some data with the descriptive text showing. When the user clicks one of the images, it would call a <indexterm><primary><literal>showImage()</literal></primary></indexterm><methodname>showImage()</methodname> method on <varname>stage</varname> with the URL of the image to show as an argument.</para>
+
+<para>The replicated views inside of <varname>listOfImages</varname>
+would best be positioned using a layout.
+</para>
+
+<section id="layout-and-design.floatingviews"><title>Floating views</title>
+<para>
+The view hierarchy could also be a constraint. Imagine that in the above example, you wanted to be able to drag an item from the list of image names from <varname>listOfImages</varname> to <varname>trash</varname>. 
+Frequently in drag-and-drop environments, the original item that was dragged is left in place (although some indication may be given that it is in a transient state, such as being faded out), while a copy of it is dragged. If each of the image titles was draggable, then not only might a dragged item disrupt the arrangement of its siblings, but you wouldn't be able to leave the original intact, in order to obtain the behavior described above. 
+</para>
+
+<para>
+To get around this problem, you could use a floating view as the draggable view. A floating view is one that floats on top of the rest of your application, and only appears when dragging:
+</para>
+<orderedlist spacing="compact"><listitem><para>User clicks and holds on a view.</para></listitem><listitem><para>Floating view made visible, and located over clicked view.</para></listitem><listitem><para>Any visual changes applied to clicked view (e.g. color/alpha transform).</para></listitem><listitem><para>As mouse moves around, the floating view follows the mouse.</para></listitem><listitem><para>Onmouseup the floating view disappears, any actions performed, original clicked view restored.</para></listitem></orderedlist>
+<para>
+To position the floating view over the clicked view, you can use the <indexterm><primary><literal>getAttributeRelative()</literal></primary></indexterm><methodname>getAttributeRelative()</methodname> method of view to obtain the x and y coordinates of the view relative to a view other than its parent. For example, consider the case below:</para>
+  <example role="live-example">
+    <title>Positioning a "floating view"</title>
+    <programlisting language="lzx">
+      <textobject><textdata fileref="programs/layout-and-design-$10.lzx"/></textobject> 
+    </programlisting>
+  </example>
+
+
+<para>To achieve this, you could create a view from script when the mouse goes down over one of the views you want to drag:
+</para>
+
+<para>
+This code is not easy to read, although conceptually it's fairly simple — 
+"create a new view when the mouse button is depressed, and drag it until the mouse button is released". 
+Note also that you have to listen for the global <indexterm><primary>onmouseup event</primary></indexterm><literal>onmouseup</literal> event instead of the <indexterm><primary>onmouseup event</primary></indexterm><literal>onmouseup</literal> on the dynamically created view. Because it was positioned under the cursor after the mouse was down, the event system does not get notified when the mouse goes up over it.</para>
+<para>
+This approach is fairly laborious — you have to copy all of the attributes of the original view to the new one. If you wanted to have the text field appear in the dragged view, you would have to create a new text field to match it at run-time. As the dragged view becomes more complex, it will take longer to instantiate when the user depresses the mouse button, since view instantiation is fairly processor-expensive.</para>
+<para>
+
+A better approach would be to have the floating view ready in advance:
+</para>
+
+<example role="live-example">
+   <title>Building a "floating view"</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/layout-and-design-$11.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+
+<para>
+This code is much cleaner, and the floater code is now completely independent of the <literal>imagerow</literal> code. Individual properties of the floater can still be set (in this case they're passed as arguments to the showFloater method).
+</para>
+<para>
+Taking this a step further, if our list of images were replicated against a dataset an even more elegant approach would be to pass the data node of the replicated <literal>imageRow</literal> instance to the floater, and have the floater do the right thing with the data.
+</para>
+
+<example role="live-example">
+   <title>Using a dataset to drive layouts</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/layout-and-design-$12.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>
+The floater must have an empty datapath assigned in advance. Notice how since only a <sgmltag class="element" role="LzDatapointer">&lt;datapointer&gt;</sgmltag> element is passed to the floating view, the floater can access attributes of the data that were not referenced in the <literal>imageRow</literal> class (for example,the <literal>src</literal> attribute). This can become particularly useful when you want to "drop" the floater somewhere. The drop target may need to access other data properties (or even delete the XML node in the dataset), and passing a pointer to it saves retracing it.</para>
+<para>
+
+A floating view is not only for draggable objects. If you wanted to frame a specified view, regardless of where it was in the view hierarchy, you might also find a floating view to be the best option. See the <link linkend="layout-and-design.stableborderlayout">StableBorderLayout</link> section for more.
+</para>
+
+<para/></section><section><title>Resources and ignoring layouts</title>
+
+<para>
+You should avoid placing views inside of views with a
+resource. Instead, to have a background image in a container view, have
+a view that attaches the resource be a child of the parent view. Use
+<literal>options="ignorelayout"</literal> to prevent the background image
+from being affected by any layouts that act upon the children of its
+container:
+</para>
+
+<example role="live-example"><title>ignorelayout</title><programlisting>
+&lt;view name="container"&gt;
+  &lt;view resource="someimg.jpg" options="ignorelayout"/&gt;
+  &lt;view name="childView"/&gt;
+&lt;/view&gt;
+</programlisting></example>
+
+
+
+
+
+
+<para/></section></section></section><section><title>Scripting and Layouts</title>
+
+<para/><section id="layout-and-design.addressing"><title>Addressing Layouts</title>
+
+<para>Since a layout extends Node, it can be addressed using dot syntax:</para>
+
+<informalexample role="live-example"><programlisting>
+&lt;canvas height="140"&gt;
+  &lt;class name="coloredRect" width="20" height="80"/&gt;
+
+  &lt;view name="container"&gt;
+    &lt;simplelayout name="slayout" axis="x" spacing="10"/&gt;
+    &lt;coloredRect bgcolor="red"/&gt;
+    &lt;coloredRect bgcolor="aqua"/&gt;
+    &lt;coloredRect bgcolor="yellow"/&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+</programlisting></informalexample>
+
+<para>In the above example, the layout could be accessed by:
+<literal>container.slayout</literal>.</para>
+
+<para>You might need to address a layout in script, in order to change
+one of its attributes at run-time, to call the layout's
+<indexterm><primary><literal>update()</literal></primary></indexterm><methodname>update()</methodname> method, or to lock it. A layout can also have
+an id, so that it can be accessed globally.</para>
+<para/></section><section><title>Layouts Array</title>
+<para>
+All nodes
+have a layouts array, which contains pointers to all of the layouts
+that act upon its children:</para>
+
+<example role="live-example">
+   <title>Addressing layouts</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/layout-and-design-$15.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+
+<para/></section><section><title>Locking and Unlocking Layouts</title>
+
+<para>Layouts can be locked and unlocked using the <indexterm><primary><literal>lock()</literal></primary></indexterm><methodname>lock()</methodname>
+and <indexterm><primary><literal>unlock()</literal></primary></indexterm><methodname>unlock()</methodname> methods respectively (inherited from the
+<indexterm><primary>layout</primary></indexterm><classname>layout</classname> class).  When you lock a layout, you prevent it from
+updating. For example, if you click the colored boxes in the following
+example to enlarge them, the simplelayout will automatically update,
+and the spacing between the boxes will remain consistent. However, if
+you lock the layout, then grow the boxes, the simplelayout will not
+update, until the <indexterm><primary><literal>unlock()</literal></primary></indexterm><methodname>unlock()</methodname> method is called on the
+layout:</para>
+
+<example role="live-example">
+   <title>Locking and unlocking layouts</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/layout-and-design-$16.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+
+<para>The <indexterm><primary><literal>lock()</literal></primary></indexterm><methodname>lock()</methodname> method sets the layout's
+<indexterm><primary>locked</primary></indexterm><sgmltag class="attribute">locked</sgmltag> attribute to true. The <indexterm><primary><literal>unlock()</literal></primary></indexterm><methodname>unlock()</methodname> method
+calls the layout's <indexterm><primary><literal>update()</literal></primary></indexterm><methodname>update()</methodname> method, then sets the
+<indexterm><primary>locked</primary></indexterm><sgmltag class="attribute">locked</sgmltag> attribute to <literal>false</literal>.</para>
+
+<para/></section></section><section><title>Animating layout</title>
+<para>Layouts can be animated; that is, the properties of the layout can be set to vary over time.
+For an example and an explanation of how this is done, see <xref linkend="animation"/></para>
+
+<para/></section><section><title>Writing Custom Layouts</title>
+<para>
+When none of the default OpenLaszlo layouts do what you need, you can write a custom layout of your own. This section shows the essential aspects of building one.
+</para>
+
+
+<para/><section><title>The <indexterm><primary><literal>update()</literal></primary></indexterm><methodname>update()</methodname> method</title>
+
+<para>The <indexterm><primary><literal>update()</literal></primary></indexterm><methodname>update()</methodname> method is the most important method in
+a layout — it controls what the layout does. For example, here
+is a very basic custom layout that spaces views 20px apart. This
+is similar to the behavior of the<indexterm><primary>simplelayout</primary></indexterm><sgmltag class="element">&lt;simplelayout&gt;</sgmltag>, but unlike <indexterm><primary>simplelayout</primary></indexterm><sgmltag class="element">&lt;simplelayout&gt;</sgmltag> this one spaces
+the left hand edge of the views, rather than distributing them
+evenly:</para>
+
+<example role="live-example">
+   <title>Updating a layout</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/layout-and-design-$17.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+
+<para>All layouts have a <literal>subviews</literal> array, which allows you to cycle through the sibling views and adjust their properties accordingly. The <indexterm><primary><literal>addSubview()</literal></primary></indexterm><methodname>addSubview()</methodname> method is automatically called whenever a view is added—at init time, when a view is dynamically generated from script or via data replication. It ensures that the <indexterm><primary><literal>update()</literal></primary></indexterm><methodname>update()</methodname> method gets called so that the layout updates. If the <indexterm><primary><literal>addSubview()</literal></primary></indexterm><methodname>addSubview()</methodname>method were not present, the above example would still look fine when the application first started, but any dynamically created views would appear out of the layout.</para>
+
+<para>Notice both:</para>
+
+<orderedlist spacing="compact"><listitem><para>The test for the <indexterm><primary>locked</primary></indexterm><sgmltag class="attribute">locked</sgmltag> attribute (<literal>if (this.locked) return;</literal>) to ensure conformance with normal layout response to the locking and unlocking of layouts.</para></listitem><listitem><para>The use of the <indexterm><primary>locked</primary></indexterm><sgmltag class="attribute">locked</sgmltag> attribute in the <indexterm><primary><literal>update()</literal></primary></indexterm><methodname>update()</methodname> method (<literal>this.locked = true;</literal> and <literal>this.locked = false;</literal>) to prevent simultaneous changes to the layout.</para></listitem></orderedlist>
+<para>
+Here is a slightly more complicated example. In fact the layout defined below is the same as <literal>&lt;simplelayout axis="x" spacing="10"/&gt;</literal>.
+</para>
+<example role="live-example">
+   <title>Horizontal simplelayout</title>
+   <programlisting language="lzx">
+   <textobject><textdata fileref="programs/layout-and-design-$18.lzx"/></textobject> 
+   </programlisting>
+</example>
+
+<para>
+Notice that the <indexterm><primary><literal>update()</literal></primary></indexterm><methodname>update()</methodname> method is slightly different
+now — it adds up the total widths of the preceding siblings
+(adding the spacing) and sets the x to the total. That is the basic
+algorithm for simplelayout. Another very important difference is that
+the <indexterm><primary><literal>addSubview()</literal></primary></indexterm><methodname>addSubview()</methodname> method registers the inherited
+<indexterm><primary><literal>updateDelegate()</literal></primary></indexterm><methodname>updateDelegate()</methodname> to listen for changes to that
+subview's width. <indexterm><primary><literal>updateDelegate()</literal></primary></indexterm><methodname>updateDelegate()</methodname> is a delegate that
+all subclasses of layout have. It calls that layout's
+<indexterm><primary><literal>update()</literal></primary></indexterm><methodname>update()</methodname> method. In this example, the layout needs to
+update when the width of any of the sibling views changes, so the call
+to register it happens in the <indexterm><primary><literal>addSubview()</literal></primary></indexterm><methodname>addSubview()</methodname> method.
+</para>
+
+
+
+
+
+
+<para/></section></section></chapter>

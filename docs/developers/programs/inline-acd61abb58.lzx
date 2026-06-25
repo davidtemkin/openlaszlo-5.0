@@ -1,0 +1,45 @@
+<canvas width="200" height="400">
+  <attribute name="appear" type="number" value="0" />
+  <handler name="onappear">
+    win.show.doStart();
+  </handler>
+  <window id="win" title="Create and Account"
+      y="-300" width="180" height="300">
+    <animator name="show" attribute="y" from="-300" to="50"
+        start="false" relative="false" duration="500" />
+    <animator name="hide" attribute="y" from="50" to="-300"
+        start="false" relative="false" duration="500" />
+    <simplelayout axis="y" spacing="4" />
+    <state name="question" apply="true">
+      <text multiline="true" width="160" align="center">
+        It looks like you don't have an account.
+        Would you like to create one now?
+      </text>
+      <button text="Go">
+        <handler name="onclick">
+          parent.question.remove();
+          parent.signup.apply();
+        </handler>
+      </button>
+    </state>
+    <state name="signup">
+      <text>Name:</text>
+      <edittext/>
+      <text>Email:</text>
+      <edittext />
+      <text>Username:</text>
+      <edittext name="uname"/>
+      <text>Password:</text>
+      <edittext name="pass" />
+      <button>Create Account
+        <handler name="onclick">
+          var s = "javascript:fillFormValues('" 
+            + parent.uname.getText() + "',
+            '" + parent.pass.getText() + "')";
+          lz.Browser.loadURL(s);
+          parent.hide.doStart();
+        </handler>
+      </button>
+    </state>
+  </window>
+</canvas>

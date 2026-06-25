@@ -1,0 +1,179 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter 11. Introduction to Databinding</title><link rel="stylesheet" type="text/css" href="../../includes/ol4-docs.css"><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"><link rel="home" href="../index.html" title="OpenLaszlo Application Developer's Guide"><link rel="up" href="../developers.tutorials.html" title="Part II. Tutorial Introduction"><link rel="prev" href="scripting-tutorial.html" title="Chapter 10. Introduction to Scripting"><link rel="next" href="classes-tutorial.html" title="Chapter 12. Introduction to Classes and Object Oriented Programming"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 11. Introduction to Databinding</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="scripting-tutorial.html">Prev</a> </td><th width="60%" align="center">Part II. Tutorial Introduction</th><td width="20%" align="right"> <a accesskey="n" href="classes-tutorial.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a name="data-tutorial"></a>Chapter 11. Introduction to Databinding</h2></div></div></div><p></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1460"></a>1. Introduction</h2></div></div></div><p>We shall be examining how to interact with data in LZX.</p><a name="data-tutorial.datapaths"></a><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1462"></a>2. The Basics</h2></div></div></div><p>As far as importing data into an LZX app is concerned, we always work in XML. The XML declaration is not required, but a single root XML node is. Data is represented by the <a class="indexterm" name="id4648"></a><code class="sgmltag-element">&lt;dataset&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ element.</p><div class="example"><a name="id4652"></a><p class="title"><b>Example 11.1. Datasets</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="80" width="100%" &gt;
+  &lt;dataset name="myData"&gt;
+    &lt;myXML&gt;
+      &lt;person show="simpsons"&gt;
+        &lt;firstName&gt;Homer&lt;/firstName&gt;
+        &lt;lastName&gt;Simpson&lt;/lastName&gt;
+      &lt;/person&gt;
+      &lt;person show="simpsons"&gt;
+        &lt;firstName&gt;Marge&lt;/firstName&gt;
+        &lt;lastName&gt;Simpson&lt;/lastName&gt;
+      &lt;/person&gt;
+      &lt;person show="simpsons"&gt;
+        &lt;firstName&gt;Montgomery&lt;/firstName&gt;
+        &lt;lastName&gt;Burns&lt;/lastName&gt;
+      &lt;/person&gt;
+    &lt;/myXML&gt;
+  &lt;/dataset&gt;
+  
+  &lt;text datapath="myData:/myXML[1]/person[1]/firstName[1]/text()"/&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>In the above example, the single root element is myXML. The <a class="indexterm" name="id4656"></a><code class="sgmltag-attribute">datapath</code> attribute of the <a class="indexterm" name="id4659"></a><code class="sgmltag-element">&lt;text&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ tag binds it to the data.</p><p>Datapaths use XPath attributes to navigate through the XML data. So the name of the dataset to use goes before the colon <code class="literal">myData:</code>, followed by the nodes, separated by forward slashes (/). The square brackets provide a (one-based) space to enter which sibling node we want. </p><p>In plain English, the above example says: "get me the text from the first firstName node, of the first person node of the first (and of course, only) myXML node." The text() method call returns that node's text.</p><p>To get Marge's name, we could rewrite the <a class="indexterm" name="id4667"></a><code class="sgmltag-element">&lt;text&gt;</code> tag as follows:</p><pre class="programlisting">
+&lt;text datapath="myData:/myXML/person[2]/firstName/text()" /&gt; 
+</pre><p>To get the "show" attribute of Montgomery, we could write:</p><pre class="programlisting">
+&lt;text datapath="myData:/myXML/person[3]/@show" /&gt; 
+</pre><p>The <code class="literal">/text()</code> path segment is unnecessary with the
+<a class="indexterm" name="id4675"></a><code class="sgmltag-attribute">datapath</code> attribute.</p><p>So far we've used the <a class="indexterm" name="id4679"></a><code class="sgmltag-element">&lt;text&gt;</code> tag in conjunction with a single datapath. If we wanted to present tabular information, this would mean each text element would need its own datapath, and would be cumbersome and difficult to write. Instead let's make a quick table, by giving a <a class="indexterm" name="id4682"></a><code class="sgmltag-element">&lt;view&gt;</code><em><span class="remark">[unknown tag]</span></em>
+
+ a datapath:</p><div class="example"><a name="id4686"></a><p class="title"><b>Example 11.2. Assigning a datapath to a view</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="80" width="100%"&gt;
+  &lt;dataset name="myData"&gt;
+    &lt;myXML&gt;
+      &lt;person show="simpsons"&gt;
+        &lt;firstName&gt;Homer&lt;/firstName&gt;
+        &lt;lastName&gt;Simpson&lt;/lastName&gt;
+      &lt;/person&gt;
+      &lt;person show="simpsons"&gt;
+        &lt;firstName&gt;Marge&lt;/firstName&gt;
+        &lt;lastName&gt;Simpson&lt;/lastName&gt;
+      &lt;/person&gt;
+      &lt;person show="simpsons"&gt;
+        &lt;firstName&gt;Montgomery&lt;/firstName&gt;
+        &lt;lastName&gt;Burns&lt;/lastName&gt;
+      &lt;/person&gt;
+    &lt;/myXML&gt;
+  &lt;/dataset&gt;
+
+  &lt;view name="rowOfData" datapath="myData:/myXML[1]/person[1]"&gt;
+    &lt;simplelayout axis="x" /&gt;
+    &lt;text datapath="firstName/text()" /&gt; 
+    &lt;text datapath="lastName/text()" /&gt; 
+    &lt;text datapath="@show" /&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_3.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>The datapath of the entire <code class="varname">rowOfData</code> view has now become Homer's <code class="varname">person</code> node. The child elements of <code class="varname">rowOfData</code> inherit this, so their datapaths can be referenced relatively.</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1461"></a>2.1. Multiple rows of data</h3></div></div></div><p>In the above example we used a single <code class="varname">rowOfData</code> node. Next, we shall use a range of nodes:</p><div class="example"><a name="id4697"></a><p class="title"><b>Example 11.3. Range of nodes</b></p><div class="example-contents"><pre class="programlisting">
+   
+&lt;canvas height="80" width="100%" &gt;
+  &lt;dataset name="myData"&gt;
+    &lt;myXML&gt;
+        &lt;person show="simpsons"&gt;
+          &lt;firstName&gt;Homer&lt;/firstName&gt;
+          &lt;lastName&gt;Simpson&lt;/lastName&gt;
+        &lt;/person&gt;
+        &lt;person show="simpsons"&gt;
+          &lt;firstName&gt;Marge&lt;/firstName&gt;
+          &lt;lastName&gt;Simpson&lt;/lastName&gt;
+        &lt;/person&gt;
+        &lt;person show="simpsons"&gt;
+          &lt;firstName&gt;Montgomery&lt;/firstName&gt;
+          &lt;lastName&gt;Burns&lt;/lastName&gt;
+        &lt;/person&gt;
+      &lt;/myXML&gt;
+  &lt;/dataset&gt;
+
+  &lt;view name="myTable"&gt;
+    &lt;simplelayout axis="y" /&gt;
+    &lt;view name="rowOfData" datapath="myData:/myXML[1]/person"&gt;
+      &lt;simplelayout axis="x" /&gt;
+      &lt;text datapath="firstName/text()" /&gt; 
+      &lt;text datapath="lastName/text()" /&gt; 
+      &lt;text datapath="@show" /&gt;
+    &lt;/view&gt;
+  &lt;/view&gt;
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>Whichever tag contains the <a class="indexterm" name="id4701"></a><code class="sgmltag-attribute">datapath</code> attribute will get repeated as often as is necessary.</p><p>Remember that datapaths bind themselves to a view, so if the data changes, so will the view. We shall come to that a little later.</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="data-tutorial.including"></a>3. Ways to include data</h2></div></div></div><p>So far we've been using embedded data (XML that is written into the document). This is fine for very small amounts of static data, but there are other methods better suited to larger (or dynamic) data.</p><div class="informaltable"><table class="informaltable" border="1"><colgroup><col><col><col></colgroup><thead><tr><th>How is it included?</th><th>When is it loaded?</th><th>Syntax</th></tr></thead><tbody><tr><td><a class="link" href="data-tutorial.html#data-tutorial.embedded" title="3.1. Embedded Data">Embedded</a></td><td>Compile-time</td><td>
+<div class="informalexample"><pre class="programlisting">
+&lt;dataset name="myData"&gt;
+  &lt;myXML&gt;
+     &lt;!-- ... other XML tags ... --&gt;
+  &lt;/myXML&gt;
+&lt;/dataset&gt;
+</pre></div>
+    </td></tr><tr><td><a class="link" href="data-tutorial.html#data-tutorial.included" title="3.2. Included Data">Included</a></td><td>Compile-time</td><td>
+<pre class="programlisting">
+&lt;dataset name="myData" src="myXMLDoc.xml"/&gt;
+</pre>
+    </td></tr><tr><td><a class="link" href="data-tutorial.html#data-tutorial.http" title="3.3. HTTP Data">HTTP data</a></td><td>Runtime</td><td>
+<pre class="programlisting">
+&lt;dataset name="myData" request="true" 
+         type="http" src="myXMLDoc.xml" /&gt;
+</pre>
+    </td></tr></tbody></table></div><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="data-tutorial.embedded"></a>3.1. Embedded Data</h3></div></div></div><p>Embedded data is XML between the <a class="indexterm" name="id4740"></a><code class="sgmltag-element">&lt;dataset&gt;</code> tags. When the OpenLaszlo Server compiles the application, the data is bound into it. The data can still be changed after the application runs. Included data is static.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="data-tutorial.included"></a>3.2. Included Data</h3></div></div></div><p>Included data is essentially the same as embedded data, except that the XML itself is kept in a separate file. The size of the initial download will be the same as with embedded data.</p><p>It is locally referenced via the filesystem, so it can be placed in other directories. Included data is static.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="data-tutorial.http"></a>3.3. HTTP Data</h3></div></div></div><p>Remote data goes over HTTP, which means it can (but doesn't have to) be dynamic. If it is static, then the only difference between it and included or embedded data is that it is downloaded <span class="i">after</span> the application loads. The <code class="literal">type="http"</code> attribute indicates that this is an HTTP request. The requests can be either GET or POST. </p><p>There are several points at which the client requests the data:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>The client will request the data as soon as the app loads if the dataset's  <a class="indexterm" name="id4758"></a><code class="sgmltag-attribute">request</code> attribute is true. </p></li><li class="listitem"><p>If the <a class="indexterm" name="id4763"></a><code class="sgmltag-attribute">request</code> attribute is set to "true", the client will also request the data every time the querystring or base URL of the dataset changes (using the <a class="indexterm" name="id4766"></a><code class="methodname">setQueryString()</code> or <a class="indexterm" name="id4770"></a><code class="methodname">setSrc()</code> respectively) methods of the <code class="literal">lz.dataset</code> object.</p></li><li class="listitem"><p>When the dataset's <a class="indexterm" name="id4777"></a><code class="methodname">doRequest()</code> method gets called.</p></li></ul></div><p>In the table above, we referenced a file locally (myXMLDoc.xml), but we could have done it absolutely, or we could have hit a server-side (PHP, ASP, JSP or some CGI) that returned an XML document. We could add the query string to the <a class="indexterm" name="id4782"></a><code class="sgmltag-element">&lt;dataset&gt;</code> tag:</p><div class="informalexample"><pre class="programlisting">
+&lt;dataset name="myData"
+         <span class="em">src="http://www.myServer.com/cgi-bin/myXMLDoc.cgi?return=addresses"</span>/&gt;
+</pre></div><p>The <code class="literal">type="http"</code> attribute gets implied when the <a class="indexterm" name="id4790"></a><code class="sgmltag-attribute">src</code> attribute contains "<code class="literal">http://</code>".</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="data-tutorial.datapointers"></a>4. Datapointers</h2></div></div></div><p>Datapaths are extremely handy, but if you need more control over the data, they can become cumbersome. Datapaths are actually extensions of datapointers, but are easier to learn, which is why we introduced them first. A datapointer is a pointer into the dataset, which can be moved around. It can only be in one place of the dataset at a time, but you can have multiple datapointers, each pointing to a different part of a dataset.</p><p>Datapointers are not bound to views like datapaths are, but they do have a place in the view hierarchy (that is, they know about parents and children).</p><p>You will use a datapointer when you need to operate on the data in some way. For example, using the same format of data as in the previous examples, say you wanted to find all the people who were in the South Park show:</p><div class="example"><a name="id4800"></a><p class="title"><b>Example 11.4. Manipulating datapointers</b></p><div class="example-contents"><pre class="programlisting">
+   &lt;canvas height="50" width="100%"&gt;
+  &lt;text id="sometext" /&gt;
+  &lt;dataset name="myData" src="resources/myShowData.xml" /&gt;
+  &lt;datapointer xpath="myData:/myXML" ondata="processData()"&gt; 
+    &lt;method name="processData"&gt; 
+      this.selectChild(); 
+      do { 
+      if (this.xpathQuery( '@show' ) == 'south park') { 
+      sometext.addText(this.xpathQuery('firstName/text()') + "\n");      } 
+      } while (this.selectNext()); 
+    &lt;/method&gt; 
+  &lt;/datapointer&gt; 
+&lt;/canvas&gt;
+&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+ 
+   </pre></div></div><br class="example-break"><p>We are including the data from a local file. You can download that XML file <a class="ulink" href="http://labs.openlaszlo.org/trunk-nightly/docs/developers/programs/resources/myShowData.xml" target="_top">here</a>, and here's what it looks like:</p><pre class="programlisting">
+    &lt;myXML&gt;
+      &lt;person show="simpsons"&gt;
+        &lt;firstName&gt;Homer&lt;/firstName&gt;
+        &lt;lastName&gt;Simpson&lt;/lastName&gt;
+      &lt;/person&gt;
+      &lt;person show="simpsons"&gt;
+        &lt;firstName&gt;Marge&lt;/firstName&gt;
+        &lt;lastName&gt;Simpson&lt;/lastName&gt;
+      &lt;/person&gt;
+      &lt;person show="simpsons"&gt;
+        &lt;firstName&gt;Montgomery&lt;/firstName&gt;
+        &lt;lastName&gt;Burns&lt;/lastName&gt;
+      &lt;/person&gt;
+      &lt;person show="south park"&gt;
+        &lt;firstName&gt;Eric&lt;/firstName&gt;
+        &lt;lastName&gt;Cartman&lt;/lastName&gt;
+      &lt;/person&gt;
+      &lt;person show="south park"&gt;
+        &lt;firstName&gt;Stan&lt;/firstName&gt;
+        &lt;lastName&gt;Marsh&lt;/lastName&gt;
+      &lt;/person&gt;
+    &lt;/myXML&gt;</pre><p>The first time the <code class="literal">selectChild()</code> method is called, it selects the first <code class="literal">&lt;person&gt;</code> node.</p><p>The <code class="literal">selectNext()</code> method call returns <code class="literal">true</code> as long as an XML node was successfully selected (that is, until there aren't any more). We exploit this by using it in a <code class="literal">do <em class="replaceable"><code>…</code></em> while</code> loop, so that the same iteration occurs for every <code class="literal">&lt;person&gt;</code> node.</p><p>We could also have given the <code class="literal">&lt;datapointer&gt;</code> <code class="literal">onerror</code> and <code class="literal">ontimeout</code> event handlers to capture any problems. </p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1463"></a>4.1. Differential debugging SWF and DHTML</h3></div></div></div><p>When you query or manipulate an invalid datapointer, in the past,
+you got back `undefined`. In DHTML, this often led to disaster down
+the road, so the compiler added a warning when you did this, but still returned
+`undefined` for backwards compatibility. In SWF, which is very
+lenient about dealing with undefined values, manipulating an invalid
+datapointer appears to have no ill effects; but the compiler still issues the
+warning, because you may run into trouble if you compile your code
+for DHTML. </p><p>When you define an LZX class whose name is the same as an
+underlying runtime global, in the past, the runtime clobbered the runtime
+global, to allow you to say `new &lt;tagname&gt;` to dynamically create
+instances of your LZX tag. This leads to disaster in any runtime, so
+the runtime no longer clobbers the global and it emits a warning telling you you
+will need to use `lz.&lt;tagname&gt;` to reference the class dynamically.</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="scripting-tutorial.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="../developers.tutorials.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="classes-tutorial.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 10. Introduction to Scripting </td><td width="20%" align="center"><a accesskey="h" href="../index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 12. Introduction to Classes and Object Oriented Programming</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

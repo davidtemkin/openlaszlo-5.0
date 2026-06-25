@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ItemLookupResponse><Items>
+  <Request><IsValid>True</IsValid></Request>
+  <Item>
+    <ASIN>B00005YW4H</ASIN>
+    <SmallImage><URL>data/covers/B00005YW4H.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B00005YW4H.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B00005YW4H.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>Berlin Philharmonic</Artist>
+      <Manufacturer>Deutsche Grammophon</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>1999-10-12</ReleaseDate>
+      <Title>Symphony No. 9 “Choral”</Title>
+      <ListPrice><Amount>1698</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$16.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$9.99</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$4.50</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$12.99</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Beethoven’s towering final symphony in a benchmark recording — the “Ode to Joy” finale remains unmatched.</Content></EditorialReview></EditorialReviews>
+  </Item>
+  <Item>
+    <ASIN>B00006IX86</ASIN>
+    <SmallImage><URL>data/covers/B00006IX86.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B00006IX86.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B00006IX86.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>Academy of Ancient Music</Artist>
+      <Manufacturer>Decca</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>2000-03-21</ReleaseDate>
+      <Title>The Four Seasons</Title>
+      <ListPrice><Amount>1398</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$13.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$7.99</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$3.25</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$10.49</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Vivaldi’s evergreen concertos, played on period instruments with crackling energy.</Content></EditorialReview></EditorialReviews>
+  </Item>
+  <Item>
+    <ASIN>B000005J56</ASIN>
+    <SmallImage><URL>data/covers/B000005J56.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B000005J56.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B000005J56.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>English Chamber Orchestra</Artist>
+      <Manufacturer>EMI Classics</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>1998-06-09</ReleaseDate>
+      <Title>Brandenburg Concertos</Title>
+      <ListPrice><Amount>1998</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$19.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$11.00</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$5.75</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$15.99</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Bach’s six concertos sparkle with counterpoint — a cornerstone of the Baroque repertoire.</Content></EditorialReview></EditorialReviews>
+  </Item>
+  <Item>
+    <ASIN>B00006AAJF</ASIN>
+    <SmallImage><URL>data/covers/B00006AAJF.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B00006AAJF.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B00006AAJF.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>Vienna Philharmonic</Artist>
+      <Manufacturer>Sony Classical</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>2001-01-30</ReleaseDate>
+      <Title>Eine kleine Nachtmusik</Title>
+      <ListPrice><Amount>1198</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$11.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$6.49</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$2.99</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$8.99</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Mozart’s serenade, elegant and effortless, in a warm Viennese reading.</Content></EditorialReview></EditorialReviews>
+  </Item>
+  <Item>
+    <ASIN>B0002RUPH4</ASIN>
+    <SmallImage><URL>data/covers/B0002RUPH4.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B0002RUPH4.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B0002RUPH4.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>Arthur Rubinstein</Artist>
+      <Manufacturer>RCA Victor</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>2002-11-05</ReleaseDate>
+      <Title>Nocturnes</Title>
+      <ListPrice><Amount>1498</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$14.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$8.25</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$4.00</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$11.49</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Chopin’s nocturnes from a legendary pianist — poetry at the keyboard.</Content></EditorialReview></EditorialReviews>
+  </Item>
+  <Item>
+    <ASIN>B00006IX6E</ASIN>
+    <SmallImage><URL>data/covers/B00006IX6E.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B00006IX6E.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B00006IX6E.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>Bolshoi Theatre Orchestra</Artist>
+      <Manufacturer>Melodiya</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>1997-09-16</ReleaseDate>
+      <Title>Swan Lake Suite</Title>
+      <ListPrice><Amount>1298</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$12.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$6.99</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$3.50</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$9.99</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Tchaikovsky’s shimmering ballet score in a sweeping, idiomatic performance.</Content></EditorialReview></EditorialReviews>
+  </Item>
+  <Item>
+    <ASIN>B000069HKH</ASIN>
+    <SmallImage><URL>data/covers/B000069HKH.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B000069HKH.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B000069HKH.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>Claude Helffer</Artist>
+      <Manufacturer>Harmonia Mundi</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>2000-07-25</ReleaseDate>
+      <Title>Clair de Lune</Title>
+      <ListPrice><Amount>1398</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$13.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$7.50</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$3.75</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$10.99</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Debussy’s impressionist piano masterpieces, all light and color.</Content></EditorialReview></EditorialReviews>
+  </Item>
+  <Item>
+    <ASIN>B00006JP29</ASIN>
+    <SmallImage><URL>data/covers/B00006JP29.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B00006JP29.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B00006JP29.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>Orchestre de Paris</Artist>
+      <Manufacturer>Erato</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>2001-05-14</ReleaseDate>
+      <Title>Boléro</Title>
+      <ListPrice><Amount>1198</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$11.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$5.99</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$2.50</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$8.49</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Ravel’s hypnotic crescendo — one unbroken accelerando to a shattering climax.</Content></EditorialReview></EditorialReviews>
+  </Item>
+  <Item>
+    <ASIN>B000000QFU</ASIN>
+    <SmallImage><URL>data/covers/B000000QFU.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B000000QFU.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B000000QFU.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>New York Philharmonic</Artist>
+      <Manufacturer>Columbia</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>1998-02-18</ReleaseDate>
+      <Title>Rhapsody in Blue</Title>
+      <ListPrice><Amount>1598</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$15.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$9.00</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$4.25</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$12.49</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Gershwin’s jazz-symphonic landmark, brash and beautiful in equal measure.</Content></EditorialReview></EditorialReviews>
+  </Item>
+  <Item>
+    <ASIN>B000002L2Z</ASIN>
+    <SmallImage><URL>data/covers/B000002L2Z.jpg</URL><Height Units="pixels">75</Height><Width Units="pixels">75</Width></SmallImage><MediumImage><URL>data/covers/B000002L2Z.jpg</URL><Height Units="pixels">160</Height><Width Units="pixels">160</Width></MediumImage><LargeImage><URL>data/covers/B000002L2Z.jpg</URL><Height Units="pixels">300</Height><Width Units="pixels">300</Width></LargeImage>
+    <ItemAttributes>
+      <Artist>Scott Joplin</Artist>
+      <Manufacturer>Nonesuch</Manufacturer>
+      <ProductGroup>Music</ProductGroup>
+      <ReleaseDate>1999-04-06</ReleaseDate>
+      <Title>The Entertainer: Ragtime Classics</Title>
+      <ListPrice><Amount>1098</Amount><CurrencyCode>USD</CurrencyCode><FormattedPrice>$10.98</FormattedPrice></ListPrice>
+    </ItemAttributes>
+    <OfferSummary>
+      <LowestNewPrice><FormattedPrice>$5.49</FormattedPrice></LowestNewPrice>
+      <LowestUsedPrice><FormattedPrice>$2.25</FormattedPrice></LowestUsedPrice>
+    </OfferSummary>
+    <Offers><Offer><OfferListing><Price><FormattedPrice>$7.99</FormattedPrice></Price></OfferListing></Offer></Offers>
+    <EditorialReviews><EditorialReview><Source>Product Description</Source><Content>Joplin’s syncopated rags — the irresistible soundtrack of the ragtime era.</Content></EditorialReview></EditorialReviews>
+  </Item>
+</Items></ItemLookupResponse>

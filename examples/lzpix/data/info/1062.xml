@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1062">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Tropical Pier to Paradise</title>
+  <description>Tropical Pier to Paradise — from the OpenLaszlo sample image library.</description>
+  <dates posted="1495270400" />
+  <urls><url type="photopage">data/photos/1062.jpg</url></urls>
+  <tags><tag>tropical</tag><tag>pier</tag><tag>to</tag><tag>paradise</tag></tags>
+</photo>
+</rsp>

@@ -1,0 +1,56 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>LzModeManagerService — LZX Reference</title>
+<link rel="stylesheet" href="ref.css"></head>
+<body><nav id="refnav"></nav>
+<main class="refmain"><a class="up" href="index.html">LZX Reference</a>
+<h1>LzModeManagerService</h1><p class="short">Controls pass-through of mouse events.</p><p class="meta">Extends <a ><code>LzEventable</code></a></p>
+        <p>
+          <code>lz.ModeManager</code>
+           is the single instance of the class
+ 
+          <code>lz.ModeManagerService</code>
+          .
+        </p>
+         
+        <p>
+           The mode manager controls the dispatch of mouse events to the rest
+ of the system. The mode manager keeps a stack of modal views. When a
+ view is made 
+          <em>modal</em>
+           (with the
+ call 
+          lz.ModeManager.makeModal()
+          ) only it and
+ its children receive mouse events. 
+        </p>
+         
+        <p>
+           In the example below, the window grabs the mode when it is opened and releases it when it is closed.
+ Note that the button no longer responds to mouse examplesses after the window is made modal,
+ but the children of the window (such as the close button and the drag bar) still do.
+ For a more detailed example of using modes with OpenLaszlo, see
+ 
+          <a >modeexample.lzx</a>
+           in the examples
+ directory.
+ 
+        </p>
+         
+        <pre class="example">
+ &lt;canvas height="160"&gt;
+   &lt;button name="b1" onclick="winDia.openWindow()"&gt;Show modal dialog&lt;/button&gt;
+   &lt;window width="200" name="winDia" closeable="true" visible="false"
+           x="150" title="modal dialog"&gt;
+     &lt;method name="openWindow"&gt;
+       this.open();
+       lz.ModeManager.makeModal(this);
+     &lt;/method&gt;
+     &lt;method name="close"&gt;
+       lz.ModeManager.release(this);
+       super.close();
+     &lt;/method&gt;
+   &lt;/window&gt;
+ &lt;/canvas&gt;
+ </pre>
+      <h3>Events</h3><ul class="events"><li><code>onmode</code> — Sent when the mode changes.</li></ul>
+</main><script src="_nav.js"></script></body></html>

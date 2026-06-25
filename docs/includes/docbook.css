@@ -1,0 +1,335 @@
+/* Stylesheet for LZX Documentation */
+/* J_LZ_COPYRIGHT_BEGIN *******************************************************
+* Copyright 2001-2008 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* J_LZ_COPYRIGHT_END *********************************************************/
+
+@import "styles.css";
+
+div.book, div.chapter, div.part, div.preface, div.appendix, div.index, div.glossary,  div.reference {
+    padding-left : 10px;
+    padding-top : 20px;
+    padding-right : 10px;
+}
+
+div.refentry {
+    padding-left : 10px;
+    padding-right : 10px;
+}
+div.condition-sidebar{
+    padding-left : 90px;
+    padding-top : 20px;
+    padding-right : 10px;
+}
+.toc .section {
+    font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+    font-size : 12px;
+    font-style: normal;
+    line-height : 18px;
+    font-weight : normal;
+    color: #333399;
+    margin-left : 10px;
+}
+
+.toc dl dd {
+    padding-left : 30px;
+}
+
+h1 { margin-left : 0; }
+h2 { margin-left: 0; }
+h3 { margin-left : 0; }
+
+td { 
+    vertical-align: top;
+}
+.rightalign {
+	text-align: right;
+}
+
+.remark {
+    background-color: yellow;
+}
+
+.refsect1 {
+    clear: both;
+    margin-top: 5px;
+}
+
+
+.refnamediv {
+  margin-top: 20px;
+  margin-bottom: 30px;
+}
+
+.refsynopsisdiv {
+    position: relative;
+    left:60%;
+    max-width: 40%;
+    margin-top: -80px;
+    min-height: 80px;
+    padding: 5pt;
+    text-align: right; 
+}
+
+.refsynopsisdiv h2 {
+    margin-left: 0px;
+    font-size: 12px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.refsynopsisdiv {
+    font-style: normal;
+}
+
+.term {
+    font-style: normal;
+    font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+    font-size : 13px;
+    font-weight : bold;
+    color: #000000;
+    background-color: #e8e8e8;
+}
+.indexdiv dl dd {
+    padding-bottom: inherit;
+}
+
+/* Inline markup */
+
+/* This substitutes for turning on shade.verbatim in parameters.xsl */
+pre.programlisting {
+  background-color: #DDDDDD;
+  border: 1px solid #7b839a ;
+  padding: 1em;
+}
+
+em.lineannotation {
+  font-style: italic ;
+  font-weight: normal ;
+  color: inherit;
+}
+
+/* Emphasis inside a program listing is bold blue, instead of italic */
+pre em {
+    color: #111499;
+    font-weight: bold;
+    font-style: normal;
+}
+
+code.fieldsynopsis {
+    white-space: normal;
+}
+
+/* This is used in the ECMAScript chapter to mark unsupported APIs */
+.strikeout {
+    font-style: italic;
+    color: red;
+}
+
+/* variablelist */
+
+.variablelist .title {
+    color: white;
+    background-color: #5b607c;
+}
+
+/* Refentry */
+
+.refsect3 {
+    margin-top: 7pt;
+}
+
+.refsect2 h3 {
+    margin-top: 0px;
+    background-color:#DDDDFF;
+    color:#333333;
+    font-family:Verdana,Geneva,Arial,Helvetica,sans-serif;
+    font-size:13px;
+    font-weight:bold;
+    padding-left: 3px;
+    padding-top: 3px;
+}
+
+.refsect2 {
+  border: 1px solid #7b839a ;
+  margin:5px;
+}
+
+.refsect2 p {
+  padding-left: 3px;
+  padding-right: 3px;
+}
+
+/* Tables */ 
+.refentry .table {    
+    table-layout: fixed;
+    width: 100%;
+}
+
+.refentry .table thead {
+    color:#333333;
+    font-family:Verdana,Geneva,Arial,Helvetica,sans-serif;
+    font-size: 11px;
+    font-weight:bold;    
+}
+
+.refentry .table thead tr {
+    background-color: #e6e6e6;
+}
+
+.refentry td {
+    font-size: 11px;
+    border-bottom-width: 1px;
+}
+
+.refentry .table thead th {
+    background-color: #e6e6e6;
+    font-size: 11px;
+}
+
+
+.refentry .table .fieldsynopsis {
+    font-size: 12px;
+    line-height:16px;
+    color: purple;
+}
+
+.variablelist table {
+    border-collapse: collapse;
+}
+
+.variablelist tbody td.attrdesc {
+    border-bottom: 1px solid #e6e6e6;
+}
+
+.attrdesc dt .term {
+    font-size: 11px;
+}
+
+.attrdesc dd {
+    line-height: 14px;
+    margin-left: 10px;
+    padding-bottom: 5px;
+    padding-left: 45px;
+}
+
+/* Segmented Lists */
+
+.segmentedlist > .title {
+    margin-top: 7pt;
+    margin-bottom: 5pt;
+    background-color: #5b607c;
+    color: white;
+}
+
+tr.segtitle {
+    background-color: #e6e6e6;
+    text-align: left;
+}
+
+tr.segtitle > th {
+    width: 55px;
+}
+
+/* Synopsis */
+
+.methodclass, .methodstaticclass, .methodname {
+    font-size: 1.08em;
+    color: #333333;
+}
+
+.methodname {
+    font-weight:bold;
+}
+
+.classsynopsis, .methodsynopsis, .fieldsynopsis {
+    font-size: 14px;
+    font-family:"Courier New",Courier,monospace;
+}
+
+.classsynopsis .methodsynopsis .fieldsynopsis .varname {
+    font-weight:bold;
+}
+
+.classname {
+    font-weight:bold;
+    color : #646464;
+    background-color : #eaeaea;
+}
+
+.methodsynopsis .parameter {
+    font-style:italic;
+}
+
+/* Conditional Text */
+
+.swf, .swf7, .dhtml, .svg, .jme {
+    border-left: 1px solid #7b839a;
+    border-right: 1px solid #7b839a;
+    border-top: 1px solid #b0b8cf;
+    border-bottom: 1px solid #8E96AD;
+    background-color: #F8F8F8;
+}
+
+.swf:before, .swf7:before, .dhtml:before, .svg:before, .jme:before {
+    content:attr(alt);
+    font-weight:bold;
+    display: block;
+    float: right;
+    text-align: right;
+    margin-right: 5pt;
+    margin-top: 5pt;
+}
+
+/* Live examples */
+
+.example, .informalexample {
+    margin-top: 5pt;
+    margin-bottom: 5pt;
+    border-left: 1px solid #7b839a;
+    border-right: 1px solid #7b839a;
+    border-top: 1px solid #b0b8cf;
+    border-bottom: 1px solid #8E96AD;
+    background-color: #E0E0E0;
+}
+
+.example .title, .informalexample .title {
+    margin-top: 0pt;
+    margin-bottom: 0pt;
+    padding-top: 0pt;
+    padding-bottom: 0pt;
+    padding-left: 10pt;
+    border-bottom: 1pt solid black;
+    
+    background-color: #7b839a;
+    color : #ffffff;
+    font-family : Verdana, Geneva, Arial, Helvetica, sans-serif;
+    font-size : 10px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.embedded-canvas {
+    background-color: white;
+    width: 100%;
+}
+
+.example table, .informalexample table {
+    width: 100%;
+    background-color: #E0E0E0;
+}
+
+.example .programlisting, .informalexample .programlisting {
+    margin: 0 0 0 0;
+    padding-top: 10pt;
+    padding-bottom: 10pt;
+    padding-left: 7pt;
+}
+
+.edit-button {
+    padding-left: 7pt;
+}
+
+td {
+vertical-align:top;
+}

@@ -1,0 +1,10 @@
+<rsp stat="ok">
+<photo id="1026">
+  <owner username="OpenLaszlo Sample Library" />
+  <title>Green Maple Leaf Backlit</title>
+  <description>Green Maple Leaf Backlit — from the OpenLaszlo sample image library.</description>
+  <dates posted="1492160000" />
+  <urls><url type="photopage">data/photos/1026.jpg</url></urls>
+  <tags><tag>green</tag><tag>maple</tag><tag>leaf</tag><tag>backlit</tag></tags>
+</photo>
+</rsp>

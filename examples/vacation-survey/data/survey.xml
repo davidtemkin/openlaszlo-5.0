@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Static seed for the vacation survey (was the /api/survey tally). Same wire shape
+     the app's datapaths read. Real cross-user aggregation needs the dynamic backend. -->
+<response status="ok">
+    <vote></vote>
+    <summary total="90">
+        <option name="Hawaii">30</option>
+        <option name="Paris">28</option>
+        <option name="Jamaica">32</option>
+    </summary>
+</response>

@@ -1,0 +1,14 @@
+myview {
+    logorsc: "resources/haze/logo.png";        
+    boxrsc: "resources/haze/box.png";
+    lightbgcolor: "#CCCCCC";
+    themename:  "Haze Foam";
+}
+
+#gTitle {
+    xpos: 40;
+    ypos: 45;
+    textcolor:  "#1e4d75";
+}
+
+/* Copyright 2008 Laszlo Systems */ 

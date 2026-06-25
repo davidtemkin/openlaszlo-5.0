@@ -1,0 +1,5 @@
+<class name="baseslider" extends="basevaluecomponent" <emphasis role="b">width="200"</emphasis>>
+  <attribute <emphasis role="em">name="trackheight"</emphasis> value="8" type="number"/>
+  <attribute <emphasis role="em">name="thumbwidth"</emphasis> value="10" type="number"/>
+  <attribute <emphasis role="em">name="thumbheight"</emphasis> value="18" type="number"/>
+</class>

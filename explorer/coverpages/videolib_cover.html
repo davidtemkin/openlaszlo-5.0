@@ -1,0 +1,36 @@
+<!--=======================================================================-->
+<!-- videolib_cover.html                                                   -->
+<!--=======================================================================-->
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+<link href="../../lps/includes/explore.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h1>Video Library</h1>
+<div style="float: left">
+    <div style="margin: 10px">
+        <img border="0" src="images/cover-images/videolib.jpg" alt="Video Library Application" width="330" height="254" />
+        <div style="text-align: center">
+            <a class="launch-app" onclick="window.open(this.href, '_blank', 'width=900,height=680'); return false" href="../../examples/videolib/videolib.lzx" style="display:inline-block;padding:9px 26px;background:#2a5db0;color:#fff;font:600 14px/1 -apple-system,'Segoe UI',Helvetica,Arial,sans-serif;border-radius:5px;text-decoration:none;cursor:pointer">Launch App</a>
+        </div>
+    </div>
+</div>
+<p>
+This application opens in a window.  If you don't see it, you may need to
+bring that window to the front.
+</p>
+<p>
+A small video player with a clip library: pick a clip from the list, then play, pause,
+and scrub it with the transport controls.
+</p>
+<p>
+OpenLaszlo's stock <code>videoview</code> was Flash-only (built on Flash's
+NetStream/NetConnection). This demo plays through <strong><code>htmlvideoview</code></strong>,
+a drop-in replacement that wraps a browser-native HTML5 <code>&lt;video&gt;</code> element,
+so the same LZX application now streams video in DHTML with no plugin.
+</p>
+</body>
+</html>

@@ -1,0 +1,11 @@
+<class name="baseslider" extends="basevaluecomponent" width="200">
+  <attribute name="trackheight" value="8" type="number"/>
+  <attribute name="thumbwidth" value="10" type="number"/>
+  <attribute name="thumbheight" value="18" type="number"/>
+
+  <attribute <emphasis role="em">name="minvalue"</emphasis> value="0" type="number"/>
+  <attribute <emphasis role="em">name="maxvalue"</emphasis> value="100" type="number"/>
+  <attribute <emphasis role="em">name="showfill"</emphasis> value="true"/>
+  <attribute <emphasis role="em">name="showvalue"</emphasis> value="true" type="boolean"/>
+  <attribute <emphasis role="em">name="showrange"</emphasis> value="true" type="boolean"/>
+</class>
