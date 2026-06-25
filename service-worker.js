@@ -54,11 +54,12 @@ function logical(p) {
 // map a distro-relative "/…" back to the real on-host path
 function physical(p) { return BASE_PFX + p; }
 // rebase root-absolute same-origin refs in served HTML/XML onto BASE (no-op when BASE="/").
-// Needed for explorer/nav_dhtml.xml (122 root-absolute src="/…" links) and any coverpage
-// that uses absolute refs; relative ("../…") and external ("http://…") refs never match.
+// Needed for explorer/nav_dhtml.xml (122 root-absolute src="/…" links + `popup="/…"` app
+// launches) and any coverpage that uses absolute refs; relative ("../…") and external
+// ("http://…") refs never match.
 function rebaseHtml(text) {
   if (BASE === "/") return text;
-  return text.replace(/\b(src|href|url)="\/(?!\/)/g, `$1="${BASE_PFX}/`);
+  return text.replace(/\b(src|href|url|popup)="\/(?!\/)/g, `$1="${BASE_PFX}/`);
 }
 
 // One closure-validated cache (CacheStorage-backed), shared across every compile.

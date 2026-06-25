@@ -8,7 +8,7 @@
 <!--=======================================================================-->
 <html>
 <head>
-<link rel="stylesheet" href="../../../lps/includes/explore.css" type="text/css">
+<link rel="stylesheet" href="/lps/includes/explore.css" type="text/css">
 <head><title>Welcome to OpenLaszlo Explorer</title>
 <link rel="SHORTCUT ICON" href="http://www.laszlosystems.com/images/laszlo.ico">
 <style>
@@ -79,7 +79,7 @@ As an open source project, we rely on the goodwill of our users. You can support
 <h3>
 Play and See
 </h3>
-This OpenLaszlo Explorer contains several demos compiled to DHTML (browser-native JavaScript). <a href="../../index.html#_lzbookmark=Demos" target="_top">As you will see</a>, their behavior and appearance are consistent across browsers.
+This OpenLaszlo Explorer contains several demos compiled to DHTML (browser-native JavaScript). <a href="/index.html#_lzbookmark=Demos" target="_top">As you will see</a>, their behavior and appearance are consistent across browsers.
 </div>
 </div>
 
