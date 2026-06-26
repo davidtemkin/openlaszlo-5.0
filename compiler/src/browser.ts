@@ -49,6 +49,9 @@ export interface CompileInBrowserOptions {
   sprites?: "none" | "oracle";
   /** Force-debug build (development only; not byte-exact). */
   debug?: boolean;
+  /** DEBUG_BACKTRACE build (`?backtrace`): per-function call-stack frames + per-call
+   *  line notes. Implies debug. Byte-for-byte vs the oracle (backtrace.lzx). */
+  backtrace?: boolean;
   /** SOLO build (`__LZproxied:"false"`). */
   proxied?: boolean;
   /** Retry cap for the preload loop (a runaway guard). */
@@ -76,7 +79,8 @@ function decode(bytes: Uint8Array): string {
 
 /** The compiler properties that gate cache staleness (must match api-node's). */
 function compileProps(o: CompileInBrowserOptions): Record<string, string> {
-  return { debug: String(!!o.debug), proxied: String(o.proxied !== false), sprites: o.sprites ?? "none" };
+  return { debug: String(!!o.debug || !!o.backtrace), backtrace: String(!!o.backtrace),
+           proxied: String(o.proxied !== false), sprites: o.sprites ?? "none" };
 }
 
 /** Compile an LZX app located at `mainUrl` entirely in the browser. Returns the JS,
@@ -161,7 +165,7 @@ export async function compileInBrowser(
     tracker.record(mainUrl, validators.get(mainUrl) ?? { missing: true });
     const opts = browserOptions({ baseUrl: mainUrl, lpsUrl: o.lpsUrl, state, sprites });
     const r = compile(state.map.get(mainUrl)!.text, {
-      ...opts, debug: o.debug, proxied: o.proxied, sprites,
+      ...opts, debug: o.debug, backtrace: o.backtrace, proxied: o.proxied, sprites,
     });
     passes++;
     result = { js: r.js, unsupported: r.unsupported };

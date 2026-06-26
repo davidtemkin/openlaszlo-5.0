@@ -1,7 +1,9 @@
 // CLI: compile an LZX file to DHTML JS on stdout.
-//   lzc-ts <file.lzx> [--solo | --proxied=false]
+//   lzc-ts <file.lzx> [--solo | --proxied=false] [--debug] [--backtrace]
 // SOLO build flag (or env LZC_SOLO=1) flips the single `__LZproxied` byte to
 // "false" — the oracle's SOLO mode. Default is the proxied (normal) build.
+// --debug / --backtrace (or LZC_DEBUG_FORCE=1 / LZC_BACKTRACE=1) select the debug
+// and DEBUG_BACKTRACE (lzc -g2) backends; backtrace implies debug.
 import { readFileSync } from "node:fs";
 import { compile } from "./compile.js";
 import { nodeOptions } from "./node-io.js";
@@ -18,7 +20,10 @@ const src = readFileSync(file, "utf8");
 const opts = nodeOptions(file, process.env.LPS_HOME);
 // FORCED-DEBUG (development only): LZC_DEBUG_FORCE=1 drives the in-progress
 // readable/source-mapped backend, bypassing the `canvas debug="true"` refusal.
-if (process.env.LZC_DEBUG_FORCE === "1") opts.debug = true;
+if (process.env.LZC_DEBUG_FORCE === "1" || flags.includes("--debug")) opts.debug = true;
+// DEBUG_BACKTRACE (lzc -g2): per-function call-stack frames + per-call line notes.
+// Implies debug (the compiler forces it). Byte-for-byte vs the oracle (backtrace.lzx).
+if (process.env.LZC_BACKTRACE === "1" || flags.includes("--backtrace")) opts.backtrace = true;
 // SOLO build: emit __LZproxied="false" (the one-byte oracle SOLO delta).
 if (process.env.LZC_SOLO === "1" || flags.includes("--solo") || flags.includes("--proxied=false"))
   opts.proxied = false;

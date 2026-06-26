@@ -35,7 +35,8 @@ function decode(bytes) {
 }
 /** The compiler properties that gate cache staleness (must match api-node's). */
 function compileProps(o) {
-    return { debug: String(!!o.debug), proxied: String(o.proxied !== false), sprites: o.sprites ?? "none" };
+    return { debug: String(!!o.debug || !!o.backtrace), backtrace: String(!!o.backtrace),
+        proxied: String(o.proxied !== false), sprites: o.sprites ?? "none" };
 }
 /** Compile an LZX app located at `mainUrl` entirely in the browser. Returns the JS,
  *  the dependency closure, the content tag (ETag), whether it was a cache hit, and
@@ -114,7 +115,7 @@ export async function compileInBrowser(mainUrl, o = {}) {
         tracker.record(mainUrl, validators.get(mainUrl) ?? { missing: true });
         const opts = browserOptions({ baseUrl: mainUrl, lpsUrl: o.lpsUrl, state, sprites });
         const r = compile(state.map.get(mainUrl).text, {
-            ...opts, debug: o.debug, proxied: o.proxied, sprites,
+            ...opts, debug: o.debug, backtrace: o.backtrace, proxied: o.proxied, sprites,
         });
         passes++;
         result = { js: r.js, unsupported: r.unsupported };

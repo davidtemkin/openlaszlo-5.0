@@ -4,11 +4,11 @@ import { parseXml } from "./xml.js";
 import { emitObject, emitObjectSpaced, emitTyped, jsString } from "./value.js";
 import { attrType, mapType } from "./schema.js";
 import { canonicalColorHex, ColorFormatException, parseColor } from "./colors.js";
-import { compileFunction, compileFunctionDebug, compileBinderDebug, collectDependencies, compileExpr, compileExprDebug, compileProgramDebug, compileStylesheetDebug, compileScriptBody, compileScriptBodyDebug, compileProgram, finalSourceLine, ScUnsupported, setScDebug } from "./sc.js";
+import { compileFunction, compileFunctionDebug, compileBinderDebug, collectDependencies, compileExpr, compileExprDebug, compileProgramDebug, compileStylesheetDebug, compileScriptBody, compileScriptBodyDebug, compileProgram, finalSourceLine, ScUnsupported, setScDebug, setScBacktrace, resetKnownClassnames, resetKnownIds, addKnownId } from "./sc.js";
 import { schemaAttrType, schemaHasEvent } from "./schema-types.js";
 import { javaDouble } from "./value.js";
 import { buildStylesheetProgram, CssUnsupported } from "./css.js";
-import { assembleDebugProgram, debugConstructor, debugConstructorPlain, renderDebugClassMake, annoFileLine, forceBlankLnum, registerBinder, lastBinderSpec, resetBinderTable, registerReg, resetRegTable, litReset, pathOnlyReset, setPathname } from "./debug.js";
+import { assembleDebugProgram, debugConstructor, debugConstructorPlain, renderDebugClassMake, annoFileLine, forceBlankLnum, registerBinder, lastBinderSpec, resetBinderTable, registerReg, resetRegTable, litReset, pathOnlyReset, setPathname, setDebugBacktrace } from "./debug.js";
 /** Build constants the oracle bakes into every canvas (from 4.9.0 goldens). */
 export const BUILD_CONSTANTS = {
     lpsbuild: "branches/4.9@17752 (17752)",
@@ -347,6 +347,7 @@ function datasetArgs(el, globals, globalOrigins, opts) {
     const dataEl = { type: "elem", name: "data", attrs: {}, attrOrder: [], children };
     const content = serializeXmlRaw(dataEl);
     globals.push(name);
+    addKnownId(name);
     globalOrigins.push(el.origin ?? "");
     return { name, content, trim, nsprefix };
 }
@@ -548,6 +549,45 @@ function styleConstraintExpr(name, exprType, value, fallback) {
  *  type string is emitted as `text`. */
 function aliasType(t) {
     return t === "html" ? "text" : t;
+}
+/** ORACLE FIX #3 (LPP-3949) TS mirror. Under backtrace, a CLASS-DEFAULT constraint
+ *  init `new CTOR(args)` placed in the class's `mergeAttributes` object is
+ *  noteCallSite-wrapped so the backtrace frame ($3) records the attribute's
+ *  DECLARATION source line `line` (the start-tag closing `>`/`/>` line = endLine),
+ *  matching the patched oracle which now anchors these inits with a #beginAttribute
+ *  srcloc directive (NodeModel.getInitialValue). The CTOR is a checked free ref, so
+ *  it is doubly noted: the outer `new`-expression and the inner callee ref, both at
+ *  `line`. Inert (returns the init verbatim) outside backtrace, so instance-context
+ *  inits and all non-backtrace builds are unchanged. */
+function btNoteConstraintInit(initExpr, line, file) {
+    if (!COMPILE_BACKTRACE)
+        return initExpr;
+    const m = /^new ([A-Za-z_$][\w$.]*)\(([\s\S]*)\)$/.exec(initExpr);
+    if (!m)
+        return initExpr;
+    // noteCallSite marker = `#0#0` (the generated ASTExpressionList). For a
+    // DIRECTIVE-FORM (state-class) constructor the fragment also carries `#<file>#1`
+    // (currentPathname = source file); for a plain constructor it stays `#0#0`. These
+    // inits are MID-OBJECT (never at statement head) so the `#<file>#1` does not emit a
+    // visible directive — the bare `#0#0` matches both forms byte-for-byte in practice.
+    // (file retained for a future directive-form refinement if a visible case appears.)
+    void file;
+    const note = `${annoFileLine(null, 0)}$3.lineno = ${line}`;
+    return `(${note}, new (${note}, ${m[1]})(${m[2]}))`;
+}
+/** Backtrace: a CLASS-DEFAULT plain color value `LzColorUtils.convertColor("0x…")`
+ *  in the mergeAttributes object is a CALL (and its `LzColorUtils` receiver a checked
+ *  free ref), so it is doubly noteCallSite-wrapped at the attribute's source line:
+ *  `($3.lineno=N, ($3.lineno=N, LzColorUtils).convertColor(…))`. The `#0#0` markers
+ *  are mid-object (invisible). Inert outside backtrace / for non-call plain values. */
+function btNoteColorInit(plain, line) {
+    if (!COMPILE_BACKTRACE)
+        return plain;
+    const m = /^([A-Za-z_$][\w$.]*)\.([A-Za-z_$][\w$]*)\(([\s\S]*)\)$/.exec(plain);
+    if (!m)
+        return plain;
+    const note = `${annoFileLine(null, 0)}$3.lineno = ${line}`;
+    return `(${note}, (${note}, ${m[1]}).${m[2]}(${m[3]}))`;
 }
 /** LZX `<attribute type=…>` -> our AttrType (subset; others fall back to schema). */
 const LZX_TYPE = {
@@ -882,7 +922,7 @@ function emitClassBlock(name, superJs, instEntries, defaultAttrs, childrenJs, cl
         const make = renderDebugClassMake(dbg.file, dbg.classLine, `"${lzcName}"`, [...instEntries, ...tailEntries], superJs, classPropsInner);
         if (Object.keys(defaultAttrs).length === 0)
             return make;
-        const merge = debugMergeAttributes(dbg.file, dbg.classLine, dbg.bodyLine, lzcName, emitObjectSpaced(defaultAttrs), dbg.memberRich ? undefined : dbg.ctorLine + 4);
+        const merge = debugMergeAttributes(dbg.file, dbg.classLine, dbg.bodyLine, lzcName, emitObjectSpaced(defaultAttrs), dbg.memberRich ? undefined : dbg.ctorLine + 4, dbg.ctorLine + 4);
         return `{\n${make};\n${merge}\n}`;
     }
     // A class-level <datapath> declares `"$datapath",void 0` AFTER the constructor
@@ -1130,6 +1170,7 @@ function buildNode(el, ctx, topLevel, classDepth, parentTag) {
         else if (name === "id") {
             // id is always a global reference: var <id>=null + bind_id binder.
             globals.push(raw);
+            addKnownId(raw);
             globalOrigins.push(el.origin ?? "");
             attrs["$lzc$bind_id"] = COMPILE_DEBUG
                 ? idBinderDebug(raw, true, debugFile(el), el.endLine ?? el.line ?? 0)
@@ -1279,6 +1320,7 @@ function buildNode(el, ctx, topLevel, classDepth, parentTag) {
     // suppressed.)
     if (pendingNameGlobal !== undefined && pendingNameGlobal !== el.attrs["id"]) {
         globals.push(pendingNameGlobal);
+        addKnownId(pendingNameGlobal);
         globalOrigins.push(el.origin ?? "");
     }
     // Child elements in document order: handlers/methods → methods (allocate now);
@@ -2216,10 +2258,11 @@ export function compile(source, opts = {}) {
     const canvasDebugOff = root.attrs["debug"] === "false"
         || /(?:^|;)\s*debug\s*:\s*false\b/.test(root.attrs["compileroptions"] ?? "");
     // `backtrace: true` (a compileroptions debug add-on) emits the LzBacktrace stack-
-    // frame prefix in every function (DEBUG_BACKTRACE) — a feature the TS readable
-    // backend does NOT yet emit. A canvas requesting it is still refused (its build
-    // would diverge); the plain `debug="true"` debug build below does not need it.
-    const wantsBacktrace = /(?:^|;)\s*backtrace\s*:\s*true\b/.test(root.attrs["compileroptions"] ?? "");
+    // frame prefix in every function (DEBUG_BACKTRACE). The TS readable backend now
+    // emits it BYTE-FOR-BYTE (verified RAW IDENTICAL on backtrace.lzx, 1340227 bytes;
+    // see HANDOFF). It is a debug feature → it forces the debug backend on.
+    const wantsBacktrace = opts.backtrace === true
+        || /(?:^|;)\s*backtrace\s*:\s*true\b/.test(root.attrs["compileroptions"] ?? "");
     // The debug backend runs when `opts.debug` is set (the FORCED-DEBUG path, via
     // LZC_DEBUG_FORCE) — MIRRORING the oracle's `--debug` (`-g1`) flag (forces
     // DEBUG_PROPERTY=true for ANY canvas, Main.java:314) — OR when the SOURCE itself
@@ -2230,19 +2273,35 @@ export function compile(source, opts = {}) {
     // that explicitly sets debug="false" (canvasDebugOff) suppresses the build (the
     // oracle's Parser honors the attr over the flag); a `backtrace: true` request is
     // refused (unimplemented feature) rather than miscompiled.
-    const debug = (opts.debug === true || (isDebugBuild && !wantsBacktrace)) && !canvasDebugOff;
-    // Refuse only what we cannot yet byte-match: a `debug="true"` build that ALSO
-    // wants `backtrace: true` (the one remaining debug feature gap). The plain debug
-    // build is now produced (the readable backend is byte-for-byte across the corpus
-    // + explorer debug sets — verified; the lone holdout is backtrace).
-    if (isDebugBuild && wantsBacktrace && !opts.debug) {
-        return { js: "", unsupported: `canvas debug build with backtrace:true = readable+sourcemap backend (backtrace unimplemented)` };
-    }
+    const debug = (opts.debug === true || isDebugBuild || wantsBacktrace) && !canvasDebugOff;
+    // `backtrace: true` (DEBUG_BACKTRACE) adds the per-function call-stack frame
+    // instrumentation (noteCallSite + prelude/prefix/suffix; see sc.ts/debug.ts). The
+    // architecture is implemented and byte-identical for the first ~133KB of the SOLO
+    // LFC (the deps-body warnUndefinedReferences=false and super-dispatch nextMethod
+    // notes ARE handled; the HANDOFF's "instance-property refinement" residual was a
+    // MISDIAGNOSIS — setter bodies DO note instance props like `classroot`, only the
+    // DEPS body suppresses them via #pragma warnUndefinedReferences=false). The
+    // former class-default `mergeAttributes` constraint-init line-state blocker
+    // (@133424) is now CLOSED by ORACLE FIX #3 (NodeModel anchors each `new
+    // LzXxxExpr(...)` init to its declaration line, LPP-3949; TS mirror =
+    // btNoteConstraintInit). The noteCallSite MARKER line-state was cracked via the
+    // oracle -SS lineann dump → Printer.btSuperSeen models `Token.currentPathname`
+    // (#0#0 vs #<file>#1): set file by a super-dispatch, a function-value, OR the `is`
+    // operator's generated `$lzsc$isa` call (each re-lexes source). The backtrace
+    // backend is now BYTE-FOR-BYTE on backtrace.lzx (RAW IDENTICAL, 1340227 bytes), so
+    // a `backtrace: true` canvas COMPILES in production (no longer refused).
+    const backtraceWanted = wantsBacktrace;
+    const backtrace = backtraceWanted && debug;
     try {
         setScDebug(debug);
+        setScBacktrace(backtrace);
+        setDebugBacktrace(backtrace);
+        resetKnownClassnames();
+        resetKnownIds();
         resetBinderTable();
         resetRegTable();
         COMPILE_DEBUG = debug;
+        COMPILE_BACKTRACE = backtrace;
         DEBUG_FILE = opts.debugFileName ?? ((id) => id);
         DEBUG_SOURCE_ID = opts.sourceId ?? "";
         SCRIPT_SRC = opts.resolveScriptSrc ?? null;
@@ -2251,7 +2310,10 @@ export function compile(source, opts = {}) {
     }
     finally {
         setScDebug(false); // never let the debug fold leak into the next compile
+        setScBacktrace(false);
+        setDebugBacktrace(false);
         COMPILE_DEBUG = false;
+        COMPILE_BACKTRACE = false;
         DEBUG_FILE = (id) => id;
         DEBUG_STMTS = null;
         SCRIPT_SRC = null;
@@ -2279,24 +2341,53 @@ function debugFile(el) {
  *  })(name)` form). `classLine` is the class-open directive line (endLine−1);
  *  `bodyLine` is the class start-tag closing-`>` line (endLine) used for the
  *  with-statement + displayName. Verified vs the dbg3 gold. */
-function debugMergeAttributes(file, classLine, bodyLine, classNameJs, objSpaced, mergeLine) {
+function debugMergeAttributes(file, classLine, bodyLine, classNameJs, objSpaced, mergeLine, noteLine) {
     const A = (n) => annoFileLine(file, n);
     const GEN = annoFileLine(null, 0);
     const FB = forceBlankLnum();
-    const mergeCall = `LzNode.mergeAttributes(${objSpaced}, ${classNameJs}.attributes)`;
+    const bt = COMPILE_BACKTRACE;
+    // Backtrace: the mergeAttributes call (and its `LzNode` receiver, a checked free
+    // ref) get noteCallSite at the merge line (ctorLine+4). The frame uses fixed
+    // registers $1/$2/$3 (one param $lzsc$c → $0).
+    const M = noteLine ?? bodyLine;
+    // noteCallSite marker = `#0#0` + (for a DIRECTIVE-FORM / state-class constructor
+    // only) the `$lzsc$a.lineno=N` fragment's `#<file>#1`. currentPathname is the real
+    // source file ONLY when the synthetic constructor is directive-form (mergeLine !=
+    // null, ≡ !memberRich): its source-anchored ctor leaves the lexer static on the
+    // file, so the mergeAttributes inherits `#<file>#1`. A PLAIN constructor leaves it
+    // generated → `#0#0` (basefocusview etc.). Verified vs the -SS lineann dump
+    // (resizestate → `#1`; basefocusview → none). N1 gated on mergeLine.
+    const N1 = mergeLine != null ? annoFileLine(file, 1) : "";
+    const mergeCall = bt
+        ? `${GEN}${N1}$3.lineno = ${M}, (${GEN}${N1}$3.lineno = ${M}, LzNode).mergeAttributes(${objSpaced}, ${classNameJs}.attributes)`
+        : `LzNode.mergeAttributes(${objSpaced}, ${classNameJs}.attributes)`;
     // A directive-form (state-class) constructor leaves the file context set to the
     // source file, so the following mergeAttributes statement tracks to a real
     // source line (= ctorLine + 4, the 4-line synthetic constructor span). A plain
     // constructor (file="") leaves the context generated → no directive here.
     const mergeDir = mergeLine != null ? A(mergeLine) : "";
     const withPart = `with ($0) with ($0.prototype) {\n${GEN}{\n${mergeDir}${mergeCall}\n}}`;
-    const tryWrap = `try {\n${A(bodyLine)}${withPart}}\n${GEN}catch ($lzsc$e) {\n${debugCatchBody(file, bodyLine)}}`;
-    const funcBlock = `{\n${GEN}${tryWrap}}`;
+    // Backtrace frame prelude/prefix/suffix + catch reporting $3.lineno.
+    const btPrelude = bt ? `var $1 = Debug;\nvar $2 = $1.backtraceStack;\n` : "";
+    const btPrefix = bt
+        ? `if ($2) {\nvar $3 = ["$lzsc$c", $0];\n$3.callee = arguments.callee;\n$3["this"] = this;\n` +
+            `$3.filename = ${jsString(file)};\n$3.lineno = ${bodyLine};\n$2.push($3);\n` +
+            `if ($2.length > $2.maxDepth) {\n$1.stackOverflow()\n}};\n`
+        : "";
+    const catchBody = bt
+        ? `if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error)` +
+            ` && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException(${jsString(file)}, $3.lineno, $lzsc$e)\n} else {\nthrow $lzsc$e\n}`
+        : debugCatchBody(file, bodyLine);
+    const btFinally = bt ? `\n${GEN}finally {\nif ($2) {\n$2.length--\n}}` : "";
+    const tryWrap = `try {\n${btPrefix}${A(bodyLine)}${withPart}}\n${GEN}catch ($lzsc$e) {\n${catchBody}}${btFinally}`;
+    const funcBlock = `{\n${GEN}${btPrelude}${tryWrap}}`;
     const innerFn = `function ($0) ${funcBlock}${FB}`;
     const S1 = `var $lzsc$temp = ${innerFn};`;
     const S2 = `${A(bodyLine)}$lzsc$temp["displayName"] = ${jsString(file + "#" + bodyLine + "/1")};`;
+    const S2bt = bt ? `\n${A(bodyLine)}$lzsc$temp["_dbg_filename"] = ${jsString(file)};` +
+        `\n${A(bodyLine)}$lzsc$temp["_dbg_lineno"] = ${bodyLine};` : "";
     const S3 = `${A(bodyLine)}return $lzsc$temp`;
-    const iife = `(function () {\n${S1}\n${S2}\n${S3}\n}${FB})()`;
+    const iife = `(function () {\n${S1}\n${S2}${S2bt}\n${S3}\n}${FB})()`;
     return `${A(classLine)}${iife}(${classNameJs})`;
 }
 /** The debug try/catch catch-clause body (re-exported shape of sc's
@@ -2311,6 +2402,9 @@ function debugCatchBody(file, line) {
 // in include expansion without threading the flag through every signature. Set
 // in compile()'s try, reset in its finally — never leaks into production.
 let COMPILE_DEBUG = false;
+// Per-compile backtrace flag (compile.ts side), mirroring SC_BACKTRACE. Drives the
+// generated mergeAttributes IIFE's backtrace frame instrumentation.
+let COMPILE_BACKTRACE = false;
 // Debug-build top-level-statement sink: in a debug build, each emitted top-level
 // statement (class `Class.make(…)` block, instance/LzInstantiateView, colors,
 // registration) is collected here in emission order, then assembled (each its own
@@ -3088,7 +3182,7 @@ function compileInner(root, opts, debug) {
                 else if (con && con.when === "style") {
                     // A `$style` constraint on an (inherited) class attribute → just the
                     // compact init in mergeAttributes; no void-0 declaration slot.
-                    defaultAttrs[an] = styleConstraintExpr(an, resolveConstraintType(def.name, an), con.expr);
+                    defaultAttrs[an] = btNoteConstraintInit(styleConstraintExpr(an, resolveConstraintType(def.name, an), con.expr), child.endLine ?? child.line ?? 0, debugFile(child));
                 }
                 else if (con) {
                     if (con.when !== "" && con.when !== "once" && con.when !== "path")
@@ -3102,7 +3196,7 @@ function compileInner(root, opts, debug) {
                         ? compileConstraintDebug(an, declared, setterExpr, con.when, mGen, debugFile(child), child.endLine ?? child.line ?? 0)
                         : compileConstraint(an, declared, setterExpr, con.when, mGen);
                     instEntries.push(...c.entries);
-                    defaultAttrs[an] = c.initExpr;
+                    defaultAttrs[an] = btNoteConstraintInit(c.initExpr, child.endLine ?? child.line ?? 0, debugFile(child));
                     // A class-tag CONSTRAINT attribute is a code member: its binder/deps
                     // methods (`$reportException` bodies) make the class member-rich, so the
                     // synthetic ctor takes the plain (file="") form tracked off the deps
@@ -3119,10 +3213,10 @@ function compileInner(root, opts, debug) {
                     // (color attributes are when="once"; constant colors fold to a literal).
                     const cv = colorValue(an, raw, resolveConstraintType(def.name, an), mGen, debugFile(child), child.endLine ?? child.line ?? 0);
                     if ("plain" in cv)
-                        defaultAttrs[an] = cv.plain;
+                        defaultAttrs[an] = btNoteColorInit(cv.plain, child.endLine ?? child.line ?? 0);
                     else {
                         instEntries.push(...cv.entries);
-                        defaultAttrs[an] = cv.init;
+                        defaultAttrs[an] = btNoteConstraintInit(cv.init, child.endLine ?? child.line ?? 0, debugFile(child));
                         // The `$once` color constraint is a CODE MEMBER (its `$mh` setter body
                         // resets `#file`), so it makes the class member-rich — the synthetic
                         // ctor tracks off the setter's deps span (plain file="" form), NOT the
@@ -3222,7 +3316,7 @@ function compileInner(root, opts, debug) {
                         const fb = raw != null
                             ? compileTypedValue(c.attrs["type"] ? mapType(c.attrs["type"]) : valueTypeOf(def.name, an), raw, false)
                             : undefined;
-                        defaultAttrs[an] = styleConstraintExpr(an, declared, jsString(c.attrs["style"]), fb);
+                        defaultAttrs[an] = btNoteConstraintInit(styleConstraintExpr(an, declared, jsString(c.attrs["style"]), fb), c.endLine ?? c.line ?? 0, debugFile(c));
                     }
                     else if (con && con.when === "immediately") {
                         // $immediately{expr} class <attribute>: an eager default value
@@ -3252,7 +3346,7 @@ function compileInner(root, opts, debug) {
                             ? compileConstraintDebug(an, declared, setterExpr, con.when, mGen, debugFile(c), c.endLine ?? c.line ?? 0)
                             : compileConstraint(an, declared, setterExpr, con.when, mGen);
                         instEntries.push(...cc.entries, ...slot, ...setterEntry);
-                        defaultAttrs[an] = cc.initExpr;
+                        defaultAttrs[an] = btNoteConstraintInit(cc.initExpr, c.endLine ?? c.line ?? 0, debugFile(c));
                         noteMember(c, false);
                         lastMemberConBody = cc.lastBody;
                         lastMemberConSrcLine = cc.lastSrcLine;
@@ -3284,13 +3378,17 @@ function compileInner(root, opts, debug) {
                     }
                 }
                 else if (c.name === "event") {
-                    // <event name="X"/> → a void-0 slot + X:LzDeclaredEvent default.
+                    // <event name="X"/> → a void-0 slot + X:LzDeclaredEvent default. Under
+                    // backtrace, the `LzDeclaredEvent` value is a checked free ref → noted at
+                    // the event element's source line (the mergeAttributes IIFE frame is $3).
                     const en = c.attrs["name"];
                     if (!en)
                         throw new Unsupported(`<event> without name`);
                     if (!isInherited(def.superTag, en))
                         instEntries.push(voidSlot(en));
-                    defaultAttrs[en] = "LzDeclaredEvent";
+                    defaultAttrs[en] = COMPILE_BACKTRACE
+                        ? `(${annoFileLine(null, 0)}$3.lineno = ${c.line ?? 0}, LzDeclaredEvent)`
+                        : "LzDeclaredEvent";
                 }
                 else if (c.name === "setter") {
                     // <setter name="X" args="v">body</setter> → a $lzc$set_X method. The

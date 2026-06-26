@@ -26,6 +26,32 @@ export const OP_PATHRESET = "R";
 export const OP_PATHRESET_ONLY = "r";
 export const OP_REG = "G";
 export const OP_SETPATH = "P";
+// Backtrace (DEBUG_BACKTRACE) flag for the generated constructors (debugConstructor
+// / debugConstructorPlain), which add the per-frame backtraceStack instrumentation.
+// Set per compile by compile.ts (alongside setScBacktrace). Inert for normal debug.
+let DBG_BACKTRACE = false;
+export function setDebugBacktrace(v) { DBG_BACKTRACE = v; }
+// The constructor's frame prelude/prefix/suffix + the noted super-fallback. Params
+// parent/attrs/children/async are fixed registers $0-$3, so $lzsc$d/$lzsc$s/$lzsc$a
+// are always $4/$5/$6.
+function ctorBacktrace(file, ctorLine) {
+    const D = "$4", S = "$5", Av = "$6";
+    return {
+        prelude: "var " + D + " = Debug;\nvar " + S + " = " + D + ".backtraceStack;\n",
+        prefix: "if (" + S + ") {\n" +
+            "var " + Av + " = [\"parent\", parent_$0, \"attrs\", attrs_$1, \"children\", children_$2, \"async\", async_$3];\n" +
+            Av + ".callee = arguments.callee;\n" +
+            Av + '["this"] = this;\n' +
+            Av + ".filename = " + JSON.stringify(file) + ";\n" +
+            Av + ".lineno = " + ctorLine + ";\n" +
+            S + ".push(" + Av + ");\n" +
+            "if (" + S + ".length > " + S + ".maxDepth) {\n" + D + ".stackOverflow()\n}};\n",
+        suffix: "\nfinally {\nif (" + S + ") {\n" + S + ".length--\n}}",
+        // The super dispatch's nextMethod fallback is a regular call → noteCallSite at
+        // ctorLine+1 (the dispatch's source line). The super test/dispatch is not noted.
+        nextMethod: "(" + Av + ".lineno = " + (ctorLine + 1) + ", this.nextMethod(arguments.callee, \"$lzsc$initialize\"))",
+    };
+}
 // A source-literal attr value (`id: "x"`, `text: "…"`, a plain immediate value) is
 // serialized by the oracle wrapped in `<key>: #beginAttribute\n\n#file <app>\n#line
 // <srcLine>\n<value>\n#file \n#endAttribute`, whose trailing empty `#file ` resets
@@ -378,14 +404,26 @@ export function debugConstructor(file, ctorLine) {
     const catchBody = 'if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error)' +
         ' && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException(' + JSON.stringify(file) + ", " + L +
         ", $lzsc$e)\n} else {\nthrow $lzsc$e\n}";
-    const tryText = "try {\n" + A(L) + switchText + ";\n" + A(B) + superDispatch + "\n}\n" +
-        Agen + "catch ($lzsc$e) {\n" + catchBody + "}";
-    const funcBlock = "{\n" + Agen + tryText + "}";
+    const bt = DBG_BACKTRACE ? ctorBacktrace(file, L) : null;
+    // Backtrace: the super-dispatch's nextMethod fallback is noted; the catch reports
+    // $6.lineno (the dynamic frame line) and a finally pops the frame.
+    const dispatch = bt
+        ? '(arguments.callee["$superclass"] && arguments.callee.$superclass.prototype["$lzsc$initialize"]' +
+            ' || ' + bt.nextMethod + ').call(this, parent_$0, attrs_$1, children_$2, async_$3)'
+        : superDispatch;
+    const catchBt = 'if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error)' +
+        ' && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException(' + JSON.stringify(file) + ", $6.lineno" +
+        ", $lzsc$e)\n} else {\nthrow $lzsc$e\n}";
+    const tryText = "try {\n" + (bt ? bt.prefix : "") + A(L) + switchText + ";\n" + A(B) + dispatch + "\n}\n" +
+        Agen + "catch ($lzsc$e) {\n" + (bt ? catchBt : catchBody) + "}" + (bt ? bt.suffix : "");
+    const funcBlock = "{\n" + Agen + (bt ? bt.prelude : "") + tryText + "}";
     const FUNC = A(L) + "function  (parent_$0, attrs_$1, children_$2, async_$3) " + funcBlock + FB;
     const S1 = A(L) + "var $lzsc$temp = " + FUNC + ";";
     const S2 = A(L) + '$lzsc$temp["displayName"] = "$lzsc$initialize";';
+    const S2bt = bt ? "\n" + A(L) + '$lzsc$temp["_dbg_filename"] = ' + JSON.stringify(file) + ";" +
+        "\n" + A(L) + '$lzsc$temp["_dbg_lineno"] = ' + L + ";" : "";
     const S3 = A(L) + "return $lzsc$temp";
-    return "(function () {\n" + S1 + "\n" + S2 + "\n" + S3 + "\n}" + FB + ")()";
+    return "(function () {\n" + S1 + "\n" + S2 + S2bt + "\n" + S3 + "\n}" + FB + ")()";
 }
 /** The synthetic constructor for a MEMBER-RICH class — rendered with NO
  *  source-location directives (file=""): the constructor (loc=null) inherits sc's
@@ -401,20 +439,35 @@ export function debugConstructorPlain(line) {
     // class directive). When a preceding code member already reset the context to
     // generated (its forceBlankLnum), the annotation collapses to nothing — so the
     // constraint/method-rich plain ctors are byte-unchanged.
+    const bt = DBG_BACKTRACE ? ctorBacktrace("", line) : null;
+    const dispatch = bt
+        ? '(arguments.callee["$superclass"] && arguments.callee.$superclass.prototype["$lzsc$initialize"]' +
+            ' || ' + bt.nextMethod + ').call(this, parent_$0, attrs_$1, children_$2, async_$3)\n'
+        : '(arguments.callee["$superclass"] && arguments.callee.$superclass.prototype["$lzsc$initialize"]' +
+            ' || this.nextMethod(arguments.callee, "$lzsc$initialize")).call(this, parent_$0, attrs_$1, children_$2, async_$3)\n';
+    const catchTail = bt
+        ? 'if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error)' +
+            ' && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException("", $6.lineno, $lzsc$e)\n} else {\nthrow $lzsc$e\n}}' + bt.suffix + "}\n"
+        : 'if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error)' +
+            ' && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException("", ' + line + ", $lzsc$e)\n} else {\nthrow $lzsc$e\n}}}\n";
+    const dbgMeta = bt
+        ? '$lzsc$temp["_dbg_filename"] = "";\n$lzsc$temp["_dbg_lineno"] = ' + line + ";\n"
+        : "";
     return ("(function () {\n" +
         annoFileLine(null, 0) +
         "var $lzsc$temp = function  (parent_$0, attrs_$1, children_$2, async_$3) {\n" +
+        (bt ? bt.prelude : "") +
         "try {\n" +
+        (bt ? bt.prefix : "") +
         "switch (arguments.length) {\ncase 0:\n" +
         "parent_$0 = null;;case 1:\nattrs_$1 = null;;case 2:\nchildren_$2 = null;;case 3:\nasync_$3 = false\n};\n" +
-        '(arguments.callee["$superclass"] && arguments.callee.$superclass.prototype["$lzsc$initialize"]' +
-        ' || this.nextMethod(arguments.callee, "$lzsc$initialize")).call(this, parent_$0, attrs_$1, children_$2, async_$3)\n' +
+        dispatch +
         "}\n" +
         "catch ($lzsc$e) {\n" +
-        'if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error)' +
-        ' && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException("", ' + line + ", $lzsc$e)\n} else {\nthrow $lzsc$e\n}}}\n" +
+        catchTail +
         ";\n" +
         '$lzsc$temp["displayName"] = "$lzsc$initialize";\n' +
+        dbgMeta +
         "return $lzsc$temp\n" +
         "}\n" +
         ")()");

@@ -155,14 +155,14 @@ const CLASS_MODIFIERS = new Set(["public", "private", "protected", "final", "int
 type Node =
   | { k: "num"; raw: string }
   | { k: "str"; v: string }
-  | { k: "id"; name: string }
+  | { k: "id"; name: string; line?: number } // line = identifier token line (backtrace noteCallSite on checked free refs); inert otherwise
   | { k: "this" }
   | { k: "super" }
   | { k: "lit"; v: string } // true/false/null
   | { k: "member"; o: Node; p: string }
   | { k: "index"; o: Node; i: Node }
-  | { k: "call"; c: Node; args: Node[] }
-  | { k: "new"; c: Node; args: Node[] }
+  | { k: "call"; c: Node; args: Node[]; line?: number } // line = call-expression start token (oracle node.beginLine, for backtrace noteCallSite)
+  | { k: "new"; c: Node; args: Node[]; line?: number }
   | { k: "unary"; op: string; e: Node; prefix: boolean; line?: number } // line = the operand's source line (postfix ++/-- on a free id → debug IIFE expansion)
   | { k: "bin"; op: string; l: Node; r: Node }
   | { k: "logic"; op: string; l: Node; r: Node }
@@ -207,11 +207,13 @@ type ClassMember =
 /** The OpenLaszlo `a is B` type-test operator expands to the conditional
  *  `B["$lzsc$isa"]?B.$lzsc$isa(a):a instanceof B` (operands duplicated, as the
  *  oracle does). The printer's precedence logic re-adds any needed parens. */
-function makeIsExpr(a: Node, b: Node): Node {
+function makeIsExpr(a: Node, b: Node, line?: number): Node {
   return {
     k: "cond",
     c: { k: "index", o: b, i: { k: "str", v: "$lzsc$isa" } },
-    t: { k: "call", c: { k: "member", o: b, p: "$lzsc$isa" }, args: [a] },
+    // Backtrace: the generated `B.$lzsc$isa(a)` CALL is noteCallSite-wrapped, so it
+    // carries the `is` expression's source line (the operator token line).
+    t: { k: "call", c: { k: "member", o: b, p: "$lzsc$isa" }, args: [a], line },
     f: { k: "bin", op: "instanceof", l: a, r: b },
   };
 }
@@ -672,9 +674,10 @@ class Parser {
       // expands to `B["$lzsc$isa"]?B.$lzsc$isa(a):a instanceof B`.
       if (op === "id" && this.peek().v === "is") {
         if (9 < minPrec) break;
+        const isLine = this.peek().line;
         this.next();
         const right = this.binary(10, noIn);
-        left = makeIsExpr(left, right);
+        left = makeIsExpr(left, right, isLine);
         continue;
       }
       // In a for-init head, `in` must not be consumed as a binary operator so the
@@ -704,19 +707,23 @@ class Parser {
     return e;
   }
   callMember(): Node {
+    // The call/new node's source line = the start of the whole call expression (the
+    // callee's first token), matching JavaCC's node.beginLine. Used by backtrace's
+    // noteCallSite (`$lzsc$a.lineno = <line>`); inert otherwise.
+    const startLine = this.peek().line;
     let e: Node;
     if (this.is("new")) {
       this.next();
       const c = this.callMemberNoCall();
       const args = this.is("(") ? this.argList() : [];
-      e = { k: "new", c, args };
+      e = { k: "new", c, args, line: startLine };
     } else {
       e = this.primary();
     }
     for (;;) {
       if (this.is(".")) { this.next(); e = { k: "member", o: e, p: this.eat("id").v }; }
       else if (this.is("[")) { this.next(); const i = this.expression(); this.eat("]"); e = { k: "index", o: e, i }; }
-      else if (this.is("(")) { e = { k: "call", c: e, args: this.argList() }; }
+      else if (this.is("(")) { e = { k: "call", c: e, args: this.argList(), line: startLine }; }
       else break;
     }
     return e;
@@ -796,7 +803,7 @@ class Parser {
     switch (t.t) {
       case "num": this.next(); return { k: "num", raw: t.v };
       case "str": this.next(); return { k: "str", v: t.v };
-      case "id": this.next(); return { k: "id", name: t.v };
+      case "id": this.next(); return { k: "id", name: t.v, line: t.line };
       case "this": this.next(); return { k: "this" };
       case "super": this.next(); return { k: "super" };
       case "function": return this.functionExpr();
@@ -892,6 +899,43 @@ const MAGIC_TRUE = new Set(["$dhtml", "$js1"]);
 // existing module-level MAGIC constant sets.
 let SC_DEBUG = false;
 export function setScDebug(v: boolean): void { SC_DEBUG = v; }
+// Per-compile backtrace flag (DEBUG_BACKTRACE). A `compileroptions="backtrace:true"`
+// build maintains a runtime call-stack: every function body gets a backtraceStack
+// frame (prelude/prefix/suffix), every call + checked free-ref is wrapped in a
+// `($lzsc$a.lineno = <node.line>, <node>)` comma-sequence (noteCallSite), and the
+// catch arm reports `$lzsc$a.lineno` instead of the static method line. Gated OFF
+// for all normal debug builds (dbg3 etc.) so the non-backtrace flow is untouched.
+let SC_BACKTRACE = false;
+export function setScBacktrace(v: boolean): void { SC_BACKTRACE = v; }
+// The compiler's predefined known globals (CommonGenerator.globals, line 101 + the
+// debug `$report*`/`Debug` additions). A free reference to one of these is NOT a
+// "checked" undefined reference, so it is never noteCallSite-wrapped under backtrace.
+// (Class names are ALSO added as each class is defined — accumulated in
+// SC_KNOWN_CLASSNAMES below.)
+const SC_KNOWN_GLOBALS = new Set<string>([
+  "NaN", "Infinity", "undefined", "eval", "parseInt", "parseFloat", "isNaN", "isFinite",
+  "decodeURI", "decodeURIComponent", "encodeURI", "encodeURIComponent",
+  "Object", "Function", "Array", "String", "Boolean", "Number", "Date",
+  "RegExp", "Error", "EvalError", "RangeError", "ReferenceError",
+  "SyntaxError", "TypeError", "URIError", "Math", "lz",
+  // debug-mode globals
+  "Debug", "$reportNotFunction", "$reportUndefinedObjectProperty", "$reportUndefinedMethod",
+  "$reportException", "$reportUndefinedProperty", "$reportUndefinedVariable", "$reportSourceWarning",
+]);
+// Class names accumulated as classes are defined (CommonGenerator line 408
+// `globals.add(classnameString)`). A reference to a class defined EARLIER in the
+// program is known; one defined later is still a checked free ref. Reset per compile.
+let SC_KNOWN_CLASSNAMES = new Set<string>();
+export function resetKnownClassnames(): void { SC_KNOWN_CLASSNAMES = new Set(); }
+export function addKnownClassname(name: string): void { SC_KNOWN_CLASSNAMES.add(name); }
+// Top-level GLOBAL declarations (`id="x"`, `name="x"`, `<dataset name>`, top-level
+// `var`) — the oracle's ToplevelCompiler.computeDeclarations declares them all into
+// `globals`/VARIABLES BEFORE any script is generated, so a reference to one is a
+// known global (never a checked free ref → never noteCallSite-wrapped). Populated by
+// compile.ts as it collects globals; reset per compile. (Backtrace-only consumer.)
+let SC_KNOWN_IDS = new Set<string>();
+export function resetKnownIds(): void { SC_KNOWN_IDS = new Set(); }
+export function addKnownId(name: string): void { SC_KNOWN_IDS.add(name); }
 const isFalse = (n: Node) => n.k === "lit" && n.v === "false";
 const isTrue = (n: Node) => n.k === "lit" && n.v === "true";
 // A compile-time magic constant — folded to a literal in bare if/?: test position
@@ -940,8 +984,8 @@ function foldNode(n: Node): Node {
     case "assign": return { k: "assign", op: n.op, l: foldNode(n.l), r: foldNode(n.r) };
     case "member": return { k: "member", o: foldNode(n.o), p: n.p };
     case "index": return { k: "index", o: foldNode(n.o), i: foldNode(n.i) };
-    case "call": return { k: "call", c: foldNode(n.c), args: n.args.map(foldNode) };
-    case "new": return { k: "new", c: foldNode(n.c), args: n.args.map(foldNode) };
+    case "call": return { k: "call", c: foldNode(n.c), args: n.args.map(foldNode), line: n.line };
+    case "new": return { k: "new", c: foldNode(n.c), args: n.args.map(foldNode), line: n.line };
     case "array": return { k: "array", els: n.els.map(foldNode) };
     case "object": return { k: "object", props: n.props.map((p) => ({ ...p, v: foldNode(p.v) })) };
     case "seq": return { k: "seq", es: n.es.map(foldNode) };
@@ -1239,6 +1283,10 @@ type Scope = {
    *  debug try/catch + `$reportException` wrapper (JavascriptGenerator:1277:
    *  `debugExceptions && (dereferenced || !free.isEmpty())`). */
   dereferenced: boolean;
+  /** ALL names declared in this body (params + locals), including the closed-over
+   *  ones that are NOT renamed. A nested function's free ref to any of these
+   *  resolves to THIS enclosing scope → not a checked/notable ref (backtrace). */
+  locals: Set<string>;
 };
 
 /** VariableAnalyzer.dereferenced (VariableAnalyzer.java:156): true iff THIS
@@ -1304,8 +1352,17 @@ function computeDereferenced(body: Stmt[]): boolean {
  *  anonymous-class rule (the analyzer does not treat globals as non-free). */
 type As3Refine = { props: Set<string> };
 
+// The three synthetic locals a backtrace function body declares (prelude/prefix):
+//   $lzsc$d = Debug, $lzsc$s = backtraceStack, $lzsc$a = the frame array. The
+// oracle visits prelude then prefix AFTER the body, so these append to the
+// `variables` list (register-numbered after all params + body locals).
+const BACKTRACE_VARS = ["$lzsc$d", "$lzsc$s", "$lzsc$a"];
+
 function analyzeScope(params: string[], body: Stmt[], isMethod: boolean, as3?: As3Refine, debug = false): Scope {
   const variables = collectVariables(body);
+  // Backtrace: reserve registers for the three frame locals (appended last so
+  // body-local register numbers are unperturbed). Inert unless SC_BACKTRACE.
+  if (debug && SC_BACKTRACE) for (const v of BACKTRACE_VARS) if (!variables.includes(v)) variables.push(v);
   const localSet = new Set<string>([...params, ...variables]);
   const free = computeFree(params, body);
   const innerFree = new Set<string>();
@@ -1348,7 +1405,7 @@ function analyzeScope(params: string[], body: Stmt[], isMethod: boolean, as3?: A
   const closedRedecls = closedParams.map((p) => ({ name: p, reg: fullMap.get(p)! }));
   for (const p of closedParams) bodyMap.delete(p);
   const newParams = params.map((p) => fullMap.get(p) ?? p);
-  return { map: bodyMap, newParams, withThis, closedRedecls, free, dereferenced: computeDereferenced(body) };
+  return { map: bodyMap, newParams, withThis, closedRedecls, free, dereferenced: computeDereferenced(body), locals: localSet };
 }
 
 // ---------- Printer (compress=true,obfuscate=false) ----------
@@ -1406,6 +1463,10 @@ class Printer {
   // script-level `var j` makes `j++` inside `globalReference` plain, while
   // databinding's instance attr `ind` (no outer var) makes `++ind` expand.
   dbgOuterVars: Set<string> = new Set();
+  // Backtrace: this body's OWN declared names (params + locals, including closed
+  // ones not in the rename map). Unioned into a nested function's outer-resolvable
+  // set so a free ref to an enclosing closed local (e.g. `dk`) is NOT noted.
+  dbgLocals: Set<string> = new Set();
   // An inherited `#pragma userFunctionName=…` (CodeGenerator: the option set in a
   // handler/setter/binder prologue persists down the options-copy into every
   // lexically-nested function), so a nested function VALUE's debug displayName is
@@ -1413,6 +1474,34 @@ class Printer {
   // form. null = no inherited name (a plain method body / top-level script does
   // not propagate). Propagates recursively into the sub-Printers.
   outerUserName: string | null = null;
+  // Backtrace (DEBUG_BACKTRACE): the renamed `$lzsc$a` frame register (e.g. "$3")
+  // for the CURRENT function body. When non-null, every call + checked free-ref
+  // node is wrapped by noteCallSite into a `($N.lineno = <node.line>, <node>)`
+  // comma-sequence. Set per function in renderDebugFuncNode; null = no instrument.
+  btVar: string | null = null;
+  // Transient guard so a notable node's re-entrant plain print does not re-note
+  // itself (read-and-cleared at the top of the call/id cases — nested args/objects
+  // still note because it is cleared before they print).
+  btSuppress = false;
+  // Backtrace: whether a super-dispatch has been printed in THIS function body.
+  // The noteCallSite fragment `$lzsc$a.lineno = N` is parsed FRESH and inherits
+  // `Token.currentPathname` (the persistent JavaCC lexer static): a super-dispatch's
+  // generation flips it to the body's real source file, so EVERY subsequent
+  // noteCallSite marker in a super-bearing body (init/construct/constructor) carries
+  // `#<dfile>#1`, while a body WITHOUT a super (plain setter/method/handler) keeps it
+  // suppressed (`#0#0`). Empirically exact across the backtrace -SS lineann dump:
+  // construct/init markers are `#0#0 #<file>#1`; every super-less method is `#0#0`.
+  // Fresh per function body (each gets a new Printer → default false).
+  btSuperSeen = false;
+  // Backtrace: whether bare-id CHECKED free references are noteCallSite-wrapped in
+  // THIS body. A function compiled with `#pragma warnUndefinedReferences=false`
+  // (the constraint DEPENDENCIES method — NodeModel.java:396) makes NO reference a
+  // checked node (JavascriptReference: makeCheckedNode is gated on
+  // WARN_UNDEFINED_REFERENCES), so its bare-id refs are NOT noted — but its CALLs
+  // still are (noteCallSite for calls/new is independent of WARN_UNDEFINED). The
+  // setter/handler/method/binder bodies keep the default (true) so they note bare
+  // instance-property refs (e.g. `classroot`) like the oracle. Inert unless btVar.
+  btWarnUndef = true;
   SP: string; COMMA: string; COLON: string; ASSIGN: string; OPENP: string; CLOSEP: string;
   constructor(rename: Map<string, string>, compress = true) {
     this.rename = rename;
@@ -1442,8 +1531,40 @@ class Printer {
     return str;
   }
 
+  // A super-call (translateSuperCallExpression) gets NO noteCallSite
+  // (JavascriptGenerator:834) — detect the three super dispatch shapes so they
+  // are excluded from backtrace instrumentation.
+  isSuperCall(n: Extract<Node, { k: "call" }>): boolean {
+    const c = n.c;
+    if (c.k === "super") return true;
+    if (c.k === "member" && c.o.k === "super") return true;
+    if (c.k === "member" && (c.p === "call" || c.p === "apply") &&
+        c.o.k === "member" && c.o.o.k === "super") return true;
+    return false;
+  }
+  // Backtrace noteCallSite predicate: a call node carrying a source line (and not
+  // a super dispatch) is wrapped `($lzsc$a.lineno = <line>, <call>)`.
+  btNotableCall(n: Node): boolean {
+    if (this.btVar == null || typeof (n as { line?: number }).line !== "number" || (n as { line: number }).line <= 0) return false;
+    // A `new` expression also gets noteCallSite (CodeGenerator.visitNewExpression).
+    if (n.k === "new") return true;
+    return n.k === "call" && !this.isSuperCall(n);
+  }
+  // Backtrace noteCallSite predicate for a CHECKED free-bare-id reference
+  // (makeCheckedNode): a free identifier carrying a source line, not resolving to
+  // an enclosing-scope binding. Wrapped `($lzsc$a.lineno = <line>, <id>)`.
+  btNotableId(n: Node): boolean {
+    return this.btVar != null && this.btWarnUndef && n.k === "id" && typeof n.line === "number" &&
+      n.line > 0 && this.dbgFree != null && this.dbgFree.has(n.name) &&
+      !this.dbgOuterVars.has(n.name) &&
+      !SC_KNOWN_GLOBALS.has(n.name) && !SC_KNOWN_CLASSNAMES.has(n.name) && !SC_KNOWN_IDS.has(n.name);
+  }
+
   // precedence for paren decisions
   prec(n: Node): number {
+    // A noted call / checked-ref renders as a `(… , …)` comma-sequence (prec 0),
+    // so the parent parenthesizes it per comma precedence.
+    if ((this.btNotableCall(n) || this.btNotableId(n)) && !this.btSuppress) return 0;
     switch (n.k) {
       case "seq": return 0;
       case "assign": return 1;
@@ -1477,6 +1598,30 @@ class Printer {
   }
 
   expr(n: Node): string {
+    // Backtrace noteCallSite: a notable call / checked free-ref renders as a
+    // `<$lzsc$a>.lineno = <node.line>, <node>` comma-sequence. btSuppress guards
+    // the re-entrant plain print of THIS node (cleared before its children print,
+    // so nested args/refs still note). Idempotent (matches AnnotatedNode).
+    if (this.btVar != null && (this.btNotableCall(n) || this.btNotableId(n))) {
+      if (!this.btSuppress) {
+        const line = (n as { line?: number }).line!;
+        this.btSuppress = true;
+        const inner = this.expr(n);
+        // noteCallSite's ASTExpressionList is a GENERATED node (beginLine 0) → its
+        // leading `#0#0` marker. The seq's FIRST child, the `$lzsc$a.lineno = N`
+        // assignment, is parsed FRESH (`new Parser().parse(...)`,
+        // JavascriptGenerator:733) and carries `filename = Token.currentPathname`
+        // (line 1 of the one-line fragment). currentPathname is the body's real
+        // source file ONLY after a super-dispatch flips the lexer static; otherwise
+        // it is suppressed. So a super-bearing body emits `#0#0 #<dfile>#1` (→ a
+        // `/* -*- file: #1 -*- */` directive at statement head, path omitted); a
+        // super-less body emits `#0#0 #0#0` ≡ `#0#0` (the 2nd dedups). Verified
+        // byte-exact against the oracle -SS lineann dump.
+        const cp = this.btSuperSeen ? this.dfile : "";
+        return annoFileLine(null, 0) + annoFileLine(cp, 1) + this.btVar + ".lineno = " + line + ", " + inner;
+      }
+      this.btSuppress = false;
+    }
     switch (n.k) {
       case "num": return printNumber(n.raw);
       case "str": return jsString(n.v);
@@ -1492,14 +1637,39 @@ class Printer {
         // The superclass-method dispatch guard prefix, spaced in the debug build
         // (`["$superclass"] && … || this.nextMethod(arguments.callee, m)`).
         const A = this.SP, C = this.COMMA;
+        // Backtrace: a super-dispatch flips Token.currentPathname to the real source
+        // file for the rest of this body, so subsequent noteCallSite markers carry
+        // `#<dfile>#1` (see btSuperSeen). Supers are body-first, so setting the flag
+        // here (before the dispatch's own args/body print) is positionally faithful.
+        if (this.btVar != null && this.isSuperCall(n)) this.btSuperSeen = true;
+        // Backtrace: the `is` operator's generated `B.$lzsc$isa(a)` call (makeIsExpr)
+        // is re-lexed from source by the oracle → it flips Token.currentPathname to
+        // the real file for the REST of this body, exactly like a super-dispatch
+        // (debugger.lzx addText: `msg.toHTML is Function` at 945 → the catch `trace`
+        // at 951 carries `#<dfile>#1`). The generated frame catch-wrapper's
+        // `Error.$lzsc$isa(...)` is emitted as a literal string (debugCatchBody*),
+        // NOT through this printer, so it never reaches here.
+        if (SC_BACKTRACE && this.btVar != null && n.c.k === "member" && n.c.p === "$lzsc$isa")
+          this.btSuperSeen = true;
+        // Backtrace: the `this.nextMethod(...)` FALLBACK of a super-dispatch is a
+        // generated CALL → noteCallSite-wrapped at the super-call's source line
+        // (`($N.lineno = <line>, this.nextMethod(...))`). The `$superclass` guard
+        // refs (member/index) are not checked, so only the fallback call is noted.
+        const btLine = (n as { line?: number }).line;
+        const nextMethod = (m: string) => {
+          const callExpr = `this.nextMethod(arguments.callee${C}${m})`;
+          return this.btVar != null && typeof btLine === "number" && btLine > 0
+            ? `(${this.btVar}.lineno${this.ASSIGN}${btLine}${C}${callExpr})`
+            : callExpr;
+        };
         const dispatch = (m: string) =>
           `(arguments.callee["$superclass"]${A}&&${A}arguments.callee.$superclass.prototype[${m}]` +
-          `${A}||${A}this.nextMethod(arguments.callee${C}${m}))`;
+          `${A}||${A}${nextMethod(m)})`;
         // Bare `super(args)` is the constructor super-call → dispatch to
         // $lzsc$initialize (CommonGenerator: a super with no selector).
         if (n.c.k === "super") {
           const m = jsString("$lzsc$initialize");
-          const args = n.args.map((a) => this.expr(a)).join(C);
+          const args = n.args.map((a) => this.wrap(a, 1)).join(C);
           return `${dispatch(m)}.call(this${args ? C + args : ""})`;
         }
         // super.X.call(args) / super.X.apply(args) → the dispatch with the
@@ -1508,7 +1678,7 @@ class Printer {
         if (n.c.k === "member" && (n.c.p === "call" || n.c.p === "apply") &&
             n.c.o.k === "member" && n.c.o.o.k === "super") {
           const m = jsString(n.c.o.p);
-          const args = n.args.map((a) => this.expr(a)).join(C);
+          const args = n.args.map((a) => this.wrap(a, 1)).join(C);
           return `${dispatch(m)}.${n.c.p}(${args})`;
         }
         // super.X(args) → the kernel superclass-method dispatch.
@@ -1518,7 +1688,7 @@ class Printer {
           // names the setter $lzc$set_<prop>; a dynamic one dispatches via
           // '$lzc$set_'+prop (without the $superclass guard).
           if (n.c.p === "setAttribute" && n.args.length === 2) {
-            const value = this.expr(n.args[1]);
+            const value = this.wrap(n.args[1], 1);
             const prop = n.args[0];
             if (prop.k === "str") {
               const m = jsString("$lzc$set_" + prop.v);
@@ -1527,12 +1697,17 @@ class Printer {
             return `this.nextMethod(arguments.callee${C}${jsString("$lzc$set_")}${A}+${A}${this.expr(prop)}).call(this${C}${value})`;
           }
           const m = jsString(n.c.p);
-          const args = n.args.map((a) => this.expr(a)).join(C);
+          const args = n.args.map((a) => this.wrap(a, 1)).join(C);
           return `${dispatch(m)}.call(this${args ? C + args : ""})`;
         }
-        return this.wrap(n.c, 17) + "(" + n.args.map((a) => this.expr(a)).join(this.COMMA) + ")";
+        // The call's function reference goes through translateReferenceForCall (NOT
+        // a checked value get), so a bare-id callee is NEVER noteCallSite-wrapped
+        // (the CALL itself carries the note). A member/other callee is printed
+        // normally (its object IS a checked value get → may be noted).
+        const callee = n.c.k === "id" ? this.id(n.c.name) : this.wrap(n.c, 17);
+        return callee + "(" + n.args.map((a) => this.wrap(a, 1)).join(this.COMMA) + ")";
       }
-      case "new": return "new " + this.wrap(n.c, 18) + "(" + n.args.map((a) => this.expr(a)).join(this.COMMA) + ")";
+      case "new": return "new " + this.wrap(n.c, 18) + "(" + n.args.map((a) => this.wrap(a, 1)).join(this.COMMA) + ")";
       case "unary":
         // Debug: a `++`/`--` (PREFIX or POSTFIX) on a CHECKED reference (a free,
         // bare identifier — NOT a property/index ref, NOT a local, NOT an outer
@@ -1595,7 +1770,11 @@ class Printer {
         // conditional in the then/else branch keeps its parens.
         return this.wrap(n.c, 2, true) + this.SP + "?" + this.SP + this.wrap(n.t, 2, true) + this.SP + ":" + this.SP + this.wrap(n.f, 2, true);
       case "array":
-        return "[" + n.els.map((e) => this.expr(e)).join(this.COMMA) + "]";
+        // Elements wrap at assignment precedence (oracle visitArrayLiteral uses
+        // maybeAddParens at COMMA prec) so a comma-sequence element — e.g. a
+        // backtrace noteCallSite `($N.lineno = L, call)` — is parenthesized and its
+        // comma is not mistaken for the array separator.
+        return "[" + n.els.map((e) => this.wrap(e, 1)).join(this.COMMA) + "]";
       case "object":
         // A key preserves its source form: a string-literal key stays quoted, a
         // numeric key prints as a number, an identifier key stays bare.
@@ -1636,8 +1815,17 @@ class Printer {
       // names) + any names already resolvable from further out as outer (resolved)
       // vars — so a `++X` inside a deeper function where X is an outer `var` stays
       // plain.
-      const childOuter = new Set<string>([...this.dbgOuterVars, ...this.rename.keys()]);
-      return renderDebugFuncNode(n, userName, n.name != null, ffile, fl, "report", false, undefined, this.outerUserName, childOuter);
+      const childOuter = new Set<string>([...this.dbgOuterVars, ...this.rename.keys(),
+        ...(SC_BACKTRACE ? this.dbgLocals : [])]);
+      const out = renderDebugFuncNode(n, userName, n.name != null, ffile, fl, "report", false, undefined, this.outerUserName, childOuter);
+      // Backtrace: generating a function VALUE leaves Token.currentPathname on the
+      // real source file (like a super-dispatch), so a noteCallSite whose subtree
+      // includes a function — e.g. `choices.sort(function(a,b){…})` — and every
+      // following one in this body carries `#<dfile>#1`. Set AFTER rendering so the
+      // ENCLOSING call's cp (computed post-expr) sees it; the nested function has its
+      // own Printer/flag. (Same effect as btSuperSeen — currentPathname tracking.)
+      if (SC_BACKTRACE) this.btSuperSeen = true;
+      return out;
     }
     const scope = analyzeScope(n.params, n.body, false);
     const sub = new Printer(scope.map, this.c);
@@ -2146,7 +2334,9 @@ class Printer {
       case "expr": return this.expr(st.e) + ";";
       case "empty": return "";
       case "var":
-        return "var " + st.decls.map((d) => this.id(d.name) + (d.init ? this.SP + "=" + this.SP + this.expr(d.init) : "")).join(this.COMMA) + ";";
+        // A var initializer is at assignment precedence — wrap so a noteCallSite
+        // comma-sequence (prec 0, backtrace) is parenthesized.
+        return "var " + st.decls.map((d) => this.id(d.name) + (d.init ? this.SP + "=" + this.SP + this.wrap(d.init, 1) : "")).join(this.COMMA) + ";";
       case "return": {
         if (!st.e) return "return;";
         // delimitWithParen (force=true): the separator is " " when the value does
@@ -2527,6 +2717,20 @@ export function compileScriptBodyDebug(
   printer.dbg = true;
   printer.dfile = file;
   printer.dline = elementLine;
+  // Backtrace: a `<script>` instance's function VALUE is a back-traceable frame too
+  // (it bypasses renderDebugFuncNode, so the frame is wired here). The script printer
+  // uses an empty rename map (script-scope vars are globals), so the frame registers
+  // are the literal $lzsc$d/$lzsc$s/$lzsc$a. Setting btVar turns on the body's
+  // noteCallSite. INERT when SC_BACKTRACE is off (the function stays a plain
+  // displayName-IIFE + try/catch).
+  const bt = SC_BACKTRACE;
+  if (bt) {
+    printer.btVar = "$lzsc$a";
+    // The free set (refs not declared in script scope) drives which bare ids are
+    // "checked" → noteCallSite-wrapped. Script-scope vars (hoistNames) are declared
+    // by collectVariables so they are available (not free); `canvas`/`lz`/… are free.
+    printer.dbgFree = computeFree([], ast);
+  }
   // The script-scope globals (var/funcdecl names) RESOLVE a nested function's free
   // reference, so a `++X`/`X++` on such a name inside a nested funcdecl is NOT
   // "checked" → stays plain (performance-tuning's `var j` → `j++` in
@@ -2557,10 +2761,16 @@ export function compileScriptBodyDebug(
       }).join("\n")
     : "";
   const bodyStmts = printer.joinStmts(rest);
-  const lead = [hoist, funcAssigns].filter((s) => s !== "");
-  const leadJoined = lead.join("\n");
+  // Backtrace frame prefix (`if ($lzsc$s) {…push…}`) goes first in the lead, before
+  // the hoist/funcAssigns and body (a no-param frame → `[]`).
+  const btFramePrefix = bt ? btPrefix("$lzsc$d", "$lzsc$s", "$lzsc$a", [], [], file, elementLine, false) : "";
+  const lead = [btFramePrefix, hoist, funcAssigns].filter((s) => s !== "");
   // A lead ending in `;` (the `name = void 0;` hoist / funcdecl assigns) needs only
-  // a newline before the body; one not ending in `;` needs `;\n`.
+  // a newline before the next item; one not ending in `;` (the frame prefix `}}`)
+  // needs `;\n`.
+  const joinSep = (acc: string, item: string) =>
+    acc + (unannotateStr(acc).replace(/\s+$/, "").endsWith(";") ? "\n" : ";\n") + item;
+  const leadJoined = lead.length ? lead.reduce(joinSep) : "";
   const leadSep = unannotateStr(leadJoined).replace(/\s+$/, "").endsWith(";") ? "\n" : ";\n";
   const bodyInner = lead.length
     ? leadJoined + (bodyStmts ? leadSep + bodyStmts : "")
@@ -2581,12 +2791,17 @@ export function compileScriptBodyDebug(
   // `var X = {…}` globals → NO try). `dereferenced` stays TOP-scope only (computeDeref
   // skips nested funcs), so the funcdecl bodies' property accesses do NOT count.
   const freeReal = computeFree([], ast);
-  const needTry = computeDereferenced(ast) || freeReal.size > 0;
+  // Backtrace always establishes a try (for the finally/frame-pop suffix).
+  const needTry = bt || computeDereferenced(ast) || freeReal.size > 0;
   let funcBlock: string;
   if (needTry) {
-    const catchBody = debugCatchBody(file, elementLine);
-    const tryWrap = "try {\n" + elided + blockNL(elided) + "}\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}";
-    funcBlock = "{\n" + Agen + tryWrap + "}";
+    const catchBody = bt ? debugCatchBodyBacktrace(file, "$lzsc$a") : debugCatchBody(file, elementLine);
+    const finallyClause = bt
+      ? "\n" + Agen + "finally {\n" + btSuffix("$lzsc$s") + blockNL(btSuffix("$lzsc$s")) + "}"
+      : "";
+    const tryWrap = "try {\n" + elided + blockNL(elided) + "}\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}" + finallyClause;
+    const preludeStr = bt ? btPrelude("$lzsc$d", "$lzsc$s") + "\n" : "";
+    funcBlock = "{\n" + Agen + preludeStr + tryWrap + "}";
   } else {
     funcBlock = elided === "" ? "{}" : "{\n" + elided + blockNL(elided) + "}";
   }
@@ -2594,8 +2809,13 @@ export function compileScriptBodyDebug(
   const userName = file + "#" + elementLine + "/" + displayCol;
   const S1 = A(elementLine) + "var $lzsc$temp = " + innerFn + ";";
   const S2 = A(elementLine) + '$lzsc$temp["displayName"] = ' + jsString(userName) + ";";
+  // Backtrace static frame metadata (after displayName, JavascriptGenerator:1648).
+  const S2bt = bt
+    ? NL + A(elementLine) + '$lzsc$temp["_dbg_filename"] = ' + jsString(file) + ";" +
+      NL + A(elementLine) + '$lzsc$temp["_dbg_lineno"] = ' + elementLine + ";"
+    : "";
   const S3 = A(elementLine) + "return $lzsc$temp;";
-  const inner = S1 + NL + S2 + NL + elideSemi(S3);
+  const inner = S1 + NL + S2 + S2bt + NL + elideSemi(S3);
   return "(function () {" + NL + inner + NL + "}" + FB + ")()";
 }
 
@@ -2811,6 +3031,7 @@ export function compileMethodDebug(
   const printer = new Printer(scope.map, /*compress*/ false);
   printer.dbg = true;
   printer.dbgFree = scope.free;
+  printer.dbgLocals = scope.locals;
   printer.dfile = filename;
   printer.dline = line;
   if (scope.withThis) throw new ScUnsupported("debug: withThis method (grind TODO)");
@@ -2833,6 +3054,48 @@ function debugCatchBody(filename: string, line: number): string {
     'if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error)' +
     ' && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException(' +
     jsString(filename) + ", " + line + ", $lzsc$e)\n} else {\nthrow $lzsc$e\n}"
+  );
+}
+
+/** Backtrace function-body wrapper fragments (JavascriptGenerator:1225-1245).
+ *  `dvar`/`svar`/`avar` are the renamed `$lzsc$d`/`$lzsc$s`/`$lzsc$a` registers.
+ *  Emitted as generated code (no source-location annotation — the surrounding
+ *  with/try/finally region shares the empty-file context). */
+function btPrelude(dvar: string, svar: string): string {
+  return "var " + dvar + " = Debug;\nvar " + svar + " = " + dvar + ".backtraceStack;";
+}
+function btPrefix(
+  dvar: string, svar: string, avar: string,
+  params: string[], newParams: string[], fn: string, line: number, isStatic: boolean
+): string {
+  // `[quote(p0), p0, quote(p1), p1, …]` — the frame's name/value pairs (the param
+  // identifier register-renamed; the name a plain string literal).
+  const elems: string[] = [];
+  for (let i = 0; i < params.length; i++) { elems.push(jsString(params[i])); elems.push(newParams[i]); }
+  const arr = "[" + elems.join(", ") + "]";
+  return (
+    "if (" + svar + ") {\n" +
+    "var " + avar + " = " + arr + ";\n" +
+    avar + ".callee = arguments.callee;\n" +
+    (isStatic ? "" : avar + '["this"] = this;\n') +
+    avar + ".filename = " + jsString(fn) + ";\n" +
+    avar + ".lineno = " + line + ";\n" +
+    svar + ".push(" + avar + ");\n" +
+    "if (" + svar + ".length > " + svar + ".maxDepth) {\n" +
+    dvar + ".stackOverflow()\n" +
+    "}}"
+  );
+}
+function btSuffix(svar: string): string {
+  return "if (" + svar + ") {\n" + svar + ".length--\n}";
+}
+/** Backtrace catch body: identical to debugCatchBody but the reported line is the
+ *  dynamic `<$lzsc$a>.lineno` (last noteCallSite) instead of the static method line. */
+function debugCatchBodyBacktrace(filename: string, avar: string): string {
+  return (
+    'if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error)' +
+    ' && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException(' +
+    jsString(filename) + ", " + avar + ".lineno, $lzsc$e)\n} else {\nthrow $lzsc$e\n}"
   );
 }
 
@@ -2911,11 +3174,25 @@ export function compileFunctionDebug(
   const printer = new Printer(scope.map, /*compress*/ false);
   printer.dbg = true;
   printer.dbgFree = scope.free;
+  printer.dbgLocals = scope.locals;
+  // The constraint DEPENDENCIES method carries `#pragma warnUndefinedReferences=
+  // false` (NodeModel.java:396, paired with the throwsError=true → catchKind
+  // "throws"). With warnings off, NO bare-id reference is a checked node, so under
+  // backtrace its bare refs (e.g. `classroot`) are NOT noteCallSite-wrapped — only
+  // its CALLs are. Setter/method/handler bodies keep btWarnUndef=true (default).
+  printer.btWarnUndef = catchKind !== "throws";
   printer.dfile = file;
   printer.dline = methodLine;
   // Pragma-bearing functions (handlers/setters/binders) propagate their pretty
   // userFunctionName into nested function values (see Printer.outerUserName).
   if (propagateName != null) printer.outerUserName = propagateName;
+  // Backtrace frame registers (reserved last in analyzeScope); btVar turns on
+  // noteCallSite for every call/checked-ref in this body.
+  const bt = SC_BACKTRACE;
+  const dvar = bt ? scope.map.get("$lzsc$d")! : "";
+  const svar = bt ? scope.map.get("$lzsc$s")! : "";
+  const avar = bt ? scope.map.get("$lzsc$a")! : "";
+  if (bt) printer.btVar = avar;
   const A = (n: number) => annoFileLine(file, n);
   const Agen = annoFileLine(null, 0);
   const FB = forceBlankLnum();
@@ -2944,11 +3221,21 @@ export function compileFunctionDebug(
   const redecls = withThis
     ? scope.closedRedecls.map(({ name, reg }) => Agen + "var " + name + " = " + reg + ";").join("\n")
     : "";
-  const hoist = funcdecls.length
-    ? funcdecls.map((d) => Agen + "var " + printer.id(d.name) + ";").join("\n") + "\n" +
-      funcdecls.map((d) => A(methodLine) + printer.id(d.name) + " = " +
+  // Funcdecl hoist splits into the `var name;` DECLARATIONS (hoisted to the very
+  // front of the try body) and the `name = function…` ASSIGNMENTS (kept in place,
+  // after the frame prefix). The oracle's statement-list var-hoisting pulls the
+  // declaration ahead of the backtrace prefix (JavascriptGenerator: the fundef name
+  // is in `variables`, declared at the front of the try body; the assignment is the
+  // fundefs-loop node added AFTER `prefix`). With no prefix (non-backtrace) the two
+  // stay adjacent (`hoist`), preserving the byte-identical dbg3 form.
+  const hoistDecls = funcdecls.length
+    ? funcdecls.map((d) => Agen + "var " + printer.id(d.name) + ";").join("\n")
+    : "";
+  const hoistAssigns = funcdecls.length
+    ? funcdecls.map((d) => A(methodLine) + printer.id(d.name) + " = " +
         renderDebugFuncNode(d.fn, d.name, /*named*/ true, file, (d as any).line ?? methodLine) + ";").join("\n")
     : "";
+  const hoist = hoistDecls && hoistAssigns ? hoistDecls + "\n" + hoistAssigns : hoistDecls + hoistAssigns;
   const prologue = cases.length > 0
     ? A(methodLine) + "switch (arguments.length) {\n" +
       cases.map((c, j) => "case " + c.i + ":\n" + (j === 0 ? A(methodLine + 1) : "") + c.assign).join(";;") +
@@ -2957,19 +3244,29 @@ export function compileFunctionDebug(
   // Assemble the leading generated statements (redecls/hoist/prologue), then body.
   // A lead ending in `;` (redecls/hoist) needs only a newline before the body; one
   // ending in `}` (the switch prologue) needs `;\n` (statement terminator).
-  const lead = [redecls, hoist, prologue].filter((s) => s !== "");
+  // Backtrace prefix (frame push) — generated, after redecls, before body/prologue.
+  const prefix = bt ? btPrefix(dvar, svar, avar, params, scope.newParams, file, methodLine, /*isStatic*/ false) : "";
+  // Backtrace: funcdecl `var` declarations hoist BEFORE the frame prefix; their
+  // assignments stay after it. Non-backtrace keeps `hoist` (decl+assign) together.
+  const lead = bt
+    ? [redecls, hoistDecls, prefix, hoistAssigns, prologue].filter((s) => s !== "")
+    : [redecls, hoist, prologue].filter((s) => s !== "");
   // The try/catch wrapper is emitted iff the ANALYZED body is dereferenced or has
   // free references (JavascriptGenerator:1277). The default-param prologue
   // (`switch (arguments.length) {…}`) is part of that analyzed body, and
   // `arguments.length` is a property reference → dereferenced. So any method with
-  // a default parameter is wrapped, even when the user body itself is not.
-  const needTry = scope.dereferenced || scope.free.size > 0 || cases.length > 0;
+  // a default parameter is wrapped, even when the user body itself is not. Backtrace
+  // always establishes a try (the finally/suffix).
+  const needTry = bt || scope.dereferenced || scope.free.size > 0 || cases.length > 0;
   // Enable the first-statement super quirk only for unwrapped bodies with no lead
   // (the super must directly follow the function's source `{`).
   printer.dbgNoWrapper = !needTry && lead.length === 0;
   const bodyStmts = printer.joinStmts(rest);
   printer.dbgNoWrapper = false;
-  const leadJoined = lead.join("\n");
+  // `;`-aware lead joiner (the prefix `if(){}` block has no trailing `;`).
+  const joinSep = (acc: string, item: string) =>
+    acc + (unannotateStr(acc).replace(/\s+$/, "").endsWith(";") ? "\n" : ";\n") + item;
+  const leadJoined = lead.length ? lead.reduce(joinSep) : "";
   const leadSep = unannotateStr(leadJoined).replace(/\s+$/, "").endsWith(";") ? "\n" : ";\n";
   const bodyInner = lead.length
     ? leadJoined + (bodyStmts ? leadSep + bodyStmts : "")
@@ -2981,17 +3278,26 @@ export function compileFunctionDebug(
   const elided = elideSemi(bodyInner);
   let funcBlock: string;
   if (needTry) {
-    const catchBody = catchKind === "throws" ? debugCatchBodyThrows() : debugCatchBody(file, methodLine);
-    const tryWrap = "try {\n" + elided + blockNL(elided) + "}\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}";
-    funcBlock = withThis ? "{\n" + Agen + "with (this) {\n" + tryWrap + "}}" : "{\n" + Agen + tryWrap + "}";
+    const catchBody = catchKind === "throws" ? debugCatchBodyThrows()
+      : bt ? debugCatchBodyBacktrace(file, avar) : debugCatchBody(file, methodLine);
+    const finallyClause = bt
+      ? "\n" + Agen + "finally {\n" + btSuffix(svar) + blockNL(btSuffix(svar)) + "}"
+      : "";
+    const tryWrap = "try {\n" + elided + blockNL(elided) + "}\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}" + finallyClause;
+    const preludeStr = bt ? btPrelude(dvar, svar) + "\n" : "";
+    funcBlock = withThis ? "{\n" + Agen + "with (this) {\n" + preludeStr + tryWrap + "}}" : "{\n" + Agen + preludeStr + tryWrap + "}";
   } else {
     funcBlock = elided === "" ? "{}" : "{\n" + elided + blockNL(elided) + "}";
   }
   const innerFn = A(methodLine) + "function  (" + scope.newParams.join(", ") + ")" + " " + funcBlock + FB;
   const S1 = A(methodLine) + "var $lzsc$temp = " + innerFn + ";";
   const S2 = A(methodLine) + '$lzsc$temp["displayName"] = ' + jsString(userName) + ";";
+  const S2bt = bt
+    ? NL + A(methodLine) + '$lzsc$temp["_dbg_filename"] = ' + jsString(file) + ";" +
+      NL + A(methodLine) + '$lzsc$temp["_dbg_lineno"] = ' + methodLine + ";"
+    : "";
   const S3 = A(methodLine) + "return $lzsc$temp;";
-  const inner = S1 + NL + S2 + NL + elideSemi(S3);
+  const inner = S1 + NL + S2 + S2bt + NL + elideSemi(S3);
   return "(function () {" + NL + inner + NL + "}" + FB + ")()";
 }
 
@@ -3046,6 +3352,7 @@ function renderDebugFuncNode(
   const printer = new Printer(scope.map, /*compress*/ false);
   printer.dbg = true;
   printer.dbgFree = scope.free;
+  printer.dbgLocals = scope.locals;
   // A free reference that resolves to a name declared in an ENCLOSING scope is not
   // "checked" (no postfix/prefix IIFE expansion). This function's locals/params
   // join the outer set for ITS nested functions (threaded via printer.dbgOuterVars,
@@ -3056,6 +3363,13 @@ function renderDebugFuncNode(
   // A `#pragma userFunctionName=` (handler/setter/binder) propagates its pretty
   // name into nested function VALUES (CodeGenerator's persistent options-copy).
   if (propagateName != null) printer.outerUserName = propagateName;
+  // Backtrace: this body's frame registers (reserved last in analyzeScope). Setting
+  // btVar turns on noteCallSite for every call/checked-ref printed in this body.
+  const bt = SC_BACKTRACE;
+  const dvar = bt ? scope.map.get("$lzsc$d")! : "";
+  const svar = bt ? scope.map.get("$lzsc$s")! : "";
+  const avar = bt ? scope.map.get("$lzsc$a")! : "";
+  if (bt) printer.btVar = avar;
   const A = (n: number) => annoFileLine(file, n);
   const Agen = annoFileLine(null, 0);
   const FB = forceBlankLnum();
@@ -3093,21 +3407,36 @@ function renderDebugFuncNode(
       cases.map((c, j) => "case " + c.i + ":\n" + (j === 0 ? A(funcLine + 1) : "") + c.assign).join(";;") +
       "\n}"
     : "";
-  const lead = [redecls, hoist, prologue].filter((s) => s !== "");
-  const needTry = scope.dereferenced || scope.free.size > 0 || cases.length > 0;
+  // Backtrace prefix (the `if ($lzsc$s) {…frame push…}`) — a generated statement
+  // that goes after the withThis redecls and before the body / default-param
+  // prologue (JavascriptGenerator:1528, prefix added to newBody before fundefs).
+  const prefix = bt ? btPrefix(dvar, svar, avar, params, scope.newParams, file, funcLine, /*isStatic*/ false) : "";
+  const lead = [redecls, prefix, hoist, prologue].filter((s) => s !== "");
+  // Backtrace always establishes a try (the finally/suffix), so force the wrapper.
+  const needTry = bt || scope.dereferenced || scope.free.size > 0 || cases.length > 0;
   printer.dbgNoWrapper = !needTry && lead.length === 0;
   const bodyStmts = printer.joinStmts(rest);
   printer.dbgNoWrapper = false;
-  const leadJoined = lead.join("\n");
+  // Join lead items with a `;`-aware separator (the prefix `if(){}` block has no
+  // trailing `;` so a following default-param switch needs one). Inert for the
+  // non-backtrace lead (every non-last item already ends `;`).
+  const joinSep = (acc: string, item: string) =>
+    acc + (unannotateStr(acc).replace(/\s+$/, "").endsWith(";") ? "\n" : ";\n") + item;
+  const leadJoined = lead.length ? lead.reduce(joinSep) : "";
   const leadSep = unannotateStr(leadJoined).replace(/\s+$/, "").endsWith(";") ? "\n" : ";\n";
   const bodyInner = lead.length ? leadJoined + (bodyStmts ? leadSep + bodyStmts : "") : bodyStmts;
   const blockNL = (b: string) => (unannotateStr(b).endsWith("}") ? "" : NL);
   const elided = elideSemi(bodyInner);
   let funcBlock: string;
   if (needTry) {
-    const catchBody = catchKind === "throws" ? debugCatchBodyThrows() : debugCatchBody(file, funcLine);
-    const tryWrap = "try {\n" + elided + blockNL(elided) + "}\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}";
-    funcBlock = withThis ? "{\n" + Agen + "with (this) {\n" + tryWrap + "}}" : "{\n" + Agen + tryWrap + "}";
+    const catchBody = catchKind === "throws" ? debugCatchBodyThrows()
+      : bt ? debugCatchBodyBacktrace(file, avar) : debugCatchBody(file, funcLine);
+    const finallyClause = bt
+      ? "\n" + Agen + "finally {\n" + btSuffix(svar) + blockNL(btSuffix(svar)) + "}"
+      : "";
+    const tryWrap = "try {\n" + elided + blockNL(elided) + "}\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}" + finallyClause;
+    const preludeStr = bt ? btPrelude(dvar, svar) + "\n" : "";
+    funcBlock = withThis ? "{\n" + Agen + "with (this) {\n" + preludeStr + tryWrap + "}}" : "{\n" + Agen + preludeStr + tryWrap + "}";
   } else {
     funcBlock = elided === "" ? "{}" : "{\n" + elided + blockNL(elided) + "}";
   }
@@ -3122,7 +3451,13 @@ function renderDebugFuncNode(
   const innerFn = A(funcLine) + "function" + (named ? "  " : " ") + "(" + scope.newParams.join(", ") + ")" + " " + funcBlock + FB;
   const S1 = A(funcLine) + "var $lzsc$temp = " + innerFn + ";";
   const S2 = A(funcLine) + '$lzsc$temp["displayName"] = ' + jsString(userName) + ";";
+  // Backtrace adds the static frame metadata after displayName (JavascriptGenerator
+  // :1648): `_dbg_filename` / `_dbg_lineno`. The repeated annotations dedup to `#N`.
+  const S2bt = bt
+    ? NL + A(funcLine) + '$lzsc$temp["_dbg_filename"] = ' + jsString(file) + ";" +
+      NL + A(funcLine) + '$lzsc$temp["_dbg_lineno"] = ' + funcLine + ";"
+    : "";
   const S3 = A(funcLine) + "return $lzsc$temp;";
-  const inner = S1 + NL + S2 + NL + elideSemi(S3);
+  const inner = S1 + NL + S2 + S2bt + NL + elideSemi(S3);
   return "(function () {" + NL + inner + NL + "}" + FB + ")()";
 }

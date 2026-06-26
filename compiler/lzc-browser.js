@@ -646,6 +646,21 @@ var OP_PATHRESET = "R";
 var OP_PATHRESET_ONLY = "r";
 var OP_REG = "G";
 var OP_SETPATH = "P";
+var DBG_BACKTRACE = false;
+function setDebugBacktrace(v) {
+  DBG_BACKTRACE = v;
+}
+function ctorBacktrace(file, ctorLine) {
+  const D = "$4", S = "$5", Av = "$6";
+  return {
+    prelude: "var " + D + " = Debug;\nvar " + S + " = " + D + ".backtraceStack;\n",
+    prefix: "if (" + S + ") {\nvar " + Av + ' = ["parent", parent_$0, "attrs", attrs_$1, "children", children_$2, "async", async_$3];\n' + Av + ".callee = arguments.callee;\n" + Av + '["this"] = this;\n' + Av + ".filename = " + JSON.stringify(file) + ";\n" + Av + ".lineno = " + ctorLine + ";\n" + S + ".push(" + Av + ");\nif (" + S + ".length > " + S + ".maxDepth) {\n" + D + ".stackOverflow()\n}};\n",
+    suffix: "\nfinally {\nif (" + S + ") {\n" + S + ".length--\n}}",
+    // The super dispatch's nextMethod fallback is a regular call → noteCallSite at
+    // ctorLine+1 (the dispatch's source line). The super test/dispatch is not noted.
+    nextMethod: "(" + Av + ".lineno = " + (ctorLine + 1) + ', this.nextMethod(arguments.callee, "$lzsc$initialize"))'
+  };
+}
 function litReset(srcLine) {
   return ANNOTATE_MARKER + OP_PATHRESET + srcLine + ANNOTATE_MARKER;
 }
@@ -916,16 +931,24 @@ function debugConstructor(file, ctorLine) {
   const superDispatch = '(arguments.callee["$superclass"] && arguments.callee.$superclass.prototype["$lzsc$initialize"] || this.nextMethod(arguments.callee, "$lzsc$initialize")).call(this, parent_$0, attrs_$1, children_$2, async_$3)';
   const switchText = "switch (arguments.length) {\ncase 0:\n" + A(B) + "parent_$0 = null;;case 1:\nattrs_$1 = null;;case 2:\nchildren_$2 = null;;case 3:\nasync_$3 = false\n}";
   const catchBody = 'if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error) && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException(' + JSON.stringify(file) + ", " + L + ", $lzsc$e)\n} else {\nthrow $lzsc$e\n}";
-  const tryText = "try {\n" + A(L) + switchText + ";\n" + A(B) + superDispatch + "\n}\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + "}";
-  const funcBlock = "{\n" + Agen + tryText + "}";
+  const bt = DBG_BACKTRACE ? ctorBacktrace(file, L) : null;
+  const dispatch = bt ? '(arguments.callee["$superclass"] && arguments.callee.$superclass.prototype["$lzsc$initialize"] || ' + bt.nextMethod + ").call(this, parent_$0, attrs_$1, children_$2, async_$3)" : superDispatch;
+  const catchBt = 'if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error) && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException(' + JSON.stringify(file) + ", $6.lineno, $lzsc$e)\n} else {\nthrow $lzsc$e\n}";
+  const tryText = "try {\n" + (bt ? bt.prefix : "") + A(L) + switchText + ";\n" + A(B) + dispatch + "\n}\n" + Agen + "catch ($lzsc$e) {\n" + (bt ? catchBt : catchBody) + "}" + (bt ? bt.suffix : "");
+  const funcBlock = "{\n" + Agen + (bt ? bt.prelude : "") + tryText + "}";
   const FUNC = A(L) + "function  (parent_$0, attrs_$1, children_$2, async_$3) " + funcBlock + FB;
   const S1 = A(L) + "var $lzsc$temp = " + FUNC + ";";
   const S2 = A(L) + '$lzsc$temp["displayName"] = "$lzsc$initialize";';
+  const S2bt = bt ? "\n" + A(L) + '$lzsc$temp["_dbg_filename"] = ' + JSON.stringify(file) + ";\n" + A(L) + '$lzsc$temp["_dbg_lineno"] = ' + L + ";" : "";
   const S3 = A(L) + "return $lzsc$temp";
-  return "(function () {\n" + S1 + "\n" + S2 + "\n" + S3 + "\n}" + FB + ")()";
+  return "(function () {\n" + S1 + "\n" + S2 + S2bt + "\n" + S3 + "\n}" + FB + ")()";
 }
 function debugConstructorPlain(line) {
-  return "(function () {\n" + annoFileLine(null, 0) + 'var $lzsc$temp = function  (parent_$0, attrs_$1, children_$2, async_$3) {\ntry {\nswitch (arguments.length) {\ncase 0:\nparent_$0 = null;;case 1:\nattrs_$1 = null;;case 2:\nchildren_$2 = null;;case 3:\nasync_$3 = false\n};\n(arguments.callee["$superclass"] && arguments.callee.$superclass.prototype["$lzsc$initialize"] || this.nextMethod(arguments.callee, "$lzsc$initialize")).call(this, parent_$0, attrs_$1, children_$2, async_$3)\n}\ncatch ($lzsc$e) {\nif ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error) && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException("", ' + line + ', $lzsc$e)\n} else {\nthrow $lzsc$e\n}}}\n;\n$lzsc$temp["displayName"] = "$lzsc$initialize";\nreturn $lzsc$temp\n}\n)()';
+  const bt = DBG_BACKTRACE ? ctorBacktrace("", line) : null;
+  const dispatch = bt ? '(arguments.callee["$superclass"] && arguments.callee.$superclass.prototype["$lzsc$initialize"] || ' + bt.nextMethod + ").call(this, parent_$0, attrs_$1, children_$2, async_$3)\n" : '(arguments.callee["$superclass"] && arguments.callee.$superclass.prototype["$lzsc$initialize"] || this.nextMethod(arguments.callee, "$lzsc$initialize")).call(this, parent_$0, attrs_$1, children_$2, async_$3)\n';
+  const catchTail = bt ? 'if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error) && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException("", $6.lineno, $lzsc$e)\n} else {\nthrow $lzsc$e\n}}' + bt.suffix + "}\n" : 'if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error) && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException("", ' + line + ", $lzsc$e)\n} else {\nthrow $lzsc$e\n}}}\n";
+  const dbgMeta = bt ? '$lzsc$temp["_dbg_filename"] = "";\n$lzsc$temp["_dbg_lineno"] = ' + line + ";\n" : "";
+  return "(function () {\n" + annoFileLine(null, 0) + "var $lzsc$temp = function  (parent_$0, attrs_$1, children_$2, async_$3) {\n" + (bt ? bt.prelude : "") + "try {\n" + (bt ? bt.prefix : "") + "switch (arguments.length) {\ncase 0:\nparent_$0 = null;;case 1:\nattrs_$1 = null;;case 2:\nchildren_$2 = null;;case 3:\nasync_$3 = false\n};\n" + dispatch + "}\ncatch ($lzsc$e) {\n" + catchTail + ';\n$lzsc$temp["displayName"] = "$lzsc$initialize";\n' + dbgMeta + "return $lzsc$temp\n}\n)()";
 }
 function renderDebugClassMake(file, classLine, classNameJs, instProps, superJs, classPropsInner) {
   return annoFileLine(file, classLine) + "Class.make(" + classNameJs + ", [" + instProps.join(", ") + "], " + superJs + ", [" + classPropsInner + "])";
@@ -1188,11 +1211,13 @@ function unescapeChar(s, j) {
 }
 var AS3_DECL = /* @__PURE__ */ new Set(["class", "interface", "import", "package"]);
 var CLASS_MODIFIERS = /* @__PURE__ */ new Set(["public", "private", "protected", "final", "internal", "dynamic"]);
-function makeIsExpr(a, b) {
+function makeIsExpr(a, b, line) {
   return {
     k: "cond",
     c: { k: "index", o: b, i: { k: "str", v: "$lzsc$isa" } },
-    t: { k: "call", c: { k: "member", o: b, p: "$lzsc$isa" }, args: [a] },
+    // Backtrace: the generated `B.$lzsc$isa(a)` CALL is noteCallSite-wrapped, so it
+    // carries the `is` expression's source line (the operator token line).
+    t: { k: "call", c: { k: "member", o: b, p: "$lzsc$isa" }, args: [a], line },
     f: { k: "bin", op: "instanceof", l: a, r: b }
   };
 }
@@ -1659,9 +1684,10 @@ var Parser = class {
       if (op === "id" && this.peek().v === "is") {
         if (9 < minPrec)
           break;
+        const isLine = this.peek().line;
         this.next();
         const right2 = this.binary(10, noIn);
-        left = makeIsExpr(left, right2);
+        left = makeIsExpr(left, right2, isLine);
         continue;
       }
       if (noIn && op === "in")
@@ -1698,12 +1724,13 @@ var Parser = class {
     return e;
   }
   callMember() {
+    const startLine = this.peek().line;
     let e;
     if (this.is("new")) {
       this.next();
       const c = this.callMemberNoCall();
       const args = this.is("(") ? this.argList() : [];
-      e = { k: "new", c, args };
+      e = { k: "new", c, args, line: startLine };
     } else {
       e = this.primary();
     }
@@ -1717,7 +1744,7 @@ var Parser = class {
         this.eat("]");
         e = { k: "index", o: e, i };
       } else if (this.is("(")) {
-        e = { k: "call", c: e, args: this.argList() };
+        e = { k: "call", c: e, args: this.argList(), line: startLine };
       } else
         break;
     }
@@ -1816,7 +1843,7 @@ var Parser = class {
         return { k: "str", v: t.v };
       case "id":
         this.next();
-        return { k: "id", name: t.v };
+        return { k: "id", name: t.v, line: t.line };
       case "this":
         this.next();
         return { k: "this" };
@@ -1919,6 +1946,61 @@ var SC_DEBUG = false;
 function setScDebug(v) {
   SC_DEBUG = v;
 }
+var SC_BACKTRACE = false;
+function setScBacktrace(v) {
+  SC_BACKTRACE = v;
+}
+var SC_KNOWN_GLOBALS = /* @__PURE__ */ new Set([
+  "NaN",
+  "Infinity",
+  "undefined",
+  "eval",
+  "parseInt",
+  "parseFloat",
+  "isNaN",
+  "isFinite",
+  "decodeURI",
+  "decodeURIComponent",
+  "encodeURI",
+  "encodeURIComponent",
+  "Object",
+  "Function",
+  "Array",
+  "String",
+  "Boolean",
+  "Number",
+  "Date",
+  "RegExp",
+  "Error",
+  "EvalError",
+  "RangeError",
+  "ReferenceError",
+  "SyntaxError",
+  "TypeError",
+  "URIError",
+  "Math",
+  "lz",
+  // debug-mode globals
+  "Debug",
+  "$reportNotFunction",
+  "$reportUndefinedObjectProperty",
+  "$reportUndefinedMethod",
+  "$reportException",
+  "$reportUndefinedProperty",
+  "$reportUndefinedVariable",
+  "$reportSourceWarning"
+]);
+var SC_KNOWN_CLASSNAMES = /* @__PURE__ */ new Set();
+function resetKnownClassnames() {
+  SC_KNOWN_CLASSNAMES = /* @__PURE__ */ new Set();
+}
+var SC_KNOWN_IDS = /* @__PURE__ */ new Set();
+function resetKnownIds() {
+  SC_KNOWN_IDS = /* @__PURE__ */ new Set();
+}
+function addKnownId(name) {
+  SC_KNOWN_IDS.add(name);
+}
 var isFalse = (n) => n.k === "lit" && n.v === "false";
 var isTrue = (n) => n.k === "lit" && n.v === "true";
 var isMagicConst = (name) => name === "$debug" || MAGIC_FALSE.has(name) || MAGIC_TRUE.has(name);
@@ -1981,9 +2063,9 @@ function foldNode(n) {
     case "index":
       return { k: "index", o: foldNode(n.o), i: foldNode(n.i) };
     case "call":
-      return { k: "call", c: foldNode(n.c), args: n.args.map(foldNode) };
+      return { k: "call", c: foldNode(n.c), args: n.args.map(foldNode), line: n.line };
     case "new":
-      return { k: "new", c: foldNode(n.c), args: n.args.map(foldNode) };
+      return { k: "new", c: foldNode(n.c), args: n.args.map(foldNode), line: n.line };
     case "array":
       return { k: "array", els: n.els.map(foldNode) };
     case "object":
@@ -2633,8 +2715,14 @@ function computeDereferenced(body) {
   body.forEach(wS);
   return found;
 }
+var BACKTRACE_VARS = ["$lzsc$d", "$lzsc$s", "$lzsc$a"];
 function analyzeScope(params, body, isMethod, as3, debug = false) {
   const variables = collectVariables(body);
+  if (debug && SC_BACKTRACE) {
+    for (const v of BACKTRACE_VARS)
+      if (!variables.includes(v))
+        variables.push(v);
+  }
   const localSet = /* @__PURE__ */ new Set([...params, ...variables]);
   const free = computeFree(params, body);
   const innerFree = /* @__PURE__ */ new Set();
@@ -2665,7 +2753,7 @@ function analyzeScope(params, body, isMethod, as3, debug = false) {
   for (const p of closedParams)
     bodyMap.delete(p);
   const newParams = params.map((p) => fullMap.get(p) ?? p);
-  return { map: bodyMap, newParams, withThis, closedRedecls, free, dereferenced: computeDereferenced(body) };
+  return { map: bodyMap, newParams, withThis, closedRedecls, free, dereferenced: computeDereferenced(body), locals: localSet };
 }
 var NL = "\n";
 var UNARY_WORD = /* @__PURE__ */ new Set(["typeof", "void", "delete"]);
@@ -2681,7 +2769,12 @@ var Printer = class _Printer {
     this.dbgNoWrapper = false;
     this.dbgFree = null;
     this.dbgOuterVars = /* @__PURE__ */ new Set();
+    this.dbgLocals = /* @__PURE__ */ new Set();
     this.outerUserName = null;
+    this.btVar = null;
+    this.btSuppress = false;
+    this.btSuperSeen = false;
+    this.btWarnUndef = true;
     this.rename = rename;
     this.c = compress;
     this.SP = compress ? "" : " ";
@@ -2709,8 +2802,38 @@ var Printer = class _Printer {
     }
     return str;
   }
+  // A super-call (translateSuperCallExpression) gets NO noteCallSite
+  // (JavascriptGenerator:834) — detect the three super dispatch shapes so they
+  // are excluded from backtrace instrumentation.
+  isSuperCall(n) {
+    const c = n.c;
+    if (c.k === "super")
+      return true;
+    if (c.k === "member" && c.o.k === "super")
+      return true;
+    if (c.k === "member" && (c.p === "call" || c.p === "apply") && c.o.k === "member" && c.o.o.k === "super")
+      return true;
+    return false;
+  }
+  // Backtrace noteCallSite predicate: a call node carrying a source line (and not
+  // a super dispatch) is wrapped `($lzsc$a.lineno = <line>, <call>)`.
+  btNotableCall(n) {
+    if (this.btVar == null || typeof n.line !== "number" || n.line <= 0)
+      return false;
+    if (n.k === "new")
+      return true;
+    return n.k === "call" && !this.isSuperCall(n);
+  }
+  // Backtrace noteCallSite predicate for a CHECKED free-bare-id reference
+  // (makeCheckedNode): a free identifier carrying a source line, not resolving to
+  // an enclosing-scope binding. Wrapped `($lzsc$a.lineno = <line>, <id>)`.
+  btNotableId(n) {
+    return this.btVar != null && this.btWarnUndef && n.k === "id" && typeof n.line === "number" && n.line > 0 && this.dbgFree != null && this.dbgFree.has(n.name) && !this.dbgOuterVars.has(n.name) && !SC_KNOWN_GLOBALS.has(n.name) && !SC_KNOWN_CLASSNAMES.has(n.name) && !SC_KNOWN_IDS.has(n.name);
+  }
   // precedence for paren decisions
   prec(n) {
+    if ((this.btNotableCall(n) || this.btNotableId(n)) && !this.btSuppress)
+      return 0;
     switch (n.k) {
       case "seq":
         return 0;
@@ -2757,6 +2880,16 @@ var Printer = class _Printer {
     return this.expr(child);
   }
   expr(n) {
+    if (this.btVar != null && (this.btNotableCall(n) || this.btNotableId(n))) {
+      if (!this.btSuppress) {
+        const line = n.line;
+        this.btSuppress = true;
+        const inner = this.expr(n);
+        const cp = this.btSuperSeen ? this.dfile : "";
+        return annoFileLine(null, 0) + annoFileLine(cp, 1) + this.btVar + ".lineno = " + line + ", " + inner;
+      }
+      this.btSuppress = false;
+    }
     switch (n.k) {
       case "num":
         return printNumber(n.raw);
@@ -2782,20 +2915,29 @@ var Printer = class _Printer {
         return this.wrap(n.o, 17) + "[" + this.expr(n.i) + "]";
       case "call": {
         const A = this.SP, C = this.COMMA;
-        const dispatch = (m) => `(arguments.callee["$superclass"]${A}&&${A}arguments.callee.$superclass.prototype[${m}]${A}||${A}this.nextMethod(arguments.callee${C}${m}))`;
+        if (this.btVar != null && this.isSuperCall(n))
+          this.btSuperSeen = true;
+        if (SC_BACKTRACE && this.btVar != null && n.c.k === "member" && n.c.p === "$lzsc$isa")
+          this.btSuperSeen = true;
+        const btLine = n.line;
+        const nextMethod = (m) => {
+          const callExpr = `this.nextMethod(arguments.callee${C}${m})`;
+          return this.btVar != null && typeof btLine === "number" && btLine > 0 ? `(${this.btVar}.lineno${this.ASSIGN}${btLine}${C}${callExpr})` : callExpr;
+        };
+        const dispatch = (m) => `(arguments.callee["$superclass"]${A}&&${A}arguments.callee.$superclass.prototype[${m}]${A}||${A}${nextMethod(m)})`;
         if (n.c.k === "super") {
           const m = jsString("$lzsc$initialize");
-          const args = n.args.map((a) => this.expr(a)).join(C);
+          const args = n.args.map((a) => this.wrap(a, 1)).join(C);
           return `${dispatch(m)}.call(this${args ? C + args : ""})`;
         }
         if (n.c.k === "member" && (n.c.p === "call" || n.c.p === "apply") && n.c.o.k === "member" && n.c.o.o.k === "super") {
           const m = jsString(n.c.o.p);
-          const args = n.args.map((a) => this.expr(a)).join(C);
+          const args = n.args.map((a) => this.wrap(a, 1)).join(C);
           return `${dispatch(m)}.${n.c.p}(${args})`;
         }
         if (n.c.k === "member" && n.c.o.k === "super") {
           if (n.c.p === "setAttribute" && n.args.length === 2) {
-            const value = this.expr(n.args[1]);
+            const value = this.wrap(n.args[1], 1);
             const prop = n.args[0];
             if (prop.k === "str") {
               const m2 = jsString("$lzc$set_" + prop.v);
@@ -2804,13 +2946,14 @@ var Printer = class _Printer {
             return `this.nextMethod(arguments.callee${C}${jsString("$lzc$set_")}${A}+${A}${this.expr(prop)}).call(this${C}${value})`;
           }
           const m = jsString(n.c.p);
-          const args = n.args.map((a) => this.expr(a)).join(C);
+          const args = n.args.map((a) => this.wrap(a, 1)).join(C);
           return `${dispatch(m)}.call(this${args ? C + args : ""})`;
         }
-        return this.wrap(n.c, 17) + "(" + n.args.map((a) => this.expr(a)).join(this.COMMA) + ")";
+        const callee = n.c.k === "id" ? this.id(n.c.name) : this.wrap(n.c, 17);
+        return callee + "(" + n.args.map((a) => this.wrap(a, 1)).join(this.COMMA) + ")";
       }
       case "new":
-        return "new " + this.wrap(n.c, 18) + "(" + n.args.map((a) => this.expr(a)).join(this.COMMA) + ")";
+        return "new " + this.wrap(n.c, 18) + "(" + n.args.map((a) => this.wrap(a, 1)).join(this.COMMA) + ")";
       case "unary":
         if (this.dbg && (n.op === "++" || n.op === "--") && n.e.k === "id" && this.dbgFree && this.dbgFree.has(n.e.name) && !this.dbgOuterVars.has(n.e.name)) {
           const sym = n.e.name;
@@ -2858,7 +3001,7 @@ var Printer = class _Printer {
       case "cond":
         return this.wrap(n.c, 2, true) + this.SP + "?" + this.SP + this.wrap(n.t, 2, true) + this.SP + ":" + this.SP + this.wrap(n.f, 2, true);
       case "array":
-        return "[" + n.els.map((e) => this.expr(e)).join(this.COMMA) + "]";
+        return "[" + n.els.map((e) => this.wrap(e, 1)).join(this.COMMA) + "]";
       case "object":
         return "{" + n.props.map((p) => {
           const k = p.keyKind === "str" ? jsString(p.key) : p.keyKind === "num" ? printNumber(p.key) : p.key;
@@ -2878,8 +3021,15 @@ var Printer = class _Printer {
       const fl = n.line ?? this.dline ?? 0;
       const ffile = n.file !== void 0 ? n.file : this.dfile ?? "";
       const userName = this.outerUserName != null ? this.outerUserName : n.name != null ? n.name : `${ffile}#${n.line}/${n.col}`;
-      const childOuter = /* @__PURE__ */ new Set([...this.dbgOuterVars, ...this.rename.keys()]);
-      return renderDebugFuncNode(n, userName, n.name != null, ffile, fl, "report", false, void 0, this.outerUserName, childOuter);
+      const childOuter = /* @__PURE__ */ new Set([
+        ...this.dbgOuterVars,
+        ...this.rename.keys(),
+        ...SC_BACKTRACE ? this.dbgLocals : []
+      ]);
+      const out = renderDebugFuncNode(n, userName, n.name != null, ffile, fl, "report", false, void 0, this.outerUserName, childOuter);
+      if (SC_BACKTRACE)
+        this.btSuperSeen = true;
+      return out;
     }
     const scope = analyzeScope(n.params, n.body, false);
     const sub = new _Printer(scope.map, this.c);
@@ -3254,7 +3404,7 @@ ${S3}
       case "empty":
         return "";
       case "var":
-        return "var " + st.decls.map((d) => this.id(d.name) + (d.init ? this.SP + "=" + this.SP + this.expr(d.init) : "")).join(this.COMMA) + ";";
+        return "var " + st.decls.map((d) => this.id(d.name) + (d.init ? this.SP + "=" + this.SP + this.wrap(d.init, 1) : "")).join(this.COMMA) + ";";
       case "return": {
         if (!st.e)
           return "return;";
@@ -3596,6 +3746,11 @@ function compileScriptBodyDebug(source, file, elementLine, displayCol) {
   printer.dbg = true;
   printer.dfile = file;
   printer.dline = elementLine;
+  const bt = SC_BACKTRACE;
+  if (bt) {
+    printer.btVar = "$lzsc$a";
+    printer.dbgFree = computeFree([], ast);
+  }
   for (const v of hoistNames)
     printer.dbgOuterVars.add(v);
   const A = (n) => annoFileLine(file, n);
@@ -3608,19 +3763,23 @@ function compileScriptBodyDebug(source, file, elementLine, displayCol) {
     return lead2 + printer.id(d.name) + " = " + printer.printFunc(d.fn) + ";";
   }).join("\n") : "";
   const bodyStmts = printer.joinStmts(rest);
-  const lead = [hoist, funcAssigns].filter((s) => s !== "");
-  const leadJoined = lead.join("\n");
+  const btFramePrefix = bt ? btPrefix("$lzsc$d", "$lzsc$s", "$lzsc$a", [], [], file, elementLine, false) : "";
+  const lead = [btFramePrefix, hoist, funcAssigns].filter((s) => s !== "");
+  const joinSep = (acc, item) => acc + (unannotateStr(acc).replace(/\s+$/, "").endsWith(";") ? "\n" : ";\n") + item;
+  const leadJoined = lead.length ? lead.reduce(joinSep) : "";
   const leadSep = unannotateStr(leadJoined).replace(/\s+$/, "").endsWith(";") ? "\n" : ";\n";
   const bodyInner = lead.length ? leadJoined + (bodyStmts ? leadSep + bodyStmts : "") : bodyStmts;
   const blockNL = (b) => unannotateStr(b).endsWith("}") ? "" : NL;
   const elided = elideSemi(bodyInner);
   const freeReal = computeFree([], ast);
-  const needTry = computeDereferenced(ast) || freeReal.size > 0;
+  const needTry = bt || computeDereferenced(ast) || freeReal.size > 0;
   let funcBlock;
   if (needTry) {
-    const catchBody = debugCatchBody(file, elementLine);
-    const tryWrap = "try {\n" + elided + blockNL(elided) + "}\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}";
-    funcBlock = "{\n" + Agen + tryWrap + "}";
+    const catchBody = bt ? debugCatchBodyBacktrace(file, "$lzsc$a") : debugCatchBody(file, elementLine);
+    const finallyClause = bt ? "\n" + Agen + "finally {\n" + btSuffix("$lzsc$s") + blockNL(btSuffix("$lzsc$s")) + "}" : "";
+    const tryWrap = "try {\n" + elided + blockNL(elided) + "}\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}" + finallyClause;
+    const preludeStr = bt ? btPrelude("$lzsc$d", "$lzsc$s") + "\n" : "";
+    funcBlock = "{\n" + Agen + preludeStr + tryWrap + "}";
   } else {
     funcBlock = elided === "" ? "{}" : "{\n" + elided + blockNL(elided) + "}";
   }
@@ -3628,8 +3787,9 @@ function compileScriptBodyDebug(source, file, elementLine, displayCol) {
   const userName = file + "#" + elementLine + "/" + displayCol;
   const S1 = A(elementLine) + "var $lzsc$temp = " + innerFn + ";";
   const S2 = A(elementLine) + '$lzsc$temp["displayName"] = ' + jsString(userName) + ";";
+  const S2bt = bt ? NL + A(elementLine) + '$lzsc$temp["_dbg_filename"] = ' + jsString(file) + ";" + NL + A(elementLine) + '$lzsc$temp["_dbg_lineno"] = ' + elementLine + ";" : "";
   const S3 = A(elementLine) + "return $lzsc$temp;";
-  const inner = S1 + NL + S2 + NL + elideSemi(S3);
+  const inner = S1 + NL + S2 + S2bt + NL + elideSemi(S3);
   return "(function () {" + NL + inner + NL + "}" + FB + ")()";
 }
 function finalSourceLine(src, baseLine = 1, baseFile) {
@@ -3744,6 +3904,24 @@ ${cases.join("\n")}
 function debugCatchBody(filename, line) {
   return 'if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error) && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException(' + jsString(filename) + ", " + line + ", $lzsc$e)\n} else {\nthrow $lzsc$e\n}";
 }
+function btPrelude(dvar, svar) {
+  return "var " + dvar + " = Debug;\nvar " + svar + " = " + dvar + ".backtraceStack;";
+}
+function btPrefix(dvar, svar, avar, params, newParams, fn, line, isStatic) {
+  const elems = [];
+  for (let i = 0; i < params.length; i++) {
+    elems.push(jsString(params[i]));
+    elems.push(newParams[i]);
+  }
+  const arr = "[" + elems.join(", ") + "]";
+  return "if (" + svar + ") {\nvar " + avar + " = " + arr + ";\n" + avar + ".callee = arguments.callee;\n" + (isStatic ? "" : avar + '["this"] = this;\n') + avar + ".filename = " + jsString(fn) + ";\n" + avar + ".lineno = " + line + ";\n" + svar + ".push(" + avar + ");\nif (" + svar + ".length > " + svar + ".maxDepth) {\n" + dvar + ".stackOverflow()\n}}";
+}
+function btSuffix(svar) {
+  return "if (" + svar + ") {\n" + svar + ".length--\n}";
+}
+function debugCatchBodyBacktrace(filename, avar) {
+  return 'if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error) && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException(' + jsString(filename) + ", " + avar + ".lineno, $lzsc$e)\n} else {\nthrow $lzsc$e\n}";
+}
 function debugCatchBodyThrows() {
   return 'if (Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error) {\nlz.$lzsc$thrownError = $lzsc$e\n};\nthrow $lzsc$e';
 }
@@ -3782,10 +3960,18 @@ function compileFunctionDebug(userName, params, source, defaults, file, methodLi
   );
   printer.dbg = true;
   printer.dbgFree = scope.free;
+  printer.dbgLocals = scope.locals;
+  printer.btWarnUndef = catchKind !== "throws";
   printer.dfile = file;
   printer.dline = methodLine;
   if (propagateName != null)
     printer.outerUserName = propagateName;
+  const bt = SC_BACKTRACE;
+  const dvar = bt ? scope.map.get("$lzsc$d") : "";
+  const svar = bt ? scope.map.get("$lzsc$s") : "";
+  const avar = bt ? scope.map.get("$lzsc$a") : "";
+  if (bt)
+    printer.btVar = avar;
   const A = (n) => annoFileLine(file, n);
   const Agen = annoFileLine(null, 0);
   const FB = forceBlankLnum();
@@ -3800,7 +3986,8 @@ function compileFunctionDebug(userName, params, source, defaults, file, methodLi
     return { i, assign: lhs + " = " + compileExpr(defaults[i]) };
   }).filter((c) => c != null);
   const redecls = withThis ? scope.closedRedecls.map(({ name, reg }) => Agen + "var " + name + " = " + reg + ";").join("\n") : "";
-  const hoist = funcdecls.length ? funcdecls.map((d) => Agen + "var " + printer.id(d.name) + ";").join("\n") + "\n" + funcdecls.map((d) => A(methodLine) + printer.id(d.name) + " = " + renderDebugFuncNode(
+  const hoistDecls = funcdecls.length ? funcdecls.map((d) => Agen + "var " + printer.id(d.name) + ";").join("\n") : "";
+  const hoistAssigns = funcdecls.length ? funcdecls.map((d) => A(methodLine) + printer.id(d.name) + " = " + renderDebugFuncNode(
     d.fn,
     d.name,
     /*named*/
@@ -3808,30 +3995,46 @@ function compileFunctionDebug(userName, params, source, defaults, file, methodLi
     file,
     d.line ?? methodLine
   ) + ";").join("\n") : "";
+  const hoist = hoistDecls && hoistAssigns ? hoistDecls + "\n" + hoistAssigns : hoistDecls + hoistAssigns;
   const prologue = cases.length > 0 ? A(methodLine) + "switch (arguments.length) {\n" + cases.map((c, j) => "case " + c.i + ":\n" + (j === 0 ? A(methodLine + 1) : "") + c.assign).join(";;") + "\n}" : "";
-  const lead = [redecls, hoist, prologue].filter((s) => s !== "");
-  const needTry = scope.dereferenced || scope.free.size > 0 || cases.length > 0;
+  const prefix = bt ? btPrefix(
+    dvar,
+    svar,
+    avar,
+    params,
+    scope.newParams,
+    file,
+    methodLine,
+    /*isStatic*/
+    false
+  ) : "";
+  const lead = bt ? [redecls, hoistDecls, prefix, hoistAssigns, prologue].filter((s) => s !== "") : [redecls, hoist, prologue].filter((s) => s !== "");
+  const needTry = bt || scope.dereferenced || scope.free.size > 0 || cases.length > 0;
   printer.dbgNoWrapper = !needTry && lead.length === 0;
   const bodyStmts = printer.joinStmts(rest);
   printer.dbgNoWrapper = false;
-  const leadJoined = lead.join("\n");
+  const joinSep = (acc, item) => acc + (unannotateStr(acc).replace(/\s+$/, "").endsWith(";") ? "\n" : ";\n") + item;
+  const leadJoined = lead.length ? lead.reduce(joinSep) : "";
   const leadSep = unannotateStr(leadJoined).replace(/\s+$/, "").endsWith(";") ? "\n" : ";\n";
   const bodyInner = lead.length ? leadJoined + (bodyStmts ? leadSep + bodyStmts : "") : bodyStmts;
   const blockNL = (b) => unannotateStr(b).endsWith("}") ? "" : NL;
   const elided = elideSemi(bodyInner);
   let funcBlock;
   if (needTry) {
-    const catchBody = catchKind === "throws" ? debugCatchBodyThrows() : debugCatchBody(file, methodLine);
-    const tryWrap = "try {\n" + elided + blockNL(elided) + "}\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}";
-    funcBlock = withThis ? "{\n" + Agen + "with (this) {\n" + tryWrap + "}}" : "{\n" + Agen + tryWrap + "}";
+    const catchBody = catchKind === "throws" ? debugCatchBodyThrows() : bt ? debugCatchBodyBacktrace(file, avar) : debugCatchBody(file, methodLine);
+    const finallyClause = bt ? "\n" + Agen + "finally {\n" + btSuffix(svar) + blockNL(btSuffix(svar)) + "}" : "";
+    const tryWrap = "try {\n" + elided + blockNL(elided) + "}\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}" + finallyClause;
+    const preludeStr = bt ? btPrelude(dvar, svar) + "\n" : "";
+    funcBlock = withThis ? "{\n" + Agen + "with (this) {\n" + preludeStr + tryWrap + "}}" : "{\n" + Agen + preludeStr + tryWrap + "}";
   } else {
     funcBlock = elided === "" ? "{}" : "{\n" + elided + blockNL(elided) + "}";
   }
   const innerFn = A(methodLine) + "function  (" + scope.newParams.join(", ") + ") " + funcBlock + FB;
   const S1 = A(methodLine) + "var $lzsc$temp = " + innerFn + ";";
   const S2 = A(methodLine) + '$lzsc$temp["displayName"] = ' + jsString(userName) + ";";
+  const S2bt = bt ? NL + A(methodLine) + '$lzsc$temp["_dbg_filename"] = ' + jsString(file) + ";" + NL + A(methodLine) + '$lzsc$temp["_dbg_lineno"] = ' + methodLine + ";" : "";
   const S3 = A(methodLine) + "return $lzsc$temp;";
-  const inner = S1 + NL + S2 + NL + elideSemi(S3);
+  const inner = S1 + NL + S2 + S2bt + NL + elideSemi(S3);
   return "(function () {" + NL + inner + NL + "}" + FB + ")()";
 }
 function compileBinderDebug(userName, bodySource, file, funcLine) {
@@ -3884,12 +4087,19 @@ function renderDebugFuncNode(fn, userName, named, file, funcLine, catchKind = "r
   );
   printer.dbg = true;
   printer.dbgFree = scope.free;
+  printer.dbgLocals = scope.locals;
   if (outerVars)
     printer.dbgOuterVars = outerVars;
   printer.dfile = file;
   printer.dline = funcLine;
   if (propagateName != null)
     printer.outerUserName = propagateName;
+  const bt = SC_BACKTRACE;
+  const dvar = bt ? scope.map.get("$lzsc$d") : "";
+  const svar = bt ? scope.map.get("$lzsc$s") : "";
+  const avar = bt ? scope.map.get("$lzsc$a") : "";
+  if (bt)
+    printer.btVar = avar;
   const A = (n) => annoFileLine(file, n);
   const Agen = annoFileLine(null, 0);
   const FB = forceBlankLnum();
@@ -3914,21 +4124,35 @@ function renderDebugFuncNode(fn, userName, named, file, funcLine, catchKind = "r
     d.line ?? funcLine
   ) + ";").join("\n") : "";
   const prologue = cases.length > 0 ? A(funcLine) + "switch (arguments.length) {\n" + cases.map((c, j) => "case " + c.i + ":\n" + (j === 0 ? A(funcLine + 1) : "") + c.assign).join(";;") + "\n}" : "";
-  const lead = [redecls, hoist, prologue].filter((s) => s !== "");
-  const needTry = scope.dereferenced || scope.free.size > 0 || cases.length > 0;
+  const prefix = bt ? btPrefix(
+    dvar,
+    svar,
+    avar,
+    params,
+    scope.newParams,
+    file,
+    funcLine,
+    /*isStatic*/
+    false
+  ) : "";
+  const lead = [redecls, prefix, hoist, prologue].filter((s) => s !== "");
+  const needTry = bt || scope.dereferenced || scope.free.size > 0 || cases.length > 0;
   printer.dbgNoWrapper = !needTry && lead.length === 0;
   const bodyStmts = printer.joinStmts(rest);
   printer.dbgNoWrapper = false;
-  const leadJoined = lead.join("\n");
+  const joinSep = (acc, item) => acc + (unannotateStr(acc).replace(/\s+$/, "").endsWith(";") ? "\n" : ";\n") + item;
+  const leadJoined = lead.length ? lead.reduce(joinSep) : "";
   const leadSep = unannotateStr(leadJoined).replace(/\s+$/, "").endsWith(";") ? "\n" : ";\n";
   const bodyInner = lead.length ? leadJoined + (bodyStmts ? leadSep + bodyStmts : "") : bodyStmts;
   const blockNL = (b) => unannotateStr(b).endsWith("}") ? "" : NL;
   const elided = elideSemi(bodyInner);
   let funcBlock;
   if (needTry) {
-    const catchBody = catchKind === "throws" ? debugCatchBodyThrows() : debugCatchBody(file, funcLine);
-    const tryWrap = "try {\n" + elided + blockNL(elided) + "}\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}";
-    funcBlock = withThis ? "{\n" + Agen + "with (this) {\n" + tryWrap + "}}" : "{\n" + Agen + tryWrap + "}";
+    const catchBody = catchKind === "throws" ? debugCatchBodyThrows() : bt ? debugCatchBodyBacktrace(file, avar) : debugCatchBody(file, funcLine);
+    const finallyClause = bt ? "\n" + Agen + "finally {\n" + btSuffix(svar) + blockNL(btSuffix(svar)) + "}" : "";
+    const tryWrap = "try {\n" + elided + blockNL(elided) + "}\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}" + finallyClause;
+    const preludeStr = bt ? btPrelude(dvar, svar) + "\n" : "";
+    funcBlock = withThis ? "{\n" + Agen + "with (this) {\n" + preludeStr + tryWrap + "}}" : "{\n" + Agen + preludeStr + tryWrap + "}";
   } else {
     funcBlock = elided === "" ? "{}" : "{\n" + elided + blockNL(elided) + "}";
   }
@@ -3938,8 +4162,9 @@ function renderDebugFuncNode(fn, userName, named, file, funcLine, catchKind = "r
   const innerFn = A(funcLine) + "function" + (named ? "  " : " ") + "(" + scope.newParams.join(", ") + ") " + funcBlock + FB;
   const S1 = A(funcLine) + "var $lzsc$temp = " + innerFn + ";";
   const S2 = A(funcLine) + '$lzsc$temp["displayName"] = ' + jsString(userName) + ";";
+  const S2bt = bt ? NL + A(funcLine) + '$lzsc$temp["_dbg_filename"] = ' + jsString(file) + ";" + NL + A(funcLine) + '$lzsc$temp["_dbg_lineno"] = ' + funcLine + ";" : "";
   const S3 = A(funcLine) + "return $lzsc$temp;";
-  const inner = S1 + NL + S2 + NL + elideSemi(S3);
+  const inner = S1 + NL + S2 + S2bt + NL + elideSemi(S3);
   return "(function () {" + NL + inner + NL + "}" + FB + ")()";
 }
 
@@ -4458,6 +4683,7 @@ function datasetArgs(el, globals, globalOrigins, opts) {
   const dataEl = { type: "elem", name: "data", attrs: {}, attrOrder: [], children };
   const content = serializeXmlRaw(dataEl);
   globals.push(name);
+  addKnownId(name);
   globalOrigins.push(el.origin ?? "");
   return { name, content, trim, nsprefix };
 }
@@ -4606,6 +4832,25 @@ function styleConstraintExpr(name, exprType, value, fallback) {
 }
 function aliasType(t) {
   return t === "html" ? "text" : t;
+}
+function btNoteConstraintInit(initExpr, line, file) {
+  if (!COMPILE_BACKTRACE)
+    return initExpr;
+  const m = /^new ([A-Za-z_$][\w$.]*)\(([\s\S]*)\)$/.exec(initExpr);
+  if (!m)
+    return initExpr;
+  void file;
+  const note = `${annoFileLine(null, 0)}$3.lineno = ${line}`;
+  return `(${note}, new (${note}, ${m[1]})(${m[2]}))`;
+}
+function btNoteColorInit(plain, line) {
+  if (!COMPILE_BACKTRACE)
+    return plain;
+  const m = /^([A-Za-z_$][\w$.]*)\.([A-Za-z_$][\w$]*)\(([\s\S]*)\)$/.exec(plain);
+  if (!m)
+    return plain;
+  const note = `${annoFileLine(null, 0)}$3.lineno = ${line}`;
+  return `(${note}, (${note}, ${m[1]}).${m[2]}(${m[3]}))`;
 }
 function compileAttr(tag, name, raw, inCanvas, typeOf = attrType) {
   if (/^\$(once|always|immediately)?\{/.test(raw) || /^\$\{/.test(raw)) {
@@ -4808,7 +5053,7 @@ function emitClassBlock(name, superJs, instEntries, defaultAttrs, childrenJs, cl
     const make2 = renderDebugClassMake(dbg.file, dbg.classLine, `"${lzcName}"`, [...instEntries, ...tailEntries], superJs, classPropsInner);
     if (Object.keys(defaultAttrs).length === 0)
       return make2;
-    const merge2 = debugMergeAttributes(dbg.file, dbg.classLine, dbg.bodyLine, lzcName, emitObjectSpaced(defaultAttrs), dbg.memberRich ? void 0 : dbg.ctorLine + 4);
+    const merge2 = debugMergeAttributes(dbg.file, dbg.classLine, dbg.bodyLine, lzcName, emitObjectSpaced(defaultAttrs), dbg.memberRich ? void 0 : dbg.ctorLine + 4, dbg.ctorLine + 4);
     return `{
 ${make2};
 ${merge2}
@@ -4963,6 +5208,7 @@ function buildNode(el, ctx, topLevel, classDepth, parentTag) {
       hasLiteralAttr = true;
     } else if (name === "id") {
       globals.push(raw);
+      addKnownId(raw);
       globalOrigins.push(el.origin ?? "");
       attrs["$lzc$bind_id"] = COMPILE_DEBUG ? idBinderDebug(raw, true, debugFile(el), el.endLine ?? el.line ?? 0) : idBinder(raw, true);
       if (COMPILE_DEBUG)
@@ -5051,6 +5297,7 @@ function buildNode(el, ctx, topLevel, classDepth, parentTag) {
   }
   if (pendingNameGlobal !== void 0 && pendingNameGlobal !== el.attrs["id"]) {
     globals.push(pendingNameGlobal);
+    addKnownId(pendingNameGlobal);
     globalOrigins.push(el.origin ?? "");
   }
   const children = [];
@@ -5578,16 +5825,20 @@ function compile(source, opts = {}) {
   }
   const isDebugBuild = root.attrs["debug"] === "true" || /(?:^|;)\s*debug\s*:\s*true\b/.test(root.attrs["compileroptions"] ?? "");
   const canvasDebugOff = root.attrs["debug"] === "false" || /(?:^|;)\s*debug\s*:\s*false\b/.test(root.attrs["compileroptions"] ?? "");
-  const wantsBacktrace = /(?:^|;)\s*backtrace\s*:\s*true\b/.test(root.attrs["compileroptions"] ?? "");
-  const debug = (opts.debug === true || isDebugBuild && !wantsBacktrace) && !canvasDebugOff;
-  if (isDebugBuild && wantsBacktrace && !opts.debug) {
-    return { js: "", unsupported: `canvas debug build with backtrace:true = readable+sourcemap backend (backtrace unimplemented)` };
-  }
+  const wantsBacktrace = opts.backtrace === true || /(?:^|;)\s*backtrace\s*:\s*true\b/.test(root.attrs["compileroptions"] ?? "");
+  const debug = (opts.debug === true || isDebugBuild || wantsBacktrace) && !canvasDebugOff;
+  const backtraceWanted = wantsBacktrace;
+  const backtrace = backtraceWanted && debug;
   try {
     setScDebug(debug);
+    setScBacktrace(backtrace);
+    setDebugBacktrace(backtrace);
+    resetKnownClassnames();
+    resetKnownIds();
     resetBinderTable();
     resetRegTable();
     COMPILE_DEBUG = debug;
+    COMPILE_BACKTRACE = backtrace;
     DEBUG_FILE = opts.debugFileName ?? ((id) => id);
     DEBUG_SOURCE_ID = opts.sourceId ?? "";
     SCRIPT_SRC = opts.resolveScriptSrc ?? null;
@@ -5595,7 +5846,10 @@ function compile(source, opts = {}) {
     return compileInner(root, opts, debug);
   } finally {
     setScDebug(false);
+    setScBacktrace(false);
+    setDebugBacktrace(false);
     COMPILE_DEBUG = false;
+    COMPILE_BACKTRACE = false;
     DEBUG_FILE = (id) => id;
     DEBUG_STMTS = null;
     SCRIPT_SRC = null;
@@ -5609,29 +5863,59 @@ var DEBUG_SOURCE_ID = "";
 function debugFile(el) {
   return DEBUG_FILE(el.origin ?? DEBUG_SOURCE_ID);
 }
-function debugMergeAttributes(file, classLine, bodyLine, classNameJs, objSpaced, mergeLine) {
+function debugMergeAttributes(file, classLine, bodyLine, classNameJs, objSpaced, mergeLine, noteLine) {
   const A = (n) => annoFileLine(file, n);
   const GEN = annoFileLine(null, 0);
   const FB = forceBlankLnum();
-  const mergeCall = `LzNode.mergeAttributes(${objSpaced}, ${classNameJs}.attributes)`;
+  const bt = COMPILE_BACKTRACE;
+  const M = noteLine ?? bodyLine;
+  const N1 = mergeLine != null ? annoFileLine(file, 1) : "";
+  const mergeCall = bt ? `${GEN}${N1}$3.lineno = ${M}, (${GEN}${N1}$3.lineno = ${M}, LzNode).mergeAttributes(${objSpaced}, ${classNameJs}.attributes)` : `LzNode.mergeAttributes(${objSpaced}, ${classNameJs}.attributes)`;
   const mergeDir = mergeLine != null ? A(mergeLine) : "";
   const withPart = `with ($0) with ($0.prototype) {
 ${GEN}{
 ${mergeDir}${mergeCall}
 }}`;
+  const btPrelude2 = bt ? `var $1 = Debug;
+var $2 = $1.backtraceStack;
+` : "";
+  const btPrefix2 = bt ? `if ($2) {
+var $3 = ["$lzsc$c", $0];
+$3.callee = arguments.callee;
+$3["this"] = this;
+$3.filename = ${jsString(file)};
+$3.lineno = ${bodyLine};
+$2.push($3);
+if ($2.length > $2.maxDepth) {
+$1.stackOverflow()
+}};
+` : "";
+  const catchBody = bt ? `if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error) && $lzsc$e !== lz["$lzsc$thrownError"]) {
+$reportException(${jsString(file)}, $3.lineno, $lzsc$e)
+} else {
+throw $lzsc$e
+}` : debugCatchBody2(file, bodyLine);
+  const btFinally = bt ? `
+${GEN}finally {
+if ($2) {
+$2.length--
+}}` : "";
   const tryWrap = `try {
-${A(bodyLine)}${withPart}}
+${btPrefix2}${A(bodyLine)}${withPart}}
 ${GEN}catch ($lzsc$e) {
-${debugCatchBody2(file, bodyLine)}}`;
+${catchBody}}${btFinally}`;
   const funcBlock = `{
-${GEN}${tryWrap}}`;
+${GEN}${btPrelude2}${tryWrap}}`;
   const innerFn = `function ($0) ${funcBlock}${FB}`;
   const S1 = `var $lzsc$temp = ${innerFn};`;
   const S2 = `${A(bodyLine)}$lzsc$temp["displayName"] = ${jsString(file + "#" + bodyLine + "/1")};`;
+  const S2bt = bt ? `
+${A(bodyLine)}$lzsc$temp["_dbg_filename"] = ${jsString(file)};
+${A(bodyLine)}$lzsc$temp["_dbg_lineno"] = ${bodyLine};` : "";
   const S3 = `${A(bodyLine)}return $lzsc$temp`;
   const iife = `(function () {
 ${S1}
-${S2}
+${S2}${S2bt}
 ${S3}
 }${FB})()`;
   return `${A(classLine)}${iife}(${classNameJs})`;
@@ -5640,6 +5924,7 @@ function debugCatchBody2(file, line) {
   return 'if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error) && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException(' + jsString(file) + ", " + line + ", $lzsc$e)\n} else {\nthrow $lzsc$e\n}";
 }
 var COMPILE_DEBUG = false;
+var COMPILE_BACKTRACE = false;
 var DEBUG_STMTS = null;
 function pushDebug(stmt) {
   if (DEBUG_STMTS)
@@ -6072,7 +6357,7 @@ function compileInner(root, opts, debug) {
         } else if (con && con.when === "immediately") {
           defaultAttrs[an] = compileExpr(con.expr);
         } else if (con && con.when === "style") {
-          defaultAttrs[an] = styleConstraintExpr(an, resolveConstraintType(def.name, an), con.expr);
+          defaultAttrs[an] = btNoteConstraintInit(styleConstraintExpr(an, resolveConstraintType(def.name, an), con.expr), child.endLine ?? child.line ?? 0, debugFile(child));
         } else if (con) {
           if (con.when !== "" && con.when !== "once" && con.when !== "path")
             throw new Unsupported(`$${con.when}{} constraint`);
@@ -6080,7 +6365,7 @@ function compileInner(root, opts, debug) {
           const setterExpr = con.literal && declared === "color" ? `LzColorUtils.convertColor(${jsString(con.expr)})` : con.expr;
           const c = COMPILE_DEBUG ? compileConstraintDebug(an, declared, setterExpr, con.when, mGen, debugFile(child), child.endLine ?? child.line ?? 0) : compileConstraint(an, declared, setterExpr, con.when, mGen);
           instEntries.push(...c.entries);
-          defaultAttrs[an] = c.initExpr;
+          defaultAttrs[an] = btNoteConstraintInit(c.initExpr, child.endLine ?? child.line ?? 0, debugFile(child));
           if (COMPILE_DEBUG && "lastBody" in c) {
             noteMember(child, false);
             lastMemberConBody = c.lastBody;
@@ -6089,10 +6374,10 @@ function compileInner(root, opts, debug) {
         } else if (valueTypeOf(def.name, an) === "color") {
           const cv = colorValue(an, raw, resolveConstraintType(def.name, an), mGen, debugFile(child), child.endLine ?? child.line ?? 0);
           if ("plain" in cv)
-            defaultAttrs[an] = cv.plain;
+            defaultAttrs[an] = btNoteColorInit(cv.plain, child.endLine ?? child.line ?? 0);
           else {
             instEntries.push(...cv.entries);
-            defaultAttrs[an] = cv.init;
+            defaultAttrs[an] = btNoteConstraintInit(cv.init, child.endLine ?? child.line ?? 0, debugFile(child));
             if (COMPILE_DEBUG && cv.cc.lastBody !== void 0) {
               noteMember(child, false);
               lastMemberConBody = cv.cc.lastBody;
@@ -6145,7 +6430,7 @@ function compileInner(root, opts, debug) {
             if (c.attrs["setter"] != null)
               noteMember(c, false);
             const fb = raw != null ? compileTypedValue(c.attrs["type"] ? mapType(c.attrs["type"]) : valueTypeOf(def.name, an), raw, false) : void 0;
-            defaultAttrs[an] = styleConstraintExpr(an, declared, jsString(c.attrs["style"]), fb);
+            defaultAttrs[an] = btNoteConstraintInit(styleConstraintExpr(an, declared, jsString(c.attrs["style"]), fb), c.endLine ?? c.line ?? 0, debugFile(c));
           } else if (con && con.when === "immediately") {
             instEntries.push(...slot, ...setterEntry);
             if (c.attrs["setter"] != null)
@@ -6159,7 +6444,7 @@ function compileInner(root, opts, debug) {
             const setterExpr = litType === "color" ? `LzColorUtils.convertColor(${jsString(con.expr)})` : con.expr;
             const cc = COMPILE_DEBUG ? compileConstraintDebug(an, declared, setterExpr, con.when, mGen, debugFile(c), c.endLine ?? c.line ?? 0) : compileConstraint(an, declared, setterExpr, con.when, mGen);
             instEntries.push(...cc.entries, ...slot, ...setterEntry);
-            defaultAttrs[an] = cc.initExpr;
+            defaultAttrs[an] = btNoteConstraintInit(cc.initExpr, c.endLine ?? c.line ?? 0, debugFile(c));
             noteMember(c, false);
             lastMemberConBody = cc.lastBody;
             lastMemberConSrcLine = cc.lastSrcLine;
@@ -6186,7 +6471,7 @@ function compileInner(root, opts, debug) {
             throw new Unsupported(`<event> without name`);
           if (!isInherited(def.superTag, en))
             instEntries.push(voidSlot(en));
-          defaultAttrs[en] = "LzDeclaredEvent";
+          defaultAttrs[en] = COMPILE_BACKTRACE ? `(${annoFileLine(null, 0)}$3.lineno = ${c.line ?? 0}, LzDeclaredEvent)` : "LzDeclaredEvent";
         } else if (c.name === "setter") {
           const sn = c.attrs["name"];
           if (!sn)
@@ -6845,8 +7130,12 @@ function validatorsEqual(stored, current) {
     return false;
   if (stored.missing && current.missing)
     return true;
+  for (const k of ["etag", "lastModified"]) {
+    if (stored[k] !== void 0 && current[k] !== void 0)
+      return stored[k] === current[k];
+  }
   let compared = 0;
-  for (const k of ["hash", "etag", "lastModified", "mtime", "size"]) {
+  for (const k of ["hash", "mtime", "size"]) {
     if (stored[k] !== void 0 && current[k] !== void 0) {
       if (stored[k] !== current[k])
         return false;
@@ -7041,7 +7330,12 @@ function decode(bytes) {
   return s;
 }
 function compileProps(o) {
-  return { debug: String(!!o.debug), proxied: String(o.proxied !== false), sprites: o.sprites ?? "none" };
+  return {
+    debug: String(!!o.debug || !!o.backtrace),
+    backtrace: String(!!o.backtrace),
+    proxied: String(o.proxied !== false),
+    sprites: o.sprites ?? "none"
+  };
 }
 async function compileInBrowser(mainUrl, o = {}) {
   const fetchFn = o.fetchFn ?? globalThis.fetch;
@@ -7097,6 +7391,7 @@ async function compileInBrowser(mainUrl, o = {}) {
     const r = compile(state.map.get(mainUrl).text, {
       ...opts,
       debug: o.debug,
+      backtrace: o.backtrace,
       proxied: o.proxied,
       sprites
     });

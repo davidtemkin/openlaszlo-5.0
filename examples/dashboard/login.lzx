@@ -19,26 +19,20 @@
            bgcolor="#80807E"  initstage="early" >
 
         <view id="loadWindow" align="center"
-              y="${ (canvas.height/3)-(this.height/2) }" 
-              width="300" height="100"
+              y="${ (canvas.height/3)-(this.height/2) }"
+              width="307" height="172"
               pixellock="true" >
 
             <handler name="oninit" reference="canvas">
-                // with canvas.oninit event all views are loaded so...
-                // start transition to login screen
-                // first hide progressbar and then grow the 
-                // window to necessary width/height.
-                
-                this.loadView.animate( "opacity" , 0 , 700 );
-                this.animate("width", this.loginView.width + 7,
-                                      700,false, {motion:"easein"} );
+                // OL4/DHTML: the app compiles + loads in-browser almost
+                // instantly, so the original loading->login GROW
+                // (300x100 -> loginView size) read as the window resizing
+                // right after it appeared. The window now opens directly at
+                // its final size (width/height above = loginView.width+7 by
+                // loginView.height+44); we just fade the loading bar out and
+                // fade the login form in -- no resize.
 
-                var anm = loadWindow.animate( "height",
-                                              this.loginView.height+44,
-                                              700,
-                                              false,
-                                              {motion:"easein"} );
-
+                var anm = this.loadView.animate( "opacity", 0, 700 );
                 var delg = new LzDelegate( loginView.fadeUp, "doStart",
                                            anm, "onstop");
             </handler>

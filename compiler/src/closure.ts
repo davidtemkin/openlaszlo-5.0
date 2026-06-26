@@ -56,8 +56,23 @@ export interface Tracker {
 export function validatorsEqual(stored: Validator, current: Validator): boolean {
   if (!!stored.missing !== !!current.missing) return false;
   if (stored.missing && current.missing) return true;
+  // A matching STRONG validator (HTTP ETag / Last-Modified) is authoritative: the
+  // resource is unchanged, so we must NOT also require size/hash to match. This is
+  // not just an optimization — it is REQUIRED for correctness over a compressing
+  // host: the cache is populated from GET responses (the validator's `size` is the
+  // DECOMPRESSED body length, `hash` is over the decompressed text), but freshness is
+  // re-checked with a cheap HEAD whose `Content-Length` is the COMPRESSED size (and
+  // which has no body to re-hash). Letting that size/hash difference veto a matching
+  // ETag made every reload a cache MISS → a full recompile. ETags exist precisely to
+  // be authoritative for conditional requests; trust them when both sides supply one.
+  for (const k of ["etag", "lastModified"] as const) {
+    if (stored[k] !== undefined && current[k] !== undefined) return stored[k] === current[k];
+  }
+  // No shared strong validator (e.g. the disk backend's mtime+size, or a host that
+  // sends none) → fall back to content-hash / mtime / size, all of which the probe
+  // can supply comparably in that case.
   let compared = 0;
-  for (const k of ["hash", "etag", "lastModified", "mtime", "size"] as const) {
+  for (const k of ["hash", "mtime", "size"] as const) {
     if (stored[k] !== undefined && current[k] !== undefined) {
       if (stored[k] !== current[k]) return false;
       compared++;

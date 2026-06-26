@@ -68,7 +68,7 @@ function rebaseHtml(text) {
 // (b) busts every cached asset. Host-agnostic: works on ANY static host (GitHub Pages,
 // S3, nginx, Cloudflare Pages…) with no build pipeline — just re-run the stamp before you
 // deploy. Left as "dev" when unstamped (local serving).
-const BUILD_ID = "d62a534ee5d8";
+const BUILD_ID = "8813a8a87888";
 
 // Per-build cache bucket: a new BUILD_ID -> a new bucket -> the old one is dropped on
 // activate, and compiled output is re-keyed, so a runtime/compiler change recompiles.
@@ -166,22 +166,24 @@ async function canvasAttrs(srcUrl) {
 //   ?debug[=true]        → debug build (lfc-debug.js + per-line /* file */ annotations);
 //                          implies lzconsoledebug (the in-app debug console), as on the old server.
 //   ?lzconsoledebug=true → debug console without a debug build.
+//   ?backtrace / ?lzbacktrace → DEBUG_BACKTRACE build (lzc -g2): per-function call-stack
+//                          frames + per-call-site line notes, byte-for-byte vs the oracle
+//                          (backtrace.lzx). Implies debug (it is a debug add-on); the
+//                          debug runtime (lfc-debug.js) carries the LzBacktrace stack.
 // Unsupported on the SOLO static distro (reported, never silently dropped):
 //   ?proxied=true / ?lzproxied=true   (no data-proxy server — distro is SOLO),
-//   ?backtrace / ?lzbacktrace         (lzc -g2; needs the 1.6MB backtrace runtime + per-node lines),
 //   ?lzr=swf / ?lzt=swf               (the SWF runtime is retired; DHTML only).
-// The compiler cache already keys on {debug,proxied,sprites} (compileProps), so debug and
-// production builds of the same app never collide.
+// The compiler cache keys on {debug,backtrace,proxied,sprites} (compileProps), so debug,
+// backtrace, and production builds of the same app never collide.
 // ───────────────────────────────────────────────────────────────────────────
 function parseFlags(sp) {
   const on = (v) => v !== null && v !== "false";
-  const debug = on(sp.get("debug"));
-  const flags = { debug, lzconsoledebug: on(sp.get("lzconsoledebug")) || debug, proxied: false, unsupported: null };
+  const backtrace = on(sp.get("backtrace")) || on(sp.get("lzbacktrace"));
+  const debug = on(sp.get("debug")) || backtrace;   // backtrace is a debug add-on → forces debug on
+  const flags = { debug, backtrace, lzconsoledebug: on(sp.get("lzconsoledebug")) || debug, proxied: false, unsupported: null };
   const proxiedReq = sp.get("proxied") ?? sp.get("lzproxied");
   const rt = sp.get("lzr") || sp.get("lzt");
-  if (on(sp.get("backtrace")) || on(sp.get("lzbacktrace")))
-    flags.unsupported = "backtrace (lzc -g2) is not supported by the in-browser compiler.";
-  else if (proxiedReq === "true")
+  if (proxiedReq === "true")
     flags.unsupported = "proxied=true needs a data-proxy server; the static distro is SOLO (proxied=false).";
   else if (rt && /swf/i.test(rt))
     flags.unsupported = "the SWF runtime is retired; only the DHTML runtime is available.";
@@ -191,6 +193,10 @@ function parseFlags(sp) {
 function flagQuery(flags) {
   const q = [];
   if (flags.debug) q.push("debug=true");
+  // Use the `lzbacktrace` spelling: it is in lz.embed's preserved-option list (embed.js),
+  // so the runtime carries it through to the `<name>.lzx.js` compile request (and turns on
+  // the runtime `$backtrace` recording). A plain `backtrace` param is dropped by embed.
+  if (flags.backtrace) q.push("lzbacktrace=true");
   if (flags.lzconsoledebug) q.push("lzconsoledebug=true");
   return q.length ? "?" + q.join("&") : "";
 }
@@ -323,6 +329,7 @@ async function compileResponse(url, request) {
       sprites: "none",             // (C) sheet-free: individual frame PNGs, no montages
       proxied: false,              // SOLO static distro — no dynamic data proxy
       debug: flags.debug,          // (D) debug build → cache keys on it (compileProps), no prod collision
+      backtrace: flags.backtrace,  // (D) DEBUG_BACKTRACE add-on → cache keys on it too
     });
     if (r.unsupported) {
       return new Response(errStub(`compile UNSUPPORTED: ${r.unsupported}`), jsHeaders());
