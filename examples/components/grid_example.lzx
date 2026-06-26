@@ -2,10 +2,13 @@
     <greenstyle name="greencolors"/>
     <bluestyle name="bluecolors"/>
 
+    <!-- OL5/DHTML SOLO: laszlosystems.com is defunct; use a local static weather feed.
+         (contactsData src was "http:contactsdata.xml" — a malformed URL that only
+         resolved by a browser scheme-relative quirk; made it a clean relative path.) -->
     <dataset name="weatherdata" request="true" type="http"
-            src="http://www.laszlosystems.com/cgi-pub/weather.cgi?zip=94114"/>
+            src="weatherdata.xml"/>
     <dataset name="contactsData" request="true" type="http"
-    src="http:contactsdata.xml"/>
+            src="contactsdata.xml"/>
     <tabs style="bluecolors">
         <tabpane> Contacts
             <grid datapath="contactsData:/*" sizetoheader="false">
@@ -73,8 +76,16 @@
                   height="${parent.height -
                             ( parent.inset_top +parent.inset_bottom )}"
                   showvlines="true" bgcolor0="$once{greencolors.basecolor}" sizetoheader="false"
-                  datapath="weatherdata:/weather/current"
-                style="greencolors"/>
+                  datapath="weatherdata:/*"
+                style="greencolors">
+                <!-- OL5: a <grid> renders nothing without explicit columns (it does NOT
+                     auto-generate them from the data), so define them for the weather feed. -->
+                <gridtext datapath="@city" width="120">City</gridtext>
+                <gridtext datapath="@temperature" width="75">Temp °F</gridtext>
+                <gridtext datapath="@conditions" width="120">Conditions</gridtext>
+                <gridtext datapath="@humidity" width="85">Humidity %</gridtext>
+                <gridtext datapath="@wind">Wind</gridtext>
+            </grid>
         </tabpane>
 
     </tabs>

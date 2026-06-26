@@ -1,0 +1,8 @@
+<weather>
+  <current city="San Francisco" temperature="62" conditions="Partly Cloudy" humidity="72" wind="WNW 10 mph"/>
+  <current city="New York"      temperature="78" conditions="Sunny"         humidity="55" wind="S 8 mph"/>
+  <current city="Chicago"       temperature="74" conditions="Cloudy"        humidity="58" wind="SW 14 mph"/>
+  <current city="Los Angeles"   temperature="81" conditions="Clear"         humidity="40" wind="W 6 mph"/>
+  <current city="Seattle"       temperature="59" conditions="Light Rain"    humidity="85" wind="SW 12 mph"/>
+  <current city="Miami"         temperature="88" conditions="Thunderstorms" humidity="79" wind="ESE 11 mph"/>
+</weather>

@@ -90,7 +90,9 @@
                 <view bgcolor="#EAEAEA" layout="spacing: 2" x="2" y="2"
                     width="${parent.width - 4}" height="${parent.height - 4}">
                     <text align="center">Hominid evolution</text>
-                    <text multiline="true">in millions of years before present</text>
+                    <!-- OL5/DHTML: a multiline text needs an explicit width or it wraps one
+                         word per line, overflowing this box and overlapping the tree below. -->
+                    <text multiline="true" width="${parent.width}">in millions of years before present</text>
                     <text>following Johanson &amp; Edgar (1996)</text>
                     <text align="center"><i>From Lucy to Language</i></text>
                 </view>
