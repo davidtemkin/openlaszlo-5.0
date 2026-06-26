@@ -46,6 +46,13 @@ for (const input of INPUTS) {
 }
 const build = h.digest("hex").slice(0, 12);
 
+// Idempotent: only touch files when the build id actually changed (so a pre-commit hook
+// produces no churn when nothing platform-relevant changed).
+const current = (swText.match(/const BUILD_ID = "([^"]*)";/) || [])[1];
+if (current === build) {
+  console.log("stamp-version: unchanged (BUILD_ID =", build + ")");
+  process.exit(0);
+}
 writeFileSync(SW, swText.replace(BUILD_RE, `const BUILD_ID = "${build}";`));
-writeFileSync(join(ROOT, "version.json"), JSON.stringify({ build, stamped: new Date().toISOString() }, null, 2) + "\n");
-console.log("stamp-version: BUILD_ID =", build);
+writeFileSync(join(ROOT, "version.json"), JSON.stringify({ build }, null, 2) + "\n");
+console.log("stamp-version: BUILD_ID", current || "(none)", "->", build);
