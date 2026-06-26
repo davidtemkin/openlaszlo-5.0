@@ -64,13 +64,9 @@ http.createServer((req, res) => {
     fs.createReadStream(file).pipe(res);
   };
   const notFound = () => {
-    // Mirror GitHub Pages: serve /404.html (with 404 status) for missing paths, so the
-    // deep-link bootstrap (?goto) works locally exactly as it will on the real host.
-    const f404 = path.join(ROOT, "404.html");
-    fs.stat(f404, (e, s) => {
-      if (!e && s.isFile()) { res.writeHead(404, { "Content-Type": "text/html;charset=utf-8" }); return fs.createReadStream(f404).pipe(res); }
-      res.writeHead(404, { "Content-Type": "text/plain" }); res.end("404 Not Found");
-    });
+    // Hash routing keeps every shareable link on index.html, so deep/shared links never 404
+    // and need no 404.html bootstrap on any host. A 404 here means a genuinely missing file.
+    res.writeHead(404, { "Content-Type": "text/plain" }); res.end("404 Not Found");
   };
   fs.stat(fp, (err, st) => {
     if (err) return notFound();

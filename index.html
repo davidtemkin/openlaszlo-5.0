@@ -43,12 +43,9 @@
 
     // BASE — this page's own directory. The whole distro is relative to it, so everything
     // adapts to WHATEVER URL serves index.html (origin root, /openlaszlo/ project page, …)
-    // with no build step. Recorded so 404.html can rebuild homepage URLs at any deploy depth.
+    // with no build step.
     const BASE = location.pathname.replace(/[^/]*$/, "");   // "/" | "/openlaszlo/" | …
-    try { localStorage.setItem("ol_base", BASE); } catch (e) {}
-    // A 404-bootstrap deep link arrives as ?goto=<distro-relative path>; routed below.
-    const GOTO = new URLSearchParams(location.search).get("goto");
-    window.OL_BASE = BASE;   // read by the Explorer logo + 404.html
+    window.OL_BASE = BASE;   // read by the Explorer logo (back-to-home)
 
     function fail(msg) {
       boot.style.display = "none";
@@ -65,7 +62,14 @@
     const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
     const byTitle = new Map();   // "Demos|Calendar" → framed pathname (e.g. /openlaszlo/examples/calendar/)
     const byFramed = new Map();  // framed pathname  → "Demos|Calendar"
-    let suppressNav = false;     // true while WE drive the Explorer (don't echo back to pushState)
+    let suppressNav = false;     // true while WE drive the Explorer (don't echo back to the URL)
+    let suppressHash = false;    // true while WE set location.hash (don't re-route from our own write)
+    // The shareable address lives in the URL FRAGMENT, not the path. The path therefore stays
+    // index.html on every link, so a deep/shared link can NEVER 404 and needs no host 404/rewrite
+    // config (works the same on GitHub Pages, Firebase, S3, nginx, python -m http.server…). The
+    // fragment carries the distro-relative content path; these map it to/from the framed pathname.
+    const framedToRel = (framed) => framed.slice(BASE.length - 1);            // keeps a leading "/"
+    const relToFramed = (rel) => (BASE.replace(/\/$/, "") + rel).replace(/\/?$/, "/");
 
     async function buildNavMap() {
       try {
@@ -114,16 +118,24 @@
       });
     }
 
-    // Explorer → shell
+    // Explorer → shell: mirror the current node into the URL fragment.
     window.olNav = function (titlePath) {
       if (suppressNav) return;
       const framed = byTitle.get(titlePath);
-      if (framed && location.pathname !== framed) history.pushState({ tp: titlePath }, "", framed);
+      if (!framed) return;
+      const hash = "#" + framedToRel(framed);
+      if (location.hash !== hash) { suppressHash = true; location.hash = hash; }
     };
-    // back / forward
-    window.addEventListener("popstate", (e) => {
-      const tp = (e.state && e.state.tp) || byFramed.get(location.pathname) || "";
+    // shell ← URL: a deep/shared link, a pasted fragment, or browser back/forward.
+    function routeFromHash() {
+      const rel = decodeURIComponent(location.hash.replace(/^#/, ""));
+      if (!rel) return;
+      const tp = byFramed.get(relToFramed(rel));
       if (tp) driveExplorer(tp);
+    }
+    window.addEventListener("hashchange", () => {
+      if (suppressHash) { suppressHash = false; return; }   // ignore our own writes
+      routeFromHash();
     });
 
     async function loadExplorer() {
@@ -131,14 +143,7 @@
       const f = document.getElementById("explorer");
       f.addEventListener("load", () => {
         boot.style.display = "none"; f.style.display = "block";
-        // Honor a 404-bootstrap deep link: clean ?goto out of the address bar and drive the
-        // Explorer to the matching node.
-        if (GOTO) {
-          const framed = (BASE.replace(/\/$/, "") + GOTO).replace(/\/?$/, "/");
-          const tp = byFramed.get(framed);
-          history.replaceState(tp ? { tp } : null, "", tp ? framed : BASE);
-          if (tp) driveExplorer(tp);
-        }
+        routeFromHash();   // drive the Explorer to the fragment's node (deep link / refresh)
       }, { once: true });
       // The Explorer's source lives under explorer/; the SW maps the `/`-namespace URL
       // `explore-nav.lzx` → explorer/explore-nav.lzx and compiles it in-browser.
