@@ -97,22 +97,24 @@
             var minNum=currentTimeObj.getMinutes();
             var secNum=currentTimeObj.getSeconds();
 
-            // Move the hands of the clock...
-            var dur = 700;
+            // Move the hands of the clock. Set rotation DIRECTLY via setAttribute (as the
+            // second hand below does) — view.animate('rotation',…) is a no-op in this DHTML
+            // runtime, which left the hour/minute hands stuck at 0 so every clock looked
+            // identical regardless of its timezone (only AM/PM + the second hand differed).
             if ( (this.lasthour != hourNum*30) || (this.lastminute != minNum*6) ){
                   this.lasthour = hourNum*30;
                   var hourPart = hourNum * 30 + ( minNum / 2 );
-                  this.hh.animate('rotation',hourPart,dur);
-                  this.hhs.animate('rotation',hourPart,dur);
+                  this.hh.setAttribute('rotation', hourPart);
+                  this.hhs.setAttribute('rotation', hourPart);
             }
 
             if ( this.lastminute != minNum*6 ){
                   this.lastminute = minNum*6;
-                  this.mh.animate('rotation',this.lastminute,dur);
-                  this.mhs.animate('rotation',this.lastminute,dur);
+                  this.mh.setAttribute('rotation', this.lastminute);
+                  this.mhs.setAttribute('rotation', this.lastminute);
             }
-            this.shs.setAttribute('rotation',secNum*6,dur);
-            this.sh.setAttribute('rotation',secNum*6,dur);
+            this.shs.setAttribute('rotation',secNum*6);
+            this.sh.setAttribute('rotation',secNum*6);
 
         ]]>
         </method>

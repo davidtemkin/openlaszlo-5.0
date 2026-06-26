@@ -30,13 +30,14 @@
     </font>
     
     <class name="viewframe" extends="view" >
-        <attribute name="aframe" value="0" />
-        <method name="setAttribute" args="a,v" >
-            if ( a == "aframe" ) {
-                this.setAttribute('frame', Math.round( v ));
-            }       
-            super.setAttribute( a, v );
-        </method>
+        <!-- aframe: the authoritative (possibly fractional) hand position. The displayed
+             sprite `frame` is CONSTRAINED to it, so aframe is an ordinary LZX attribute —
+             reliably stored, readable and animatable — and the frame follows automatically.
+             (This replaces a setAttribute override whose aframe didn't read back reliably,
+             which made the sweep start from frame 0 instead of the hand's current position.)
+             mod 60 keeps the frame valid as a sweep interpolates across the 0 boundary. -->
+        <attribute name="aframe" value="0" type="number"/>
+        <attribute name="frame" value="${ ((Math.round(this.aframe) % 60) + 60) % 60 }"/>
     </class>
 
     <!-- CLASS: CLOCK -->
@@ -49,6 +50,17 @@
         <attribute name="lastminute"     value="0" />
         <attribute name="lastsecond"     value="0" />
         <attribute name="timezoneoffset" value="0" />
+
+        <!-- hand-sweep animation state (used when a city click changes the timezone) -->
+        <attribute name="sweepActive" value="false"/>
+        <attribute name="sweepDel"    value="null"/>
+        <attribute name="sweepStep"   value="0"/>
+        <attribute name="sweepSteps"  value="20"/>
+        <attribute name="sweepMs"     value="30"/>
+        <attribute name="hh0" value="0"/><attribute name="hhD" value="0"/>
+        <attribute name="mh0" value="0"/><attribute name="mhD" value="0"/>
+        <attribute name="sh0" value="0"/><attribute name="shD" value="0"/>
+        <attribute name="sweepEndHH" value="0"/><attribute name="sweepEndMH" value="0"/><attribute name="sweepEndSH" value="0"/>
 
 
         <!-- AM or PM -->
@@ -74,79 +86,131 @@
         <!-- GLASS HILITE -->
         <view resource="glasshilite" />
 
-        <method name="setCurrentTime">
+        <method name="setCurrentTime" args="sweep=false">
         <![CDATA[
             // Get the current date and time local to this machine
             var currentTimeObj = new Date();
 
-            // Tranlsate the time to the cities local time
+            // Translate the time to the city's local time
             currentTimeObj.setTime(currentTimeObj.getTime() + currentTimeObj.getTimezoneOffset()*60*1000); // UTC time
-            currentTimeObj.setTime(currentTimeObj.getTime() + + this.timezoneoffset*60*60*1000); // local to city
+            currentTimeObj.setTime(currentTimeObj.getTime() + this.timezoneoffset*60*60*1000); // local to city
             var hourNum = currentTimeObj.getHours();
 
-            // change time and get day
             var dayNum   = currentTimeObj.getDay();
             var dayArray = ["Sun","Mon","Tue","Wed","Thur","Fri","Sat"];
 
-            // Get PM or AM
-            if (hourNum > 11) {
-                hourNum-=12; // for clock representation
-                var hourLabel="PM";
-            } else {
-                var hourLabel="AM";
-            }
+            if (hourNum > 11) { hourNum-=12; var hourLabel="PM"; } else { var hourLabel="AM"; }
             this.dayandampm.setText(dayArray[dayNum] + " " + hourLabel);
 
-            // Get Minutes and Seconds
             var minNum=currentTimeObj.getMinutes();
             var secNum=currentTimeObj.getSeconds();
 
-            // now vsiually update the hands of the clock
-            this.updateHands( hourNum, minNum, secNum );
-
+            this.updateHands( hourNum, minNum, secNum, sweep );
         ]]>
         </method>
- 
-         <method name="updateHands" args="hour, min, sec" >
-//             Debug.debug("updateHands:", hour, min, sec );
-            
-            var dur = 700;
-            if ( this.lasthour != hour ){
-                 this.hh.animate('aframe', hour, 1000 );
-                 this.lasthour = hour;
+
+        <!-- Compute each hand's target sprite frame and either set it instantly (normal
+             per-second tick) or animate the hands into place (sweep — on a city change). -->
+        <method name="updateHands" args="hour, min, sec, sweep=false" >
+        <![CDATA[
+            // All hands use 60-frame sprites. Hour hand advances 5 frames/hour (every 12
+            // min) so it moves WITHIN the hour — at 9:30 it sits between 9 and 10. (View
+            // rotation isn't supported in this DHTML runtime, so we animate the FRAME, not
+            // a rotation; frame = (hour%12)*5 + floor(min/12), range 0–59.)
+            var hhT = (hour % 12) * 5 + Math.floor(min / 12);
+            var mhT = min;
+            var shT = sec;
+
+            if (sweep) {
+                // the second hand doesn't move across a timezone change (seconds are the
+                // same everywhere) — set it directly and let it keep ticking; only the hour
+                // (and the minute, for half-hour zones) sweep into place.
+                if ( this.lastsecond != shT ){ this.sh.setAttribute('aframe', shT); this.lastsecond = shT; }
+                this.startSweep(hhT, mhT);
+                return;
             }
 
-            if ( this.lastminute != min ){
-                 this.mh.animate('aframe', min, 1000 );
-                 this.lastminute = min;
-            }
-
-            if ( this.lastsecond != sec ){
-                 this.sh.setAttribute('aframe', sec);
-                 this.lastsecond = sec;
-            }
-
-            /*
-            if ( this.lastminute != minNum*6 ){
-                  this.lastminute = minNum*6;
-                  this.mh.animate('rotation',this.lastminute,dur);
-                  this.mhs.animate('rotation',this.lastminute,dur);
-            }
-            this.shs.setAttribute('rotation',secNum*6,dur);
-            this.sh.setAttribute('rotation',secNum*6,dur);
-            */
+            if ( this.lasthour   != hhT ){ this.hh.setAttribute('aframe', hhT); this.lasthour   = hhT; }
+            if ( this.lastminute != mhT ){ this.mh.setAttribute('aframe', mhT); this.lastminute = mhT; }
+            if ( this.lastsecond != shT ){ this.sh.setAttribute('aframe', shT); this.lastsecond = shT; }
+        ]]>
         </method>
-         
+
+        <!-- shortest signed distance between two frame indices on the 60-frame circle, so a
+             hand takes the SHORT way round when a city change repositions it -->
+        <method name="circDelta" args="from, to">
+        <![CDATA[
+            var d = (to - from) % 60;
+            if (d > 30) d -= 60; else if (d < -30) d += 60;
+            return d;
+        ]]>
+        </method>
+
+        <!-- Animate the hand FRAMES from where they are to the targets. view.animate() is a
+             no-op in this DHTML runtime, so step `aframe` over a short timer-driven tween
+             (lz.Timer — the same primitive secondtimer uses); viewframe rounds aframe to the
+             nearest sprite frame, so the hands sweep smoothly into place. -->
+        <method name="startSweep" args="hhT, mhT">
+        <![CDATA[
+            // Always start from the hand's CURRENT position (this.hh.aframe is now reliable
+            // via the constraint above), so a click never resets the hand to 0 first.
+            this.hh0 = this.hh.aframe; this.hhD = this.circDelta(this.hh.aframe, hhT);
+            this.mh0 = this.mh.aframe; this.mhD = this.circDelta(this.mh.aframe, mhT);
+            this.sweepEndHH = hhT; this.sweepEndMH = mhT;
+            this.sweepStep = 0;
+            if (!this.sweepActive) {
+                this.sweepActive = true;
+                if (this.sweepDel == null) this.sweepDel = new LzDelegate(this, 'sweepTick');
+                lz.Timer.addTimer(this.sweepDel, this.sweepMs);
+            }
+            // If a sweep is already running (rapid second click), the in-flight timer chain
+            // just picks up the new start/target/step above — re-aimed from the current
+            // position, with no second parallel chain.
+        ]]>
+        </method>
+
+        <method name="sweepTick">
+        <![CDATA[
+            this.sweepStep++;
+            var t = this.sweepStep / this.sweepSteps;
+            if (t > 1) t = 1;
+            var e = 1 - Math.pow(1 - t, 3);   // ease-out cubic
+            this.hh.setAttribute('aframe', this.hh0 + this.hhD * e);
+            this.mh.setAttribute('aframe', this.mh0 + this.mhD * e);
+            if (t < 1) {
+                lz.Timer.addTimer(this.sweepDel, this.sweepMs);
+            } else {
+                // land exactly on the target frames and resync the per-tick trackers
+                this.hh.setAttribute('aframe', this.sweepEndHH); this.lasthour   = this.sweepEndHH;
+                this.mh.setAttribute('aframe', this.sweepEndMH); this.lastminute = this.sweepEndMH;
+                this.sweepActive = false;
+            }
+        ]]>
+        </method>
 
         <!-- This method is called everytime the global object 'secondtimer'(see below) -->
         <!-- sends an onsecond event -->
         <handler name="onsecond" reference="secondtimer" >
-            this.setCurrentTime();
+            if (this.sweepActive) { this.tickSecond(); return; }   // keep the second hand ticking during an hour/minute sweep
+            this.setCurrentTime(false);
         </handler>
 
+        <!-- advance only the second hand (used while an hour/minute sweep is in progress) -->
+        <method name="tickSecond">
+        <![CDATA[
+            var d = new Date();
+            d.setTime(d.getTime() + d.getTimezoneOffset()*60*1000 + this.timezoneoffset*60*60*1000);
+            var sec = d.getSeconds();
+            if (this.lastsecond != sec) { this.sh.setAttribute('aframe', sec); this.lastsecond = sec; }
+        ]]>
+        </method>
 
+        <!-- Called when a city dot is clicked (cityspot.activateclock → applyOffset). On a
+             real change, sweep the hands to the new timezone's time. -->
         <method name="setTimeZone" args="tzo" >
+            var changed = (this.timezoneoffset != tzo);
             this.timezoneoffset = tzo;
+            if (changed) this.setCurrentTime(true);
         </method>
 
     </class>
