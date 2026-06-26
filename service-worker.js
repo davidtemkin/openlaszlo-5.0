@@ -62,15 +62,40 @@ function rebaseHtml(text) {
   return text.replace(/\b(src|href|url|popup)="\/(?!\/)/g, `$1="${BASE_PFX}/`);
 }
 
-// One closure-validated cache (CacheStorage-backed), shared across every compile.
-const cache = new BrowserCache(COMPILER_VERSION, { store: "cachestorage" });
+// BUILD_ID — stamped by tools/stamp-version.mjs at package time (a content hash of the
+// runtime + compiler bundle + this worker). It changes whenever the deployed platform
+// changes, which (a) changes THIS worker's bytes so the browser installs a fresh SW and
+// (b) busts every cached asset. Host-agnostic: works on ANY static host (GitHub Pages,
+// S3, nginx, Cloudflare Pages…) with no build pipeline — just re-run the stamp before you
+// deploy. Left as "dev" when unstamped (local serving).
+const BUILD_ID = "d62a534ee5d8";
+
+// Per-build cache bucket: a new BUILD_ID -> a new bucket -> the old one is dropped on
+// activate, and compiled output is re-keyed, so a runtime/compiler change recompiles.
+const COMPILE_CACHE = "lzc-compile-" + BUILD_ID;
+const cache = new BrowserCache(BUILD_ID + ":" + COMPILER_VERSION, { store: "cachestorage", cacheName: COMPILE_CACHE });
+
+// Always revalidate distro asset fetches against the host (conditional GET via ETag /
+// Last-Modified — supported by every static host). A changed runtime/source/coverpage is
+// re-fetched immediately; an unchanged one is a cheap 304. This is what keeps the served
+// runtime fresh after a deploy without manual cache-clearing; BUILD_ID handles the
+// separate compiled-app cache. Merge so callers can still override (e.g. Range).
+function fresh(init) { return Object.assign({ cache: "no-cache" }, init); }
 
 // ───────────────────────────────────────────────────────────────────────────
 // Lifecycle — take control ASAP so newly-loaded clients (the Explorer iframe and
 // its content panes) are intercepted from their first request.
 // ───────────────────────────────────────────────────────────────────────────
 self.addEventListener("install", () => self.skipWaiting());
-self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
+self.addEventListener("activate", (e) => e.waitUntil((async () => {
+  // A new SW means a new BUILD_ID: drop every cache that isn't this build's compile
+  // bucket (old builds' compiled apps + any stale cache), then tell open clients to
+  // reload onto the fresh version (index.html guards against reload loops by build id).
+  const keys = await caches.keys();
+  await Promise.all(keys.filter((k) => k !== COMPILE_CACHE).map((k) => caches.delete(k)));
+  await self.clients.claim();
+  for (const c of await self.clients.matchAll({ type: "window" })) c.postMessage({ type: "ol-updated", build: BUILD_ID });
+})()));
 
 // ───────────────────────────────────────────────────────────────────────────
 // (A) toSourceUrl — the URL→source namespace map, mirroring server/index.mjs
@@ -107,7 +132,7 @@ function distroFetch(url, init) {
     .replace("/lps/fonts/", "/fonts/")
     .replace("/lps/lfc/", "/lfc/")
     .replace("/WEB-INF/lps/misc/lzx-autoincludes.properties", "/lzx-autoincludes.properties");
-  return fetch(u, init);
+  return fetch(u, fresh(init));
 }
 
 // Read the app's `<canvas>` bgcolor + width + height so the wrapper can embed it EXACTLY
@@ -250,14 +275,14 @@ self.addEventListener("fetch", (event) => {
 async function serveMapped(target, req) {
   const isText = /\.(x?html?|xml)(\?|$)/i.test(target);
   if (BASE !== "/" && isText) {
-    const res = await fetch(target);
+    const res = await fetch(target, fresh());
     if (!res.ok) return res;
     const body = rebaseHtml(await res.text());
     const headers = new Headers(res.headers);
     return new Response(body, { status: res.status, statusText: res.statusText, headers });
   }
   const range = req.headers.get("range");
-  return fetch(target, range ? { headers: { range } } : undefined);
+  return fetch(target, fresh(range ? { headers: { range } } : undefined));
 }
 
 // The wrapper HTML for a navigation to `…/<name>.lzx`. Mirrors server/wrapper.mjs:

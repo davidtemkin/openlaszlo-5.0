@@ -151,14 +151,25 @@
           + "Explorer needs to compile LZX in the browser.\n\nUse a current Chrome / Edge / "
           + "Firefox / Safari over https:// (or http://localhost), or run the bundled Node server.");
       }
+      // A new deploy: the freshly-activated SW (new BUILD_ID) clears caches and posts its
+      // build id. If it differs from the one this page booted with, reload once onto the
+      // fresh version. Set-before-reload + sessionStorage guards against reload loops.
+      navigator.serviceWorker.addEventListener("message", (e) => {
+        if (!e.data || e.data.type !== "ol-updated") return;
+        const seen = sessionStorage.getItem("ol-build");
+        sessionStorage.setItem("ol-build", e.data.build);
+        if (seen && seen !== e.data.build) location.reload();
+      });
+      let reg;
       try {
-        await navigator.serviceWorker.register("./service-worker.js", { type: "module", scope: "./" });
+        reg = await navigator.serviceWorker.register("./service-worker.js", { type: "module", scope: "./", updateViaCache: "none" });
       } catch (e) {
         return fail("Service Worker registration failed — likely a browser without MODULE "
           + "service-worker support.\n\n" + (e && e.message ? e.message : e)
           + "\n\nTry a current browser, or run the bundled Node server.");
       }
       await navigator.serviceWorker.ready;
+      if (reg) reg.update().catch(() => {});   // force an update check each load → prompt pickup of new deploys
 
       // A SW does not control the page that registered it until the next navigation.
       // If we're not controlled yet, reload ONCE (guarded) so this page — and the
