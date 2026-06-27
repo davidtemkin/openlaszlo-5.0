@@ -79,7 +79,7 @@ function rebaseHtml(text) {
 // (b) busts every cached asset. Host-agnostic: works on ANY static host (GitHub Pages,
 // S3, nginx, Cloudflare Pages…) with no build pipeline — just re-run the stamp before you
 // deploy. Left as "dev" when unstamped (local serving).
-const BUILD_ID = "9226b7c4f8ce";
+const BUILD_ID = "ff303b2d482f";
 
 // Per-build cache bucket: a new BUILD_ID -> a new bucket -> the old one is dropped on
 // activate, and compiled output is re-keyed, so a runtime/compiler change recompiles.

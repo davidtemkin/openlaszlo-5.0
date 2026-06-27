@@ -265,7 +265,14 @@ export function browserOptions(args) {
             : [joinUrl(base + "/", ref)];
         if (lps && !ref.startsWith("/"))
             roots.push(joinUrl(lps + "/lps/components/", ref));
-        const candidates = roots.flatMap((r) => [r, r + "/library.lzx"]);
+        // An LZX include names EITHER a file (`foo.lzx`) OR a directory whose `library.lzx`
+        // is the real entry (`foo` → `foo/library.lzx`) — the name's suffix already tells
+        // which. Over HTTP each wrong-form guess is a 404 round-trip, so pick the form by
+        // suffix instead of probing both: a `.lzx` ref can't be a directory, a bare name
+        // can't be a file. Drops the impossible candidates (≈⅔ of 404 probes) without
+        // changing which file resolves — the search path (app dir, then lps/components) is
+        // untouched, so app-local overrides and on-demand component editing still work.
+        const candidates = roots.flatMap((r) => (/\.lzx$/i.test(ref) ? [r] : [r + "/library.lzx"]));
         pending = false;
         for (const url of candidates) {
             const f = want(url);

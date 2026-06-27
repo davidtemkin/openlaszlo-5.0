@@ -7056,7 +7056,7 @@ function browserOptions(args) {
     const roots = ref.startsWith("/") ? lps ? [joinUrl(lps + "/lps/components/", ref.slice(1))] : [] : [joinUrl(base + "/", ref)];
     if (lps && !ref.startsWith("/"))
       roots.push(joinUrl(lps + "/lps/components/", ref));
-    const candidates = roots.flatMap((r) => [r, r + "/library.lzx"]);
+    const candidates = roots.flatMap((r) => /\.lzx$/i.test(ref) ? [r] : [r + "/library.lzx"]);
     pending = false;
     for (const url of candidates) {
       const f = want(url);
