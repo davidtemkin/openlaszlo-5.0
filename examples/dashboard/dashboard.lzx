@@ -293,8 +293,7 @@
                 width="464" height="329"
                 visible="false"
                 windowTintColor="'F2E9DA'"
-                windowTintBrightness="-150"
-                windowClickOpacity="1">
+                windowTintBrightness="-150">
         <view resource="dailyContentIcon" placement="topLeft" />
         <lattabslider placement="content" 
                    height="${immediateparent.height}" 
@@ -360,8 +359,7 @@
                 width="464" height="274"
                 visible="false"
                 windowTintColor="'C9CCA3'"
-                windowTintBrightness="-100"
-                windowClickOpacity="1">
+                windowTintBrightness="-100">
         <view resource="communicationsIcon" placement="topLeft" />
         <lattabslider placement="content" 
                    height="${immediateparent.height}" 
