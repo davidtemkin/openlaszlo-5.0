@@ -14,10 +14,6 @@ Note that when we refer to animation in LZX applications, we mean anything that 
         &lt;animator name="go" attribute="x" to="100" duration="1000" start="false"/&gt;
     &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-    * Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-    * Use is subject to license terms.                                            *
-    * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/simpleanimation.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/simpleanimation.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
 An animator starts with the current value of an attribute unless otherwise specified.  
@@ -31,10 +27,6 @@ of <code class="literal">x="50"</code>, and then animates the window to a positi
         &lt;animator name="go" attribute="x" from="50" to="100" duration="1000" start="false"/&gt;
     &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-    * Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-    * Use is subject to license terms.                                            *
-    * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/startanimation.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/startanimation.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
 Animators, by default, change an object's attribute by easing in and out of the <a class="indexterm" name="id7961"></a><code class="sgmltag-attribute">from</code> and 
@@ -50,10 +42,6 @@ The values for the motion tag are: <code class="literal">easeboth</code>, <code 
         &lt;animator name="go" attribute="x" to="100" duration="1000" motion="linear" start="false"/&gt;
     &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-    * Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-    * Use is subject to license terms.                                            *
-    * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/linearanimation.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/linearanimation.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
 Animators, like views, can be named so that they can be controlled later via scripts. This next example shows a common practice to activate an animator when a view is clicked, rather than when a view is first instantiated. Animators can be initially dormant by setting <code class="literal">start="false"</code>, and then activated on demand by calling its <a class="indexterm" name="id7979"></a><code class="methodname">start()</code> method.
@@ -64,10 +52,6 @@ Animators, like views, can be named so that they can be controlled later via scr
     &lt;animator name="myAnimator" attribute="x" to="100" duration="1000" start="false"/&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
     </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/animation-_4.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/animation-_4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
 Animators can also animate objects relative to their current values.
@@ -83,10 +67,6 @@ a view that animates 100 pixels to the right every time it is clicked.
               start="false" relative="true"/&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
     </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/animation-_5.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/animation-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> 
 More than one animator can be added to an object, and the set will be processed simultaneously. The code below shows an object moving diagonally by using both "x" and "y" animators.
@@ -97,10 +77,6 @@ More than one animator can be added to an object, and the set will be processed 
     &lt;animator attribute="y" to="100" duration="1000"/&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
   </pre></div><p>To process the two animators above sequentially, i.e. one after the
 other, you use the <a class="indexterm" name="id7995"></a><code class="sgmltag-element">&lt;animatorgroup&gt;</code><em><span class="remark">[unknown tag]</span></em>
@@ -124,75 +100,8 @@ simple views.  Click on any red square to see the animation of the
 named attribute, or press "test" to see them all at once.</p><div class="example"><a name="id8032"></a><p class="title"><b>Example 24.6. Basic Animation</b></p><div class="example-contents"><pre class="programlisting">
       
 &lt;canvas width="100%" height="200" bgcolor="0xE5E1B0" &gt;
-  &lt;!-- INCLUDES That provide framework for the example --&gt;
-  &lt;include href="animation_library.lzx"/&gt;
-  
-  &lt;!-- The EXAMPLE itself--&gt;
-  &lt;view id="tutorial1" height="600" width="${parent.width}" visible="true"&gt;
-    &lt;ruler name="rlr" height="3000" y="0"/&gt;
-    &lt;view height="30"/&gt;
-    &lt;view height="120" y="30"&gt;
-      &lt;view x="50"&gt;
-        &lt;boxtitle label="opacity"/&gt;
-        &lt;boxtitle label="rotation"/&gt;
-        &lt;boxtitle label="width"/&gt;
-        &lt;boxtitle label="height"/&gt;
-        &lt;boxtitle label="x"/&gt;
-        &lt;boxtitle label="y"/&gt;
-        &lt;simplelayout axis="x" spacing="51"/&gt;
-      &lt;/view&gt;
-      &lt;view y="20"&gt;
-        &lt;box id="B1" x="50" onclick="this.anm.doStart()"&gt;
-          &lt;animator name="anm" attribute="opacity"  to=".5"  duration="500" start="false"/&gt;
-        &lt;/box&gt;
-        &lt;box id="B2" x="150" onclick="this.anm.doStart()"&gt;
-          &lt;animator name="anm" attribute="rotation" to="45"  duration="500" start="false"/&gt;
-        &lt;/box&gt;
-        &lt;box id="B3" x="250" onclick="this.anm.doStart()"&gt;
-          &lt;animator name="anm" attribute="width"    to="99"  duration="500" start="false"/&gt;
-        &lt;/box&gt;
-        &lt;box id="B4" x="350" onclick="this.anm.doStart()"&gt;
-          &lt;animator name="anm" attribute="height"   to="100" duration="500" start="false"/&gt;
-        &lt;/box&gt;
-        &lt;box id="B5" x="450" onclick="this.anm.doStart()"&gt;
-          &lt;animator name="anm" attribute="x"        to="500" duration="500" start="false"/&gt;
-        &lt;/box&gt;
-        &lt;box id="B6" x="550" onclick="this.anm.doStart()"&gt;
-          &lt;animator name="anm" attribute="y"        to="50"  duration="500" start="false"/&gt;
-        &lt;/box&gt;
-      &lt;/view&gt;
-      &lt;simplelayout axis="y" spacing="5"/&gt;
-    &lt;/view&gt;
-    
-    &lt;!-- The TEST and RESET buttons --&gt;
-    &lt;view x="50"   y="150" width="${parent.width - 50}"&gt;
-      &lt;button x="50"
-                  onclick="B1.anm.doStart();
-                           B2.anm.doStart();
-                           B3.anm.doStart();
-                           B4.anm.doStart();
-                           B5.anm.doStart();
-                           B6.anm.doStart();
-                           "&gt;Test&lt;/button&gt;
-      &lt;button
-                  onclick="B1.setAttribute('opacity', 1);
-                           B2.setAttribute('rotation', 0);
-                           B3.setAttribute('width', 49);
-                           B4.setAttribute('height', 49);
-                           B5.setAttribute('x', 450);
-                           B6.setAttribute('y', 0);
-                           this.parent.P2.setAttribute('display', ' ');
-                           "&gt;Reset&lt;/button&gt;
-      &lt;simplelayout axis="x"/&gt;
-    &lt;/view&gt;
-  &lt;/view&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
-</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/animation-_7.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/animation-_7.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1596"></a>2. Absolute vs. relative animation</h2></div></div></div><p>The following example shows the difference between relative and
+</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/animation-_9.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/animation-_9.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1596"></a>2. Absolute vs. relative animation</h2></div></div></div><p>The following example shows the difference between relative and
 absolute animation. By default, <a class="indexterm" name="id8038"></a><code class="sgmltag-attribute">relative</code> is set
 to <code class="literal">false</code>, which means that animation of an attribute is
 calculated relative to that attribute's <span class="em">initial</span> value.  When
@@ -202,49 +111,8 @@ is invoked.  Click on each of the red squares a few times to see the
 difference.</p><div class="example"><a name="id8047"></a><p class="title"><b>Example 24.7. Basic Animation</b></p><div class="example-contents"><pre class="programlisting">
       
 &lt;canvas width="100%" height="200" bgcolor="0xE5E1B0" &gt;
-  &lt;!-- INCLUDES That provide framework for the example --&gt;
-  &lt;include href="animation_library.lzx"/&gt;
-  
-  &lt;!-- RELATIVE ANIMATION EXAMPLE --&gt;
-  &lt;view id="tutorial2" height="400" width="${parent.width}" visible="true"&gt;
-    &lt;ruler name="rlr" height="300" y="0"/&gt;
-    &lt;view height="30"/&gt;
-    &lt;view height="120"&gt;
-      &lt;view y="40" visible="true"&gt;
-        &lt;view&gt;
-          &lt;text&gt;Absolute&lt;/text&gt;
-            &lt;box id="B7" x="50" onclick="this.anm.doStart()"&gt;
-              &lt;animator name="anm" attribute="x" to="200"  duration="500" start="false"/&gt;
-            &lt;/box&gt;
-          &lt;/view&gt;
-          
-          &lt;view&gt;
-            &lt;text&gt;Relative&lt;/text&gt;
-              &lt;box id="B8" x="50" onclick="this.anm.doStart()"&gt;
-                &lt;animator name="anm" attribute="x" to="200"  duration="500"
-                          start="false" relative="true"/&gt;
-              &lt;/box&gt;
-            &lt;/view&gt;
-          &lt;simplelayout axis="y" spacing="5"/&gt;
-        &lt;/view&gt;
-      &lt;/view&gt;
-      
-      &lt;!-- The TEST and RESET buttons --&gt;
-      &lt;view x="50" y="150"&gt;
-        &lt;button text="Test" x="50"
-                    onclick="B7.anm.doStart();B8.anm.doStart()"/&gt;
-        &lt;button text="Reset"
-                    onclick="B7.setAttribute('x', 50);B8.setAttribute('x', 50);"/&gt;
-      &lt;simplelayout axis="x"/&gt;
-    &lt;/view&gt;
-  &lt;/view&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
-</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/animation-_8.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/animation-_8.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1597"></a>3. Using the <a class="indexterm" name="id8052"></a><code class="sgmltag-attribute">from</code> attribute</h2></div></div></div><p>The <a class="indexterm" name="id8056"></a><code class="sgmltag-attribute">from</code> attribute indicates the starting
+</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/animation-_9.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/animation-_9.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1597"></a>3. Using the <a class="indexterm" name="id8052"></a><code class="sgmltag-attribute">from</code> attribute</h2></div></div></div><p>The <a class="indexterm" name="id8056"></a><code class="sgmltag-attribute">from</code> attribute indicates the starting
 value from which the animation is to begin. If the object is not at
 that value, it first assumes it and then begins the animation.  In the
 example below, the animated attribute is <a class="indexterm" name="id8059"></a><code class="sgmltag-attribute">x</code>,
@@ -259,49 +127,6 @@ object moves until <code class="literal">x=100</code>, where <code class="varnam
 calculated relative to its value at the start of the animation.</p><div class="example"><a name="id8079"></a><p class="title"><b>Example 24.8. Using the "from" attribute</b></p><div class="example-contents"><pre class="programlisting">
       
 &lt;canvas width="100%" height="200" bgcolor="0xE5E1B0" &gt;
-  &lt;!-- INCLUDES That provide framework for the example --&gt;
-  &lt;include href="animation_library.lzx"/&gt;
-  
-  &lt;!-- The EXAMPLE itself--&gt;
-  &lt;view id="tutorial2" height="400" width="${parent.width}" visible="true"&gt;
-    &lt;ruler name="rlr" height="300" y="0"/&gt;
-    &lt;view height="30"/&gt;
-    &lt;view height="120" y="40"&gt;
-      &lt;view&gt;
-        &lt;text&gt;absolute&lt;/text&gt;
-        &lt;box id="B9" x="50" onclick="this.anm.doStart()"&gt;
-          &lt;animator name="anm" attribute="x" from="200" to="100"
-                    duration="500" start="false"/&gt;
-        &lt;/box&gt;
-      &lt;/view&gt;
-      
-      &lt;view&gt;
-        &lt;text&gt;relative&lt;/text&gt;
-        &lt;box id="B10" x="50" onclick="this.anm.doStart()"&gt;
-          &lt;animator name="anm" attribute="x" from="200" to="100"
-                    duration="500" start="false" relative="true"/&gt;
-        &lt;/box&gt;
-      &lt;/view&gt;
-      &lt;simplelayout axis="y" spacing="5"/&gt;
-    &lt;/view&gt;
-  &lt;/view&gt;
-  
-  &lt;!-- The TEST and RESET buttons --&gt;
-  &lt;view x="50" y="150"&gt;
-    &lt;button text="Test" x="50"
-               onclick="B9.anm.doStart();B10.anm.doStart()"/&gt;
-    &lt;button text="Reset"
-               onclick="
-               B9.setAttribute('x', 50);
-               B10.setAttribute('x', 50);
-               this.parent.P2.setAttribute('display', ' ');"/&gt;
-    &lt;simplelayout axis="x"/&gt;
-  &lt;/view&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
 </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/animation-_9.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/animation-_9.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1598"></a>4. Using the <a class="indexterm" name="id8084"></a><code class="sgmltag-attribute">motion</code> attribute</h2></div></div></div><p>The <a class="indexterm" name="id8088"></a><code class="sgmltag-attribute">motion</code> attribute allows you to specify
 whether the animation accelerates ("ease out"), decelerates ("ease
@@ -309,69 +134,6 @@ in"), both accelerates and decelerates ("ease both"), or is at a
 constant rate (linear).</p><div class="example"><a name="id8091"></a><p class="title"><b>Example 24.9. Using the "motion" attribute</b></p><div class="example-contents"><pre class="programlisting">
       
 &lt;canvas width="100%" height="300" bgcolor="0xE5E1B0" &gt;
-  &lt;!-- INCLUDES That provide framework for the example --&gt;
-  &lt;include href="animation_library.lzx"/&gt;
-  
-  &lt;!-- The EXAMPLE itself--&gt;
-  &lt;view id="tutorial2" height="400" width="${parent.width}" visible="true"&gt;
-    &lt;ruler name="rlr" height="300" y="0"/&gt;
-    &lt;view height="30"/&gt;
-    &lt;view height="200" y="40"&gt;
-      &lt;view&gt;
-        &lt;text&gt;easeboth&lt;/text&gt;
-        &lt;box id="B11" x="50" onclick="this.anm.doStart()"&gt;
-          &lt;animator name="anm" attribute="x" to="600"
-                    duration="1000" start="false" motion="easeboth"/&gt;
-        &lt;/box&gt;
-      &lt;/view&gt;
-      
-      &lt;view&gt;
-        &lt;text&gt;easein&lt;/text&gt;
-        &lt;box id="B12" x="50" onclick="this.anm.doStart()"&gt;
-          &lt;animator name="anm" attribute="x" to="600"
-                    duration="1000" start="false" motion="easein"/&gt;
-        &lt;/box&gt;
-      &lt;/view&gt;
-      
-      &lt;view&gt;
-        &lt;text&gt;easeout&lt;/text&gt;
-        &lt;box id="B13" x="50" onclick="this.anm.doStart()"&gt;
-          &lt;animator name="anm" attribute="x" to="600"
-                    duration="1000" start="false" motion="easeout"/&gt;
-        &lt;/box&gt;
-      &lt;/view&gt;
-      
-      &lt;view&gt;
-        &lt;text&gt;linear&lt;/text&gt;
-        &lt;box id="B14" x="50" onclick="this.anm.doStart()"&gt;
-          &lt;animator name="anm" attribute="x" to="600"
-                    duration="1000" start="false" motion="linear"/&gt;
-        &lt;/box&gt;
-      &lt;/view&gt;
-      &lt;simplelayout axis="y" spacing="5"/&gt;
-    &lt;/view&gt;
-  &lt;/view&gt;
-  
-  &lt;!-- The TEST and RESET buttons --&gt;
-  &lt;view x="50" y="260"&gt;
-    &lt;button text="Test" x="50"
-                 onclick="B11.anm.doStart();
-                          B12.anm.doStart();
-                          B13.anm.doStart();
-                          B14.anm.doStart()"/&gt;
-    &lt;button text="Reset" 
-                 onclick="B11.setAttribute('x', 50);
-                          B12.setAttribute('x', 50);
-                          B13.setAttribute('x', 50);
-                          B14.setAttribute('x', 50);
-                          this.parent.P2.setAttribute('display', ' ');"/&gt;
-    &lt;simplelayout axis="x"/&gt;
-  &lt;/view&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
 </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/animation-_10.lzx" data-height="300" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/animation-_10.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1599"></a>5. Tags vs Script</h2></div></div></div><p>
 In OpenLaszlo applications you can achieve the same result by using XML tags or JavaScript APIs. The examples above have demonstrated how to use the <a class="indexterm" name="id8097"></a><code class="sgmltag-element">&lt;animator&gt;</code> tag.  Alternatively
@@ -379,72 +141,6 @@ you can use the <a class="indexterm" name="id8100"></a><code class="methodname">
 </p><div class="example"><a name="id8104"></a><p class="title"><b>Example 24.10. The "bounce effect"</b></p><div class="example-contents"><pre class="programlisting">
       
 &lt;canvas width="100%" height="390" bgcolor="0xE5E1B0" &gt;
-  &lt;!-- INCLUDES That provide framework for the example --&gt;
-  &lt;include href="animation_library.lzx"/&gt;
-  
-  &lt;!-- The EXAMPLE itself--&gt;
-  &lt;view id="tutorial2" height="400" width="${parent.width}" visible="true"&gt;
-    &lt;ruler name="rlr" height="350" y="0"/&gt;
-    &lt;view height="30"/&gt;
-    &lt;view height="200" y="40"&gt;
-      &lt;box id="B15" x="50" onclick="this.ax1.doStart(); this.ax2.doStart()"&gt;
-        &lt;animator name="ax1" attribute="x" to="400"
-                  duration="1000" motion="easeout" start="false"/&gt;
-        &lt;animator name="ax2" attribute="x" to="300"
-                  duration="1000" motion="easein"  start="false"/&gt;
-      &lt;/box&gt;
-      
-      &lt;box id="B16" x="50" onclick="this.ax1.doStart(); this.ax2.doStart()"&gt;
-        &lt;animator name="ax1" attribute="x" to="400"
-                  duration="1000" motion="easein"  start="false"/&gt;
-        &lt;animator name="ax2" attribute="x" to="300"
-                  duration="1000" motion="easeout" start="false"/&gt;
-      &lt;/box&gt;
-      &lt;view height="10"/&gt;
-      &lt;box id="B17" x="50" onclick="this.bounce()"&gt;
-        &lt;method name="bounce"&gt;
-          this.animate("x",400,1000,false,{motion:'easeout'});
-          this.animate("x",300,1000,false,{motion:'easein'});
-        &lt;/method&gt;
-      &lt;/box&gt;
-      &lt;box id="B18" x="50" onclick="this.bounce()"&gt;
-        &lt;method name="bounce"&gt;
-          this.animate("x",400,1000,false,{motion:'easein'});
-          this.animate("x",300,1000,false,{motion:'easeout'});
-        &lt;/method&gt;
-      &lt;/box&gt;
-      &lt;box id="B19" x="50" onclick="this.bounce()"&gt;
-        &lt;method name="bounce"&gt;
-          this.animate("x",400,1000,false,{motion:'easein'});
-          this.animate("x",300,1000,false,{motion:'easeout'});
-        &lt;/method&gt;
-      &lt;/box&gt;
-      &lt;simplelayout axis="y" spacing="10"/&gt;
-    &lt;/view&gt;
-  &lt;/view&gt;
-  
-  &lt;!-- The TEST and RESET buttons --&gt;
-  &lt;view x="50" y="350"&gt;
-    &lt;button text="Test" x="50"
-                onclick="B15.ax1.doStart(); B15.ax2.doStart();
-                         B16.ax1.doStart(); B16.ax2.doStart();
-                         B17.bounce();  
-                         B18.bounce();
-                         B19.bounce();"/&gt;
-    &lt;button text="Reset"
-                onclick="B15.setAttribute('x', 50);
-                         B16.setAttribute('x', 50);
-                         B17.setAttribute('x', 50);
-                         B18.setAttribute('x', 50);
-                         B19.setAttribute('x', 50);
-                  this.parent.P2.setAttribute('display', ' ');"/&gt;
-    &lt;simplelayout axis="x"/&gt;
-  &lt;/view&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
 </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/animation-_11.lzx" data-height="390" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/animation-_11.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1600"></a>6. Using the <a class="indexterm" name="id8109"></a><code class="sgmltag-attribute">indirect</code> attribute</h2></div></div></div><p>The <a class="indexterm" name="id8113"></a><code class="sgmltag-attribute">indirect</code> attribute allows you to reverse
 the direction in which an animation occurs while still arriving at the
@@ -461,44 +157,6 @@ properties — such as height, width, opacity — to see the
 effect.</p><div class="example"><a name="id8132"></a><p class="title"><b>Example 24.11. Indirect attribute</b></p><div class="example-contents"><pre class="programlisting">
       
 &lt;canvas width="100%" height="290" bgcolor="0xE5E1B0" &gt;
-  &lt;!-- INCLUDES That provide framework for the example --&gt;
-  &lt;include href="animation_library.lzx"/&gt;
-  
-  &lt;!-- The EXAMPLE itself--&gt;
-  &lt;view id="tutorial2" height="400" width="${parent.width}" visible="true"&gt;
-    &lt;ruler name="rlr" height="250" y="0"/&gt;
-    &lt;view height="30"/&gt;
-    &lt;view height="200" y="40"&gt;
-      &lt;view height="10"/&gt;   
-      &lt;box id="B22" x="50" onclick="this.anm.doStart()"&gt;
-        &lt;animator name="anm" attribute="x" to="500"
-                  duration="1000" start="false"/&gt;
-      &lt;/box&gt;
-
-      &lt;box id="B23" x="50" onclick="this.anm.doStart()"&gt;
-        &lt;animator name="anm" attribute="x" to="500"
-                  duration="1000" start="false" indirect="true"/&gt;
-      &lt;/box&gt;
-  
-      &lt;simplelayout axis="y" spacing="10"/&gt;
-    &lt;/view&gt;
-  &lt;/view&gt;
-
-  &lt;!-- The TEST and RESET buttons --&gt;
-  &lt;view x="50" y="250"&gt;
-    &lt;button text="Test" x="50"
-               onclick="B22.anm.doStart();B23.anm.doStart()"/&gt;
-    &lt;button text="Reset"
-               onclick="B22.setAttribute('x', 50);
-                        B23.setAttribute('x', 50);
-                        this.parent.P2.setAttribute('display', ' ');"/&gt;
-    &lt;simplelayout axis="x"/&gt;
-  &lt;/view&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
 </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/animation-_12.lzx" data-height="290" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/animation-_12.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1601"></a>7. Animator Groups</h2></div></div></div><p>The <a class="indexterm" name="id8138"></a><code class="sgmltag-element">&lt;animatorgroup&gt;</code><em><span class="remark">[unknown tag]</span></em>
 
@@ -525,50 +183,6 @@ performed simultaneously.  To see the difference, edit the example
 below by specifying <code class="literal">process="sequential"</code>.</p><div class="example"><a name="id8170"></a><p class="title"><b>Example 24.12. Animator groups</b></p><div class="example-contents"><pre class="programlisting">
       
 &lt;canvas width="100%" height="400" bgcolor="0xE5E1B0"  &gt;
-  &lt;!-- INCLUDES That provide framework for the example --&gt;
-  &lt;include href="animation_library.lzx"/&gt;
-  
-  &lt;!-- The EXAMPLE itself--&gt;
-  &lt;view id="tutorial2" height="400" width="${parent.width}" visible="true"&gt;
-    &lt;ruler name="rlr" height="350" y="0"/&gt;
-    &lt;view height="30"/&gt;
-    &lt;view height="200" y="40"&gt;
-      &lt;view height="150" x="50"&gt;
-        &lt;box id="B20"  onclick="this.anm.doStart()"&gt;
-          &lt;animatorgroup name="anm" start="false" process="simultaneous"&gt;
-            &lt;animator attribute="x" from="0" to="300" duration="1000" motion="linear"/&gt;
-            &lt;animator attribute="y" from="0" to="100" duration="1000"                /&gt;
-          &lt;/animatorgroup&gt;
-        &lt;/box&gt;
-      &lt;/view&gt;
-      &lt;view height="150" x="350"&gt;
-        &lt;box id="B21" onclick="this.anm.doStart()"&gt;
-          &lt;animatorgroup name="anm" start="false" process="simultaneous"&gt;
-            &lt;animator attribute="x" from="0" to="300" duration="1000"                 /&gt;
-            &lt;animator attribute="y" from="0" to="100" duration="1000" motion="easeout"/&gt;
-          &lt;/animatorgroup&gt;
-        &lt;/box&gt;
-      &lt;/view&gt;
-      &lt;simplelayout axis="y" spacing="10"/&gt;
-    &lt;/view&gt;
-  &lt;/view&gt;
-
-  &lt;!-- The TEST and RESET buttons --&gt;
-  &lt;view x="50" y="350"&gt;
-    &lt;button text="Test" x="50"
-                onclick="B20.anm.doStart();
-                         B21.anm.doStart()"/&gt;
-    &lt;button text="Reset"
-                onclick="B20.setAttribute('x', 0);B20.setAttribute('y', 0);
-                         B21.setAttribute('x', 0);B21.setAttribute('y', 0);
-                         this.parent.P2.setAttribute('display', ' ');"/&gt;
-    &lt;simplelayout axis="x"/&gt;
-  &lt;/view&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
 </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/animation-_13.lzx" data-height="400" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/animation-_13.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> Animatorgroups can be contained within animatorgroups, allowing for the encapsulation of more complex behavior.
 This next example illustrates that point by having the view return back to its original position. The return animates
@@ -587,10 +201,6 @@ the object along both the x and y axes simultaneously after its initial movement
     &lt;/animatorgroup&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/animation-_14.lzx" data-height="210" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/animation-_14.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Note that in the code above there was no duration set for the x and
 y animators of the interior <a class="indexterm" name="id8178"></a><code class="sgmltag-element">&lt;animatorgroup&gt;</code>.
@@ -613,41 +223,6 @@ have simplified this example by having the layout return to its
 initial state — there is no "reset" button.</p><div class="example"><a name="id8207"></a><p class="title"><b>Example 24.14. Animating Layout</b></p><div class="example-contents"><pre class="programlisting">
       
 &lt;canvas width="100%" height="185" bgcolor="0xE5E1B0"&gt;
-  &lt;!-- INCLUDES That provide framework for the example --&gt;
-  &lt;include href="animation_library.lzx"/&gt;
-  
-  &lt;!-- The EXAMPLE itself--&gt;
-  &lt;view id="tutorial2" height="200" width="${parent.width}" visible="true"&gt;
-    &lt;ruler name="rlr" height="150" y="0"/&gt;
-    &lt;view height="30"/&gt;
-    &lt;view height="60" y="40"&gt;
-      &lt;view id="V01" x="50"&gt;
-        &lt;borderedbox/&gt;
-        &lt;borderedbox/&gt;
-        &lt;borderedbox/&gt;
-        &lt;borderedbox/&gt;
-        
-        &lt;simplelayout name="lyt" axis="x" spacing="5"&gt;
-          &lt;animatorgroup name="anm" start="false" process="sequential"&gt;
-            &lt;animator attribute="spacing" from="5"   to="50"  duration="1000"/&gt;
-            &lt;animator attribute="spacing" from="50"  to="-49" duration="1000"/&gt;
-            &lt;animator attribute="spacing" from="-49" to="5"   duration="1000"/&gt;
-          &lt;/animatorgroup&gt;
-        &lt;/simplelayout&gt;
-      &lt;/view&gt;
-    &lt;/view&gt;
-    
-    &lt;!-- The TEST button --&gt;
-    &lt;view x="50" y="150"&gt;
-      &lt;button text="Test" x="50"
-                  onclick="V01.lyt.anm.doStart()"/&gt;
-    &lt;/view&gt;
-  &lt;/view&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
 </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/animation-_15.lzx" data-height="185" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/animation-_15.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1602"></a>9. Everything Animates</h2></div></div></div><p>Now that you've seen how animation works you can explore animating all different kinds of attributes.  
 Here is a hint: try giving a view a "hidden" attribute, say "charm"
@@ -665,10 +240,6 @@ behavior with a single animator.</p><div class="example"><a name="id8215"></a><p
               duration="3000" repeat="Infinity"/&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
     </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/animation-_16.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/animation-_16.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="mulitframe-animation"></a>10. Animation with Multi-frame Resources</h2></div></div></div><p>You can animate a group of images by specifying the directory from which to load the images. All the
 files in that directory will be used for the animation.</p><p>The following example uses the eight <code class="literal">png</code> files in <code class="literal">resources/spinner/</code> 
@@ -693,8 +264,4 @@ files in that directory will be used for the animation.</p><p>The following exam
         &lt;/handler&gt; 
     &lt;/button&gt; 
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-    * Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-    * Use is subject to license terms.                                            *
-    * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
       </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/spinner.lzx" data-height="180" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/spinner.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="fonts.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.building-apps.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="developers.power.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 23. Fonts </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Part IV. In Depth</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';var h=b.getAttribute('data-height');if(h)f.style.height=h+'px';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

@@ -105,10 +105,6 @@ By default, OpenLaszlo applications use the device fonts.
     &lt;scrollbar axis="y"/&gt;
   &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>  You can override the default font by redefining the default font on the <a class="indexterm" name="id7550"></a><code class="sgmltag-element">&lt;canvas&gt;</code><em><span class="remark">[unknown tag]</span></em>
 
@@ -125,10 +121,6 @@ Note that you need to do this within the <a class="indexterm" name="id7554"></a>
      &lt;text font="Verdana"&gt;Verdana Foobar the quick brown frotz jumped over the bad music&lt;/text&gt;
      &lt;simplelayout /&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_2.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1576"></a>2. OpenLaszlo "pseudo-pixel" fonts</h2></div></div></div><p>Because the underlying Flash runtime can only display outline fonts, 
     OpenLaszlo applications today can only support outline fonts.  This would seem to imply that
@@ -162,10 +154,6 @@ For example,
     &lt;text&gt;Howdy back!&lt;/text&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_3.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1577"></a>3.1.1. Specifying more than one font</h4></div></div></div><p>
 You can supply more than one font name as argument to the font attribute. At runtime, the system will try the font list from left to right and use the first one it finds. This can come in handy if you have an application that you would like to compile to both SWF and DHTML.
@@ -196,10 +184,6 @@ The behavior of <a class="indexterm" name="id7636"></a><code class="sgmltag-attr
 &lt;canvas height="40" width="100%"&gt;
      &lt;text&gt;Hello World&lt;/text&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_4.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
  This renders Hello World in a client font.
@@ -208,10 +192,6 @@ The behavior of <a class="indexterm" name="id7636"></a><code class="sgmltag-attr
 &lt;canvas height="100" width="100%"&gt;
    &lt;text fontsize="24"&gt;Hello World&lt;/text&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_5.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
 This renders Hello World in a larger client font, with no jaggies.
@@ -226,10 +206,6 @@ This renders Hello World in a larger client font, with no jaggies.
    &lt;text font="Courier"&gt;Some text&lt;/text&gt;
    &lt;text font="monospace"&gt;Some text&lt;/text&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_6.lzx" data-height="120" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_6.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
  This displays three pairs of items. The items in each pair may be rendered in the same font, depending on the default fonts on the client.
@@ -241,10 +217,6 @@ This renders Hello World in a larger client font, with no jaggies.
      &lt;text font="nofont, sans-serif"&gt;Some text&lt;/text&gt;
      &lt;text font="sans-serif"&gt;Some text&lt;/text&gt;
  &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_7.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_7.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
  This displays three lines in the same font.
@@ -321,10 +293,6 @@ The remaining differences are:
   &lt;font name="helmet" src="helmetr.ttf"/&gt;
   &lt;text font="helmet" fontsize="20"&gt;Hello Helmet&lt;/text&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_11.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_11.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
         As you can see below, The HTML text rendering tags, <a class="indexterm" name="id7809"></a><code class="sgmltag-element">&lt;b&gt;</code><em><span class="remark">[unknown tag]</span></em>
@@ -349,10 +317,6 @@ The remaining differences are:
     &lt;b&gt;&lt;i&gt;bold italic&lt;/i&gt;&lt;/b&gt;
   &lt;/text&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_12.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_12.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> In the example below, we use the HTML text <a class="indexterm" name="id7821"></a><code class="sgmltag-element">&lt;font&gt;</code><em><span class="remark">[unknown tag]</span></em>
 
@@ -367,10 +331,6 @@ The remaining differences are:
     &lt;font face="arioso"&gt;arioso&lt;/font&gt;
   &lt;/text&gt;
   &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_13.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_13.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>In the example below, you can see that setting the <a class="indexterm" name="id7829"></a><code class="sgmltag-attribute">fontsize</code>
     can get you very big text.</p><div class="example"><a name="id7832"></a><p class="title"><b>Example 23.14. Using the fontsize attribute</b></p><div class="example-contents"><pre class="programlisting">
@@ -379,10 +339,6 @@ The remaining differences are:
   &lt;font name="helmet" src="helmetr.ttf"/&gt;
   &lt;text resize="true" fontsize="100" font="helmet"&gt;BIG&lt;/text&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_14.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_14.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Many of the fonts look too small at the default fontsize of 8.</p><div class="example"><a name="id7836"></a><p class="title"><b>Example 23.15. Omitting the fontsize attribute</b></p><div class="example-contents"><pre class="programlisting">
    
@@ -390,10 +346,6 @@ The remaining differences are:
   &lt;font name="helmet" src="helmetr.ttf"/&gt;
   &lt;text font="helmet"&gt;Helmet at default size(8) is very hard to read!&lt;/text&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_15.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_15.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>You can specify the font for inputtext, too.</p><div class="example"><a name="id7840"></a><p class="title"><b>Example 23.16. Specifying the font for inputtext</b></p><div class="example-contents"><pre class="programlisting">
    
@@ -401,10 +353,6 @@ The remaining differences are:
   &lt;font name="helmet" src="helmetr.ttf"/&gt;
   &lt;inputtext bgcolor="red" font="helmet"&gt;Type your text here&lt;/inputtext&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_16.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_16.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Note that HTML text does <span class="b"><span class="i">not</span></span> work in <a class="indexterm" name="id7846"></a><code class="sgmltag-element">&lt;inputtext&gt;</code><em><span class="remark">[unknown tag]</span></em>
 
@@ -434,10 +382,6 @@ These are described in turn below.
     &lt;/view&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_17.lzx" data-height="250" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_17.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>You can even specify font attributes on the canvas:</p><div class="example"><a name="id7866"></a><p class="title"><b>Example 23.18. Specifying a canvas font</b></p><div class="example-contents"><pre class="programlisting">
    
@@ -445,10 +389,6 @@ These are described in turn below.
   &lt;font name="tahoe" src="lztahoe8.ttf"/&gt;
   &lt;text text="hello"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_18.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_18.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1586"></a>4.2.2. Font attributes and classes</h4></div></div></div><p>Specifying a font attribute on a class definition:</p><div class="orderedlist"><ol class="orderedlist compact" type="1"><li class="listitem"><p>causes instances of that class to use the class definition of that font attribute and </p></li><li class="listitem"><p>the class definition font attribute cascades down to instance children in the class definition itself. </p></li></ol></div><p> Class font attributes bind more tightly than 
         cascaded font attributes.
@@ -470,10 +410,6 @@ These are described in turn below.
     &lt;text text="use cascaded font"/&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/fonts-_19.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/fonts-_19.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p class="fixme"><em><span class="remark"><span class="para-label">FIXME: </span>Note: sometime in these examples we set the text to be resizable.  Ask Adam or Sarah why</span></em></p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1589"></a>4.3. Fonts provided with the OpenLaszlo Server</h3></div></div></div><p>The OpenLaszlo Server provides a number of fonts for your use in <code class="literal">$LPS_HOME/lps/fonts</code>.
     The pseudo-pixel fonts that come with the OpenLaszlo Server are described <a class="link" href="fonts.html#fonts.pixel-fonts">above</a>.  The OpenLaszlo

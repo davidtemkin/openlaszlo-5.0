@@ -5,7 +5,3 @@
         <animator name="go" attribute="x" to="100" duration="1000" motion="linear" start="false"/>
     </view>
 </canvas>
-<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-    * Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-    * Use is subject to license terms.                                            *
-    * X_LZ_COPYRIGHT_END ****************************************************** -->

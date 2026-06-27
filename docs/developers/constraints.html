@@ -37,10 +37,6 @@
     &lt;text text = "$once{'once: ' + (m?m.value:'undefined')}" /&gt;
     &lt;text text = "$always{'always: ' + (m?m.value:'undefined')}" /&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/tag_constraints.lzx" data-height="160" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/tag_constraints.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Here's what the different values for <code class="literal">when</code> do:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><code class="literal">immediately</code>: undefined, because the slider does not exist until the program
      runs. If you run this example with the debugger on, you will see a warning.</li><li class="listitem"><code class="literal">once</code>: set to the slider value when the program loads.</li><li class="listitem"><code class="literal">always</code>: track changes in the slider value.</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1664"></a>2.2. Creating constraints from script</h3></div></div></div><p class="fixme">
@@ -63,10 +59,6 @@
   &lt;/view&gt; 
   &lt;window id="m" x="10" title="Drag me" width="160" height="20"/&gt; 
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/constraints-_1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/constraints-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p><code class="literal">myConstraintMethod</code> is a callback function that is required for the <a class="indexterm" name="id9350"></a><code class="methodname">applyConstraintMethod()</code> method. <code class="varname">d</code> is an
@@ -118,10 +110,6 @@
         width="30" height="30" bgcolor="blue"/&gt;
   &lt;simplelayout/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/ex.constraints.1.lzx" data-height="120" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/ex.constraints.1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>In the example below, the position of the blue square is connected to the position of the
     mouse. If you move the mouse inside the canvas, the blue square will move as the mouse moves,
@@ -134,10 +122,6 @@
         x="${parent.getMouse('x')}"
         y="${parent.getMouse('y')}"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/ex.constraints.2.lzx" data-height="120" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/ex.constraints.2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>The constraint expression may be almost any Javascript expression. For example, you could
     change the y value in the previous example to
@@ -177,10 +161,6 @@ width="${immediateparent.width - parent.bordersize * 2}"
     
   &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/constraints-_10.lzx" data-height="300" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/constraints-_10.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1672"></a>6. Circular Constraints</h2></div></div></div><p>A constraint loop exists when the value of an attribute <code class="varname">A</code> depends on
     <code class="varname">B</code>, and <code class="varname">B</code> depends on <code class="varname">A</code>. It's actually a
@@ -201,10 +181,6 @@ width="${immediateparent.width - parent.bordersize * 2}"
           showvalue="false" showrange="false"/&gt;
 
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/constraints-_11.lzx" data-height="120" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/constraints-_11.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> How does it work? When you drag the red view to change its own y position, it sends an <a class="indexterm" name="id9469"></a><code class="literal">ony</code> event. The blue view is listening for the red view's <a class="indexterm" name="id9472"></a><code class="literal">ony</code> event and responds by updating its own y position. The red
    view is listening for the blue view's <a class="indexterm" name="id9475"></a><code class="literal">ony</code> event; however, it doesn't respond to that event because an

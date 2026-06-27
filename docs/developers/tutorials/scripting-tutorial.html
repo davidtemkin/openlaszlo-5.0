@@ -15,10 +15,6 @@ immediately. <a class="indexterm" name="id4379"></a><code class="sgmltag-element
     sometext.setAttribute("text", "hello world");
   &lt;/script&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-  * Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
-  * Use is subject to license terms.                                            *
-  * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
  
    </pre></div></div><br class="example-break"><p>We can now use our knowledge of JavaScript to build on this foundation:</p><div class="example"><a name="id4391"></a><p class="title"><b>Example 10.2. Incorporating JavaScript</b></p><div class="example-contents"><pre class="programlisting">
@@ -35,10 +31,6 @@ immediately. <a class="indexterm" name="id4379"></a><code class="sgmltag-element
     moretext.addText(result);
   &lt;/script&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1452"></a>2.1. JavaScript gotchas</h3></div></div></div><p>
 If you've never worked with JavaScript before, you may be surprised by some subtle features of the language.
@@ -59,10 +51,6 @@ For example, consider this slight expansion of the preceding program:</p><div cl
     bettertext.format("%s plus %s is %s", first, second, first + second);
   &lt;/script&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>Everything there is fine, except the "<code class="literal">badtext.setAttribute( … );</code>" line. Four plus three should be 7, as in 
 the line immediately above it, right? What happened is that we concatenated numbers to strings
@@ -112,10 +100,6 @@ and of course the particular application. The CDATA method is perhaps a little m
     ]]&gt;
   &lt;/script&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>Functions are global to the LZX document, and they follow the same scope rules as JavaScript.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="tutorial-methods"></a>4. Methods</h2></div></div></div><p>Methods are in some ways similar to functions. They contain blocks of code between <a class="indexterm" name="id4446"></a><code class="sgmltag-element">&lt;method&gt;</code><em><span class="remark">[unknown tag]</span></em>
 
@@ -136,10 +120,6 @@ before. There are a few methods that apply to it. The
             onclick="this.parent.setAttribute('title', 'You clicked it');"/&gt;
   &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/scripting-5.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/scripting-5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Let's break this statement apart:</p><pre class="programlisting">    onclick="this.parent.setAttribute('title', 'You clicked it');"</pre><p>First, there's the </p><pre class="programlisting">    onclick=</pre><p>Like all of the on[event] attributes,  
 this one takes JavaScript that will be run in the context of the object when the event is received. </p><p>The next part:</p><pre class="programlisting">    this.parent</pre><p>is a reference to an object. In JavaScript, the scope is generally global unless you say otherwise. That means 
@@ -167,10 +147,6 @@ all the attributes of a <a class="indexterm" name="id4523"></a><code class="sgml
             onclick="this.parent.parent.windowTwo.setAttribute('x', 200)"/&gt;
   &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>We're just building on the previous example here. Instead of addressing the parent view of the button, we are going two up, then one down. 
 <code class="literal">this.parent.parent</code> refers to the canvas, and we point to Window 2 by using its <a class="indexterm" name="id4532"></a><code class="sgmltag-attribute">name</code> (windowTwo).</p><p>We are also using the <a class="indexterm" name="id4536"></a><code class="methodname">setAttribute()</code> method, which takes two arguments: the attribute to set, and what to set it to.</p><p>Next, let's find a way to move Window 2 over so that we can see what's behind it, without dragging it. Clicking the button
@@ -189,10 +165,6 @@ all the attributes of a <a class="indexterm" name="id4523"></a><code class="sgml
             this.parent.parent.windowTwo.x + 20)"/&gt;
   &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>That works, but the code is getting pretty messy. It would be more elegant to encase all the code in a block and call 
 it whenever the button is clicked…. To do what, we could write a function:</p><div class="example"><a name="id4549"></a><p class="title"><b>Example 10.11. Moving window by function call</b></p><div class="example-contents"><pre class="programlisting">
@@ -218,10 +190,6 @@ it whenever the button is clicked…. To do what, we could write a function:</p>
               onclick="moveWindow();"/&gt;
   &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>Notice how we use the "<code class="literal">canvas.</code>" syntax for pointing to the second window. We have to address the view <span class="em">absolutely</span>. 
 The code is a lot easier to understand, because we can break it up over several lines, comment it and assign appropriately-named variables.</p><p>However, the function is pretty detached from the button. A more elegant way of achieving the same result would be to write 
@@ -235,21 +203,6 @@ a method <span class="em">of the button</span>.</p><div class="example"><a name=
   &lt;window x="20" y="20" width="200"
           title="Simple Window"&gt;
     &lt;button text="My button" onclick="this.moveWindow()"&gt;
-      &lt;!-- Moves the second window twenty pixels 
-           to the right --&gt;
-      &lt;method name="moveWindow"&gt;
-        var increment = 20;
-        var originalX = this.parent.parent.windowTwo.x;
-        var newX = originalX + increment;
-        this.parent.parent.windowTwo.setAttribute('x', newX);
-      &lt;/method&gt;
-    &lt;/button&gt;
-  &lt;/window&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>Since methods are not not global, we have to call them relatively. In the case of the button, we use <code class="literal">this.moveWindow()</code>. 
 
@@ -267,23 +220,6 @@ so there can be more than one view with the same name in a file (they just can't
     &lt;simplelayout axis="x" spacing="4"/&gt;
     &lt;button text="My button" name="button1" 
             onclick="this.moveWindow()"&gt;
-      &lt;!-- Moves the second window twenty pixels 
-           to the right --&gt;
-      &lt;method name="moveWindow"&gt;
-        var increment = 20;
-        var originalX = this.parent.parent.windowTwo.x;
-        var newX = originalX + increment;
-        this.parent.parent.windowTwo.setAttribute('x', newX);
-      &lt;/method&gt;
-    &lt;/button&gt;
-    &lt;button text="Bigger Button" 
-            onclick="this.parent.button1.moveWindow()"/&gt;
-  &lt;/window&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>Both buttons now cause the window to move. However, it's confusing that one button points to a method in another button. 
 Since windowTwo is doing the moving, why not make the method part of the window, and have both buttons point to that? 
@@ -293,29 +229,6 @@ access it globally:</p><div class="example"><a name="id4589"></a><p class="title
 &lt;canvas width="100%" height="200"&gt;
   &lt;window x="100" y="60" 
           title="Window 2" name="windowTwo" id="windowTwoId"&gt;
-    &lt;!-- Moves the second window twenty pixels 
-         to the right --&gt;
-    &lt;method name="moveWindow"&gt;
-      var increment = 20;
-      var originalX = this.x;
-      var newX = originalX + increment;
-      this.setAttribute('x', newX);
-    &lt;/method&gt;
-    &lt;text&gt;This is the second window.&lt;/text&gt;
-  &lt;/window&gt;
-  &lt;window x="20" y="20" width="210"
-      title="Simple Window"&gt;
-    &lt;simplelayout axis="x" spacing="4"/&gt;
-    &lt;button text="My button" name="button1" 
-            onclick="windowTwoId.moveWindow()"/&gt;
-    &lt;button text="Bigger Button" 
-            onclick="this.parent.parent.windowTwo.moveWindow()"/&gt;
-  &lt;/window&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>Just to illustrate <a class="indexterm" name="id4593"></a><code class="sgmltag-attribute">id</code>s and <a class="indexterm" name="id4596"></a><code class="sgmltag-attribute">name</code>s, one button is addressing the window
  relatively using its <a class="indexterm" name="id4599"></a><code class="sgmltag-attribute">name</code>, and the other globally, using its <a class="indexterm" name="id4602"></a><code class="sgmltag-attribute">id</code>. 
@@ -327,72 +240,12 @@ Move the box left and right, perhaps? We might write another method to move the 
 &lt;canvas width="100%" height="200"&gt;
   &lt;window x="100" y="60" 
           title="Window 2" name="windowTwo" id="windowTwoId"&gt;
-    &lt;!-- Moves the second window twenty pixels 
-         in specified direction --&gt;
-    &lt;method name="moveWindow" args="direction"&gt;
-      // decide which direction to go
-      if (direction == "left") {
-       var increment = -20;
-      } else if (direction == "right") {
-        var increment = 20;
-      }
-      var originalX = this.x;
-      var newX = originalX + increment;
-      this.setAttribute('x', newX);
-    &lt;/method&gt;
-    &lt;text&gt;This is the second window.&lt;/text&gt;
-  &lt;/window&gt;
-  &lt;window x="20" y="20" width="210"
-      title="Simple Window"&gt;
-    &lt;simplelayout axis="x" spacing="4"/&gt;
-    &lt;button text="Move Left" name="button1" 
-            onclick="windowTwoId.moveWindow('left')"/&gt;
-    &lt;button text="Move Right" 
-            onclick="windowTwoId.moveWindow('right')"/&gt;
-  &lt;/window&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>We can pass more than one argument to a method, just as with a function:</p><div class="example"><a name="id4619"></a><p class="title"><b>Example 10.16. Passing multiple arguments to a method</b></p><div class="example-contents"><pre class="programlisting">
    
 &lt;canvas width="100%" height="200"&gt;
   &lt;window x="100" y="60"
           title="Window 2" name="windowTwo" id="windowTwoId"&gt;
-    &lt;!-- Moves the second window twenty pixels 
-         in specified direction --&gt;
-    &lt;method name="moveWindow" args="direction, distance"&gt;
-      // decide which direction to go
-      if (direction == "left") {
-        var increment = -1 * distance;
-      } else if (direction == "right") {
-        var increment = distance;
-      }
-      var originalX = this.x;
-      var newX = originalX + increment;
-      this.setAttribute('x', newX);
-    &lt;/method&gt;
-    &lt;text&gt;This is the second window.&lt;/text&gt;
-  &lt;/window&gt;
-  &lt;window x="20" y="20" width="300"
-      title="Simple Window"&gt;
-      &lt;simplelayout axis="x" spacing="4"/&gt;
-      &lt;button text="Left 2" name="button1" 
-              onclick="windowTwoId.moveWindow('left', 2)"/&gt;
-      &lt;button text="Left 20" name="button2" 
-              onclick="windowTwoId.moveWindow('left', 20)"/&gt;
-      &lt;button text="Right 20" 
-              onclick="windowTwoId.moveWindow('right', 20)"/&gt;
-      &lt;button text="Right 2" 
-              onclick="windowTwoId.moveWindow('right', 2)"/&gt;
-  &lt;/window&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1459"></a>7. Using attributes to reduce complexity</h2></div></div></div><p>Continuing from the same example as above, let's look at ways to reduce the number of arguments being passed. 
 Here we put the functionality into the button itself:</p><div class="example"><a name="id4625"></a><p class="title"><b>Example 10.17. More on attributes</b></p><div class="example-contents"><pre class="programlisting">
@@ -400,48 +253,6 @@ Here we put the functionality into the button itself:</p><div class="example"><a
 &lt;canvas width="100%" height="200"&gt;
   &lt;window x="100" y="60"
         title="Window 2" name="windowTwo" id="windowTwoId"&gt;
-    &lt;!-- Moves the second window specified number of pixels 
-         in specified direction --&gt;
-    &lt;method name="moveWindow" args="buttonObj"&gt;
-      direction = buttonObj.direction;
-      distance = parseInt(buttonObj.distance);
-      // decide which direction to go
-      if (direction == "left") {
-       var increment = -1 * distance;
-      } else if (direction == "right") {
-        var increment = distance;
-      }
-      var originalX = this.x;
-      var newX = originalX + increment;
-      this.setAttribute('x', newX);
-    &lt;/method&gt;
-    &lt;text&gt;This is the second window.&lt;/text&gt;
-  &lt;/window&gt;
-  &lt;window x="20" y="20" width="300"
-      title="Simple Window"&gt;
-    &lt;simplelayout axis="x" spacing="4"/&gt;
-    &lt;button onclick="windowTwoId.moveWindow(this)"&gt;Left 2
-      &lt;attribute name="direction" value="'left'"/&gt;
-      &lt;attribute name="distance" value="'2'"/&gt;
-    &lt;/button&gt;
-    &lt;button onclick="windowTwoId.moveWindow(this)"&gt;Left 20
-      &lt;attribute name="direction" value="'left'"/&gt;
-      &lt;attribute name="distance" value="'20'"/&gt;
-    &lt;/button&gt;
-    &lt;button onclick="windowTwoId.moveWindow(this)"&gt;Right 20
-      &lt;attribute name="direction" value="'right'"/&gt;
-      &lt;attribute name="distance" value="'20'"/&gt;
-    &lt;/button&gt;
-    &lt;button onclick="windowTwoId.moveWindow(this)"&gt;Right 2
-      &lt;attribute name="direction" value="right" type="string"/&gt;
-      &lt;attribute name="distance" value="'2'"/&gt;
-    &lt;/button&gt;
-  &lt;/window&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>The buttons have attributes which we have named "distance" and "direction". 
 The values of those attributes need to be in <span class="i">double quoted strings</span>, because the value needs to be a JavaScript expression, 

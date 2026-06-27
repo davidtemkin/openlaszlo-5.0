@@ -252,10 +252,6 @@
 &lt;canvas width="100%" height="27"&gt;
   &lt;button onclick="lz.Browser.loadURL('http://www.openlaszlo.org','_blank');" text="Click Me!"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008, 2010 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
                 </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/browser-integration-_8.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/browser-integration-_8.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>This mechanism can also be used to name the window
       allowing subsequent loads to occur in the same window</p><div class="example"><a name="id12758"></a><p class="title"><b>Example 35.8. reusing new browswer window</b></p><div class="example-contents"><pre class="programlisting">
@@ -265,10 +261,6 @@
   &lt;button onclick="lz.Browser.loadURL('http://www.openlaszlo.org','newOpenLaszloWindow');" text="OpenLaszlo Homepage"/&gt;
   &lt;button onclick="lz.Browser.loadURL('http://forum.openlaszlo.org','newOpenLaszloWindow');" text="OpenLaszlo Forum"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008, 2010 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
                 </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/browser-integration-_9.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/browser-integration-_9.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1822"></a>6. Passing startup Data to Embedded Applications</h2></div></div></div><p>Any query parameters that you add to the end of your url
     to load the application are available through the <a class="indexterm" name="id12764"></a>
@@ -294,12 +286,8 @@
     Debug.debug("%w", innerVar);
   &lt;/handler&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2010 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
-                </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/browser-integration.setting-defaults.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/browser-integration.setting-defaults.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>The above application is requested without a 
+                </pre></div></div><br class="example-break"><p>The above application is requested without a 
       <code class="literal">myData</code> query parameter. The debugger
       therefore displays the default value 
       <code class="literal">bar</code>. If this application is requested with
@@ -325,10 +313,6 @@
     &lt;tabelement name="three" text="Tabelement Three"/&gt;
   &lt;/tabslider&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007-2008, 2010 Laszlo Systems, Inc.  All Rights Reserved.        *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
                 </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/browser-integration.restoring-state.lzx" data-height="250" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/browser-integration.restoring-state.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Click 
       <a class="ulink" href="javascript:window.open('programs/browser-integration.restoring-state.lzx?lzt=swf&amp;tab=two','example','resizable=0,width=640,height=480,menubar=0,location=0,status=0,scrollbars=0,toolbar=0,address=0')" target="_top">
@@ -350,64 +334,6 @@
     states. To see the program in action, follow <a class="ulink" href="javascript:window.open('programs/browser-integration.history.lzx?lzt=html','example','resizable=0,width=640,height=480,menubar=0,location=0,status=0,scrollbars=0,toolbar=1')" target="_top">
       this link</a> to open a popup window.</p><div class="example"><a name="id12809"></a><p class="title"><b>Example 35.13. history enabled application</b></p><div class="example-contents"><pre class="programlisting">
                     &lt;canvas history="true"&gt;
-  &lt;!-- Click on blob START, STATE_2, STATE_3, END, then click browser back button --&gt;
-
-  &lt;!-- a blob you can click on to select --&gt;
-  &lt;class name="blob" extends="drawview" width="100" height="100"&gt;
-    &lt;attribute name="title" type="text"/&gt;
-    &lt;attribute name="lineStyle" value="black" type="color"/&gt;
-    &lt;attribute name="lineWidth" value="4" type="number"/&gt;
-    &lt;text align="center" valign="middle" fontsize="16" text="${parent.title}"/&gt;
-    &lt;handler name="onclick"&gt;
-      main.selectBlob(this);
-    &lt;/handler&gt;
-    &lt;method name="select" args="val"&gt;
-      clear();
-      rect(2, 2, 96, 96, 5);
-      if (val) {
-        // draw a border to select
-        stroke();
-      }
-      fill();
-    &lt;/method&gt;
-  &lt;/class&gt;
-
-  &lt;!-- A view with four states --&gt;
-  &lt;view id="main" x="10" y="10" layout="axis: x; spacing: 10"&gt;
-    &lt;attribute name="mystate" type="string" value="START"/&gt;
-    &lt;blob fillStyle="#ffcccc" name="s1" title="START"/&gt;
-    &lt;blob fillStyle="#ccccff" name="s2" title="STATE_2"/&gt;
-    &lt;blob fillStyle="#ccffcc" name="s3" title="STATE_3"/&gt;
-    &lt;blob fillStyle="#cccccc" name="s4" title="END"/&gt;
-
-    &lt;method name="selectBlob" args="blob"&gt;
-      var oldstate = this.mystate;
-      var newstate = blob.title;
-      if (oldstate != newstate) {
-        // save the old state
-        lz.History.save('main', 'mystate', oldstate);
-        // create new history context
-        lz.History.next();
-
-        setAttribute('mystate', newstate);
-      }
-    &lt;/method&gt;
-
-    &lt;!-- update blobs' appearance --&gt;
-    &lt;handler name="oninit" method="gotoState"/&gt;
-    &lt;handler name="onmystate" method="gotoState"/&gt;
-    &lt;method name="gotoState" args="ignore=null"&gt;
-      for (var i = subviews.length - 1; i &gt;= 0; --i) {
-        var blob = subviews[i];
-        blob.select(blob.title == this.mystate);
-      }
-    &lt;/method&gt;
-  &lt;/view&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2010 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
                 </pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1823"></a>8. Scaling OpenLaszlo Applications to Browser
     Dimensions</h2></div></div></div><p>You can make the canvas of the OpenLaszlo application
@@ -431,10 +357,6 @@
     &lt;command key="$once{['Control','n']}"
         onselect="Debug.debug('the [Ctrl-n] key combination was pressed');" /&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
             </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/browser-integration-_19.lzx" data-height="130" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/browser-integration-_19.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p class="fixme">
             <em><span class="remark">

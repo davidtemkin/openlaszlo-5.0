@@ -30,7 +30,3 @@
   <schedule name="b" target="${f}" title="Busy" bgcolor="0xd0000a" datapath="busy:/"/>
   <schedule name="f" target="${b}"  title="Free" bgcolor="0x00a000" datapath="free:/"/>
 </canvas>
-<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** -->

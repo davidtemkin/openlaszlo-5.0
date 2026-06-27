@@ -24,13 +24,3 @@
     <box bgcolor="blue" options="goesInLayout2" name="blue1"/>
     <box bgcolor="blue" options="goesInLayout2" name="blue2"/>
     <box bgcolor="blue" options="goesInLayout2" name="blue3"/>
-    <!-- both -->
-    <box bgcolor="yellow" options="goesInLayout2;goesInLayout1" name="yellow1"/>
-    <box bgcolor="yellow" options="goesInLayout2;goesInLayout1" name="yellow2"/>
-    <box bgcolor="yellow" options="goesInLayout2;goesInLayout1" name="yellow3"/>
-  </view>
-</canvas>
-<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007 - 2009 Laszlo Systems, Inc.  All Rights Reserved.            *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** -->

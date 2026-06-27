@@ -6,7 +6,3 @@
     <text text = "$once{'once: ' + (m?m.value:'undefined')}" />
     <text text = "$always{'always: ' + (m?m.value:'undefined')}" />
 </canvas>
-<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** -->

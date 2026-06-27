@@ -71,10 +71,6 @@ framework is available by including <code class="literal">utils/performance</cod
       measure(stringConcatenation, iterations, "String concatenation");
     &lt;/script&gt;
   &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>
 Because <code class="literal">Date.getTime</code> is based on the real time clock,
@@ -145,10 +141,6 @@ local variable.
                       'empty': empty})).run();
     &lt;/script&gt;
   &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1947"></a>2.1.2. Cache constant global references</h4></div></div></div><p>
 If you need to access a global reference many times that you know will
@@ -178,10 +170,6 @@ not change, create a local reference and use that instead.
                       'empty': empty})).run();
     &lt;/script&gt;
   &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1948"></a>2.1.3. Deep path references</h4></div></div></div><p>
 It's expensive to do a lot of a.b.c.d.e.f references, compared to just
@@ -307,10 +295,6 @@ The example below illustrates the various ways of adding elements to an array.
                         'empty': empty})).run();
     &lt;/script&gt;
   &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1951"></a>2.3. Loops</h3></div></div></div><p>
 In older players, <code class="literal">while</code> loops are slightly more efficient than <code class="literal">for ... in</code> loops which are slightly more efficient than <code class="literal">for</code> loops.  The difference is not enough that you should contort your code, but if any will work equally well, you should choose accordingly.
@@ -353,10 +337,6 @@ In older players, <code class="literal">while</code> loops are slightly more eff
                         'empty': empty})).run();
     &lt;/script&gt;
   &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1952"></a>2.4. Conditionals</h3></div></div></div><p>
 Using a cascade of <code class="literal">if</code> statements is slightly more efficient that using
@@ -418,10 +398,6 @@ absolutely necessary.
                         'empty': empty})).run();
     &lt;/script&gt;
   &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1953"></a>2.5. with</h3></div></div></div><p>
 The use of <code class="literal">with</code> does not appear to affect performance, so it is a stylistic choice.
@@ -462,10 +438,6 @@ The use of <code class="literal">with</code> does not appear to affect performan
                           'empty': empty})).run();
     &lt;/script&gt;
   &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1954"></a>2.6. Function calls</h3></div></div></div><p>The cost of a function call is about equivalent to three assignment
 statements, so modularizing your code using function calls is not
@@ -567,10 +539,6 @@ function call is about equivalent to an additional assignment.</p><div class="ex
                         'empty': empty})).run();
     &lt;/script&gt;
   &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1955"></a>2.7. Code hoisting</h3></div></div></div><p>
 It's always a good idea to carefully examine <a class="indexterm" name="id15013"></a><em class="glossterm">inner loops</em> (loops that
@@ -620,10 +588,6 @@ of a loop.
                         'empty': empty})).run();
     &lt;/script&gt;
   &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1958"></a>3. Optimizing startup time</h2></div></div></div><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1957"></a>3.1. Using Lazy Replication</h3></div></div></div><p>If you will have more items in your list than will appear to the user,
 you should use <code class="literal">dataoption="lazy"</code>.  In this case the
@@ -669,10 +633,6 @@ automatically.)</p></div><div class="example"><a name="id15063"></a><p class="ti
   &lt;simplelayout spacing="4" inset="10"/&gt;
   &lt;constantlayout value="10" axis="x"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/performance-tuning-_10.lzx" data-height="120" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/performance-tuning-_10.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1960"></a>4. Optimizing runtime performance with pooling</h2></div></div></div><p>If you are creating a list from data and then change the data that
 is represented by the list, you should consider
@@ -745,10 +705,6 @@ also be true.</p></div><div class="example"><a name="id15078"></a><p class="titl
     &lt;/list&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/performance-tuning-_11.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/performance-tuning-_11.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1959"></a>4.1. Data optimization checklist</h3></div></div></div><p>
 Data pooling gives you the key tool in optimizing performance issues related to XML data. The philosophy

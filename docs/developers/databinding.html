@@ -72,7 +72,7 @@ below. In this example, you can get access to the given dataset by referring to
     &lt;/bookshelf&gt;  
   &lt;/dataset&gt;
 &lt;/canvas&gt;
-</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/inline-3b1038e127.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/inline-3b1038e127.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>This style of dataset inclusion is called <a class="indexterm" name="id13142"></a><em class="glossterm">local data</em> in
+</pre></div></div><br class="example-break"><p>This style of dataset inclusion is called <a class="indexterm" name="id13142"></a><em class="glossterm">local data</em> in
 that the data is included locally in the application, rather than
 being retrieved from a remote data source or web service.  Data can be
 included from a remote source by specifying the
@@ -84,10 +84,6 @@ included from a remote source by specifying the
   &lt;button onclick="t.setAttribute('text', canvas.menu.serialize())"&gt;Show XML data &lt;/button&gt;
   &lt;inputtext multiline="true" width="${canvas.width}" bgcolor="0xa0a0a0" id="t" height="300"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_2.lzx" data-height="400" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>In this example the OpenLaszlo application, when it starts up, makes a
 HTTP request for the url,
@@ -156,10 +152,6 @@ a <a class="indexterm" name="id13214"></a><code class="sgmltag-element">&lt;view
     &lt;text datapath="@show" /&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_3.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>The datapath of the entire <code class="varname">rowOfData</code> view has now become Homer's <code class="varname">person</code> node. 
 The child elements of <code class="varname">rowOfData</code> inherit this, so their datapaths can be referenced relatively.</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1836"></a>2.1.2. Multiple rows of data</h4></div></div></div><p>In the above example we used a single <code class="varname">rowOfData</code> node. Next, we shall use a range of all of the nodes:</p><div class="example"><a name="id13228"></a><p class="title"><b>Example 37.4. Range of nodes</b></p><div class="example-contents"><pre class="programlisting">
@@ -192,10 +184,6 @@ The child elements of <code class="varname">rowOfData</code> inherit this, so th
     &lt;/view&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_4.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Whichever tag contains the <a class="indexterm" name="id13232"></a><code class="sgmltag-attribute">datapath</code> attribute will get repeated as 
 often as is necessary.</p><p>Remember that datapaths bind themselves to a view, so if the data changes, so will the view. </p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="databinding.including"></a>3. Ways to include data</h2></div></div></div><p>
@@ -347,10 +335,6 @@ datapath="local:<span class="i">reference.to.dataset.relative.to.parent</span>:/
   &lt;redlocaldatatest/&gt;
 
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_7.lzx" data-height="300" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_7.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1839"></a>3.5. <a class="indexterm" name="id13333"></a><code class="literal">ondata</code>, <a class="indexterm" name="id13336"></a><code class="literal">onerror</code> and <a class="indexterm" name="id13339"></a><code class="literal">ontimeout</code> event</h3></div></div></div><p>When the application's <a class="indexterm" name="id13343"></a><code class="classname">lz.dataset</code> receives the data, the
 <a class="indexterm" name="id13346"></a><code class="literal">ondata</code> event is sent.  In the case that an error occured
@@ -422,10 +406,6 @@ Here is an example of the XMLHTTPRequest class.
     &lt;button onclick="loadXMLDoc(in1.getText())"&gt;Load Data&lt;/button&gt;
     &lt;button onclick="loadXMLDoc('badurl')"&gt;Test Error Handling, this should fail&lt;/button&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_8.lzx" data-height="600" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_8.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1843"></a>4.1. Using XMLHTTPRequest() in SOLO applications</h3></div></div></div><p>In SOLO applications, the <a class="indexterm" name="id13398"></a><code class="classname">XMLHTTPRequest</code> class does provide one capability that is not currently available from datasets; that is, you can get the raw text of the XML as a string, before it is parsed.  You do this using the <a class="indexterm" name="id13401"></a><code class="methodname">responseText()</code> method. This capability is only available in SOLO applications.
@@ -447,12 +427,8 @@ Also, in SOLO deployed applications, the <a class="indexterm" name="id13407"></a
     &lt;/method&gt;
   &lt;/datapointer&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_9.lzx" data-height="180" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_9.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>For brevity's sake, we are writing to the debugger, and we are including the data from a local file.</p><p>The <code class="literal">selectChild(2)</code> method call selects the <a class="indexterm" name="id13432"></a><code class="sgmltag-element">&lt;myXML&gt;</code> node, then the South Park <a class="indexterm" name="id13435"></a><code class="sgmltag-element">&lt;person&gt;</code> node -- it selects the second-depth node because of the depth argument "2" we passed it (otherwise it would default to 1.</p><p>The <code class="literal">selectNext</code> method call returns <code class="literal">true</code> as long as an XML node was successfully selected (i.e. until there aren't any more). We exploit this by using it in a <code class="literal">do <em class="replaceable"><code>…</code></em> while</code> loop, so that the same iteration occurs for every <a class="indexterm" name="id13443"></a><code class="sgmltag-element">&lt;person&gt;</code> node.</p><p>We could also have given the <a class="indexterm" name="id13447"></a><code class="sgmltag-element">&lt;datapointer&gt;</code> <a class="indexterm" name="id13450"></a><code class="literal">onerror</code> and <a class="indexterm" name="id13453"></a><code class="literal">ontimeout</code> event handlers to capture any problems. </p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1848"></a>6. Accessing data</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1847"></a>6.1. Datasets</h3></div></div></div><p>A <a class="indexterm" name="id13459"></a><code class="sgmltag-element">&lt;dataset&gt;</code><em><span class="remark">[unknown tag]</span></em>
+   </pre></div></div><br class="example-break"><p>For brevity's sake, we are writing to the debugger, and we are including the data from a local file.</p><p>The <code class="literal">selectChild(2)</code> method call selects the <a class="indexterm" name="id13432"></a><code class="sgmltag-element">&lt;myXML&gt;</code> node, then the South Park <a class="indexterm" name="id13435"></a><code class="sgmltag-element">&lt;person&gt;</code> node -- it selects the second-depth node because of the depth argument "2" we passed it (otherwise it would default to 1.</p><p>The <code class="literal">selectNext</code> method call returns <code class="literal">true</code> as long as an XML node was successfully selected (i.e. until there aren't any more). We exploit this by using it in a <code class="literal">do <em class="replaceable"><code>…</code></em> while</code> loop, so that the same iteration occurs for every <a class="indexterm" name="id13443"></a><code class="sgmltag-element">&lt;person&gt;</code> node.</p><p>We could also have given the <a class="indexterm" name="id13447"></a><code class="sgmltag-element">&lt;datapointer&gt;</code> <a class="indexterm" name="id13450"></a><code class="literal">onerror</code> and <a class="indexterm" name="id13453"></a><code class="literal">ontimeout</code> event handlers to capture any problems. </p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1848"></a>6. Accessing data</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1847"></a>6.1. Datasets</h3></div></div></div><p>A <a class="indexterm" name="id13459"></a><code class="sgmltag-element">&lt;dataset&gt;</code><em><span class="remark">[unknown tag]</span></em>
 
  provides a way to
 encapsulate arbitrary XML data in an OpenLaszlo application. Depending on
@@ -496,12 +472,8 @@ simply by its name (it is globally visible):</p><div class="example"><a name="id
     Debug.debug("%w", week)
   &lt;/script&gt;
   &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_10.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_10.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1846"></a>6.1.2. Datasets created at runtime</h4></div></div></div><p>Datasets can also be created at runtime in script by calling the constructor for the <a class="indexterm" name="id13512"></a><code class="classname">lz.dataset</code>:
+   </pre></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1846"></a>6.1.2. Datasets created at runtime</h4></div></div></div><p>Datasets can also be created at runtime in script by calling the constructor for the <a class="indexterm" name="id13512"></a><code class="classname">lz.dataset</code>:
 <code class="literal">var dset = new lz.dataset(null, {name: 'mydset'})</code>. The first argument to the constructor is 
 the dataset's parent node, which is the <a class="indexterm" name="id13516"></a><code class="sgmltag-element">&lt;datasource&gt;</code><em><span class="remark">[unknown tag]</span></em>
 
@@ -549,10 +521,6 @@ is bound to a datapath that matches a data node (see below).
     &lt;/handler&gt;
   &lt;/button&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_11.lzx" data-height="150" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_11.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1853"></a>7.2. Attribute bindings using $path</h3></div></div></div><p>Attributes of a node can be bound to data explicitly by using the <code class="literal">$path{}</code> constraint syntax. The expression
 inside the curly brackets must evaluate to a string, which is interpreted as a relative XPath expression. 
@@ -585,10 +553,6 @@ on a node's datapath will store the current value for that attribute back in the
     &lt;/handler&gt;
   &lt;/button&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_12.lzx" data-height="150" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_12.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1851"></a>7.2.2. Attribute values by $path constraint</h4></div></div></div><p>Assigning a node's attribute value by <code class="literal">$path</code> constraint results in replication of the node as many times as necessary to correspond to each item in the <code class="literal">dataset</code>.</p><p>In this example, there are three items in the <code class="literal">dataset</code>, so the <code class="literal">box</code> node replicates three times.</p><div class="example"><a name="id13575"></a><p class="title"><b>Example 37.11. Assigning an attribute value by $path constraint</b></p><div class="example-contents"><pre class="programlisting">
    
@@ -608,11 +572,7 @@ on a node's datapath will store the current value for that attribute back in the
     
     &lt;coloredbox datapath="boxes:/boxes/box"/&gt;
 
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+&lt;/canvas&gt; 
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_13.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_13.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1852"></a>7.2.3. $path values in calculations</h4></div></div></div><p>
 JavaScript provides easy casting from string to numeric data types. The $path{...} syntax is defined to return a string, which can be used to assign a value to an attribute.  You can combine attributes to preform calculations based on strings returned from a $path{...} inquiry on a dataset.
@@ -654,11 +614,6 @@ evident from the debugger output.</p><div class="example"><a name="id13590"></a>
     &lt;text text="${this.escapeText(this.formatToString('order: %w, data: %#w', parent.order, parent.datapath.data))}" /&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-     * Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.        *
-     * Use is subject to license terms.                                       *
-     * X_LZ_COPYRIGHT_END ***************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_15.lzx" data-height="155" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_15.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1855"></a>7.4. Using ondata to process updates</h3></div></div></div><p>For a datapointer, a datapath, or a datamapped node, the <a class="indexterm" name="id13595"></a><code class="literal">ondata</code> event is sent whenever the data it 
 is bound to changes. This implies that for XPaths that select a data node, ondata event is sent only when the 
@@ -724,10 +679,6 @@ document.</p><div class="example"><a name="id13605"></a><p class="title"><b>Exam
     &lt;/text&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_14.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_14.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1861"></a>8. Manipulating datapointers</h2></div></div></div><p>
 Recall that datapointer is an object that represents a pointer to a node in a <a class="indexterm" name="id13610"></a><code class="classname">lz.dataset</code>. The datapointer can be repositioned using either cursor movements calls such as <a class="indexterm" name="id13613"></a><code class="methodname">selectNext()</code>, or by running an XPath request via <a class="indexterm" name="id13617"></a><code class="methodname">setXPath()</code>.
@@ -801,10 +752,6 @@ is true.</p><div class="example"><a name="id13633"></a><p class="title"><b>Examp
     &lt;text id="bad_result" resize="true" fgcolor="red" fontstyle="bold"/&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_16.lzx" data-height="150" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_16.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>This example illustrates the effect of the <a class="indexterm" name="id13637"></a><code class="sgmltag-attribute">rerunxpath</code> property. The text fields at the bottom are updated when 
 the ondata event is sent by the datapointers intended to be bound to the first node in the dataset. However, the 
@@ -836,71 +783,8 @@ depending on the presence or absence of data.</p><div class="example"><a name="i
   &lt;/dataset&gt;
 
   &lt;class name="light"&gt;
-    &lt;!-- Attributes passed down to bulb --&gt;
-    &lt;attribute name="bulbColor" type="color"/&gt;
-    &lt;attribute name="bulbVisibility" type="string"/&gt;
-    &lt;attribute name="bulbXpath" type="string"/&gt;
-
-    &lt;simplelayout axis="x" spacing="5"/&gt;
-    &lt;!-- Button to explore visibility settings --&gt;
-    &lt;button onclick="parent.toggleVisibility()"&gt;Toggle Visibility&lt;/button&gt;
-    &lt;!-- Display to show data/visibility/visible --&gt;
-    &lt;text name="display" font="Monaco, Courier, fixed" /&gt;
-    &lt;method name="updateDisplay"&gt;
-      display.format('data: %-4#w + visibility: %-11#w -&gt; visible: %-7#w', bulb.data, bulb.visibility, bulb.visible);
-    &lt;/method&gt;
-    &lt;!-- "bulb" that will be visible or not according to data binding and visibility settings --&gt;
-    &lt;text name="bulb" width="20" height="20" bgcolor="${classroot.bulbColor}"
-          visibility="${classroot.bulbVisibility}" datapath="${classroot.bulbXpath}"
-          oninit="classroot.updateDisplay()" ondata="classroot.updateDisplay()"/&gt;
-    &lt;!-- Method to rotate through visibility choices --&gt;
-    &lt;method name="toggleVisibility"&gt;
-      switch (bulb.visibility) {
-        case 'visible':
-          bulb.setAttribute('visibility', 'collapse');
-          break;
-        case 'collapse':
-          bulb.setAttribute('visibility', 'hidden');
-          break;
-        case 'hidden':
-          bulb.setAttribute('visibility', 'visible');
-          break;
-      }
-      updateDisplay();
-    &lt;/method&gt;
-  &lt;/class&gt;
-
-  &lt;!-- Demo that shows three different visibility settings for the same xpath --&gt;
-  &lt;class name="demo" bgcolor="gray90"&gt;
-    &lt;simplelayout axis="y" spacing="2"/&gt;
-    &lt;attribute name="lightXpath" type="string"/&gt;
-    &lt;light bulbColor="red" bulbVisibility="hidden" bulbXpath="${classroot.lightXpath}"/&gt;
-    &lt;light bulbColor="yellow" bulbVisibility="collapse" bulbXpath="${classroot.lightXpath}"/&gt;
-    &lt;light bulbColor="green" bulbVisibility="visible" bulbXpath="${classroot.lightXpath}"/&gt;
-  &lt;/class&gt;
-
-  &lt;simplelayout axis="y" spacing="7"/&gt;
-  &lt;!-- Demo that shows three xpaths only the first of which matches (and hence has data) --&gt;
-  &lt;demo lightXpath="mydata:/element[1]/text()"/&gt;
-  &lt;demo lightXpath="mydata:/element[2]/text()"/&gt;
-  &lt;demo lightXpath="mydata:/element[3]/text()"/&gt;
-
-  &lt;!-- Button to add data so second and third xpaths above will get data --&gt;
-  &lt;attribute name="next" value="2" /&gt;
-  &lt;button onclick="if (canvas.next &amp;lt; 4) {mydata.getPointer().addNode('element', '#' + canvas.next++)}"&gt;
-    Add Data
-  &lt;/button&gt;
-  &lt;button onclick="if (canvas.next &amp;gt; 1) {var p = mydata.getPointer(); p.setXPath('element[' + --canvas.next + ']'); p.deleteNode();}"&gt;
-    Remove Data
-  &lt;/button&gt;
-&lt;/canvas&gt;
-
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008, 2009 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1859"></a>8.3. Update timing (order of data initialization)</h3></div></div></div><p>Because data contained by static datasets is compiled into the application, it is available immediately. 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/viewvisibility.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/viewvisibility.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1859"></a>8.3. Update timing (order of data initialization)</h3></div></div></div><p>Because data contained by static datasets is compiled into the application, it is available immediately. 
 Therefore any datapointers that have a static dataset as part of their paths will send the ondata event before
 any children of the canvas are instantiated by the runtime. This is important to remember if all changes in the 
 data need to be reflected in the application's interface. In other words, when writing handlers for <code class="literal">ondata</code>, one 
@@ -935,10 +819,6 @@ have finished initializing. This result of this approach is that the call succee
   &lt;datapointer xpath="filesys:/" ondata="myfs.openChildren(true)"/&gt;
 
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_18.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_18.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>On the other hand, dynamic datasets have to fetch data externally, so they may not deliver it before the visual 
 elements that depend on it are in a stable state. This is why the logic in the code should only attempt to
@@ -990,10 +870,6 @@ set to the top of the dataset, and adds a new node at each level.</p><div class=
       &lt;/method&gt;
   &lt;/button&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_19.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_19.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1864"></a>9. Data processing</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1862"></a>9.1. Using <a class="indexterm" name="id13690"></a><code class="methodname">setPointer()</code> to bind data</h3></div></div></div><p>As an essential part of their functionality, datapointers (and datapaths) can be set directly to data nodes. 
 The example below uses the <a class="indexterm" name="id13695"></a><code class="methodname">setPointer()</code> method to set the target view's datapath to the node referenced by the 
@@ -1024,10 +900,6 @@ dataset.</p><div class="example"><a name="id13699"></a><p class="title"><b>Examp
     &lt;simplelayout spacing="5"/&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_20.lzx" data-height="150" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_20.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1863"></a>9.2. Controlling a datapath</h3></div></div></div><p><a class="indexterm" name="id13704"></a><code class="classname">lz.datapath</code> is a subclass of <a class="indexterm" name="id13707"></a><code class="classname">lz.datapointer</code>, and therefore can be used in much the same way to iterate over data.
 The example below treats the datapath of each of the replicated view as a pointer to the dataset that backs it.
@@ -1065,10 +937,6 @@ could be used to manipulate and add children nodes.</p><div class="example"><a n
   &lt;schedule name="b" target="${f}" title="Busy" bgcolor="0xd0000a" datapath="busy:/"/&gt;
   &lt;schedule name="f" target="${b}"  title="Free" bgcolor="0x00a000" datapath="free:/"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_21.lzx" data-height="150" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_21.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>There is an important restriction on usage of iterator methods with a datapath. If you move it by calling any 
 of <code class="literal">select<em class="replaceable"><code>...</code></em>()</code> or <code class="literal">set<em class="replaceable"><code>XXX</code></em>Pointer()</code> methods, its XPath is then removed, which means that any updates to underlying 
@@ -1095,10 +963,6 @@ data will not notify the datamapped UI element. Consider the following example.<
           onclick="details.datapath.selectNext()"/&gt;
   &lt;resizelayout axis="x" spacing="10"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_22.lzx" data-height="150" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_22.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>You can move the datapath of the contact detail view in either direction, and the text fields will update 
 correctly. This is because their respective datapaths are unaffected by the scrolling (it only moves the 
@@ -1138,9 +1002,5 @@ by calling the <a class="indexterm" name="id13722"></a><code class="methodname">
   
   &lt;resizelayout axis="x" spacing="10"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_23.lzx" data-height="150" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_23.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="data-structures.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.data.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="datareplication.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 36. Data, XML, and XPath </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 38. Data Replication</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';var h=b.getAttribute('data-height');if(h)f.style.height=h+'px';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

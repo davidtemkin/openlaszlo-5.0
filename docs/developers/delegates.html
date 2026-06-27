@@ -125,10 +125,6 @@ all events from the delegate, and resets the message to nothing special.
         statusText.setAttribute("text", "That button was clicked two or more times");
     &lt;/method&gt; 
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008, 2010 Laszlo Systems, Inc.  All Rights Reserved.       *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/delegates-_1.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/delegates-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1729"></a>2. Delegates and Memory Management</h2></div></div></div><p>
 In the past, it was necessary to manually track delegates and manually clean them up when objects were destroyed to prevent memory leaks.  This is no longer required - the event system now automatically cleans up delegates as needed.
@@ -162,10 +158,6 @@ by the delegate, instead of creating a new timer (which would be inefficient) , 
         &lt;/method&gt;
     &lt;/text&gt; 
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008, 2010 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/delegates-_3.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/delegates-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1731"></a>4.  Using <a class="indexterm" name="id10834"></a><code class="classname">lz.Delegate</code> to determine initialization of the last replicated view </h2></div></div></div><p>
 In the following example, when the last <a class="indexterm" name="id10838"></a><code class="sgmltag-element">&lt;text&gt;</code> object has been
@@ -223,11 +215,7 @@ resource by simply registering the <a class="indexterm" name="id10860"></a><code
     &lt;/text&gt;
    
     &lt;simplelayout axis="y"/&gt; 
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008, 2010 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+&lt;/canvas&gt; 
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/delegates-_4.lzx" data-height="150" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/delegates-_4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1732"></a>5. Delegates as attributes</h2></div></div></div><p>
 A delegate is an object, and as such it can be an attribute of another object. For example, consider:</p><div class="example"><a name="id10872"></a><p class="title"><b>Example 30.4. delegate as attribute</b></p><div class="example-contents"><pre class="programlisting">

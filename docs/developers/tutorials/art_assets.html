@@ -22,10 +22,6 @@ In this case, a GIF image:</p><div class="example"><a name="id3921"></a><p class
 &lt;canvas width="100%" height="80"&gt;
   &lt;view resource="resources/smiley.gif"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>This tiny OpenLaszlo application loads an image called <code class="literal">smiley.gif</code> 
 (which is located in <code class="literal">resources</code>, a subdirectory of the one that contains the application).</p><p>To position an image, position the view that contains that image as a resource:</p><div class="example"><a name="id3928"></a><p class="title"><b>Example 8.2. Positioning images</b></p><div class="example-contents"><pre class="programlisting">
@@ -34,10 +30,6 @@ In this case, a GIF image:</p><div class="example"><a name="id3921"></a><p class
    &lt;view resource="resources/smiley.gif"/&gt;
    &lt;view x="50" y="50" resource="resources/smiley.gif"/&gt;
  &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>We'll come to changing the size of an image later.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="art_assets.including"></a>3. Ways to include resources</h2></div></div></div><p>In the example above, we included an image from the current local directory that was loaded when the application was compiled on the server. This may or may not be right for the particular application, so LZX has four ways to load images:</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1443"></a>3.1. Loading resources at compile time</h3></div></div></div><p>The resource gets bundled with the rest of the application when it is compiled on the server, so there will be a larger initial download, but the images will display instantly.</p><p>All of these four methods will eventually show the same result on screen:</p><div class="example"><a name="id3938"></a><p class="title"><b>Example 8.3. Local pathname</b></p><div class="example-contents"><pre class="programlisting">
 &lt;canvas width="500" height="100"&gt;
@@ -68,10 +60,6 @@ In this case, a GIF image:</p><div class="example"><a name="id3921"></a><p class
   &lt;view x="10" y="50" width="363" height="242" 
   stretches="both" resource="resources/sunset.jpg"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p> OpenLaszlo supports GIFs, JPEGs and PNGs. They can all be resized by setting the <a class="indexterm" name="id3964"></a><code class="sgmltag-attribute">stretches</code> attribute of the view that contains the resource to <code class="literal">both</code>, <code class="literal">width</code> or <code class="literal">height</code>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="art_assets.multiframe"></a>5. Multi-frame Resources</h2></div></div></div><p>Resources can be multi frame, meaning that a single resource is actually made up of a number of different resources, each of which can only be shown one at a time.</p><p>The format for doing this is:</p><div class="example"><a name="id3974"></a><p class="title"><b>Example 8.8. Multiframe resources</b></p><div class="example-contents"><pre class="programlisting">
    
@@ -83,10 +71,6 @@ In this case, a GIF image:</p><div class="example"><a name="id3921"></a><p class
   &lt;view x="150" y="50" resource="face"
          onclick="this.setAttribute('frame', 2);"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>The resources nested within the resource tag are numbered starting with 1.</p><p>As you can see, OpenLaszlo supports GIFs, JPEGs and PNGs. They can all be resized by setting the <code class="sgmltag-attribute">stretches</code> attribute of the view that contains the resource to either <code class="literal">both</code>, <code class="literal">width</code> or <code class="literal">height</code>.</p><p>You can also use multi-frame resources for animation: see <a class="xref" href="../animation.html#mulitframe-animation" title="10. Animation with Multi-frame Resources">Section 10, “Animation with Multi-frame Resources”</a> in the <span class="emphasis"><em>Animation</em></span> chapter.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="art_assets.swfs"></a>6. Working with SWFs</h2></div></div></div><p>In applications compiled to SWF, you can treat SWF-formatted assets as resources, whether they are animated or not:</p><div class="example"><a name="id3989"></a><p class="title"><b>Example 8.9. Working with swf files</b></p><div class="example-contents"><pre class="programlisting">
    
@@ -94,10 +78,6 @@ In this case, a GIF image:</p><div class="example"><a name="id3921"></a><p class
   &lt;view resource="resources/still_swf.png"/&gt;
   &lt;view x="150" y="20" resource="resources/anim_swf0001.png"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>Any animation will loop <span class="emphasis"><em>ad infinitum</em></span>. You will probably want to control the animation of a SWF file from the script in your application. To prevent it from playing, we can tell it to stop when the view is initialized:</p><pre class="programlisting">&lt;view x="150" y="20" resource="anim_swf.swf" <span class="em">oninit="this.stop();"</span>/&gt;</pre><div class="example"><a name="id3996"></a><p class="title"><b>Example 8.10. Stopping swf animations</b></p><div class="example-contents"><pre class="programlisting">
    
@@ -106,10 +86,6 @@ In this case, a GIF image:</p><div class="example"><a name="id3921"></a><p class
         onclick="this.stop();"
         clickable="true"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>Clicking on the image will cause the animation to stop. The <span class="property">onclick</span> event handler will be covered in the "Scripting" tutorial.</p><p>Instead of just using <code class="methodname">stop()</code>, we could have passed the <code class="methodname">stop()</code> method an argument instructing it at which frame to stop.
  In addition, we could have used the <code class="methodname">play()</code> method (also with optional frame argument) to play from a given frame.</p><p>We can't really progress beyond this point without covering scripting, but here is a preview of some of 

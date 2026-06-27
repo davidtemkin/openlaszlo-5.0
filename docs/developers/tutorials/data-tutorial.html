@@ -22,10 +22,6 @@
   
   &lt;text datapath="myData:/myXML[1]/person[1]/firstName[1]/text()"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>In the above example, the single root element is myXML. The <a class="indexterm" name="id4656"></a><code class="sgmltag-attribute">datapath</code> attribute of the <a class="indexterm" name="id4659"></a><code class="sgmltag-element">&lt;text&gt;</code><em><span class="remark">[unknown tag]</span></em>
 
@@ -63,10 +59,6 @@
     &lt;text datapath="@show" /&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/databinding-_3.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/databinding-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>The datapath of the entire <code class="varname">rowOfData</code> view has now become Homer's <code class="varname">person</code> node. The child elements of <code class="varname">rowOfData</code> inherit this, so their datapaths can be referenced relatively.</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1461"></a>2.1. Multiple rows of data</h3></div></div></div><p>In the above example we used a single <code class="varname">rowOfData</code> node. Next, we shall use a range of nodes:</p><div class="example"><a name="id4697"></a><p class="title"><b>Example 11.3. Range of nodes</b></p><div class="example-contents"><pre class="programlisting">
    
@@ -98,10 +90,6 @@
     &lt;/view&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>Whichever tag contains the <a class="indexterm" name="id4701"></a><code class="sgmltag-attribute">datapath</code> attribute will get repeated as often as is necessary.</p><p>Remember that datapaths bind themselves to a view, so if the data changes, so will the view. We shall come to that a little later.</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="data-tutorial.including"></a>3. Ways to include data</h2></div></div></div><p>So far we've been using embedded data (XML that is written into the document). This is fine for very small amounts of static data, but there are other methods better suited to larger (or dynamic) data.</p><div class="informaltable"><table class="informaltable" border="1"><colgroup><col><col><col></colgroup><thead><tr><th>How is it included?</th><th>When is it loaded?</th><th>Syntax</th></tr></thead><tbody><tr><td><a class="link" href="data-tutorial.html#data-tutorial.embedded" title="3.1. Embedded Data">Embedded</a></td><td>Compile-time</td><td>
 <div class="informalexample"><pre class="programlisting">
@@ -137,10 +125,6 @@
     &lt;/method&gt; 
   &lt;/datapointer&gt; 
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>We are including the data from a local file. You can download that XML file <a class="ulink" href="http://labs.openlaszlo.org/trunk-nightly/docs/developers/programs/resources/myShowData.xml" target="_top">here</a>, and here's what it looks like:</p><pre class="programlisting">
     &lt;myXML&gt;

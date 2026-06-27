@@ -73,45 +73,6 @@ Explain how it works
 </p><div class="example"><a name="id15309"></a><p class="title"><b>Example 44.2. Combobox that creates a cookie</b></p><div class="example-contents"><pre class="programlisting">
    
 &lt;canvas width="100%" height="100"&gt;
-
-    &lt;!-- dataset to set cookie with --&gt;
-    &lt;dataset name="dsSetCookie" type="http" src="resources/cookie.xml" /&gt;
-
-    &lt;!-- Set previous set item during start --&gt;
-    &lt;dataset name="dsGetCookie" type="http" src="resources/cookie.xml" 
-             querystring="name=mycookie&amp;amp;op=get" request="true" /&gt;
-    &lt;datapointer name="dpCookie" xpath="dsGetCookie:/info[1]/data[1]/item[1]/text()"&gt;
-        &lt;handler name="ondata" args="d"&gt;
-            if (d != '') cbox1.selectItem(d);
-        &lt;/handler&gt;        
-    &lt;/datapointer&gt;
-
-
-    &lt;!-- combobox items --&gt;
-    &lt;dataset name="items"&gt;
-        &lt;item value="item1" &gt;item one&lt;/item&gt;
-        &lt;item value="item2" &gt;item two&lt;/item&gt;
-        &lt;item value="item3" &gt;item three&lt;/item&gt;
-        &lt;item value="item4" &gt;item four&lt;/item&gt;
-    &lt;/dataset&gt;
-
-    &lt;combobox id="cbox1" x="20" y="20" width="130" defaulttext="choose one..."&gt;
-        &lt;textlistitem datapath="items:/item/" text="$path{'text()'}"
-                      value="$path{'@value'}"&gt;
-            &lt;!-- when item is selected, save choice in cookie by calling JSP --&gt;
-            &lt;handler name="onclick"&gt;
-            &lt;![CDATA[
-                dsSetCookie.setAttribute("querystring", "name=mycookie&amp;op=set&amp;item=" + this.value);
-                dsSetCookie.doRequest();
-            ]]&gt;
-            &lt;/handler&gt;
-        &lt;/textlistitem&gt;
-    &lt;/combobox&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><div class="example"><a name="id15312"></a><p class="title"><b>Example 44.3. cookie.jsp</b></p><div class="example-contents"><pre class="programlisting">
 

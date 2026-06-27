@@ -18,11 +18,7 @@
   &lt;gView id="red"   bgcolor="rgb(255,0,0)"/&gt;
   &lt;gView id="blue"  bgcolor="rgb(0,255,0)"/&gt;
   &lt;gView id="green" bgcolor="rgb(0,0,255)"/&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+&lt;/canvas&gt; 
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/color-_1.lzx" data-height="125" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/color-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="specifycolor"></a>3. Different Ways to Specify Color</h2></div></div></div><p> OpenLaszlo enables coloring in four ways: 0x000000, #000000,
          <code class="literal">rgb(0,0,0)</code>, and "black". Using the format 0x000000 only works for
@@ -107,10 +103,6 @@
   &lt;/script&gt;
 
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-     * Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-     * Use is subject to license terms.                                            *
-     * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/color-_3.lzx" data-height="620" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/color-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>You can also specify color using a number or an expression.
          <code class="literal">presentValue()</code> is used in the following example to return
@@ -125,10 +117,6 @@
         &lt;text text="${color.presentValue()}"/&gt;
     &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ********************************************************
-     * Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-     * Use is subject to license terms.                                            *
-     * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
       </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/colorswatch.lzx" data-height="150" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/colorswatch.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1548"></a>3.1. Mixing Colors</h3></div></div></div><p> To blend a color, combine the RGB values. Red (FF0000) plus blue (0000FF) equals
             fuchsia (FF00FF): </p><div class="example"><a name="id6822"></a><p class="title"><b>Example 20.4. Blending Colors</b></p><div class="example-contents"><pre class="programlisting">
@@ -138,10 +126,6 @@
   &lt;view name="blue" x="50" y="50" height="100" width="100" bgcolor="0x0000FF"/&gt;
   &lt;view name="fuchsia" x="50" y="50" height="50" width="50" bgcolor="0xFF00FF"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/color-_4.lzx" data-height="150" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/color-_4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="standardcolors"></a>3.2. Standard Web Colors</h3></div></div></div><p> The 16 basic web colors can be employed by name: </p><div class="example"><a name="id6828"></a><p class="title"><b>Example 20.5. Named colors</b></p><div class="example-contents"><pre class="programlisting">
    &lt;canvas height="290"&gt; 
@@ -161,11 +145,7 @@
             &lt;/view&gt; 
         &lt;/replicator&gt; 
     &lt;/view&gt; 
-&lt;/canvas&gt; 
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2009 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+&lt;/canvas&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/color-_5.lzx" data-height="290" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/color-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="csscolors"></a>3.3. CSS3 Colors</h3></div></div></div><p>In addition to the standard web colors, you can also specify <a class="ulink" href="http://www.w3.org/TR/css3-color/#svg-color" target="_top">CSS3 colors</a> by name. Click
          on the color name to see the hex value.</p><div class="example"><a name="id6835"></a><p class="title"><b>Example 20.6. CSS3 colors</b></p><div class="example-contents"><pre class="programlisting">
@@ -241,11 +221,6 @@
     &lt;/replicator&gt; 
   &lt;/view&gt; 
 &lt;/canvas&gt; 
-
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-  * Copyright 2007, 2009 Laszlo Systems, Inc.  All Rights Reserved.             *
-  * Use is subject to license terms.                                            *
-  * X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
          </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/csscolors.lzx" data-height="620" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/csscolors.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1549"></a>3.4. Nonstandard Colors</h3></div></div></div><p> To specify any color other than the <a class="link" href="color.html#standardcolors" title="3.2. Standard Web Colors">standard web
                colors</a> or <a class="link" href="color.html#csscolors" title="3.3. CSS3 Colors">CSS3 colors</a>, which are usable by
             name, use hex codes or <code class="literal">rgb()</code>. With <code class="literal">rgb()</code>, you can
@@ -280,10 +255,6 @@
     &lt;view width="50" height="50" bgcolor="rgb(00%,100%,13%)"/&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-  * Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-  * Use is subject to license terms.                                            *
-  * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/nonstandardcolors.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/nonstandardcolors.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1550"></a>3.5. Opacity</h3></div></div></div><p> In OpenLaszlo, a view has a color and an opacity which are handled separately. The
                <code class="literal">opacity</code> attribute ranges from 0 (transparent) to 1 (opaque). </p><div class="example"><a name="id6850"></a><p class="title"><b>Example 20.8. Color and opacity</b></p><div class="example-contents"><pre class="programlisting">
@@ -309,11 +280,7 @@
     Click on a view to reduce its opacity.&lt;br/&gt; 
     Mouse out to restore 100% opacity. 
   &lt;/text&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-  * Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
-  * Use is subject to license terms.                                            *
-  * X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+&lt;/canvas&gt; 
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/color-_7.lzx" data-height="110" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/color-_7.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>When a view's <code class="literal">opacity</code> is set to 0, the <code class="literal">visible</code>
             attribute of that view turns to false.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1553"></a>3.6. DHTML with Windows Internet Explorer: Opacity Issues</h3></div></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1551"></a>3.6.1. Internet Explorer: <code class="literal">overflow="visible"</code> Doesn't Work with
                   <code class="literal">opacity</code></h4></div></div></div><p>If you use the IE alpha-filter to set the opacity, the overflow will always be

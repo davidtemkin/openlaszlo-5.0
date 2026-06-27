@@ -42,10 +42,6 @@
     message.myMethod()
   &lt;/script&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_1.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1694"></a>2.1. Naming methods</h3></div></div></div><p> Choose method names carefully. Names should be descriptive, to help you and other
             readers of your code understand what they do. You need also to keep in mind that when
@@ -71,11 +67,7 @@
   &lt;script&gt;
     message.add(4,9)
   &lt;/script&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+&lt;/canvas&gt; 
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_2.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1696"></a>2.3.  Return Values </h3></div></div></div><p> Sometimes when you write a method, you want the result to be returned to the calling
             script for further processing. In the following example, <code class="literal">returnsum()</code>
@@ -95,11 +87,7 @@
     var z = x + y;
     message.addText('\nz equals ' +  z)
   &lt;/script&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+&lt;/canvas&gt; 
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_3.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1702"></a>3. Events</h2></div></div></div><p> In LZX, changes in the status of objects are communicated through events. Events can be
          used to trigger the execution of script. The script to be executed can be contained in an
@@ -159,10 +147,6 @@
 &lt;canvas height="50" width="100%"&gt;
    &lt;view height="30" width="30" bgcolor="red" onclick="setAttribute('bgcolor', 'blue')"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007-2009 Laszlo Systems, Inc.  All Rights Reserved.              *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_5.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1705"></a>4.2. The &lt;handler&gt; tag</h3></div></div></div><p>The <a class="indexterm" name="id10038"></a><code class="sgmltag-element">&lt;handler&gt;</code><em><span class="remark">[unknown tag]</span></em>
              tag defines how an instance responds to an event. A handler
@@ -180,11 +164,7 @@
       this.setAttribute('text', 'clicked'); 
     &lt;/handler&gt;
   &lt;/button&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;  
+&lt;/canvas&gt;  
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_6.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_6.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1706"></a>4.3. Multiple handlers for the same event</h3></div></div></div><p> An event can have associated with it any number of handlers. When that event is
             sent, all handlers associated with it are executed. </p><div class="example"><a name="id10056"></a><p class="title"><b>Example 29.7. Multiple handlers for single events</b></p><div class="example-contents"><pre class="programlisting">
@@ -203,10 +183,6 @@
       &lt;/handler&gt;
    &lt;/button&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_7.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_7.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1707"></a>4.4. Handlers that call methods</h3></div></div></div><p> A handler may include JavaScript code to be executed when the associated event
             occurs, or it may reference a method that contains the code to be executed. To reference
@@ -222,10 +198,6 @@
     &lt;/method&gt;
   &lt;/button&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_8.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_8.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1708"></a>4.5. Handlers in class definitions</h3></div></div></div><p> A handler is not overridable in a subclass, so you can add as many handlers as you
             like to an event and they will all fire. </p><p> If you want a subclass to be able to override the handling of an event in a
@@ -268,10 +240,6 @@
   &lt;text id="message" multiline="true" /&gt;
   &lt;simplelayout /&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_9.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_9.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> Here is the same example with instances: </p><div class="example"><a name="id10084"></a><p class="title"><b>Example 29.10. Overriding an event-handling method in an instance</b></p><div class="example-contents"><pre class="programlisting">
    &lt;canvas height="200" width="100%"&gt;
@@ -294,10 +262,6 @@
   &lt;text id="message" multiline="true" /&gt;
   &lt;simplelayout /&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-  * Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-  * Use is subject to license terms.                                            *
-  * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_10.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_10.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> Suppose you want to handle, in one class, an event from some other object? In that
             case, you would use the <a class="indexterm" name="id10088"></a><code class="sgmltag-attribute">reference</code> attribute: </p><pre class="programlisting">
@@ -328,10 +292,6 @@
   &lt;/base&gt; 
   &lt;text id="message" y="40" multiline="true" /&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_11.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_11.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> Note that Mine handles a click on Yours. Even though the handler is in Mine, it only
             runs when you click Yours. </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1710"></a>4.7. Comparing ways to send and handle events</h3></div></div></div><p> As has been discussed above, you can cause an event to be sent explicitly, by
@@ -353,15 +313,6 @@
     &lt;simplelayout axis="x" spacing="5"/&gt;
     &lt;button onclick="foo.myevent.sendEvent(12)" text="send the event"/&gt;
     &lt;button onclick="foo.setAttribute('season', 'fall')" text="autumn"/&gt;
-    
-    &lt;!-- Don't do this! Setting an attribute directly with '=' shortcuts around
-        the event system. This is not right; use setAttribute instead --&gt;
-    &lt;button onclick="foo.season='winter'" text="evil"/&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_12.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_12.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1711"></a>4.8. Testing for existence of events in "legacy" code</h3></div></div></div><p> As is explained in <a class="xref" href="delegates.html" title="Chapter 30. Delegates">Chapter 30, <i>Delegates</i></a>, an event doesn't really exist unless
             and until there is a delegate registered to receive it. In code that was written before
@@ -398,11 +349,7 @@
          are characterized based on this behavior into four categories, described in <a class="xref" href="methods-events-attributes.html#attributecategories" title="5.1. Categories of Attributes">Section 5.1, “Categories of Attributes”</a>.</p><p>An attribute can be declared in a tag header as follows:</p><div class="example"><a name="id10156"></a><p class="title"><b>Example 29.13. Setting an attribute value in the tag header</b></p><div class="example-contents"><pre class="programlisting">
                &lt;canvas height="20" width="100%"&gt;
   &lt;view width="20" height="20" bgcolor="red"/&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+&lt;/canvas&gt; 
             </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_13.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_13.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>An alternative (although more verbose) way to set the attribute is using the
             <code class="literal">&lt;attribute&gt;</code> tag as a child of the tag whose attribute
          is being set:</p><div class="example"><a name="id10161"></a><p class="title"><b>Example 29.14. Using the attribute element to set an attribute value</b></p><div class="example-contents"><pre class="programlisting">
@@ -412,11 +359,7 @@
     &lt;attribute name="height" value="20"/&gt;
     &lt;attribute name="bgcolor" type="color" value="red"/&gt;
   &lt;/view&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+&lt;/canvas&gt; 
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_14.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_14.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>This second example is the same as saying <code class="literal">&lt;view width="20" height="20"
          bgcolor="red"/&gt;</code>. The <code class="literal">&lt;attribute&gt;</code> tag is useful for
          writing classes as well as for performing complicated constraints of existing attributes.</p><p>In script, the values of most attributes can be retrieved using dot syntax:</p><div class="example"><a name="id10168"></a><p class="title"><b>Example 29.15. Using dot syntax to retrieve an attribute value</b></p><div class="example-contents"><pre class="programlisting">
@@ -424,21 +367,13 @@
   &lt;simplelayout/&gt;
   &lt;view name="myView" width="20" height="20" bgcolor="red"/&gt; 
   &lt;text oninit="this.format('myView.width = %d', myView.width)"/&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007 - 2009 Laszlo Systems, Inc.  All Rights Reserved.            *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+&lt;/canvas&gt; 
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_15.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_15.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>All attributes that are settable in script (see below) can be set using  
                <code class="literal">setAttribute()</code>:</p><div class="example"><a name="id10173"></a><p class="title"><b>Example 29.16. Using <code class="literal">setAttribute()</code> to set an attribute value</b></p><div class="example-contents"><pre class="programlisting">
    &lt;canvas height="20" width="100%"&gt;
   &lt;view width="20" height="20" bgcolor="red"
       oninit="this.setAttribute('width', 50);"/&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+&lt;/canvas&gt; 
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_17.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_17.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="attributecategories"></a>5.1. Categories of Attributes</h3></div></div></div><p> Attributes can be placed into four categories according to how they are set, read,
             and modified. </p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p><code class="literal">read/write</code> attributes</p></li><li class="listitem"><p><code class="literal">event-handler</code> attributes</p></li><li class="listitem"><p><code class="literal">initialize-only</code> attributes</p></li><li class="listitem"><p><code class="literal">read-only</code> attributes</p></li></ul></div><p>These are described briefly in the following sections.</p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="readwriteattributes"></a>5.1.1. <code class="literal">read/write</code> attributes</h4></div></div></div><p><code class="literal">read/write</code> attributes may be modified at runtime and be the
                target of a constraint expression. When <code class="literal">setAttribute()</code> is called
@@ -450,10 +385,6 @@
         &lt;text text="${'My opacity is ' + myView.opacity + '. Click to change it.'}"/&gt;
     &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007 - 2009 Laszlo Systems, Inc.  All Rights Reserved.            *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_19.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_19.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="eventhandlerattributes"></a>5.1.2. <code class="literal">event-handler</code> attributes</h4></div></div></div><p><code class="literal">event-handler</code> attributes are instructions for what to perform
                when a particular event happens. They always contain script, and cannot be changed at
@@ -462,11 +393,6 @@
       &lt;canvas height="150" debug="true"&gt;
     &lt;view width="50" height="50" bgcolor="red" onclick="Debug.write('Hello, World!');"/&gt;
 &lt;/canvas&gt;
-
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 - 2009 Laszlo Systems, Inc.  All Rights Reserved.            *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
     </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_20.lzx" data-height="150" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_20.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>There is a long-hand version for <code class="literal">event-handler</code> attributes, just
                like normal attributes:</p><div class="example"><a name="id10217"></a><p class="title"><b>Example 29.19. long-hand version for <code class="literal">event-handler</code> attributes</b></p><div class="example-contents"><pre class="programlisting">
@@ -478,11 +404,6 @@
         &lt;/handler&gt;
     &lt;/text&gt;
 &lt;/canvas&gt;
-
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 - 2009 Laszlo Systems, Inc.  All Rights Reserved.            *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
                </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/longhandevent.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/longhandevent.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="initializeonlyattributes"></a>5.1.3. <code class="literal">initialize-only</code> attributes</h4></div></div></div><p><code class="literal">initialize-only</code> attributes are declared and set in the tag, but
                cannot be changed in using script. Good examples of
@@ -496,11 +417,6 @@
         &lt;/handler&gt;
     &lt;/text&gt;
 &lt;/canvas&gt;
-
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 - 2009 Laszlo Systems, Inc.  All Rights Reserved.            *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
                </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/initializeonly.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/initializeonly.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="readonlyattributes"></a>5.1.4. <code class="literal">read-only</code> attributes</h4></div></div></div><p><code class="literal">read-only</code> attributes, sometimes called
                <span class="emphasis"><em>fields</em></span>, are only accessible using script. Since they are
@@ -515,11 +431,6 @@
         &lt;/handler&gt;
     &lt;/text&gt;
 &lt;/canvas&gt;
-
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 - 2009 Laszlo Systems, Inc.  All Rights Reserved.            *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
                </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/readonly.lzx" data-height="130" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/readonly.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1723"></a>6. The <a class="indexterm" name="id10245"></a><code class="sgmltag-element">&lt;attribute&gt;</code> tag</h2></div></div></div><p>The <a class="indexterm" name="id10249"></a><code class="sgmltag-element">&lt;attribute&gt;</code> tag has two uses.</p><p>In a class definition, the <a class="indexterm" name="id10253"></a><code class="sgmltag-element">&lt;attribute&gt;</code><em><span class="remark">[unknown tag]</span></em>
           tag defines attributes that can be set in instances of the
@@ -531,10 +442,6 @@
   &lt;/class&gt;
   &lt;diamond size="25" x="36" bgcolor="red"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_21.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_21.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>You can also use an instance to extend a class, just like a new class would (but without
          defining the class, if you only need one instance). So, just as in a class, the attribute
@@ -549,10 +456,6 @@
     &lt;attribute name="height" value="25"/&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_22.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_22.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> In the example above the width is set in the tag header and the height is set using the <a class="indexterm" name="id10275"></a><code class="sgmltag-element">&lt;attribute&gt;</code> tag. These
          syntaxes are functionally equivalent for attributes that are defined in the LZX schema—that
@@ -573,10 +476,6 @@
     &lt;box label="Box1"/&gt;
     &lt;box/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_23.lzx" data-height="300" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_23.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> To make sure attributes do what you want them to do, assign a
             <code class="literal">type</code> to your attributes when you declare them: </p><div class="example"><a name="id10298"></a><p class="title"><b>Example 29.25. Declaring attribute type</b></p><div class="example-contents"><pre class="programlisting">
@@ -591,10 +490,6 @@
     &lt;box label="Box1"/&gt;
     &lt;box/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_24.lzx" data-height="300" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_24.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1714"></a>6.2.1. Using the <code class="literal">type</code> attribute</h4></div></div></div><p> The <code class="literal">type</code> attribute specifies the type of the
                   <code class="literal">&lt;attribute&gt;</code>'s value and affects how a value
@@ -773,11 +668,7 @@
         this.ontime.sendEvent();                                     //fire ontime event 
     &lt;/method&gt; 
   &lt;/button&gt; 
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+&lt;/canvas&gt; 
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_25.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_25.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1719"></a>6.6. oninit event vs init method</h3></div></div></div><p> Instances and subclasses of <a class="indexterm" name="id10613"></a><code class="classname">LzNode</code>, including <a class="indexterm" name="id10616"></a><code class="classname">LzView</code> and classes defined using <a class="indexterm" name="id10619"></a><code class="sgmltag-element">&lt;class&gt;</code><em><span class="remark">[unknown tag]</span></em>
              , have both an <a class="indexterm" name="id10623"></a><code class="methodname">init()</code> method and an <a class="indexterm" name="id10627"></a><code class="literal">oninit</code> event. Since you do not have control over the
@@ -805,11 +696,7 @@
       //use the init method instead
     &lt;/handler&gt;
   &lt;/button&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+&lt;/canvas&gt; 
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_26.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_26.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1720"></a>6.7. The keyword <code class="literal">this</code>
          </h3></div></div></div><p> When setting variables local to the current class, node, or view, always refer to
@@ -821,10 +708,6 @@
    &lt;view  height="30" width="30" bgcolor="blue"
    onclick="this.bringToFront()"/&gt; 
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/methods-events-attributes-_27.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/methods-events-attributes-_27.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p> Not using <code class="literal">this</code> can result in unpredictable results. </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1722"></a>6.8.  Different ways to get and set attributes </h3></div></div></div><p> There are four ways of getting and setting attributes in LZX, each with benefits and
             drawbacks:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>Using <code class="methodname">setAttribute()</code> and the <code class="literal">.</code> operator</p></li><li class="listitem"><p>Using predefined "setters" for certain attributes, such as <a class="indexterm" name="id10689"></a><code class="methodname">onx()</code> and <a class="indexterm" name="id10693"></a><code class="methodname">ony()</code></p></li><li class="listitem"><p>using custom getter and setter methods, as explained above</p></li><li class="listitem"><p>Reading and writing attributes directly: that is, without using a setter or

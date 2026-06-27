@@ -112,10 +112,6 @@
 &lt;canvas height="110" width="100%"&gt;
   &lt;view resource="resources/logo.gif"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
       </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/media-resources-_1.lzx" data-height="110" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/media-resources-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Or they may be declared externally as first-class objects
     themselves:</p><div class="example"><a name="id6379"></a><p class="title"><b>Example 18.2. Importing a resource</b></p><div class="example-contents"><pre class="programlisting">
@@ -124,10 +120,6 @@
   &lt;resource name="myname" src="resources/logo.gif"/&gt;
   &lt;view resource="myname"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
       </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/media-resources-_2.lzx" data-height="110" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/media-resources-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>You cannot set a resource on a view with subviews. The following
     code will result in an error:</p></div><div class="example"><a name="id6384"></a><p class="title"><b>Example 18.3. Setting a resource on a view with subviews</b></p><div class="example-contents"><pre class="programlisting">
@@ -141,10 +133,6 @@
         &lt;view bgcolor="red" /&gt;
     &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2009 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
       </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/viewresource.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/viewresource.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1523"></a>3.1. Resources are not views</h3></div></div></div><p>Note that a 
       <code class="sgmltag-element">
       resource</code> is 
@@ -230,10 +218,6 @@
     &lt;/radiogroup&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
       </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/media-resources-_3.lzx" data-height="180" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/media-resources-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>You can use a multi-frame resource to construct an
     animation that moves between frames when you call the 
@@ -260,38 +244,12 @@
   &lt;/view&gt;
   &lt;view id="me" resource="myresource"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
       </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/media-resources-_4.lzx" data-height="220" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/media-resources-_4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Multi-frame resources are also useful for structuring the
     display of a single visual element or component that takes on
     different appearances:</p><div class="example"><a name="id6534"></a><p class="title"><b>Example 18.6. Using multi-frame resources</b></p><div class="example-contents"><pre class="programlisting">
         
 &lt;canvas height="120" width="100%"&gt;
-  &lt;!-- create the multi-frame resource and give it a name --&gt;
-  &lt;resource name="mybutton_rsrc"&gt;
-    &lt;!-- first frame is the mouseup state of the button --&gt;     
-    &lt;frame src="resources/button-up.png"/&gt;   
-    &lt;!-- second frame is the mouseover state of the button --&gt;     
-    &lt;frame src="resources/button-over.png"/&gt; 
-    &lt;!-- third frame is the mousedown state of the button --&gt;     
-    &lt;frame src="resources/button-down.png"/&gt; 
-  &lt;/resource&gt;
-
-  &lt;!-- attach the resource to a view with mouse events --&gt;
-  &lt;view resource="mybutton_rsrc" 
-        onmouseover="setAttribute('frame', 2)"
-        onmouseout="setAttribute('frame', 1)"
-        onmousedown="setAttribute('frame', 3)"
-        onmouseup="setAttribute('frame', 2)"/&gt;
-
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
       </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/media-resources-_5.lzx" data-height="120" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/media-resources-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1528"></a>4.1. Frame rates</h3></div></div></div><p>As of OpenLaszlo 3.1, all LZX applications are compiled
       to Macromedia Flash (SWF) files. With the exception of audio
@@ -332,10 +290,6 @@
 &lt;canvas height="180" width="100%"&gt;
   &lt;view resource="http:resources/logo.gif"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
         </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/media-resources-_7.lzx" data-height="180" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/media-resources-_7.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>The second method is to use the 
       <code class="methodname">
@@ -345,10 +299,6 @@
 &lt;canvas height="180" width="100%"&gt;
   &lt;view oninit="this.setAttribute('source', 'http:resources/logo.gif')"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
         </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/media-resources-_8.lzx" data-height="180" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/media-resources-_8.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>LZX treats HTTP URLs that omit the two slashes 
         <code class="literal">//</code>after the colon (:) as being relative
@@ -443,10 +393,6 @@
     &lt;/handler&gt; 
   &lt;/view&gt; 
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
           </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/media-resources-_9.lzx" data-height="400" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/media-resources-_9.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1533"></a>6. Using the &lt;image&gt; tag</h2></div></div></div><p>The 
     <code class="sgmltag-element">image</code> tag has

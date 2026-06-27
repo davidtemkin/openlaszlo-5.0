@@ -19,10 +19,6 @@ glance a view seems like just another view:</p><div class="example"><a name="id5
       &lt;view height="50" width="50" bgcolor="red"/&gt;
       &lt;drawview height="50" width="50" bgcolor="blue"/&gt;
     &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>
 </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>Previously, <code class="literal">&lt;drawview&gt;</code> auto-sized when OpenLaszlo only supported Flash. To make this work in DHTML and Flash consistently, <code class="literal">size</code> must now be explicitly set, because DHTML doesn't support autosize. <code class="literal">size</code> can be changed at runtime, but it may clear the canvas, in which case a new <code class="literal">oncontext</code> event is sent to signal a redraw is needed.  <code class="literal">size</code> need not be a fixed value; it can also be set to percentage values or constraint values.</p></div><p>
@@ -58,10 +54,6 @@ But by adding the line <code class="literal">this.stroke()</code> we produce the
     &lt;/handler&gt;
   &lt;/drawview&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
      </pre></div></div><br class="example-break"><p>
 The <code class="methodname">closePath</code> method draws a line back to the beginning of the current path:
@@ -78,10 +70,6 @@ The <code class="methodname">closePath</code> method draws a line back to the be
         &lt;/handler&gt;
       &lt;/drawview&gt;
     &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>
 Now that we have a closed shape, we can fill it.  First we define a <code class="literal">fillStyle</code>, and then we fill the shape. 
@@ -100,10 +88,6 @@ Now that we have a closed shape, we can fill it.  First we define a <code class=
         &lt;/handler&gt;
       &lt;/drawview&gt;
     &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>
 Note that if you don't close a path but call the <code class="literal">fill()</code> method, the path will be closed implicitly.  Please consult the reference page for particulars.
@@ -124,10 +108,6 @@ The <code class="literal">globalAlpha</code> attribute is used to set the opacit
         &lt;/handler&gt;
       &lt;/drawview&gt;
     &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>
 Remember that the code here is procedural, so alpha values apply to
@@ -161,10 +141,6 @@ and the color.
         &lt;/handler&gt;
       &lt;/drawview&gt;
     &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>
 To get a sense of what gradients look like, try varying the parameters of the ending x and y.
@@ -189,10 +165,6 @@ Also, remember that <code class="literal">drawview</code>s have background color
         &lt;/handler&gt;
       &lt;/drawview&gt;
     &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>
 The gradient can be linear or radial (for details, see the Reference).
@@ -218,10 +190,6 @@ method.
         &lt;/handler&gt;
       &lt;/drawview&gt;
     &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>
 The <code class="literal">clear</code> method wipes the slate clean, so to speak.
@@ -243,10 +211,6 @@ The <code class="literal">clear</code> method wipes the slate clean, so to speak
             &lt;button onclick="parent.clear()" text="clear"/&gt;
        &lt;/drawview&gt;
     &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1473"></a>3. Integrating drawviews into OpenLaszlo applications</h2></div></div></div><p>
 Although the <a class="indexterm" name="id5107"></a><code class="sgmltag-element">&lt;drawview&gt;</code><em><span class="remark">[unknown tag]</span></em>
@@ -308,10 +272,6 @@ method is evoked.
     &lt;/circle&gt;
      
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008, 2010 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>
 OpenLaszlo developers have already used the drawview API to create a color chooser and a paint program.  See what you can do. Have fun!

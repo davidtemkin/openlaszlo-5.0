@@ -12,10 +12,6 @@ In this tutorial you'll learn how to do more complex and powerful interactions a
         &lt;button&gt;My Button&lt;/button&gt;
     &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>We've added a button (My Button) just to remind us of how the <a class="indexterm" name="id3766"></a><code class="sgmltag-element">&lt;simplelayout&gt;</code><em><span class="remark">[unknown tag]</span></em>
 
@@ -36,10 +32,6 @@ which will help you build more complex views.</p><p></p></div><div class="sectio
     &lt;/button&gt;
   &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
      </pre></div></div><br class="example-break"><p>What we've said here is "constrain the x position of the button to half the width of its parent". 
 Actually we said "<code class="literal">immediateparent</code>". What's that about?</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1439"></a>2.1. Parent and Immediateparent</h3></div></div></div><p>
@@ -66,10 +58,6 @@ by half of that.  </p><div class="example"><a name="id3804"></a><p class="title"
     &lt;/button&gt;
   &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
      </pre></div></div><br class="example-break"><p>That works but it's not a general solution. We want the button to always be in the middle of the window even if it changes width. 
 Here's how we do that:</p><div class="example"><a name="id3808"></a><p class="title"><b>Example 7.4. A button that stays centered</b></p><div class="example-contents"><pre class="programlisting">
@@ -86,10 +74,6 @@ Here's how we do that:</p><div class="example"><a name="id3808"></a><p class="ti
     &lt;/button&gt;
   &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
      </pre></div></div><br class="example-break"><p>This will center the button regardless of its size. Parenthesis have been added to clarify the execution order of the code.
 To prove that the button will remain centered, we'll add an onclick script to the button that will resize it.</p><p>
@@ -109,10 +93,6 @@ We'll revisit this topic in the "Scripting" tutorial.</p><div class="example"><a
       &lt;/button&gt;
    &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
      </pre></div></div><br class="example-break"><p>Notice that as the button grows, it still stays centered.</p><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>
 The following discussion of syntax is really unfortunate.
@@ -138,10 +118,6 @@ We can try adding a few buttons at the top:</p><div class="example"><a name="id3
     &lt;/button&gt;
   &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
      </pre></div></div><br class="example-break"><p>We can't change the <a class="indexterm" name="id3833"></a><code class="sgmltag-element">&lt;simplelayout&gt;</code> tag, because that would
 make a mess of the other elements in the window. Instead we can put all three buttons in 
@@ -166,10 +142,6 @@ their <span class="i">own</span> view, and that view will then become a single e
     &lt;/button&gt;
   &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
      </pre></div></div><br class="example-break"><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>
 mention property that we're illustrating here--views grow to accommodate
@@ -198,10 +170,6 @@ color, that stretches from end to end?</p><p>We would constrain the width of the
     &lt;/button&gt;
   &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
      </pre></div></div><br class="example-break"><p>Now the view stretches across, but if you look at the toolbars you'll notice that they are a little bit taller than the buttons they contain. To make our buttons look the same, we could set an absolute height, but let's make it dependent on one of the buttons:</p><div class="example"><a name="id3852"></a><p class="title"><b>Example 7.9. Constraining view to child's height</b></p><div class="example-contents"><pre class="programlisting">
      
@@ -225,10 +193,6 @@ color, that stretches from end to end?</p><p>We would constrain the width of the
     &lt;/button&gt;
   &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
      </pre></div></div><br class="example-break"><p>In order to be able to reference a particular button, we had to give it a <a class="indexterm" name="id3856"></a><code class="sgmltag-attribute">name</code> attribute.</p><p>Now the buttons are top-aligned — they should be vertically aligned to the center of the red bar. Remember how earlier we said that there was an attribute to align stuff to the center? We're going to use it now:</p><div class="example"><a name="id3860"></a><p class="title"><b>Example 7.10. Using the 'valign' attribute</b></p><div class="example-contents"><pre class="programlisting">
        
@@ -254,10 +218,6 @@ color, that stretches from end to end?</p><p>We would constrain the width of the
     &lt;/button&gt;
   &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
      </pre></div></div><br class="example-break"><p>The <a class="indexterm" name="id3864"></a><code class="sgmltag-attribute">valign</code> attribute aligns the view to the middle of its parent's height. It can take a value of <code class="literal">top</code>, <code class="literal">middle</code> or <code class="literal">bottom</code>. There is an <a class="indexterm" name="id3870"></a><code class="sgmltag-attribute">align</code> attribute that aligns views to the x-axis. The only problem with using that here is that we'd have to give each button an <a class="indexterm" name="id3873"></a><code class="sgmltag-attribute">align</code> attribute.</p><p>The solution is to wrap all of our buttons in a view. Then we could apply a <a class="indexterm" name="id3877"></a><code class="sgmltag-attribute">valign</code> attribute to all of them at once.</p><div class="example"><a name="id3880"></a><p class="title"><b>Example 7.11. Applying 'valign' to container view</b></p><div class="example-contents"><pre class="programlisting">
      
@@ -283,10 +243,6 @@ color, that stretches from end to end?</p><p>We would constrain the width of the
     &lt;/button&gt;
   &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
      </pre></div></div><br class="example-break"><p>OK, we seem to have lost buttons one and two, but let's come back
 to that. You'll notice that we gave the new view a name: "buttons". We
@@ -319,10 +275,6 @@ which is inside the red view.</p><p>Now to get buttons one and two back! In the 
     &lt;/button&gt;
   &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
      </pre></div></div><br class="example-break"><p>We changed the color of the view to make it look better. 
 </p><p></p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="comp-intro.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="../developers.tutorials.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="art_assets.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 6. Introduction to Components </td><td width="20%" align="center"><a accesskey="h" href="../index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 8. Introduction to Media and Art Assets</td></tr></table></div></body></html>

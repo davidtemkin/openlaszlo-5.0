@@ -12,10 +12,6 @@ The <a class="indexterm" name="id4833"></a><code class="sgmltag-element">&lt;cla
   
   &lt;MyClass name="myFirstInstance"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>The <a class="indexterm" name="id4841"></a><code class="sgmltag-element">&lt;class&gt;</code> tag defined the class, and the <a class="indexterm" name="id4844"></a><code class="sgmltag-element">&lt;MyClass&gt;</code> tag <span class="i">instantiated</span> it. 
 Everything that was in the definition of the class is <span class="i">inherited</span> by each instance of it that is created.
@@ -43,10 +39,6 @@ didn't specify <a class="indexterm" name="id4880"></a><code class="sgmltag-attri
   
   &lt;SpecialButton&gt;Not clicked&lt;/SpecialButton&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>Since the <a class="indexterm" name="id4915"></a><code class="sgmltag-element">&lt;button&gt;</code><em><span class="remark">[unknown tag]</span></em>
 
@@ -69,10 +61,6 @@ that extends it can also take the text childnode. The method <a class="indexterm
     &lt;/method&gt;
   &lt;/SpecialButton&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>Rewriting methods can be very handy when using both your own and pre-defined classes components, 
 but it's not practical for when you have a class for which every instance may need a particular argument. </p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="classes-tutorial.attributes"></a>3. Attributes</h2></div></div></div><p>We've used attributes before (e.g. width="160"), but these have been attributes that are present in the class we are extending. 
@@ -91,10 +79,6 @@ As mentioned above, it is useful to be able to pass an instance of a class an ar
   &lt;SpecialButton&gt;Not clicked&lt;/SpecialButton&gt;
   &lt;SpecialButton changeToLabel="Thank You!"&gt;Please click me!&lt;/SpecialButton&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>If we give the attribute a value, then that will be its default value, and will get assigned if we don't explicitly set it.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1465"></a>4. More Inheritance</h2></div></div></div><p>You can extend a class more than once. For example, an application might contain more than one kind of button:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>A standard button that is blue, then switches to green when we roll over it. Clicking this button writes out the name of a pet.</p></li><li class="listitem"><p>A special button, that is red, but also switches to green when we roll over it. Clicking this button writes out a day of the week.</p></li></ul></div><div class="example"><a name="id4947"></a><p class="title"><b>Example 12.5. Extending a class more than once</b></p><div class="example-contents"><pre class="programlisting">
    &lt;?xml version="1.0" encoding="UTF-8"?&gt;
@@ -128,10 +112,6 @@ As mentioned above, it is useful to be able to pass an instance of a class an ar
     &lt;text id="weekday"/&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-  * Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-  * Use is subject to license terms.                                            *
-  * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>Here we only changed the <a class="indexterm" name="id4951"></a><code class="methodname">doAction()</code> method and the resource. The <a class="indexterm" name="id4955"></a><code class="methodname">doOver()</code> and <a class="indexterm" name="id4959"></a><code class="methodname">doOut()</code> methods remained the same, so there was no need to redefine them in the MySpecialButton definition.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="classes-tutorial.placing"></a>5. Placing views inside of classes</h2></div></div></div><p>Since we frequently write classes that extend view, at some stage we're going to need to place a view inside an instance of a class that we have created. For example, we may want to write a window class and put a text field inside of its title bar. Or we may want to put some content inside the middle of our window. There are two ways to do this: giving the subviews <a class="indexterm" name="id4967"></a><code class="sgmltag-attribute">placement</code> attributes, or giving the class the <a class="indexterm" name="id4970"></a><code class="sgmltag-attribute">defaultplacement</code> attribute.</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1466"></a>5.1. Placing views using the placement attribute</h3></div></div></div><p>If you had one view and you specifically wanted to place it in a particular subview of a class, you would use the <a class="indexterm" name="id4976"></a><code class="sgmltag-attribute">placement</code> attribute of that view. </p><p>An example is the title bar of a window: It's unlikely that you would need to place several things in the title bar of a window, so it's OK to have to add the <a class="indexterm" name="id4980"></a><code class="sgmltag-attribute">placement</code> attribute to the subview of the class that you want to place in the title bar.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1467"></a>5.2. Placing views by defining class with a defaultplacement attribute</h3></div></div></div><p class="todo"><em><span class="remark"><span class="para-label">TODO: </span>
 Link to other chapters where this is described

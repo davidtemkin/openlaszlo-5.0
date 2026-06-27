@@ -60,11 +60,7 @@ See <a class="xref" href="proxied.html" title="Chapter 25. Proxied and SOLO Ap
       
 &lt;canvas height="40" width="100%"&gt;
   &lt;text&gt;Hello, World!&lt;/text&gt; 
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+&lt;/canvas&gt; 
  
     </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-development-_1.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-development-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>This program illustrates three essential features of all Laszlo
 applications:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p>LZX files are well-formed XML documents</p></li><li class="listitem"><p><a class="indexterm" name="id3283"></a><code class="sgmltag-element">&lt;canvas&gt;</code><em><span class="remark">[unknown tag]</span></em>
@@ -90,7 +86,7 @@ in the opening tag.</p><pre class="programlisting">
 </pre><p>
 If you do not set the height and width, the canvas — like other views — sizes itself to the size of the views it contains. Unlike other views, the canvas, by default, has a nonzero width  and height: it sizes itself to the HTML page that contains it. Therefore the null LZX application</p><pre class="programlisting">
 &lt;canvas/&gt;
-</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/inline-c575f18536.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/inline-c575f18536.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div><p>defines an invisible object that is the size of the page.</p><p>In addition to its height and width, the canvas has several other
+</pre><p>defines an invisible object that is the size of the page.</p><p>In addition to its height and width, the canvas has several other
 visible attributes. The background color, defined by the
 <a class="indexterm" name="id3326"></a><code class="sgmltag-attribute">bgcolor</code> attribute, is most useful for learning
 about the visual structures of LZX applications.</p><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1417"></a>2.2.1. The <a class="indexterm" name="id3331"></a><code class="sgmltag-element">&lt;script&gt;</code><em><span class="remark">[unknown tag]</span></em>
@@ -147,19 +143,7 @@ exist but they are invisible. The second has no color
 assigned to it and the third has zero width. They still, however,
 affect the arrangement of the other two views.</p><div class="example"><a name="id3392"></a><p class="title"><b>Example 4.2. Nested views</b></p><div class="example-contents"><pre class="programlisting">
       
-&lt;canvas height="100" width="100%"&gt; 
-  &lt;!-- shows a red square: --&gt; 
-  &lt;view width="50" height="50" bgcolor="red"/&gt;
-  &lt;!-- nothing is displayed, but view still exists: --&gt; 
-  &lt;view width="50" height="50"/&gt;
-  &lt;!-- nothing is displayed, but view still exists: --&gt; 
-  &lt;view width="0" height="50" bgcolor="blue"/&gt;
-  &lt;simplelayout axis='x' spacing="5"/&gt; 
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;  
+&lt;canvas height="100" width="100%"&gt;  
     </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-development-_8.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-development-_8.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1421"></a>2.3.2. Views as containers of other views</h4></div></div></div><p>
 Views can also contain other views, allowing you to create complex visual elements. Each 'parent' view can have any number of children. By default, each child view is positioned relative to the top-left corner of its parent as shown in the example.</p><p>Although it is always possible to position any view by specifying
 its horizontal (<a class="indexterm" name="id3399"></a><code class="sgmltag-attribute">x</code>) and vertical
@@ -184,11 +168,7 @@ you. Layout types built into the system include
   &lt;view bgcolor="red" x="50" y="50" width="100" height="100"&gt; 
     &lt;view bgcolor="yellow" x="50" y="50" width="60" height="105"/&gt; 
   &lt;/view&gt; 
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;  
+&lt;/canvas&gt;  
     </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-development-_9.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-development-_9.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Running the example above also shows that the width and height of a view can be different than the dimensions of the bounding box of its child views. No clipping occurred on the "yellow" view even though it lies outside the boundary of its parent.</p><p>
 If no width and height are actually defined for a view, then it will adopt the width and height of the bounding box not its subviews. If clipping is desired, however, then the attribute <code class="literal">clip="true"</code>
 can be added to the parent, which would look like the following.</p><div class="example"><a name="id3434"></a><p class="title"><b>Example 4.4. Clipping</b></p><div class="example-contents"><pre class="programlisting">
@@ -197,11 +177,7 @@ can be added to the parent, which would look like the following.</p><div class="
   &lt;view bgcolor="red" x="50" y="50" width="100" height="100" clip="true"&gt; 
     &lt;view bgcolor="yellow" x="50" y="50" width="60" height="105"/&gt; 
   &lt;/view&gt; 
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;  
+&lt;/canvas&gt;  
     </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-development-_10.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-development-_10.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1423"></a>2.3.4. Images and other resources</h4></div></div></div><p>
 In addition to showing text and color, views are used to display, or play, media files of various formats, such as .gif, .jpeg, .png, .swf, and .mp3, for example. These resources may be compiled into the application or brought in at run time; they can be on the OpenLaszlo server or on a remote back end, and can be referenced by relative paths or absolute ids. </p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="program-development.data-binding"></a>2.4. Data Binding</h3></div></div></div><p>
 LZX derives much of its power from its unique implementation of data binding, in which the contents of a view are determined by the contents of a dataset. A dataset is simply a named hierarchy of XML data that has a single root node. All data in LZX applications is contained in datasets.</p><p>
@@ -218,11 +194,7 @@ The concept of data binding implies more than the use of views to display XML da
   &lt;view datapath="ds:/record"&gt; 
     &lt;text datapath="@name" bgcolor="$path{'@color'}" x="$path{'@x'}"/&gt; 
   &lt;/view&gt; 
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;  
+&lt;/canvas&gt;  
     </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-development-_11.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-development-_11.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
 In the above example, the one line</p><pre class="programlisting">
 &lt;view datapath="ds:/record"&gt; 
@@ -292,13 +264,9 @@ example,</p><div class="example"><a name="id3518"></a><p class="title"><b>Exampl
   &lt;script&gt; 
     Debug.debug("Well now how about that!") 
   &lt;/script&gt; 
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+&lt;/canvas&gt; 
  
-    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-development-_15.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-development-_15.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
+    </pre></div></div><br class="example-break"><p>
 To invoke the debugger, set the attribute <code class="literal">debug="true"</code>
 in the <a class="indexterm" name="id3523"></a><code class="sgmltag-element">&lt;canvas&gt;</code> tag. You can modify the appearance and position of the <a class="indexterm" name="id3526"></a><code class="sgmltag-element">&lt;debug&gt;</code><em><span class="remark">[unknown tag]</span></em>
 
@@ -308,11 +276,7 @@ To use the debugger interactively to inspect a value, you type an expression in 
 &lt;canvas width="100%" height="200" bgcolor="red" debug="true"&gt; 
   &lt;debug y="60"/&gt; 
   &lt;view name="sam" bgcolor="blue" height="50" width="50"/&gt; 
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+&lt;/canvas&gt; 
  
 </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-development-_16.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-development-_16.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
 In the evaluation pane, type,</p><pre class="programlisting">sam.setAttribute('x', 50)</pre><p>and press return. The view named <code class="varname">sam</code> (the blue

@@ -92,6 +92,28 @@ const canvasHeight = s => {
   return m ? Math.max(96, Math.min(620, +m[1])) : null;
 };
 
+// Strip the trailing X_LZ_COPYRIGHT_* legal block + the @LZX_VERSION@ marker comment from a
+// displayed source listing (the stock docs never showed them). Handles both the raw `<!--` form
+// (the staged file / map key) and the HTML-escaped `&lt;!--` form (the chunked <pre> listing).
+const stripCopyright = s => s
+  .replace(/\s*(?:<|&lt;)!--[\s\S]*?X_LZ_COPYRIGHT_BEGIN[\s\S]*?X_LZ_COPYRIGHT_END[\s\S]*?--(?:>|&gt;)/gi, "")
+  .replace(/\s*(?:<|&lt;)!--\s*@LZX_VERSION@[\s\S]*?--(?:>|&gt;)/gi, "");
+
+// A canvas whose only children are non-rendering (data/debugger/script examples — `<dataset>`,
+// `<script>`, `<debug>`, `<handler>`, `<datapointer>`, …, with no view/component) draws an EMPTY
+// window, so it gets NO Run button (the example is fully conveyed by its source listing). Strip the
+// non-visual children + comments and check whether any element tag remains inside the <canvas>.
+const NONVISUAL = ["dataset", "script", "debug", "handler", "method", "attribute", "datapointer",
+  "datapath", "simplelayout", "resizelayout", "stableborderlayout", "constantlayout", "wrappinglayout",
+  "font", "import", "include", "switch"];
+const hasVisibleContent = s => {
+  let inner = s.replace(/^[\s\S]*?<canvas\b[^>]*>/i, "").replace(/<\/canvas>[\s\S]*$/i, "").replace(/<!--[\s\S]*?-->/g, "");
+  for (const t of NONVISUAL) inner = inner
+    .replace(new RegExp(`<${t}\\b[^>]*\\/>`, "gi"), "")
+    .replace(new RegExp(`<${t}\\b[^>]*>[\\s\\S]*?<\\/${t}>`, "gi"), "");
+  return /<[a-zA-Z]/.test(inner);
+};
+
 // scan a guide's .dbk for live-examples → { map: normSource -> runUrl, inlines: name->content }
 function collectLiveExamples(srcGuideDir, outSub) {
   const map = new Map(), inlines = new Map(), heights = new Map();
@@ -118,8 +140,9 @@ function collectLiveExamples(srcGuideDir, outSub) {
           }
           if (!/<canvas[\s>/]/.test(source)) continue;     // only runnable apps get a toolbar
           if (validateCompile && !validateCompile(source, srcGuideDir, runName)) continue;  // …that compile
+          if (!hasVisibleContent(source)) continue;        // …and that render something (no empty windows)
           const url = "/docs/" + outSub + "/programs/" + runName;
-          map.set(norm(source), url);
+          map.set(norm(stripCopyright(source)), url);      // match the copyright-stripped <pre> listing
           const ch = canvasHeight(source); if (ch) heights.set(url, ch);
         }
       }
@@ -138,11 +161,11 @@ function stagePrograms(srcGuideDir, htmlDir, inlines) {
       if (e.name.startsWith(".") || SKIP.has(e.name) || /\.(lzx\.js|sprite\.png|wgt)$/.test(e.name)) continue;
       const sp = path.join(s, e.name), dp = path.join(d, sanitizeName(e.name));
       if (e.isDirectory()) cp(sp, dp);
-      else if (e.name.endsWith(".lzx")) fs.writeFileSync(dp, stripDebug(fs.readFileSync(sp, "utf8")));  // run debug-off
+      else if (e.name.endsWith(".lzx")) fs.writeFileSync(dp, stripCopyright(stripDebug(fs.readFileSync(sp, "utf8"))));  // run debug-off, no legal footer
       else fs.copyFileSync(sp, dp);
     }
   })(srcP, dstP);
-  if (inlines.size) { fs.mkdirSync(dstP, { recursive: true }); for (const [n, c] of inlines) fs.writeFileSync(path.join(dstP, n), stripDebug(c)); }
+  if (inlines.size) { fs.mkdirSync(dstP, { recursive: true }); for (const [n, c] of inlines) fs.writeFileSync(path.join(dstP, n), stripCopyright(stripDebug(c))); }
 }
 
 const liveWidget = (url, height) =>
@@ -235,9 +258,11 @@ function buildGuide(srcSub, indexFile, outSub) {
         // inject a Run/Edit toolbar after each live-example's <pre> (match raw source)
         let injected = 0;
         h = h.replace(/<pre class="programlisting">([\s\S]*?)<\/pre>/g, (full, inner) => {
-          const url = liveMap.get(norm(inner));
-          if (!url) return full;
-          injected++; live++; matchedUrls.add(url); return full + liveWidget(url, heights.get(url));
+          const clean = stripCopyright(inner);                          // drop the legal footer from EVERY listing
+          const pre = `<pre class="programlisting">${clean}</pre>`;
+          const url = liveMap.get(norm(clean));
+          if (!url) return pre;
+          injected++; live++; matchedUrls.add(url); return pre + liveWidget(url, heights.get(url));
         });
         if (injected) h = h.replace(/<\/body>/i, liveScript + "</body>");
         h = h

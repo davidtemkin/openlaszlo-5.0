@@ -10,34 +10,3 @@
     </soap>
 
     <button text="search" onclick="this.doGoogleSearch.invoke()">
-
-        <!-- if name isn't set, name defaults to value of funcname. -->
-
-        <remotecall funcname="doGoogleSearch" 
-                    remotecontext="$once{canvas.google}">
-
-            <param value="'2TKUw4ZQFHJ84ByemZK0EXV0Lj+7xGOx'" />
-            <param value="'sweet'" />
-            <param value="1" />
-            <param value="10" />
-            <param value="true" />
-            <param value="''" />
-            <param value="true" />
-            <param value="''" />
-            <param value="''" />
-            <param value="''" />
-
-            <handler name="ondata" args="value">
-                Debug.debug('got result');
-                Debug.inspect(value);
-            </handler>
-            <handler name="onerror" args="error">
-                Debug.error("RPC error: %w", error);
-            </handler>
-        </remotecall>
-    </button>
-</canvas>
-<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** -->

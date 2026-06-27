@@ -6,7 +6,3 @@
     <view name="yellow" bgcolor="yellow" width="50" height="50"/>
   </foo>
 </canvas>
-<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** -->

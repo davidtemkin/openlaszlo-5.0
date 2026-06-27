@@ -6,10 +6,6 @@ configure and define the application.  For example,</p><div class="example"><a n
 &lt;canvas height="15" width="100%"&gt;
   &lt;text&gt;Hello, World&lt;/text&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-structure-_1.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-structure-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>is a simple LZX application. The canvas has a height and width
 measured in pixels; if you do not specify values for these attributes
@@ -34,7 +30,7 @@ For example,</p><div class="example"><a name="id5412"></a><p class="title"><b>Ex
 &lt;canvas&gt;
   &lt;include href="hello-incl.lzx"/&gt;
 &lt;/canvas&gt;
-</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/inline-3e44642576.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/inline-3e44642576.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="informalexample"><pre class="programlisting">
+</pre></div></div><br class="example-break"><div class="informalexample"><pre class="programlisting">
 &lt;library&gt;
   &lt;text&gt;Hello World!&lt;/text&gt;
 &lt;/library&gt;
@@ -94,10 +90,6 @@ example:</p><div class="example"><a name="id5483"></a><p class="title"><b>Exampl
   &lt;include href="library.lzx"/&gt;
   &lt;mywindow/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/include-1.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/include-1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="informalexample"><pre class="programlisting">
 &lt;library&gt;
@@ -116,10 +108,6 @@ example:</p><div class="example"><a name="id5483"></a><p class="title"><b>Exampl
     &lt;include href="inner.lzx"/&gt;
   &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/include-3.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/include-3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="example"><a name="id5495"></a><p class="title"><b>Example 15.5. inner.lzx</b></p><div class="example-contents"><pre class="programlisting">
 &lt;button&gt;Click me!&lt;/button&gt;
@@ -134,10 +122,6 @@ include literal text from another file.</p><div class="example"><a name="id5502"
     &lt;/button&gt;
   &lt;/window&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/include-5.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/include-5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="example"><a name="id5505"></a><p class="title"><b>Example 15.7. mytext.txt</b></p><div class="example-contents"><pre class="programlisting">
 Click me!
@@ -182,20 +166,12 @@ component set.</p><p></p><div class="section"><div class="titlepage"><div><div><
   &lt;include href="lz/button.lzx"/&gt;
   &lt;button&gt;Click me!&lt;/button&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-structure-_12.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-structure-_12.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="example"><a name="id5568"></a><p class="title"><b>Example 15.11. Use button with implicit include</b></p><div class="example-contents"><pre class="programlisting">
    
 &lt;canvas height="50" width="100%"&gt;
   &lt;button&gt;Click me!&lt;/button&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-structure-_13.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-structure-_13.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="example"><a name="id5571"></a><p class="title"><b>Example 15.12. Subclass button with explicit include</b></p><div class="example-contents"><pre class="programlisting">
    
@@ -204,10 +180,6 @@ component set.</p><p></p><div class="section"><div class="titlepage"><div><div><
   &lt;class name="mybutton" extends="button"/&gt;
   &lt;mybutton&gt;Click me!&lt;/mybutton&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007-2009 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-structure-_14.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-structure-_14.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="example"><a name="id5574"></a><p class="title"><b>Example 15.13. Subclass button with implicit include</b></p><div class="example-contents"><pre class="programlisting">
    
@@ -215,10 +187,6 @@ component set.</p><p></p><div class="section"><div class="titlepage"><div><div><
   &lt;class name="mybutton" extends="button"/&gt;
   &lt;mybutton&gt;Click me!&lt;/mybutton&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007-2009 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-structure-_15.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-structure-_15.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>A file is only included if the application references a class that it does not define in its own sources.  The following two programs define their own <a class="indexterm" name="id5578"></a><code class="sgmltag-element">&lt;button&gt;</code> tag, and therefore do not implicitly include the file that defines the OpenLaszlo <a class="indexterm" name="id5581"></a><code class="sgmltag-element">&lt;button&gt;</code> tag.</p><div class="example"><a name="id5584"></a><p class="title"><b>Example 15.14. Define button</b></p><div class="example-contents"><pre class="programlisting">
    
@@ -227,11 +195,7 @@ component set.</p><p></p><div class="section"><div class="titlepage"><div><div><
     &lt;text&gt;Click me!&lt;/text&gt;
   &lt;/class&gt;
   &lt;button/&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt; 
+&lt;/canvas&gt; 
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-structure-_16.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-structure-_16.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="example"><a name="id5587"></a><p class="title"><b>Example 15.15. Define and subclass button</b></p><div class="example-contents"><pre class="programlisting">
    
 &lt;canvas height="50" width="100%"&gt;
@@ -241,10 +205,6 @@ component set.</p><p></p><div class="section"><div class="titlepage"><div><div><
   &lt;class name="mybutton" extends="button"/&gt;
   &lt;mybutton/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007-2009 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-structure-_17.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-structure-_17.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1487"></a>3.1.2. More on base components</h4></div></div></div><p>An application can include the entire set of Base components by
 including the line <code class="literal">&lt;include
@@ -318,14 +278,8 @@ application be compiled in debug mode by setting the canvas's
 <a class="indexterm" name="id5743"></a><code class="sgmltag-attribute">debug</code> attribute to true:</p><div class="example"><a name="id5746"></a><p class="title"><b>Example 15.16. Compiling with the debugger</b></p><div class="example-contents"><pre class="programlisting">
    
 &lt;canvas width="100%" height="140" debug="true"&gt;
-  &lt;!-- ... --&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-structure-_19.lzx" data-height="140" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-structure-_19.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>This has the same effect as pressing the Debug button in the
+   </pre></div></div><br class="example-break"><p>This has the same effect as pressing the Debug button in the
 developer console. It is also possible to invoke the debugger by loading the
 application using the <code class="literal">?debug=true</code> query parameter.</p><p>See <a class="xref" href="debugging.html" title="Chapter 51. Debugging">Chapter 51, <i>Debugging</i></a> 
 for more information on using the

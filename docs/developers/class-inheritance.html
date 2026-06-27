@@ -45,10 +45,6 @@ attributes, and views inside a class are inherited down through each level.</p><
   &lt;text id="message" y="30" multiline="true" /&gt;
   &lt;bottom/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_1.lzx" data-height="125" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Class definitions can include default values for attributes. For example, a class that <span class="emphasis"><em>extends</em></span> view can have default
 <a class="indexterm" name="id11338"></a><code class="sgmltag-attribute">width</code> and <a class="indexterm" name="id11341"></a><code class="sgmltag-attribute">height</code>
@@ -71,31 +67,8 @@ the <a class="indexterm" name="id11374"></a><code class="sgmltag-element">&lt;at
 an attribute in the <a class="indexterm" name="id11378"></a><code class="sgmltag-element">&lt;class&gt;</code> declaration itself.</p><div class="example"><a name="id11381"></a><p class="title"><b>Example 33.2. Inheriting properties</b></p><div class="example-contents"><pre class="programlisting">
    
 &lt;canvas height="100" width="100%"&gt;
-  &lt;!-- create a simplelayout so embedded views are laid out  --&gt;
-  &lt;!-- on top of each other.                                 --&gt;
-  &lt;class name="class1" layout="class: simplelayout; spacing: 2"&gt;
-    &lt;attribute name="label" value="class1 label" type="string"/&gt;
-    &lt;text&gt;from class1&lt;/text&gt;
-    &lt;button text="${classroot.label}"/&gt;
-  &lt;/class&gt;
-
-  &lt;!-- overrides class1's label; inherits text and button --&gt;
-  &lt;class name="class2" extends="class1" label="class2 label"&gt;
-    &lt;text&gt;from class2&lt;/text&gt;
-  &lt;/class&gt;
-
-  &lt;!-- inherit class1's text and button; inherit class2's text --&gt;
-  &lt;class name="class3" extends="class2"&gt;
-    &lt;text&gt;from class3&lt;/text&gt;
-  &lt;/class&gt;
-  &lt;class3/&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_3.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>You can use the <code class="literal">super</code> keyword to invoke a superclass's
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/program-development-_8.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/program-development-_8.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>You can use the <code class="literal">super</code> keyword to invoke a superclass's
 method. The <code class="literal">super</code> keyword is useful in instances where you want to
 extend the superclass's method without rewriting the same logic. A
 method can only use <code class="literal">super</code> to call the method that it
@@ -116,10 +89,6 @@ overrides.  That is, a subclass's <a class="indexterm" name="id11388"></a><code 
   &lt;text id="message" y="30" multiline="true" /&gt;
   &lt;bar/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_4.lzx" data-height="140" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1762"></a>2.1. Handlers cannot be overridden</h3></div></div></div><p>
 In order to override the behavior of an event handler, you would have the handler call a method, and then override the method in the subclass or instance. For example, let's say that you wanted to write a handler for the <code class="literal">onclick</code> event that you could override in an instance. In your class definition, you would use this syntax:</p><pre class="programlisting">
@@ -209,23 +178,6 @@ usually more readable.
     &lt;view bgcolor="red" width="250" height="150"&gt;
       &lt;view bgcolor="green" width="75%" height="75%"&gt;
         &lt;button text="clickme" width="75%" height="75%"&gt;
-          &lt;!-- classroot is a convenient way to access mytext --&gt;
-          &lt;handler name="onclick"&gt;
-            message.addText("\nclassroot.mytext: " + classroot.mytext);
-            message.addText("\nparent.parent.parent.mytext: " + 
-            parent.parent.parent.mytext);
-          &lt;/handler&gt;
-        &lt;/button&gt;       
-      &lt;/view&gt;     
-    &lt;/view&gt;
-    &lt;text id="message" y="140" multiline="true" /&gt;
-  &lt;/class&gt;
-  &lt;deep/&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_6.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_6.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Be careful when using <code class="literal">classroot</code> from the root of the
 class. If there is no surrounding class, <code class="literal">classroot</code> will
@@ -243,28 +195,6 @@ as a short-cut to refer to the root of outer classes.</p><div class="example"><a
       Debug.debug("foo: classroot.classroot is [%w]", classroot.classroot);
     &lt;/method&gt;
   &lt;/class&gt;
-  &lt;!-- boo contains a foo --&gt;
-  &lt;class name="boo"&gt;
-    &lt;foo name="myfoo"/&gt;
-  &lt;/class&gt;
-  &lt;!-- goo contains a boo --&gt;
-  &lt;class name="goo"&gt;
-    &lt;boo name="myboo"/&gt;
-    &lt;handler name="oninit"&gt;
-      myboo.myfoo.doit();
-      Debug.debug("-----");
-      Debug.debug("goo: this is [%w]", this);
-      // error will be displayed -- there is no classroot
-      Debug.debug("goo: classroot is [%w]", classroot);
-    &lt;/handler&gt;
-  &lt;/class&gt;
-  &lt;!-- Make an instance of goo --&gt;
-  &lt;goo name="mygoo"/&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_7.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_7.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
 At the risk of belaboring the topic, here's one more example that demonstrates that top level instances of a class have no defined classroot. Notice that even though "bar" is a child of "foo", it does not have a defined classroot, because it is a toplevel instance of the bar class. </p><div class="example"><a name="id11458"></a><p class="title"><b>Example 33.6. Classroot and top level instance</b></p><div class="example-contents"><pre class="programlisting">
@@ -280,22 +210,7 @@ At the risk of belaboring the topic, here's one more example that demonstrates t
     &lt;button name="b1" height="30" text="${parent.button_label}" 
       onclick="Debug.debug('classroooot of this button is: %#w', classroot); parent.handleclick()"/&gt;
   &lt;/class&gt;
-  &lt;class name="another_class" extends="myclass"/&gt; 
-  &lt;!-- foo and bar views are top-level instances, so their classroots are null.
-    == The buttons are children of the foo and bar views, respectively, so ==
-    == their classroots are defined. --&gt;
-  &lt;myclass id="foo"&gt;
-    &lt;another_class id="bar" bgcolor="red" button_label="another button" y="25"&gt;
-      &lt;method name="handleclick"&gt;
-        Debug.debug("this = %w, and classroot is %w", this, classroot);
-      &lt;/method&gt;
-    &lt;/another_class&gt;
-  &lt;/myclass&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+  &lt;class name="another_class" extends="myclass"/&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_8.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_8.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1765"></a>3.1. Classroot not available in &lt;state&gt;</h3></div></div></div><p>
 The <a class="indexterm" name="id11464"></a><code class="sgmltag-element">&lt;state&gt;</code><em><span class="remark">[unknown tag]</span></em>
@@ -347,10 +262,6 @@ such a class.</p><div class="example"><a name="id11503"></a><p class="title"><b>
   &lt;myinputtext&gt;plain text&lt;/myinputtext&gt;
   &lt;mytext&gt;&lt;i&gt;styled&lt;/i&gt; text&lt;/mytext&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_10.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_10.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>A user-defined class can also handle text content by defining an
 attribute named <a class="indexterm" name="id11507"></a><code class="sgmltag-attribute">text</code> with a type of
@@ -397,10 +308,6 @@ attribute. The text may contain XHTML tags such as <a class="indexterm" name="id
   &lt;/htmlText&gt;
   &lt;htmlText text="&amp;lt;b&amp;gt;bold&amp;lt;/b&amp;gt; text set here"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre></div></div><br class="example-break"><p>Note that XHTML markup within a class that is declared with
 <code class="literal">type="text"</code>, instead of <code class="literal">type="html"</code>, is
@@ -433,23 +340,6 @@ from there on will inherit that font.</p><div class="example"><a name="id11565">
   &lt;font src="helmetb.ttf" name="Helvetica" style="bold"/&gt;
   
   &lt;class name="foo"&gt;
-    &lt;!-- view overrides inherited fontstyle to plain --&gt;
-    &lt;view fontstyle="plain" bgcolor="yellow"&gt;
-      &lt;!-- text overrides inherited fontsize to 12 --&gt;
-      &lt;text fontsize="12"&gt;hello&lt;/text&gt;
-    &lt;/view&gt;
-  &lt;/class&gt;
-  
-  &lt;class name="bar" extends="foo" layout="axis: y"&gt;
-    &lt;text&gt;goodbye&lt;/text&gt;
-  &lt;/class&gt;
-  
-  &lt;bar font="Helvetica" fontstyle="bold" fontsize="12"/&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_16.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_16.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="class-inheritance.instantiating_through_script"></a>7. Instantiating classes through script</h2></div></div></div><p>In general, <em class="glossterm">instantiation</em> of objects happen using tags. For
 instance, assuming <code class="literal">&lt;class name="myclass"&gt;</code> is
@@ -485,21 +375,6 @@ add it to another view.</p><div class="example"><a name="id11606"></a><p class="
   &lt;/class&gt;
   
   &lt;view name="redbox" bgcolor="red" width="100" height="100"/&gt;
-  
-  &lt;!-- Create new lz.mybox with cyan bgcolor and place it in canvas.redbox. --&gt;
-  &lt;button x="110" text="add cyan"
-            onclick="if (canvas.redbox['cyan'] == null) 
-                       new lz.mybox(canvas.redbox, { name: 'cyan', bgcolor: 0x00ffff })"/&gt;
-
-  &lt;!-- Remove cyan view from redbox. --&gt;
-  &lt;button x="110" y="30" text="remove cyan"
-            onclick="if (canvas.redbox['cyan'] != null) canvas.redbox.cyan.destroy()"/&gt;
-
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_17.lzx" data-height="120" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_17.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="class-inheritance.procedural_and_replicated"></a>7.1. Be careful of mixing replication and classes declared procedurally</h3></div></div></div><p>
 Views that you create procedurally are not the same as "clones" created by data replication. In fact, data replication overrides procedurally created views. For example:
@@ -552,10 +427,6 @@ order. This can be verified by examining the subviews array.</p><div class="exam
   &lt;/class&gt; 
   &lt;three id="mysubclass" oninit="Debug.debug('subviews: %w', this.subviews)"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_19.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_19.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Views declared in an instance of a class will be placed in the
 top-level of the class unless otherwise declared with the
@@ -572,10 +443,6 @@ explained in more detail in the next section.</p><div class="example"><a name="i
     &lt;view name="yellow" bgcolor="yellow" width="50" height="50"/&gt;
   &lt;/foo&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_20.lzx" data-height="250" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_20.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Notice how view <code class="varname">yellow</code> follows view
 <code class="varname">red</code> in its subviews array. If a
@@ -594,10 +461,6 @@ explained in more detail in the next section.</p><div class="example"><a name="i
     &lt;view name="yellow" bgcolor="yellow" width="50" height="50"/&gt;
   &lt;/foo&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_21.lzx" data-height="250" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_21.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1776"></a>9.3. Placement</h3></div></div></div><p>The internal structure of a class is generally not visible to its
 hierarchical children. By default, instances which appear inside a class are
@@ -611,16 +474,6 @@ desirable for container classes. For example:</p><div class="example"><a name="i
                height="${parent.height-10}"
                bgcolor="#FFFFCC"/&gt;
   &lt;/class&gt;
-  
-  &lt;!-- make an instance of myframe with text inside it--&gt;
-  &lt;myframe width="220" height="20"&gt;
-    &lt;text&gt;This is some text&lt;/text&gt;
-  &lt;/myframe&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_22.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_22.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>This behavior can be changed using the
 <a class="indexterm" name="id11683"></a><code class="sgmltag-attribute">defaultplacement</code> attribute or the
@@ -637,24 +490,6 @@ should always be declared in an attribute with
 &lt;canvas height="50" width="100%"&gt;
   &lt;class name="myframe" extends="view"&gt;
     &lt;attribute name="bgcolor" value="red"/&gt;
-    
-    &lt;!-- child views of class instances will be placed in the first view
-            called insideview --&gt;
-    &lt;attribute name="defaultplacement" value="insideview" type="string"/&gt;
-    
-    &lt;view x="5" y="5" width="${parent.width-10}" name="insideview"
-                height="${parent.height-10}" 
-                bgcolor="#FFFFCC"/&gt;
-  &lt;/class&gt;
-  &lt;!-- make an instance of myframe with text inside it--&gt;
-  &lt;myframe width="220" height="50"&gt;
-    &lt;text&gt;This is some text&lt;/text&gt;
-  &lt;/myframe&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_23.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_23.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Elements declared in a class are not considered for placement, but children in
 subclasses or class instances will be.</p><div class="example"><a name="id11705"></a><p class="title"><b>Example 33.16. Defaultplacement</b></p><div class="example-contents"><pre class="programlisting">
@@ -668,34 +503,6 @@ subclasses or class instances will be.</p><div class="example"><a name="id11705"
       &lt;view x="5" y="5" width="${parent.width-10}" name="insideview"
               height="${parent.height-10}" 
               bgcolor="#FFFFCC"/&gt;
-
-      &lt;!-- this view is not affected by defaultplacement --&gt;
-      &lt;!-- because it's declared in the class.           --&gt; 
-      &lt;view x="5" y="${parent.height}" name="anotherview" 
-            width="${parent.width-10}" height="10"
-            bgcolor="blue"/&gt;
-  &lt;/class&gt;
-
-  &lt;class name="subframe" extends="myframe"&gt;
-    &lt;!-- the layout and text will be placed in insideview of myframe --&gt;
-    &lt;simplelayout axis="y"/&gt;
-    &lt;text bgcolor="teal"&gt;subframe text&lt;/text&gt;
-  &lt;/class&gt;
-
-
-  &lt;myframe width="220" height="50"&gt;
-    &lt;!-- this will be placed in insideview --&gt;
-    &lt;text&gt;This is some text&lt;/text&gt;
-  &lt;/myframe&gt;
-
-  &lt;subframe width="220" height="50" y="70"&gt;
-    &lt;text bgcolor="green"&gt;More subframe text&lt;/text&gt;
-  &lt;/subframe&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_24.lzx" data-height="160" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_24.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1772"></a>9.3.1. Placing layouts</h4></div></div></div><p>A layout declared as an attribute will be considered for
 placement. This is often the desired behavior because it makes it easy
@@ -712,30 +519,8 @@ isn't handled by defaultplacement by declaring it as a tag element in
 the class.</p><div class="example"><a name="id11723"></a><p class="title"><b>Example 33.17. Layout placement</b></p><div class="example-contents"><pre class="programlisting">
    
 &lt;canvas width="100%"&gt;
-  &lt;!-- the layout attribute will be placed in the red view --&gt;
-  &lt;class name="myplacement" defaultplacement="red" layout="axis: x; spacing: 5"&gt;
-    &lt;!-- this layout element applies to views inside of class --&gt;
-    &lt;simplelayout spacing="10"/&gt;
-    &lt;view name="red" bgcolor="red" width="150" height="150"/&gt;
-    &lt;view name="yellow" bgcolor="yellow" width="150" height="150"/&gt;
-  &lt;/class&gt;
-
-  &lt;myplacement&gt;
-    &lt;!-- placement overrides defaultplacement --&gt;
-    &lt;view name="blue" bgcolor="blue" width="50" height="50" placement="yellow"/&gt;
-
-    &lt;!-- green and teal will be placed in red --&gt;
-    &lt;view name="green" width="50" height="50" bgcolor="green"/&gt;
-    &lt;view name="teal" width="50" height="50" bgcolor="teal"/&gt;
-  &lt;/myplacement&gt;
-
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_25.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_25.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1773"></a>9.3.2. ImmediateParent</h4></div></div></div><p>A child placed using <a class="indexterm" name="id11729"></a><code class="sgmltag-attribute">defaultplacement</code> or
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/layout-and-design-_7.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/layout-and-design-_7.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1773"></a>9.3.2. ImmediateParent</h4></div></div></div><p>A child placed using <a class="indexterm" name="id11729"></a><code class="sgmltag-attribute">defaultplacement</code> or
 <a class="indexterm" name="id11732"></a><code class="sgmltag-attribute">placement</code> will often have two parent types. The
 <em class="structfield"><code>parent</code></em> is the reference to the node that was passed as
 the child's ancestor in the constructor, e.g., <code class="literal">new
@@ -748,22 +533,7 @@ child is actually placed at runtime. Its value will be the same as
   &lt;debug x="155"/&gt; 
   &lt;class name="container" defaultplacement="red"&gt;
     &lt;view name="red" bgcolor="red" width="150" height="150"/&gt;
-  &lt;/class&gt; 
-  &lt;!-- yellow's parent is top and its immediateparent   --&gt;
-  &lt;!-- is red, since that's where it's actually placed. --&gt;
-  &lt;container name="thetop"&gt;
-    &lt;view name="yellow" bgcolor="yellow" width="50" height="50"&gt;
-      &lt;handler name="oninit"&gt;
-        Debug.debug("parent: %w", this.parent);
-        Debug.debug('immediateparent: %w', this.immediateparent);
-      &lt;/handler&gt;
-    &lt;/view&gt;
-  &lt;/container&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
+  &lt;/class&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_26.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_26.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1774"></a>9.3.3. Obtaining a reference to the defaultPlacement node</h4></div></div></div><p>There may be instances where a class needs a reference to the default placement
 node. A good trick is to search the subnodes of the class until it's found.</p><div class="example"><a name="id11749"></a><p class="title"><b>Example 33.19. Obtaining reference to the defaultplacment node</b></p><div class="example-contents"><pre class="programlisting">
@@ -791,10 +561,6 @@ node. A good trick is to search the subnodes of the class until it's found.</p><
   &lt;/class&gt;
   &lt;container name="thetop"/&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_27.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_27.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1775"></a>9.3.4. Overriding placement behavior using <a class="indexterm" name="id11754"></a><code class="methodname">determinePlacement()</code></h4></div></div></div><p>A node calls its <a class="indexterm" name="id11759"></a><code class="methodname">determinePlacement()</code> method to
 determine the <em class="structfield"><code>immediateparent</code></em> of a child. This method
@@ -831,29 +597,6 @@ same.</p><div class="example"><a name="id11781"></a><p class="title"><b>Example�
    &lt;canvas debug="true" height="200" width="100%"&gt;
   &lt;debug x="155"/&gt;
   &lt;class name="container" defaultplacement="red"&gt;
-    &lt;!-- setting subnode's parent to be the same as immediateparent --&gt;
-    &lt;method name="determinePlacement" args="subnode, place, args"&gt;
-      var p = super.determinePlacement(subnode, place, args);
-      subnode.parent = p;
-      return p;
-    &lt;/method&gt; 
-    &lt;view name="blue" bgcolor="blue" width="100" height="100"&gt;
-      &lt;view name="red" bgcolor="red" width="150" height="150"/&gt;
-    &lt;/view&gt;
-  &lt;/class&gt;
-  &lt;container name="thetop"&gt;
-    &lt;view name="yellow" bgcolor="yellow" width="50" height="50"&gt;
-      &lt;handler name="oninit"&gt;
-        Debug.debug("parent: %w", this.parent);
-        Debug.debug("immediateparent: %w", this.immediateparent);
-      &lt;/handler&gt;
-    &lt;/view&gt;
-  &lt;/container&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2008 Laszlo Systems, Inc.  All Rights Reserved.                   *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_29.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_29.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1777"></a>9.4. Construction and initialization</h3></div></div></div><p>When writing complex classes, a deep understanding of how classes
 are constructed and initialized is essential. Several steps are
@@ -876,32 +619,6 @@ whereas initialization happens bottom-up (subviews to ancestor).</p><div class="
    &lt;canvas debug="true" height="180" width="100%"&gt;
   &lt;debug height="160"/&gt;
   &lt;class name="container"&gt;
-    &lt;!-- Don't forget to call super.construct(parent,args)!! --&gt;
-    &lt;method name="construct" args="parent,args"&gt;
-      Debug.debug("container construct %w %w", parent, args);
-      super.construct(parent, args);
-    &lt;/method&gt;
-    &lt;!-- The onconstruct event --&gt;
-    &lt;handler name="onconstruct" args="v"&gt;
-      Debug.debug("container onconstruct %w", v);
-    &lt;/handler&gt;
-    &lt;method name="init"&gt;
-      Debug.debug("container init");
-    &lt;/method&gt;
-    &lt;handler name="oninit"&gt;
-      Debug.debug("container oninit");
-    &lt;/handler&gt;
-  &lt;/class&gt;
-  &lt;container&gt;
-    &lt;view name="outside" oninit="Debug.debug('outside oninit')"&gt;
-      &lt;view name="inside" oninit="Debug.debug('inside oninit')"/&gt;
-    &lt;/view&gt;        
-  &lt;/container&gt;
-&lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_30.lzx" data-height="180" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_30.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Following instantiation (i.e., after the <a class="indexterm" name="id11813"></a><code class="literal">onconstruct</code>
 is sent) and if there are child nodes, the
@@ -930,10 +647,6 @@ properties:</p><div class="variablelist"><dl class="variablelist"><dt><span clas
     &lt;/view&gt;
   &lt;/container&gt;
 &lt;/canvas&gt;
-&lt;!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
-* Copyright 2007, 2008 Laszlo Systems, Inc.  All Rights Reserved.             *
-* Use is subject to license terms.                                            *
-* X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/class-inheritance-_31.lzx" data-height="180" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/class-inheritance-_31.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>In summary, you can expect the basic timing order of method and event calls to look
 like:</p><div class="orderedlist"><ol class="orderedlist compact" type="1"><li class="listitem"><p>The <a class="indexterm" name="id11849"></a><code class="methodname">construct()</code> method is called.</p></li><li class="listitem"><p>The <a class="indexterm" name="id11855"></a><code class="methodname">determinePlacement()</code> method is called.  (The parent's method is called
