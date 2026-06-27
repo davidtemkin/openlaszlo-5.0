@@ -21,14 +21,11 @@ OpenLaszlo 4.9 compiler.
   server round-trip.
 - **100% compatible with OpenLaszlo 4.9.** Differential-tested against the original Java
   compiler, the TypeScript compiler produces **byte-for-byte identical** output across the
-  documentation example corpus, the Laszlo Explorer, and complete applications, in both
-  production and debug builds. Existing LZX source compiles unchanged.
+  documentation example corpus, the Laszlo Explorer, and complete applications, in
+  production, debug, and `backtrace` builds. Existing LZX source compiles unchanged.
 - **Statically hostable.** Because compilation happens in the browser, the whole distro
   runs off any plain static host — S3, GitHub Pages, nginx, `python3 -m http.server`.
 - **Bonus: the Dashboard demo**, ported forward from OpenLaszlo 3.x, runs in DHTML.
-
-The single capability not yet reproduced is the optional `backtrace` debugging-
-instrumentation build mode — a development-time aid never included in a deployed app.
 
 ## Quick start
 

@@ -68,7 +68,7 @@ function rebaseHtml(text) {
 // (b) busts every cached asset. Host-agnostic: works on ANY static host (GitHub Pages,
 // S3, nginx, Cloudflare Pages…) with no build pipeline — just re-run the stamp before you
 // deploy. Left as "dev" when unstamped (local serving).
-const BUILD_ID = "e4ee2d5855cb";
+const BUILD_ID = "849dbd5f7541";
 
 // Per-build cache bucket: a new BUILD_ID -> a new bucket -> the old one is dropped on
 // activate, and compiled output is re-keyed, so a runtime/compiler change recompiles.
@@ -501,7 +501,11 @@ function renderWrapper({ base, runtimeUrl, bgcolor = "#ffffff", width = "100%", 
             body { background-color: ${bgcolor}; }
             img { border: 0 none; }
         </style></head><body><div id="appcontainer"></div><div id="lzsplash" style="z-index: 10000000; top: 0; left: 0; width: 100%; height: 100%; position: fixed; display: table"><p style="display: table-cell; vertical-align: middle;"><img src="${rt}/includes/spinner.gif" style="display: block; margin: 20% auto" alt="application initializing"></p></div><script type="text/javascript" defer>
-                  lz.embed.resizeWindow('${width}', '${height}');
+                  // The canvas is sized by the embed dhtml width/height below — keep resizeWindow at
+                  // '100%'. resizeWindow() resizes the WINDOW (window.resizeTo); passing the canvas dims
+                  // shrinks/jars a popup the Explorer deliberately opened at canvas+chrome size (e.g. the
+                  // dashboard popup 1010x750 → 1000x710). '100%' → NaN in embed.js → no-op (the original).
+                  lz.embed.resizeWindow('100%', '100%');
                   lz.embed.__serverroot="${rt}/includes/";lz.embed.dhtml({url: '${url}', lfcurl: '${lfcurl}', serverroot: 'lps/resources/', bgcolor: '${bgcolor}', width: '${width}', height: '${height}', id: 'lzapp', accessible: 'false', cancelmousewheel: false, cancelkeyboardcontrol: false, skipchromeinstall: false, usemastersprite: false, approot: '', appenddivid: 'appcontainer'});
                   lz.embed.applications.lzapp.onload = function loaded() {
                     var el = document.getElementById('lzsplash');
