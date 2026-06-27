@@ -181,13 +181,22 @@
       await navigator.serviceWorker.ready;
       if (reg) reg.update().catch(() => {});   // force an update check each load → prompt pickup of new deploys
 
-      // A SW does not control the page that registered it until the next navigation.
-      // If we're not controlled yet, reload ONCE (guarded) so this page — and the
-      // Explorer iframe we create — are intercepted. service-worker.js calls clients.claim(), which
-      // minimizes this to a single reload on the very first visit.
-      if (!navigator.serviceWorker.controller && !sessionStorage.getItem("ol-sw-reloaded")) {
-        sessionStorage.setItem("ol-sw-reloaded", "1");
-        return location.reload();
+      // A SW does not control the page that registered it until it claims clients. The SW
+      // calls clients.claim() on activate, which fires `controllerchange` here. WAIT for that
+      // (so the Explorer iframe we create is intercepted) rather than reloading — a reload
+      // re-fetches index.html and cold-restarts the worker, the bulk of the first-visit gap.
+      // Fallbacks keep first load bulletproof: claim already landed, or (rare) no event in 2s
+      // → reload once (guarded against loops by ol-sw-reloaded).
+      if (!navigator.serviceWorker.controller) {
+        await new Promise((resolve) => {
+          navigator.serviceWorker.addEventListener("controllerchange", () => resolve(), { once: true });
+          if (navigator.serviceWorker.controller) return resolve();
+          setTimeout(() => {
+            if (navigator.serviceWorker.controller || sessionStorage.getItem("ol-sw-reloaded")) return resolve();
+            sessionStorage.setItem("ol-sw-reloaded", "1");
+            location.reload();
+          }, 2000);
+        });
       }
       loadExplorer();
     })().catch((e) => fail("Bootstrap error:\n" + (e && e.stack ? e.stack : e)));
