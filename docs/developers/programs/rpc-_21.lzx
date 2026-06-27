@@ -1,7 +1,7 @@
 
-<canvas debug="true" height="300" width="100%">
+<canvas height="300" width="100%">
 
-    <debug x="100" width="450" height="280" />
+    
 
     <soap name="google" wsdl="http://api.google.com/GoogleSearch.wsdl">
         <handler name="onload">

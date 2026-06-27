@@ -4,12 +4,12 @@
   <include href="lztest/xmlequals.lzx"/>
 
    <view layout="axis: y">
-    <dataset name="ds" src="http://..."/>
+    <dataset name="ds" src="resources/record.xml" type="http" request="true"/>
     <text datapath="this.ds:/record/text()"/>
    </view>
 
   <class name="myclass" layout="axis: y">
-    <dataset name="ds" src="http://..."/>
+    <dataset name="ds" src="resources/record.xml" type="http" request="true"/>
     <text datapath="this.ds:/record/text()"/>
   </class>
   <myclass/>

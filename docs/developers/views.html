@@ -22,7 +22,7 @@ an audio file.
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_1.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="example"><a name="id8772"></a><p class="title"><b>Example 26.2. Invisible view</b></p><div class="example-contents"><pre class="programlisting">
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_1.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="example"><a name="id8772"></a><p class="title"><b>Example 26.2. Invisible view</b></p><div class="example-contents"><pre class="programlisting">
    
 &lt;canvas height="50" width="100%"&gt;
   &lt;view height="20" width="20" clickable="true"/&gt;
@@ -32,7 +32,7 @@ an audio file.
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_2.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>The following example shows that the view, although invisible, is
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_2.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>The following example shows that the view, although invisible, is
 indeed present.  To see that this is so, click in the upper left
 corner.</p><div class="example"><a name="id8776"></a><p class="title"><b>Example 26.3. Clicking on invisible view</b></p><div class="example-contents"><pre class="programlisting">
    &lt;canvas width="100%" height="30"&gt;
@@ -44,7 +44,7 @@ corner.</p><div class="example"><a name="id8776"></a><p class="title"><b>Example
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_3.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1640"></a>1.2. view visibility</h3></div></div></div><p>A view is only visible if it has a color or an image assigned to it, and if the height and width are greater than zero.
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_3.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1640"></a>1.2. view visibility</h3></div></div></div><p>A view is only visible if it has a color or an image assigned to it, and if the height and width are greater than zero.
  For example, the following code displays only two images even though four views are defined. The second and third views exist but
  they are completely transparent. The second has no color assigned to it and the third has zero width. They still, however, affect the
  arrangement of the other two views. </p><div class="example"><a name="id8782"></a><p class="title"><b>Example 26.4. Invisible views affect placement</b></p><div class="example-contents"><pre class="programlisting">
@@ -61,7 +61,7 @@ corner.</p><div class="example"><a name="id8776"></a><p class="title"><b>Example
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_4.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><p>???</p></td><td valign="top" align="left"><p>This view is a red square.</p></td></tr><tr><td width="5%" valign="top" align="left"><p>???</p></td><td valign="top" align="left"><p>This view has no visual representation because it has no color, but it still exists and displaces other views.</p></td></tr><tr><td width="5%" valign="top" align="left"><p>???</p></td><td valign="top" align="left"><p>This view has no visual representation because it has no width, but it still exists.</p></td></tr><tr><td width="5%" valign="top" align="left"><p>???</p></td><td valign="top" align="left"><p>This view displays the  image.</p></td></tr></table></div><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1641"></a>1.3. Z Axis</h3></div></div></div><p>Aside from the x and y axes, there is also a <a class="indexterm" name="id8797"></a><em class="glossterm">z axis</em> in
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_4.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><p>???</p></td><td valign="top" align="left"><p>This view is a red square.</p></td></tr><tr><td width="5%" valign="top" align="left"><p>???</p></td><td valign="top" align="left"><p>This view has no visual representation because it has no color, but it still exists and displaces other views.</p></td></tr><tr><td width="5%" valign="top" align="left"><p>???</p></td><td valign="top" align="left"><p>This view has no visual representation because it has no width, but it still exists.</p></td></tr><tr><td width="5%" valign="top" align="left"><p>???</p></td><td valign="top" align="left"><p>This view displays the  image.</p></td></tr></table></div><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1641"></a>1.3. Z Axis</h3></div></div></div><p>Aside from the x and y axes, there is also a <a class="indexterm" name="id8797"></a><em class="glossterm">z axis</em> in
 the OpenLaszlo view hierarchy. Two sibling views will overlap; the latter
 (in lexical order of the LZX code) will appear on top of the
 former. This order can be changed using the
@@ -80,7 +80,7 @@ methods:</p><div class="example"><a name="id8808"></a><p class="title"><b>Exampl
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_5.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_5.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
 There are also methods such as <a class="indexterm" name="id8812"></a><code class="methodname">sendBehind()</code> and <a class="indexterm" name="id8816"></a><code class="methodname">sendInFrontOf()</code>, that allow you to move a view in the z-axis more precisely, relative to a specified view:
 </p><div class="example"><a name="id8820"></a><p class="title"><b>Example 26.6. Moving views along z axis</b></p><div class="example-contents"><pre class="programlisting">
    
@@ -97,7 +97,7 @@ There are also methods such as <a class="indexterm" name="id8812"></a><code clas
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_6.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_6.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1642"></a>1.4. Nesting views within views</h3></div></div></div><p>Views can also be contained within other views, allowing you to create 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_6.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_6.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1642"></a>1.4. Nesting views within views</h3></div></div></div><p>Views can also be contained within other views, allowing you to create 
   complex visual elements. Each <em class="glossterm">parent view</em> can have any number of children, and each <em class="glossterm">child view</em> is positioned relative 
   to the top-left corner of its parent, as shown here:</p><div class="example"><a name="id8828"></a><p class="title"><b>Example 26.7. Views containing other views</b></p><div class="example-contents"><pre class="programlisting">
    
@@ -114,7 +114,7 @@ There are also methods such as <a class="indexterm" name="id8812"></a><code clas
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_7.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_7.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_7.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_7.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
 Each child view has one and only one parent view. The relationship between parent and child views is examined below 
 and in later chapters.
 </p><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1643"></a>1.5. Sizing view to its child views</h3></div></div></div><p>If no width and height are actually
@@ -138,7 +138,7 @@ the attribute <code class="literal">clip="true"</code> can be added to the paren
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_8.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_8.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>As stated above, views don't need to display an image or color to
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_8.lzx" data-height="150" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_8.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>As stated above, views don't need to display an image or color to
 affect other views. These types of views are referred to as "blank
 views".  In fact, this technique of using blank views to group others
 views is used extensively in the sample applications. The code below
@@ -158,7 +158,7 @@ outermost view.</p><div class="example"><a name="id8841"></a><p class="title"><b
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_9.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_9.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1644"></a>1.6. views, constraints and layouts</h3></div></div></div><p>The fact that a view can be assigned  different dimensions than the
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_9.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_9.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1644"></a>1.6. views, constraints and layouts</h3></div></div></div><p>The fact that a view can be assigned  different dimensions than the
 bounding box of its subviews is taken advantage of by other
 elements within OpenLaszlo such as constraints (<a class="xref" href="constraints.html" title="Chapter 27. Constraints">Chapter 27, <i>Constraints</i></a>) and layouts (<a class="xref" href="layout-and-design.html" title="Chapter 17. Layout and Design">Chapter 17, <i>Layout and Design</i></a>).
 </p><p>
@@ -200,7 +200,7 @@ comes up in countless situations.
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_10.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_10.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1650"></a>2. The View Coordinate system</h2></div></div></div><p>Starting with the canvas, each view has its own internal 2D coordinate system, with as you would expect, the horizontal axis named x and the 
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_10.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_10.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id1650"></a>2. The View Coordinate system</h2></div></div></div><p>Starting with the canvas, each view has its own internal 2D coordinate system, with as you would expect, the horizontal axis named x and the 
 vertical axis named y. The position of a view is calculated relative to its parent's coordinate system.
 </p><p>
 As view hierarchies can get complex, it's important to keep in mind, for any view:</p><div class="orderedlist"><ol class="orderedlist compact" type="1"><li class="listitem"><p>where its origin is  </p></li><li class="listitem"><p>units of measurement</p></li><li class="listitem"><p>its relationship to its parent's coordinate system  </p></li></ol></div><p>
@@ -225,7 +225,7 @@ parent. For example, consider the case below:</p><div class="example"><a name="i
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_11.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_11.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p><code class="varname">childView</code>'s <a class="indexterm" name="id8893"></a><code class="sgmltag-attribute">x</code> value is
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_11.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_11.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p><code class="varname">childView</code>'s <a class="indexterm" name="id8893"></a><code class="sgmltag-attribute">x</code> value is
 <code class="literal">35</code>, but its <a class="indexterm" name="id8897"></a><code class="sgmltag-attribute">x</code> value <span class="i">relative to
 the canvas</span> is <code class="literal">45</code> (because its parent,
 <code class="varname">parentView</code>, is already 10px in from the canvas's
@@ -265,7 +265,7 @@ In the case above, the yellow view will resize as its contents resize and move. 
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_13.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_13.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>To get around this problem (in the example of a view that is
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_13.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_13.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>To get around this problem (in the example of a view that is
 dragged), there are two solutions:</p><div class="orderedlist"><ol class="orderedlist compact" type="1"><li class="listitem"><p>Limit the drag area of the view to its parents dimensions, and give its parent an explicit size.</p></li><li class="listitem"><p>Make the view that is dragged a child of the canvas, so that it is not embedded in the view hierarchy.</p></li></ol></div><p>There is no way to unset a dimension, so that the view returns to
 resizing to its contents automatically.</p><p>Even if a view's dimensions are set explicitly, and the contents of
 the view are larger than those dimensions, the view will <span class="i">remain the
@@ -325,7 +325,7 @@ The text is smaller relative to the canvas and to the computer screen, but not t
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_14.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_14.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_14.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_14.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
 Here we have modified the example to further illustrate the same point.  Notice how the width of the green view does not change, even as the view visibly shrinks.</p><div class="example"><a name="id8972"></a><p class="title"><b>Example 26.14. Simple scaling with text and colored view</b></p><div class="example-contents"><pre class="programlisting">
    &lt;canvas width="100%" height="300"&gt;
   &lt;font src="helmetb.ttf" name="helmet"/&gt;
@@ -346,7 +346,7 @@ Here we have modified the example to further illustrate the same point.  Notice 
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_15.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_15.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1649"></a>2.4. Offsets</h3></div></div></div><p>
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_15.lzx" data-height="300" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_15.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1649"></a>2.4. Offsets</h3></div></div></div><p>
  Every view 
 has an internal <em class="glossterm">registration point</em> that is at (0,0) by default, the upper left hand corner of the view. 
 This point 
@@ -380,7 +380,7 @@ demonstrates this. See below for an explanation of what's going on in this progr
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_16.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_16.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_16.lzx" data-height="250" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_16.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>
 The reason that the intersection point does not move is that the parent view (in this case the canvas) is 
 placing the colored view at that point, and that point does not change. It is only the <code class="literal">xoffset</code> and <code class="literal">yoffset</code>
 that are changing, not the <code class="literal">x</code> and <code class="literal">y</code> of the colored view.
@@ -408,7 +408,7 @@ the pivot point of the red square is its upper left corner; the pivot point of t
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_17.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_17.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Offsets allow the view to be placed
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_17.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_17.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Offsets allow the view to be placed
 relative to the point (<a class="indexterm" name="id9000"></a><code class="sgmltag-attribute">xoffset</code>,
 <a class="indexterm" name="id9003"></a><code class="sgmltag-attribute">yoffset</code>).  (Otherwise the view is placed using
 the view's top left corner as a reference point.)  If a view has an
@@ -492,7 +492,7 @@ but not to contain the red and silver squares, which have negative x and y value
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
 
-</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_20.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_20.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1654"></a>3.4. Pixel locking</h3></div></div></div><p>Subpixel positioning gets blurry lines and images, with more positioning possibilities. This makes it look worse 
+</pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_20.lzx" data-height="250" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_20.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1654"></a>3.4. Pixel locking</h3></div></div></div><p>Subpixel positioning gets blurry lines and images, with more positioning possibilities. This makes it look worse 
 for static images, and better for animation, and for drawing 
 sets of evenly spaced images where the average spacing isn't an integral number of pixels. If you do something which causes a view 
 to end up at a non-integer x and y position, setting <a class="indexterm" name="id9075"></a><code class="sgmltag-attribute">pixellock</code> to "true" will snap it the nearest
@@ -515,7 +515,7 @@ parents and children is obvious from their position in the code.</p><div class="
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_21.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_21.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>However, things are usually more complicated, especially when views are created within classes. Views can be created or destroyed at runtime, and moreover a single
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_21.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_21.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>However, things are usually more complicated, especially when views are created within classes. Views can be created or destroyed at runtime, and moreover a single
 line of code can cause the creation of an arbitrary number of views. In many cases there are, in effect, two hierarchies-
 the <span class="i">lexical hierarchy</span> of views in the code, and the <span class="i">node hierarchy</span> of objects that are created by the code.
 </p><p>
@@ -545,7 +545,7 @@ hierarchies.  These terms are explained in greater depth in later chapters, but 
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_22.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_22.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><p>???</p></td><td valign="top" align="left"><p>default placement view: instance or subclass children go here</p></td></tr></table></div><p>The view that contains the text <code class="literal">hello</code> has a
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_22.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_22.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><p>???</p></td><td valign="top" align="left"><p>default placement view: instance or subclass children go here</p></td></tr></table></div><p>The view that contains the text <code class="literal">hello</code> has a
 <a class="indexterm" name="id9109"></a><code class="sgmltag-attribute">parent</code> of <code class="varname">w</code> and an
 <a class="indexterm" name="id9113"></a><code class="sgmltag-attribute">immediateparent</code> of <code class="literal">w.mycontent</code>.
 Note that "mycontent" could be nested in other views and it would
@@ -572,7 +572,7 @@ XAML distinguishes between the logical tree and the visual tree.  The logical tr
 * Use is subject to license terms.                                            *
 * X_LZ_COPYRIGHT_END ****************************************************** --&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_23.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_23.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>this source fragment:</p><div class="informalexample"><pre class="programlisting">
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/views-_23.lzx" data-height="96" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/views-_23.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>this source fragment:</p><div class="informalexample"><pre class="programlisting">
 &lt;myclass&gt;&lt;text placement="content"&gt;content1&lt;/text&gt;&lt;/myclass&gt;
 &lt;myclass&gt;&lt;text placement="content"&gt;content2&lt;/text&gt;&lt;/myclass&gt;
 </pre></div><p>has the logical tree:</p><pre class="programlisting">
@@ -644,4 +644,4 @@ designers expect them to be view-like, and there's a pull to make them view-like
  translation to them that's independent of the view that embeds them, and to make it possible to 
 retrieve their bounds.  (This is largely independent from the fact that they're represented as ids 
 instead of objects.)   
-</p><p></p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="proxied.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.power.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="constraints.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 25. Proxied and SOLO Applications </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 27. Constraints</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>
+</p><p></p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="proxied.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.power.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="constraints.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 25. Proxied and SOLO Applications </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 27. Constraints</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';var h=b.getAttribute('data-height');if(h)f.style.height=h+'px';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>

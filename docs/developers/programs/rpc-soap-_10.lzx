@@ -1,5 +1,5 @@
 
-<canvas debug="true" height="530" width="100%">
+<canvas height="530" width="100%">
 
     <soap name="amazon" wsdl="http://soap.amazon.com/schemas3/AmazonWebServices.wsdl">
 

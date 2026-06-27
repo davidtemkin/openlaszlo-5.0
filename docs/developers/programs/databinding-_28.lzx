@@ -1,6 +1,6 @@
 
- <canvas height="300" width="100%" debug="true">
-   <debug y="100" />
+ <canvas height="300" width="100%">
+   
    <dataset name="ds">
      <data>
        <person name="a assdfasfva asdf sad" surname="a surname"/>

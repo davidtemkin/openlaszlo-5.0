@@ -1,0 +1,4 @@
+<library>
+  <!-- Included by the "hello world via include" example. -->
+  <text>Hello, World — included from hello-incl.lzx</text>
+</library>

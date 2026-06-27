@@ -1,4 +1,4 @@
-<canvas height="130" debug="true">
+<canvas height="130">
     <command key="$once{['Control','n']}"
         onselect="Debug.debug('the [Ctrl-n] key combination was pressed');" />
 </canvas>

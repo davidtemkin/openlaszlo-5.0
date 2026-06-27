@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<canvas height="100" width="100%" debug="true">
+<canvas height="100" width="100%">
     <resource name="myname" src="resources/logo.gif"/>
     <view>
         <handler name="oninit">

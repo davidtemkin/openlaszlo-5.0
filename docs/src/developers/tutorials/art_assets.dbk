@@ -68,7 +68,7 @@ In this case, a GIF image:</para>
 <para>All of these four methods will eventually show the same result on screen:</para>
 <example role="live-example"><title>Local pathname</title><programlisting>
 &lt;canvas width="500" height="100"&gt;
-  &lt;view resource="../resources/smiley.gif"/&gt;
+  &lt;view resource="resources/smiley.gif"/&gt;
 &lt;/canvas&gt;
 </programlisting></example>
 

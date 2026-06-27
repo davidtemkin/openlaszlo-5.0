@@ -9,7 +9,7 @@
 <!-- auto-included BUT NOT in lps-dev --> 
 <include href="/extensions/views/richinputtext.lzx" />
 <!-- --> 
-<debug x="300"/>
+
 <view x="20" y="20">
 
 <window title="toggleFormat"> 

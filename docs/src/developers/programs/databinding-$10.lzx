@@ -1,7 +1,7 @@
 
 <canvas debug="true" height="200" width="100%">
   <debug height="150"/>
-  <dataset name="mydset" src="http:?lzt=xml"/>
+  <dataset name="mydset" src="resources/mydset.xml" type="http" request="true"/>
   
   <dataset name="week">
     <day>Sunday</day>

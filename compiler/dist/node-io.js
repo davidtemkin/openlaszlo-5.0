@@ -2,7 +2,7 @@
 // `resource="…"` references relative to the source file, mirroring the oracle
 // (under the app dir → ptype "ar"; otherwise relative to LPS_HOME → "sr"). The
 // browser build supplies a fetch-based resolver instead.
-import { readFileSync, realpathSync, readdirSync } from "node:fs";
+import { readFileSync, realpathSync, readdirSync, existsSync } from "node:fs";
 import { dirname, resolve as resolvePath, basename } from "node:path";
 import { imageDim } from "./imagedim.js";
 /** Longest common path prefix as a string, truncated at the last `/`
@@ -110,6 +110,13 @@ export function nodeOptions(sourcePath, lpsHome, tracker) {
     const rdText = (abs) => { const b = readFileSync(abs, "utf8"); tracker?.file(abs); return b; };
     const ls = (abs) => { const e = readdirSync(abs); tracker?.dir(abs); return e; };
     const lpsCanon = lpsHome ? canon(lpsHome) : null;
+    // Layout: the original webapp nests resources under `lps/` (<home>/lps/components +
+    // <home>/WEB-INF/lps/misc/…); the FLATTENED distro puts them at <home>/components +
+    // <home>/lzx-autoincludes.properties. Detect once and prefix accordingly, so ONE
+    // resolver serves both layouts (no symlink overlay needed for the flat distro).
+    const _nested = !!lpsHome && existsSync(resolvePath(lpsHome, "lps", "components"));
+    const LPS = _nested ? "lps/" : "";
+    const AUTOINC = _nested ? "WEB-INF/lps/misc/lzx-autoincludes.properties" : "lzx-autoincludes.properties";
     // getRelPath: a resolved absolute path → [ptype, relPath]. Under the app dir →
     // "ar" (app-relative); else relative to LPS_HOME → "sr" (server-root).
     const relPathOf = (abs) => {
@@ -141,7 +148,7 @@ export function nodeOptions(sourcePath, lpsHome, tracker) {
         const originDir = originId ? canon(dirname(originId)) : appDir;
         const baseDirs = [originDir];
         if (lpsCanon)
-            baseDirs.push(resolvePath(lpsCanon, "lps/components"), resolvePath(lpsCanon, "lps/fonts"), resolvePath(lpsCanon, "lps/lfc"));
+            baseDirs.push(resolvePath(lpsCanon, LPS + "components"), resolvePath(lpsCanon, LPS + "fonts"), resolvePath(lpsCanon, LPS + "lfc"));
         // `insertSubdir(dir/a/b/c.png, "autoPng")` => `dir/a/b/autoPng/c.png`.
         const autoPngOf = (p) => resolvePath(dirname(p), "autoPng", basename(p));
         let abs;
@@ -181,9 +188,9 @@ export function nodeOptions(sourcePath, lpsHome, tracker) {
         }
         const candidates = [
             resolvePath(appDir, src),
-            resolvePath(lpsCanon, "lps/components", src),
-            resolvePath(lpsCanon, "lps/fonts", src),
-            resolvePath(lpsCanon, "lps/lfc", src),
+            resolvePath(lpsCanon, LPS + "components", src),
+            resolvePath(lpsCanon, LPS + "fonts", src),
+            resolvePath(lpsCanon, LPS + "lfc", src),
         ];
         for (const cand of candidates) {
             try {
@@ -219,7 +226,7 @@ export function nodeOptions(sourcePath, lpsHome, tracker) {
         const originDir = originId ? canon(dirname(originId)) : appDir;
         const baseDirs = [originDir, appDir];
         if (lpsCanon)
-            baseDirs.push(resolvePath(lpsCanon, "lps/components"));
+            baseDirs.push(resolvePath(lpsCanon, LPS + "components"));
         const collect = (dirAbs, re) => {
             let entries;
             try {
@@ -267,10 +274,10 @@ export function nodeOptions(sourcePath, lpsHome, tracker) {
         // An href naming a directory includes that dir's `library.lzx`.
         const base = fromId ? dirname(fromId) : appDir;
         const roots = ref.startsWith("/")
-            ? (lpsHome ? [resolvePath(lpsHome, "lps/components", ref.slice(1))] : [])
+            ? (lpsHome ? [resolvePath(lpsHome, LPS + "components", ref.slice(1))] : [])
             : [resolvePath(base, ref)];
         if (lpsHome && !ref.startsWith("/"))
-            roots.push(resolvePath(lpsHome, "lps/components", ref));
+            roots.push(resolvePath(lpsHome, LPS + "components", ref));
         const candidates = roots.flatMap((r) => [r, resolvePath(r, "library.lzx")]);
         for (const abs of candidates) {
             try {
@@ -286,7 +293,7 @@ export function nodeOptions(sourcePath, lpsHome, tracker) {
     const autoincludes = {};
     if (lpsHome) {
         try {
-            const txt = rdText(canon(resolvePath(lpsHome, "WEB-INF/lps/misc/lzx-autoincludes.properties")));
+            const txt = rdText(canon(resolvePath(lpsHome, AUTOINC)));
             for (const line of txt.split("\n")) {
                 const m = /^\s*([\w-]+)\s*[:=]\s*(\S+)/.exec(line);
                 if (m && !line.trimStart().startsWith("#"))
@@ -321,9 +328,9 @@ export function nodeOptions(sourcePath, lpsHome, tracker) {
         const base = fromId ? dirname(fromId) : appDir;
         const cands = [resolvePath(base, ref)];
         if (lpsHome && !ref.startsWith("/"))
-            cands.push(resolvePath(lpsHome, "lps/components", ref));
+            cands.push(resolvePath(lpsHome, LPS + "components", ref));
         if (lpsHome && ref.startsWith("/"))
-            cands.push(resolvePath(lpsHome, "lps/components", ref.slice(1)));
+            cands.push(resolvePath(lpsHome, LPS + "components", ref.slice(1)));
         for (const abs of cands) {
             try {
                 return rdText(canon(abs));
@@ -345,7 +352,7 @@ export function nodeOptions(sourcePath, lpsHome, tracker) {
     const sourceId = resolvePath(sourcePath);
     const basePathnames = [appDir];
     if (lpsCanon)
-        basePathnames.push(canon(resolvePath(lpsCanon, "lps/components")), canon(resolvePath(lpsCanon, "lps/fonts")), canon(resolvePath(lpsCanon, "lps/lfc")));
+        basePathnames.push(canon(resolvePath(lpsCanon, LPS + "components")), canon(resolvePath(lpsCanon, LPS + "fonts")), canon(resolvePath(lpsCanon, LPS + "lfc")));
     const debugFileName = (id) => {
         // The app file uses its as-given (non-canonical) path so the /tmp-symlink quirk
         // survives; library files use the canonical path (mirrors FileResolver, whose

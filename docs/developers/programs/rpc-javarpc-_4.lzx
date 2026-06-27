@@ -1,7 +1,7 @@
 
-<canvas debug="true" height="300" width="100%">
+<canvas height="300" width="100%">
  
-    <debug x="100" y="10" height="275" />
+    
 
     <security>
         <allow>

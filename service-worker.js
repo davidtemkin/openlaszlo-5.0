@@ -25,9 +25,20 @@
 //
 // Module SW (registered {type:"module"}); imports the self-contained compiler bundle.
 
-import {
-  compileInBrowser, BrowserCache, COMPILER_VERSION,
-} from "./compiler/lzc-browser.js";
+import { compileInBrowser, BrowserCache, COMPILER_VERSION } from "./compiler/lzc-browser.js";
+import { toSourceUrl, ROOT_FILES } from "./urlmap.mjs";
+
+// COMPILE_MODE — "server" or "browser". index.html registers this worker as
+// `service-worker.js?compile=<mode>`: the live Node server injects window.__OL_COMPILE=
+// "server" into the index.html it serves → "server"; a dumb static host serves index.html
+// verbatim → undefined → "browser" (the safe default). So the SAME distro compiles
+// in-browser when served statically and delegates to the Node server when run under it —
+// the only difference is this one flag (no host-probing, which static-404 behavior makes
+// unreliable).
+// NOTE: a module Service Worker can't dynamic-import(), so the compiler bundle above is a
+// static import (loaded in both modes). In server mode it simply isn't used — compilation
+// is delegated to the server.
+const COMPILE_MODE = new URLSearchParams(self.location.search).get("compile") || "browser";
 
 // ───────────────────────────────────────────────────────────────────────────
 // CONFIG — resolved against the SW's own location, so the distro works at any
@@ -68,7 +79,7 @@ function rebaseHtml(text) {
 // (b) busts every cached asset. Host-agnostic: works on ANY static host (GitHub Pages,
 // S3, nginx, Cloudflare Pages…) with no build pipeline — just re-run the stamp before you
 // deploy. Left as "dev" when unstamped (local serving).
-const BUILD_ID = "e4ee2d5855cb";
+const BUILD_ID = "9226b7c4f8ce";
 
 // Per-build cache bucket: a new BUILD_ID -> a new bucket -> the old one is dropped on
 // activate, and compiled output is re-keyed, so a runtime/compiler change recompiles.
@@ -98,26 +109,12 @@ self.addEventListener("activate", (e) => e.waitUntil((async () => {
 })()));
 
 // ───────────────────────────────────────────────────────────────────────────
-// (A) toSourceUrl — the URL→source namespace map, mirroring server/index.mjs
-// urlToSource. The Explorer is served at `/`, so its OWN files (coverpages, basics,
-// nav xml, explore-nav.lzx, images…) live physically under `explorer/`. `/examples/`,
-// `/runtime/`, `/docs/` and the root bootstrap files are real paths. Returns the
-// pathname to FETCH for a given request pathname.
+// (A) toSourceUrl — the URL→source namespace map, now SHARED with the Node server
+// (urlmap.mjs) so the two compile modes resolve sources identically. The Explorer is
+// served at `/`, so its files live physically under `explorer/`; `/examples/`,
+// `/runtime/`, `/docs/`, `/compiler/` and the root bootstrap files are real paths.
 // ───────────────────────────────────────────────────────────────────────────
-const ROOT_FILES = new Set(["/", "/index.html", "/service-worker.js", "/favicon.ico", "/manifest.webmanifest"]);
-function toSourceUrl(path) {
-  if (path.startsWith("/examples/")) return path;
-  if (path.startsWith("/runtime/")) return path;
-  if (path.startsWith("/docs/")) return path;
-  if (path.startsWith("/compiler/")) return path;   // the browser compiler bundle lives here
-  // Coverpage HTML (demos_cover.html etc.) carries baked `../../lps/includes/explore.css`
-  // refs → serve them from the flat runtime/ tree (mirrors server/index.mjs:223-226). Without
-  // this the cover CSS 404s and the section landings render as unstyled serif text.
-  if (path === "/lps/includes/explore.css") return "/runtime/theme/explore.css";
-  if (path.startsWith("/lps/includes/")) return "/runtime/includes/" + path.slice("/lps/includes/".length);
-  if (ROOT_FILES.has(path)) return path;
-  return "/explorer" + path;   // Explorer default namespace (/coverpages/…, /nav_dhtml.xml, /explore-nav.lzx)
-}
+// (toSourceUrl + ROOT_FILES imported at the top from ./urlmap.mjs)
 
 // ───────────────────────────────────────────────────────────────────────────
 // (B) distroFetch — collapse the compiler's `lps/`-structured input paths onto the
@@ -163,9 +160,14 @@ async function canvasAttrs(srcUrl) {
 // ───────────────────────────────────────────────────────────────────────────
 // (D) URL compiler/runtime flags — the old OpenLaszlo server's query contract
 // (server/index.mjs + server/wrapper.mjs), ported to the in-browser compiler.
-//   ?debug[=true]        → debug build (lfc-debug.js + per-line /* file */ annotations);
-//                          implies lzconsoledebug (the in-app debug console), as on the old server.
-//   ?lzconsoledebug=true → debug console without a debug build.
+//   ?debug[=true]        → debug build (lfc-debug.js + per-line /* file */ annotations); shows the
+//                          framed on-canvas LzDebugWindow (title bar, drag grabber, resize handle,
+//                          drop shadows), as in classic OpenLaszlo: ResponderCompile.java defaulted
+//                          lzconsoledebug=false for a plain debug build, so makeDebugWindow calls
+//                          `new LzDebugWindow()`. (An earlier version forced lzconsoledebug on here,
+//                          which mis-routed every ?debug to the frameless console — corrected.)
+//   ?lzconsoledebug=true → the bare HTML/iframe console (LzDHTMLDebugConsole) — an explicit,
+//                          INDEPENDENT opt-in (the old remote-debug console), NOT implied by ?debug.
 //   ?backtrace / ?lzbacktrace → DEBUG_BACKTRACE build (lzc -g2): per-function call-stack
 //                          frames + per-call-site line notes, byte-for-byte vs the oracle
 //                          (backtrace.lzx). Implies debug (it is a debug add-on); the
@@ -180,7 +182,7 @@ function parseFlags(sp) {
   const on = (v) => v !== null && v !== "false";
   const backtrace = on(sp.get("backtrace")) || on(sp.get("lzbacktrace"));
   const debug = on(sp.get("debug")) || backtrace;   // backtrace is a debug add-on → forces debug on
-  const flags = { debug, backtrace, lzconsoledebug: on(sp.get("lzconsoledebug")) || debug, proxied: false, unsupported: null };
+  const flags = { debug, backtrace, lzconsoledebug: on(sp.get("lzconsoledebug")), proxied: false, unsupported: null };
   const proxiedReq = sp.get("proxied") ?? sp.get("lzproxied");
   const rt = sp.get("lzr") || sp.get("lzt");
   if (proxiedReq === "true")
@@ -232,6 +234,9 @@ self.addEventListener("fetch", (event) => {
   //     needs the Node server. `/api/connection` (chat WebSocket) has no static equivalent.
   //     This handler stays so those server-backed demos still reach their fixtures.
   if (path.startsWith("/api/") && path !== "/api/connection") {
+    // SERVER mode: let the live server's dynamic handler answer (lzproject CRUD, survey
+    // POST, …). BROWSER/static mode: serve the canned fixtures from server/example-data.
+    if (COMPILE_MODE === "server") { event.respondWith(fetch(req)); return; }
     const range = req.headers.get("range");   // forward Range so <video>/<audio> get 206 (seek + reliable playback)
     event.respondWith(fetch(url.origin + physical("/server/example-data/" + path.slice(5)) + url.search,
       range ? { headers: { range } } : undefined));
@@ -317,6 +322,11 @@ async function compileResponse(url, request) {
       status: 200, headers: { "Content-Type": "text/javascript;charset=utf-8", "Cache-Control": "no-cache" },
     });
   }
+  // SERVER mode: the Node server compiles `<name>.lzx.js` (TS compiler, disk-cached) and
+  // serves it with an ETag. Pass the request straight through — including If-None-Match,
+  // so the server's 304 flows back. (The wrapper, runtime proxy and namespace stay here.)
+  if (COMPILE_MODE === "server") return fetch(request);
+
   const flags = parseFlags(url.searchParams);                  // (D) ?debug etc. (query carried from the wrapper)
   if (flags.unsupported) return new Response(errStub(`unsupported: ${flags.unsupported}`), jsHeaders());
   const lzxPath = logical(url.pathname.replace(/\.js$/, ""));  // logical …/<name>.lzx

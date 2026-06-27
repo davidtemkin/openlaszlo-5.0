@@ -1,6 +1,6 @@
 
-<canvas debug="true" height="200" width="100%">
-<debug height="150" y="10" />
+<canvas height="200" width="100%">
+
     <soap name="amazon" wsdl="http://soap.amazon.com/schemas3/AmazonWebServices.wsdl">
 
         <handler name="onload">

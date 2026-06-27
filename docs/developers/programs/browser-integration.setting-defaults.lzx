@@ -1,4 +1,4 @@
-<canvas debug="true" width="100%" height="200">
+<canvas width="100%" height="200">
   <attribute name="onceData" value="$once{lz.Browser.getInitArg('myData')}" />
   <handler name="oninit">
     var innerVar = lz.Browser.getInitArg('myData');

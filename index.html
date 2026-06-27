@@ -165,9 +165,14 @@
         sessionStorage.setItem("ol-build", e.data.build);
         if (seen && seen !== e.data.build) location.reload();
       });
+      // COMPILE MODE — the live Node server injects `window.__OL_COMPILE="server"` into the
+      // index.html it serves; a dumb static host serves this file verbatim → undefined →
+      // "browser" (safe default). The mode rides on the SW's registration URL so the worker
+      // reads it from its own location. Same distro, two modes, no host-probing.
+      const COMPILE = (self.__OL_COMPILE === "server") ? "server" : "browser";
       let reg;
       try {
-        reg = await navigator.serviceWorker.register("./service-worker.js", { type: "module", scope: "./", updateViaCache: "none" });
+        reg = await navigator.serviceWorker.register("./service-worker.js?compile=" + COMPILE, { type: "module", scope: "./", updateViaCache: "none" });
       } catch (e) {
         return fail("Service Worker registration failed — likely a browser without MODULE "
           + "service-worker support.\n\n" + (e && e.message ? e.message : e)

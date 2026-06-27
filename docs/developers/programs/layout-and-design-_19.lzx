@@ -1,5 +1,5 @@
 <canvas height="400" width="100%">
-  <debug  fontsize="12"/>
+  
   <class name="box" width="50" height="30"  />
   <view name="myview">
     <simplelayout axis="x" spacing="4">

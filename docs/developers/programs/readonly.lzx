@@ -1,5 +1,5 @@
-<canvas height="130" debug="true">
-    <debug y="30"/>
+<canvas height="130">
+    
     <text id="myID">
         Click me!
         <handler name="onclick">

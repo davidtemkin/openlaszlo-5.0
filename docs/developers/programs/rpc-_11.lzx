@@ -1,5 +1,5 @@
 
-<canvas debug="true" width="100%">
+<canvas width="100%">
 
     <soap name="temperature" 
           wsdl="http://developerdays.com/cgi-bin/tempconverter.exe/wsdl/ITempConverter">

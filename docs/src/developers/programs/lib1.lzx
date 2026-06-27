@@ -1,0 +1,4 @@
+<library>
+  <!-- A small library included by the "inline class" example. -->
+  <class name="c1" extends="text" text="c1 — a class defined in lib1.lzx"/>
+</library>

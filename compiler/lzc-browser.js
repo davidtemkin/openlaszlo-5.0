@@ -2997,6 +2997,8 @@ var Printer = class _Printer {
         return this.wrap(n.l, p) + sp + n.op + rsp + r;
       }
       case "assign":
+        if (n.l.k === "id" && this.btNotableId(n.l))
+          this.btSuppress = true;
         return this.wrap(n.l, 1) + this.SP + n.op + this.SP + this.wrap(n.r, 1);
       case "cond":
         return this.wrap(n.c, 2, true) + this.SP + "?" + this.SP + this.wrap(n.t, 2, true) + this.SP + ":" + this.SP + this.wrap(n.f, 2, true);
@@ -3005,7 +3007,7 @@ var Printer = class _Printer {
       case "object":
         return "{" + n.props.map((p) => {
           const k = p.keyKind === "str" ? jsString(p.key) : p.keyKind === "num" ? printNumber(p.key) : p.key;
-          return k + this.COLON + this.expr(p.v);
+          return k + this.COLON + this.wrap(p.v, 1);
         }).join(this.COMMA) + "}";
       case "seq":
         return n.es.map((e) => this.expr(e)).join(this.COMMA);

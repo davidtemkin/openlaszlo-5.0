@@ -1,6 +1,6 @@
 
 <canvas height="125" width="100%">
-  <debug x="400"/>
+  
   <simplelayout/>
   <!-- Single line text, the default -->
   <text id="t1" bgcolor="#ffcccc" resize="false">

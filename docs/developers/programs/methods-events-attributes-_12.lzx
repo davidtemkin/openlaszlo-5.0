@@ -1,4 +1,4 @@
-<canvas width="100%" debug="true">  
+<canvas width="100%">  
     <class name="myclass_with_handler">
         <event name="myevent"/>
         <handler name="myevent" args="myargs">

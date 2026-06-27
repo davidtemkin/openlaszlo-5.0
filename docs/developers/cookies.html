@@ -75,10 +75,10 @@ Explain how it works
 &lt;canvas width="100%" height="100"&gt;
 
     &lt;!-- dataset to set cookie with --&gt;
-    &lt;dataset name="dsSetCookie" type="http" src="resources/cookie.jsp" /&gt;
+    &lt;dataset name="dsSetCookie" type="http" src="resources/cookie.xml" /&gt;
 
     &lt;!-- Set previous set item during start --&gt;
-    &lt;dataset name="dsGetCookie" type="http" src="resources/cookie.jsp" 
+    &lt;dataset name="dsGetCookie" type="http" src="resources/cookie.xml" 
              querystring="name=mycookie&amp;amp;op=get" request="true" /&gt;
     &lt;datapointer name="dpCookie" xpath="dsGetCookie:/info[1]/data[1]/item[1]/text()"&gt;
         &lt;handler name="ondata" args="d"&gt;

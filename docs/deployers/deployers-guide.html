@@ -84,21 +84,21 @@ installed with OSX by default.</p></div><p></p></div></div><div class="section">
 within a servlet container is called, confusingly, a Java web
 application, or often simply a webapp.  Webapps are sometimes packaged
 as single files that are called web application archive (WAR) files.</p><p>The LPS (standard) distribution comes with an OpenLaszlo-enabled webapp
-directory pre-installed in Tomcat.  The web application directory is</p><pre class="programlisting">$INSTALLDIR/Server/lps-4.9.1</pre><p>This webapp includes sample Laszlo applications, example LZX files,
+directory pre-installed in Tomcat.  The web application directory is</p><pre class="programlisting">$INSTALLDIR/Server/lps-5.0</pre><p>This webapp includes sample Laszlo applications, example LZX files,
 tutorials, and documentation.  The LPS Core distribution comes with
 a copy of this Laszlo-enabled webapp for you to install into your own
-servlet container.  The directory version of this webapp is </p><pre class="programlisting">$INSTALLDIR/lps-4.9.1</pre><p>Note that the name of the webapp surfaces as part of the URL used to
+servlet container.  The directory version of this webapp is </p><pre class="programlisting">$INSTALLDIR/lps-5.0</pre><p>Note that the name of the webapp surfaces as part of the URL used to
 access your Laszlo applications.  We will use the string $webapp below
 to indicate the name of a deployed web application.</p><p>For more details on Java web applications and WAR files, see the <a class="ulink" href="http://java.sun.com/products/servlet/" target="_top">Sun
 documentation on servlets</a>.</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id1363"></a>5.1. Creating OpenLaszlo-enabled Web Applications</h3></div></div></div><p>To create an empty OpenLaszlo-enabled webapp, you simply create a new
-directory and copy in the WEB-INF directory from the lps-4.9.1 webapp. On a
-UNIX system, do</p><pre class="programlisting">mkdir myappcp -r $LPS-WEBAPPDIR/WEB-INF myappcp -r $LPS-WEBAPPDIR/lps myapp</pre><p>where $LPS-WEBAPPDIR is the path to a copy of the lps-4.9.1 web
+directory and copy in the WEB-INF directory from the lps-5.0 webapp. On a
+UNIX system, do</p><pre class="programlisting">mkdir myappcp -r $LPS-WEBAPPDIR/WEB-INF myappcp -r $LPS-WEBAPPDIR/lps myapp</pre><p>where $LPS-WEBAPPDIR is the path to a copy of the lps-5.0 web
 application. For LPS (standard) distribution, $LPS-WEBAPPDIR is
-$INSTALLDIR/Server/lps-4.9.1.</p><p>To place your Laszlo applications inside myapp, copy the LZX (.lzx extension)
+$INSTALLDIR/Server/lps-5.0.</p><p>To place your Laszlo applications inside myapp, copy the LZX (.lzx extension)
 files and art assets for your
 Laszlo application(s) inside the myapp directory. 
 </p><p>To deploy the webapp, follow your servlet container's instructions.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
-Note that the lps-4.9.1 webapp that is packaged with LPS comes
+Note that the lps-5.0 webapp that is packaged with LPS comes
 pre-configured for development, not deployment. Before deploying your applications 
 you will need to reconfigure the OpenLaszlo Server 
 for deployment, as explained in the next section.
@@ -310,7 +310,7 @@ rare circumstances, when deployed Laszlo application will be edited,
 recompiled frequently, or generated automatically via a pre-processing
 request, you may want to increase the size of this cache.</p><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id1368"></a>6.6.2. OpenLaszlo Server cache directories</h4></div></div></div><p>By default, LPS places its caches inside the web application's WEB-INF
 directory.  this is
-<code class="literal">$INSTALLDIR/lps-4.9.1/WEB-INF/lps/work/cache</code>.</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="deployers-guide.caches"></a>6.7. Configuring Compiler, Media, and Data Caches</h3></div></div></div><p>The server uses several caches that are maintained
+<code class="literal">$INSTALLDIR/lps-5.0/WEB-INF/lps/work/cache</code>.</p><p></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="deployers-guide.caches"></a>6.7. Configuring Compiler, Media, and Data Caches</h3></div></div></div><p>The server uses several caches that are maintained
 via a standard LRU (least recently used) algorithm.  Each caches can
 be configured independently and each one can be set to use
 disk only or memory (backed by disk) plus additional disk space.

@@ -1,5 +1,5 @@
-<canvas debug="true" height="200" width="100%">
-<debug x="160" y="5" height="150" width="300" />
+<canvas height="200" width="100%">
+
   <script>Debug.debug('user code');</script>
   <button text="Get x, y" width="150" height="150"
   onclick="Debug.debug('click: x=%d, y=%d', getMouse('x'), getMouse('y'))" />

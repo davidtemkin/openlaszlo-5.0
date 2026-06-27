@@ -1,5 +1,5 @@
-<canvas debug="true" height="250" width="100%">
-  <debug y="10" height="200"/>
+<canvas height="250" width="100%">
+  
   <handler name="oninit">
     Debug.write('subviews: ' + canvas.subviews);
     Debug.write('subviews:',   canvas.subviews);

@@ -1,5 +1,5 @@
 
-<canvas debug="true" height="300" width="100%">
+<canvas height="300" width="100%">
 
     <soap name="geography" 
           wsdl="http://arcweb.esri.com/services/v2/PlaceFinderSample.wsdl">

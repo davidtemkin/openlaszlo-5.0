@@ -1,5 +1,5 @@
-<canvas debug="true" height="200" width="100%">
-  <debug height="175"/> 
+<canvas height="200" width="100%">
+   
   <class name="foo">
     <method name="doit">
       Debug.debug("foo: this is [%w]", this);

@@ -1,5 +1,5 @@
-<canvas debug="true" height="260" width="100%">
-  <debug height="250" y="20"/>
+<canvas height="260" width="100%">
+  
   <include href="base/basevaluecomponent.lzx"/>
   
   <class name="myvaluecomponent" extends="basevaluecomponent">

@@ -1,6 +1,6 @@
 
-<canvas height ="300" width="100%" debug="true">
-  <debug y="80"/>
+<canvas height ="300" width="100%">
+  
  <include href="lzunit"/>
   <view>
     <view id="bluebox" bgcolor="blue" width="30" height="30">

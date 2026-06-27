@@ -1,5 +1,5 @@
 
-<canvas debug="true" width="100%">
+<canvas width="100%">
 
     <!-- The security describes what classes are accessible or are allowed to be
          instantiated in the server. See the security section in this chapter

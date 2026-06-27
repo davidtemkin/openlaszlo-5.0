@@ -1,5 +1,5 @@
 
-<canvas debug="true" width="100%">
+<canvas width="100%">
 
     <dataset name="myDataset" />
 

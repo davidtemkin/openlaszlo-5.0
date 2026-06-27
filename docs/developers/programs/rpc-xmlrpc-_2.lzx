@@ -1,6 +1,6 @@
 
 
-<canvas debug="true" height="400" width="100%">
+<canvas height="400" width="100%">
     <!-- this isues one call of the freshmeat XML-RPC API -->
     <!-- Documented here: http://freshmeat.net/faq/view/49/ -->
 

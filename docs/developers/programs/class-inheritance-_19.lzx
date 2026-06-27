@@ -1,5 +1,5 @@
-<canvas debug="true" width="100%">
-  <debug y="215" />
+<canvas width="100%">
+  
   <class name="one">
     <view name="r" bgcolor="red" width="200" height="200"/>
   </class> 

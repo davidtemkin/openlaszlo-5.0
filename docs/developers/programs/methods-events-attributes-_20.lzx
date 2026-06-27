@@ -1,4 +1,4 @@
-<canvas height="150" debug="true">
+<canvas height="150">
     <view width="50" height="50" bgcolor="red" onclick="Debug.write('Hello, World!');"/>
 </canvas>
 

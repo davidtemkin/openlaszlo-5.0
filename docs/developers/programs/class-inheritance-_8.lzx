@@ -1,4 +1,4 @@
-<canvas debug="true" width="100%">
+<canvas width="100%">
   <class name="myclass" height="40" bgcolor="blue">
     <attribute name="button_label" type="text" value="button"/>
     <handler name="onclick">

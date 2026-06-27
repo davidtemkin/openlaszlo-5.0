@@ -27,6 +27,38 @@ const env = { ...process.env, XML_CATALOG_FILES: CATALOG };
 const rmrf = p => fs.rmSync(p, { recursive: true, force: true });
 const cpR = (s, d) => execFileSync("cp", ["-R", s, d]);
 
+// ---- live-example compile validation -------------------------------------
+// Only attach a Run/Edit toolbar to a snippet that ACTUALLY COMPILES with the
+// in-browser compiler. Otherwise malformed illustrative fragments (and examples
+// whose companion file is missing) would ship a broken Run button. Data/network
+// examples still compile (the data load is a runtime concern), so they keep their
+// toolbar. Self-contained: we build a throwaway LPS_HOME from the distro's OWN
+// runtime/ — the compiler's node resolver wants <home>/lps/{components,fonts,lfc}
+// + <home>/WEB-INF/lps/misc/lzx-autoincludes.properties — and use the distro's own
+// compiler bundle. If either isn't present (e.g. the compiler isn't built), the
+// check is skipped with a warning and every <canvas>-rooted snippet keeps its toolbar.
+const DISTRO = path.dirname(DOCS);
+let validateCompile = null;   // (source, srcGuideDir, runName) => boolean
+try {
+  const { compile } = await import(path.join(DISTRO, "compiler/dist/compile.js"));
+  const { nodeOptions } = await import(path.join(DISTRO, "compiler/dist/node-io.js"));
+  const runtime = path.join(DISTRO, "runtime");
+  const lpsHome = fs.mkdtempSync("/tmp/oldoc-lps-");
+  fs.symlinkSync(runtime, path.join(lpsHome, "lps"));
+  fs.mkdirSync(path.join(lpsHome, "WEB-INF/lps/misc"), { recursive: true });
+  fs.symlinkSync(path.join(runtime, "lzx-autoincludes.properties"),
+    path.join(lpsHome, "WEB-INF/lps/misc/lzx-autoincludes.properties"));
+  validateCompile = (source, srcGuideDir, runName) => {
+    try {
+      const probe = path.join(srcGuideDir, "programs", runName);   // resolves siblings/resources
+      const res = compile(source, { ...nodeOptions(probe, lpsHome), proxied: false, sprites: "none" });
+      return !res.unsupported;
+    } catch { return false; }   // parse / unresolved / refuse → not runnable
+  };
+} catch (e) {
+  console.warn("  (live-example compile validation skipped: " + (e && e.message || e) + ")");
+}
+
 // ---- live examples -------------------------------------------------------
 // The .dbk sources mark runnable snippets <example role="live-example">. The stock
 // build embedded each as a running canvas + an "edit" link to editor.jsp. We restage
@@ -43,9 +75,26 @@ const norm = s => decodeEnt(s).replace(/\r\n/g, "\n")
   .split("\n").map(l => l.replace(/\s+$/, "")).join("\n").trim();
 const sanitizeName = n => n.replace(/\$/g, "_");          // $ breaks DeployUtils.buildZipFile replaceAll
 
+// Doc embeds run debug-OFF. The distro ships the PRODUCTION runtime (no on-canvas debugger —
+// Debug.makeDebugWindow / $reportException are absent), so a snippet with canvas debug="true" or
+// a <debug> tag throws at init and hangs forever on the loading splash. Strip both from the staged
+// (Run/Edit) copy — the source LISTING above each example still shows the original. No-op otherwise.
+const stripDebug = s => s
+  .replace(/<debug\b[^>]*\/>/g, "")
+  .replace(/<debug\b[^>]*>[\s\S]*?<\/debug>/g, "")
+  .replace(/(<canvas\b[^>]*?)\s+debug\s*=\s*(["'])(?:true|TRUE)\2/g, "$1");
+
+// A live example's iframe should be as tall as its canvas. The CSS default is a fixed 240px, which
+// clips taller apps (and over-pads short ones); read the declared canvas height ("100%"/absent →
+// null = keep the CSS default), clamped to a sane range, and emit it as data-height for lzRun.
+const canvasHeight = s => {
+  const m = /<canvas\b[^>]*?\bheight\s*=\s*["'](\d+)(?:px)?["']/i.exec(s);
+  return m ? Math.max(96, Math.min(620, +m[1])) : null;
+};
+
 // scan a guide's .dbk for live-examples → { map: normSource -> runUrl, inlines: name->content }
 function collectLiveExamples(srcGuideDir, outSub) {
-  const map = new Map(), inlines = new Map();
+  const map = new Map(), inlines = new Map(), heights = new Map();
   const reEx = /<(example|informalexample)\b[^>]*role="live-example"[^>]*>([\s\S]*?)<\/\1>/g;
   (function walk(d) {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
@@ -68,12 +117,15 @@ function collectLiveExamples(srcGuideDir, outSub) {
             inlines.set(runName, source.replace(/^\n+/, ""));
           }
           if (!/<canvas[\s>/]/.test(source)) continue;     // only runnable apps get a toolbar
-          map.set(norm(source), "/docs/" + outSub + "/programs/" + runName);
+          if (validateCompile && !validateCompile(source, srcGuideDir, runName)) continue;  // …that compile
+          const url = "/docs/" + outSub + "/programs/" + runName;
+          map.set(norm(source), url);
+          const ch = canvasHeight(source); if (ch) heights.set(url, ch);
         }
       }
     }
   })(srcGuideDir);
-  return { map, inlines };
+  return { map, inlines, heights };
 }
 
 // copy programs/ (sanitized names, minus oracle compile artifacts) + write inline files
@@ -85,20 +137,24 @@ function stagePrograms(srcGuideDir, htmlDir, inlines) {
     for (const e of fs.readdirSync(s, { withFileTypes: true })) {
       if (e.name.startsWith(".") || SKIP.has(e.name) || /\.(lzx\.js|sprite\.png|wgt)$/.test(e.name)) continue;
       const sp = path.join(s, e.name), dp = path.join(d, sanitizeName(e.name));
-      if (e.isDirectory()) cp(sp, dp); else fs.copyFileSync(sp, dp);
+      if (e.isDirectory()) cp(sp, dp);
+      else if (e.name.endsWith(".lzx")) fs.writeFileSync(dp, stripDebug(fs.readFileSync(sp, "utf8")));  // run debug-off
+      else fs.copyFileSync(sp, dp);
     }
   })(srcP, dstP);
-  if (inlines.size) { fs.mkdirSync(dstP, { recursive: true }); for (const [n, c] of inlines) fs.writeFileSync(path.join(dstP, n), c); }
+  if (inlines.size) { fs.mkdirSync(dstP, { recursive: true }); for (const [n, c] of inlines) fs.writeFileSync(path.join(dstP, n), stripDebug(c)); }
 }
 
-const liveWidget = url =>
+const liveWidget = (url, height) =>
   `<div class="live-example"><div class="live-toolbar">` +
-  `<button class="live-run" type="button" data-run="${url}" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button>` +
+  `<button class="live-run" type="button" data-run="${url}"${height ? ` data-height="${height}"` : ""} onclick="lzRun(this)">&#9654;&#xfe0e; Run</button>` +
   `<a class="live-edit" href="${url}?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a>` +
   `</div></div>`;
 const liveScript =
   `<script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');` +
-  `if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}` +
+  `if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';` +
+  `var h=b.getAttribute('data-height');if(h)f.style.height=h+'px';` +
+  `d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}` +
   `f.src=b.getAttribute('data-run');}</script>`;
 
 function convertTextdata(dir) {
@@ -163,7 +219,7 @@ function buildGuide(srcSub, indexFile, outSub) {
   }
 
   // live examples: map runnable sources -> staged .lzx, copy them into the built tree
-  const { map: liveMap, inlines } = collectLiveExamples(src, outSub);
+  const { map: liveMap, inlines, heights } = collectLiveExamples(src, outSub);
   stagePrograms(src, html, inlines);
   let live = 0;
   const matchedUrls = new Set();
@@ -181,7 +237,7 @@ function buildGuide(srcSub, indexFile, outSub) {
         h = h.replace(/<pre class="programlisting">([\s\S]*?)<\/pre>/g, (full, inner) => {
           const url = liveMap.get(norm(inner));
           if (!url) return full;
-          injected++; live++; matchedUrls.add(url); return full + liveWidget(url);
+          injected++; live++; matchedUrls.add(url); return full + liveWidget(url, heights.get(url));
         });
         if (injected) h = h.replace(/<\/body>/i, liveScript + "</body>");
         h = h

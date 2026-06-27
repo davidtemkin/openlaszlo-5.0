@@ -1,5 +1,5 @@
 
-<canvas debug="true" width="100%">
+<canvas width="100%">
 
     <!-- This SOAP service uses document/literal messages for its
          operations. Each operation is passed a document as a parameter. -->

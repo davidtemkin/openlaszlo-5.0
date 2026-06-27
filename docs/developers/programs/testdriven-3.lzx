@@ -1,5 +1,5 @@
-<canvas debug="true" width="100%">
-<debug y="150"/>
+<canvas width="100%">
+
 <include href="lzunit"/>
 <simplelayout axis="y" spacing="10"/>
 

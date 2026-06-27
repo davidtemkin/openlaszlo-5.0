@@ -1,5 +1,5 @@
 
-<canvas debug="true" height="580" width="100%">
+<canvas height="580" width="100%">
 
     <dataset name="googleDset" />
 

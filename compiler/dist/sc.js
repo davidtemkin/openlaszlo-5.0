@@ -2269,6 +2269,15 @@ class Printer {
                 return this.wrap(n.l, p) + sp + n.op + rsp + r;
             }
             case "assign":
+                // Backtrace: an assignment TARGET is not a "checked" read — the oracle's
+                // makeCheckedNode (JavascriptReference) is gated on READ position — so a bare-id
+                // LHS is NOT noteCallSite-wrapped. Wrapping it would emit the un-assignable
+                // `($N.lineno=L, id) = …` (SyntaxError: invalid left-hand side; e.g. amazon's MD5
+                // `hexcase = 0`). A member/index LHS prints normally — its object read is validly
+                // noted as `(note, a).b = …`. Matches the 4.9 oracle (`myGlobalFlag = 0`). The
+                // btSuppress one-shot is read-and-cleared by expr() before the RHS prints.
+                if (n.l.k === "id" && this.btNotableId(n.l))
+                    this.btSuppress = true;
                 return this.wrap(n.l, 1) + this.SP + n.op + this.SP + this.wrap(n.r, 1);
             case "cond":
                 // All three operands are parenthesized when their precedence is <= the
@@ -2287,7 +2296,11 @@ class Printer {
                 // numeric key prints as a number, an identifier key stays bare.
                 return "{" + n.props.map((p) => {
                     const k = p.keyKind === "str" ? jsString(p.key) : p.keyKind === "num" ? printNumber(p.key) : p.key;
-                    return k + this.COLON + this.expr(p.v);
+                    // A property value wraps at assignment precedence (like array elements / the
+                    // oracle's maybeAddParens at COMMA prec) so a backtrace noteCallSite comma-seq
+                    // value — `($N.lineno=L, expr)` — is parenthesized and its comma is not mistaken
+                    // for the property separator. A no-op for ordinary values (prec ≥ 1).
+                    return k + this.COLON + this.wrap(p.v, 1);
                 }).join(this.COMMA) + "}";
             case "seq":
                 return n.es.map((e) => this.expr(e)).join(this.COMMA);

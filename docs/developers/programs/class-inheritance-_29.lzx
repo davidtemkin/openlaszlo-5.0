@@ -1,5 +1,5 @@
-<canvas debug="true" height="200" width="100%">
-  <debug x="155"/>
+<canvas height="200" width="100%">
+  
   <class name="container" defaultplacement="red">
     <!-- setting subnode's parent to be the same as immediateparent -->
     <method name="determinePlacement" args="subnode, place, args">

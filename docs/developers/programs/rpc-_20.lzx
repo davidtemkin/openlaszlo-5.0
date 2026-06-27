@@ -1,7 +1,7 @@
 
-<canvas debug="true" height="300" width="100%">
+<canvas height="300" width="100%">
 
-    <debug x="225" width="450" height="280" />
+    
 
     <dataset name="googleDset" />
 

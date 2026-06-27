@@ -1,4 +1,4 @@
-<canvas debug="true" width="100%">
+<canvas width="100%">
     <include href="lz/datacombobox.lzx"/>
     <dataset name="ds" src="./shareddata/contacts_full.xml" />
     <datapointer name="dp" />
