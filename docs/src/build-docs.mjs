@@ -100,12 +100,14 @@ const stripCopyright = s => s
   .replace(/\s*(?:<|&lt;)!--\s*@LZX_VERSION@[\s\S]*?--(?:>|&gt;)/gi, "");
 
 // Faithful to the stock docs, EVERY runnable LZX program gets a Run button (the compile gate above
-// already excludes non-canvas / non-compiling fragments). Examples that drive the debugger — a
-// <debug> view, canvas debug="true", or a Debug.* call — were shown WITH the on-canvas debugger in
-// the stock SWF docs; in the distro the production runtime has no debugger, so a plain run shows an
-// empty canvas. Run those debug-ON instead (lzRun appends ?debug → the SW loads lfc-debug.js and the
-// framed LzDebugWindow displays their output, as the original did).
-const usesDebug = s => /<debug\b/.test(s) || /\bdebug\s*=\s*(["'])true\1/i.test(s) || /\bDebug\s*\./.test(s);
+// already excludes non-canvas / non-compiling fragments). An example DECLARING the debugger — a
+// <debug> view or canvas debug="true" — was compiled in debug mode and shown WITH the on-canvas
+// debugger by the stock SWF docs; in the distro the production runtime has no debugger, so run those
+// debug-ON (lzRun appends ?debug → the SW loads lfc-debug.js and the framed LzDebugWindow shows their
+// output, as the original did). NOTE: gated on the DECLARATION only — NOT a bare Debug.* call, which
+// the stock server compiled in production (Debug inert, no window) — so this matches exactly when the
+// original showed a debugger.
+const usesDebug = s => /<debug\b/.test(s) || /\bdebug\s*=\s*(["'])true\1/i.test(s);
 
 // scan a guide's .dbk for live-examples → { map: normSource -> runUrl, inlines: name->content }
 function collectLiveExamples(srcGuideDir, outSub) {
