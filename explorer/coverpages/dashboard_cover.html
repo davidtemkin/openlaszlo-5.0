@@ -14,7 +14,10 @@
     <div style="margin: 10px">
         <img border="0" src="images/cover-images/dashboard.jpg" alt="Dashboard Application" width="328" height="233" />
         <div style="text-align: center">
-            <a class="launch-app" onclick="window.open(this.href, '_blank', 'width=900,height=680'); return false" href="/examples/dashboard/dashboard.lzx" style="display:inline-block;padding:9px 26px;background:#2a5db0;color:#fff;font:600 14px/1 -apple-system,'Segoe UI',Helvetica,Arial,sans-serif;border-radius:5px;text-decoration:none;cursor:pointer">Launch App</a>
+<!-- Popup size = the dashboard's recorded window size (1010x750 = its ~1000x710 canvas
+                 + ~40px chrome), matching the nav's "View App" launch. The dashboard canvas is 100%,
+                 so it fills this exactly and the wrapper's resizeWindow is a no-op (no resize on launch). -->
+            <a class="launch-app" onclick="window.open(this.href, '_blank', 'width=1010,height=750'); return false" href="/examples/dashboard/dashboard.lzx" style="display:inline-block;padding:9px 26px;background:#2a5db0;color:#fff;font:600 14px/1 -apple-system,'Segoe UI',Helvetica,Arial,sans-serif;border-radius:5px;text-decoration:none;cursor:pointer">Launch App</a>
         </div>
     </div>
 </div>

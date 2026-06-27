@@ -6,7 +6,13 @@
 <!--                                                                       -->
 <!--=======================================================================-->
 
-<canvas width="1000" height="710" title="Laszlo Dashboard" debug="false" fontsize="8" framerate="30">
+<!-- OL5/DHTML: width/height "100%" (was 1000x710) so the wrapper's
+     lz.embed.resizeWindow(canvasW,canvasH) is a no-op ('100%' -> NaN -> window.resizeTo
+     does nothing). The Explorer opens this in a popup sized canvas+chrome (1010x750); a
+     fixed canvas made the wrapper shrink the window to 1000x710 just after launch. The
+     desktop (~1000x710) fills the popup's content area; the layout uses canvas.width/
+     height + desktopimage dims, so it adapts. App-scoped — no service-worker change. -->
+<canvas width="100%" height="100%" title="Laszlo Dashboard" debug="false" fontsize="8" framerate="30">
     <!-- OL4: redmond skin dropped; <include href="redmond" /> -->
 
 
