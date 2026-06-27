@@ -89,7 +89,7 @@ Amazon.com.  This example doesn't do much: it merely shows that the two ends are
 
 &lt;/canvas&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/rpc-soap-_2.lzx" data-height="530" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/rpc-soap-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id2013"></a>1.4.2. unload()</h4></div></div></div><p>This method unloads the proxy from the RPC object and sets it to null. When
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/rpc-soap-_2.lzx" data-height="530" data-debug="1" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/rpc-soap-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="id2013"></a>1.4.2. unload()</h4></div></div></div><p>This method unloads the proxy from the RPC object and sets it to null. When
 the call returns, an onunload event is sent.</p><p>
 In the example below, the, SOAP service is unloaded.
 </p><div class="example"><a name="id16070"></a><p class="title"><b>Example 47.3. Unloading Amazon SOAP service</b></p><div class="example-contents"><pre class="programlisting">
@@ -117,7 +117,7 @@ In the example below, the, SOAP service is unloaded.
 
 &lt;/canvas&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/rpc-soap-_3.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/rpc-soap-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2016"></a>2. Document style operation</h2></div></div></div><p>Document style operations use XML data(that is, documents) as parameters. The SOAP
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/rpc-soap-_3.lzx" data-height="200" data-debug="1" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/rpc-soap-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p></p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2016"></a>2. Document style operation</h2></div></div></div><p>Document style operations use XML data(that is, documents) as parameters. The SOAP
 specification is moving towards document style operations as being the preferred
 way of invoking web services. The alternative RPC style posed interoperability
 challenges that were difficult to resolve. The WS-I's <a class="ulink" href="http://www.ws-i.org/archive/Profiles/Basic/2002-10/basicprofile-1.0-wgd.htm" target="_top">Basic
@@ -144,7 +144,7 @@ LZX.</p><div class="example"><a name="id16089"></a><p class="title"><b>Example 
    
 &lt;canvas debug="true" width="100%"&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/rpc-soap-_5.lzx" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/rpc-soap-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>The XML Schema in the WSDL describes how the XML should be structured for
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/rpc-soap-_5.lzx" data-debug="1" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/rpc-soap-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>The XML Schema in the WSDL describes how the XML should be structured for
 each of the operations. The WSDL below describes how what the schema should look
 like for the Add operation.</p><div class="example"><a name="id16093"></a><p class="title"><b>Example 47.6. XML Schema for .NET Math</b></p><div class="example-contents"><pre class="programlisting">
 &lt;definitions xmlns:http="http://schemas.xmlsoap.org/wsdl/http/"
@@ -253,7 +253,7 @@ is described in the WSDL's XML schema.</p><div class="example"><a name="id16103"
             Debug.error(error);
         &lt;/handler&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/rpc-soap-_8.lzx" data-height="400" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/rpc-soap-_8.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>The example demonstrates how a result value, which is actually a JavaScript
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/rpc-soap-_8.lzx" data-height="400" data-debug="1" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/rpc-soap-_8.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>The example demonstrates how a result value, which is actually a JavaScript
 object, can be data bound through the dataobject attribute in remotecall. For
 more details, see the remotecall section in the RPC chapter.</p><p></p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2017"></a>3.1. Passing complex type parameters</h3></div></div></div><p>There are RPC style operations that require complex type parameters which are
 described in the WSDL's XML schema. For instance, the Amazon WSDL has a SOAP
@@ -444,7 +444,7 @@ example.</p><div class="example"><a name="id16117"></a><p class="title"><b>Examp
 
 &lt;/canvas&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/rpc-soap-_10.lzx" data-height="530" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/rpc-soap-_10.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>There are two kinds of prototypes: objects and arrays. An object prototype
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/rpc-soap-_10.lzx" data-height="530" data-debug="1" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/rpc-soap-_10.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>There are two kinds of prototypes: objects and arrays. An object prototype
 contains three properties:</p><div class="itemizedlist"><ul class="itemizedlist compact" style="list-style-type: disc; "><li class="listitem"><p><a class="indexterm" name="id16124"></a><em class="glossterm">name</em>: (String) type name.</p></li><li class="listitem"><p><a class="indexterm" name="id16129"></a><em class="glossterm">ns</em>: (LzNamespace) prototype container which is associated to
     a particular namespace. This object is the same object pointed by
     LzNamespace.ns[MYNAMESPACE]. Inspect LzNamespace.ns in the debugger for
@@ -510,7 +510,7 @@ Google XML schema type looks like:</p><div class="example"><a name="id16163"></a
 
 &lt;/canvas&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/rpc-soap-_13.lzx" data-height="580" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/rpc-soap-_13.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>The XML schema in the WSDL for Google looks like:</p><div class="informalexample"><pre class="programlisting">
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/rpc-soap-_13.lzx" data-height="580" data-debug="1" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/rpc-soap-_13.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>The XML schema in the WSDL for Google looks like:</p><div class="informalexample"><pre class="programlisting">
 &lt;definitions name="GoogleSearch"
              targetNamespace="urn:GoogleSearch"
              xmlns:typens="urn:GoogleSearch"
@@ -710,4 +710,4 @@ The OpenLaszlo implementation of the SOAP specification has the following deviat
             RPC style operation parameters are simple types</p></li><li class="listitem"><p><a class="ulink" href="http://www.dotnetjunkies.com/quickstart/aspplus/samples/services/MathService/VB/MathService.asmx?WSDL" target="_top">.NET
             MathService: Document style operations</a></p></li></ul></div><p>
     
-    </p></li></ul></div><p></p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="rpc-javarpc.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.laszlorpc.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="rpc-xmlrpc.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 46. JavaRPC </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 48. XML-RPC</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';var h=b.getAttribute('data-height');if(h)f.style.height=h+'px';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>
+    </p></li></ul></div><p></p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="rpc-javarpc.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.laszlorpc.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="rpc-xmlrpc.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 46. JavaRPC </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 48. XML-RPC</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';var h=b.getAttribute('data-height');if(h)f.style.height=h+'px';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}var u=b.getAttribute('data-run');if(b.getAttribute('data-debug'))u+=(u.indexOf('?')<0?'?':'&')+'debug=true';f.src=u;}</script></body></html>

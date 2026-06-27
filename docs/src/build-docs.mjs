@@ -99,24 +99,17 @@ const stripCopyright = s => s
   .replace(/\s*(?:<|&lt;)!--[\s\S]*?X_LZ_COPYRIGHT_BEGIN[\s\S]*?X_LZ_COPYRIGHT_END[\s\S]*?--(?:>|&gt;)/gi, "")
   .replace(/\s*(?:<|&lt;)!--\s*@LZX_VERSION@[\s\S]*?--(?:>|&gt;)/gi, "");
 
-// A canvas whose only children are non-rendering (data/debugger/script examples — `<dataset>`,
-// `<script>`, `<debug>`, `<handler>`, `<datapointer>`, …, with no view/component) draws an EMPTY
-// window, so it gets NO Run button (the example is fully conveyed by its source listing). Strip the
-// non-visual children + comments and check whether any element tag remains inside the <canvas>.
-const NONVISUAL = ["dataset", "script", "debug", "handler", "method", "attribute", "datapointer",
-  "datapath", "simplelayout", "resizelayout", "stableborderlayout", "constantlayout", "wrappinglayout",
-  "font", "import", "include", "switch"];
-const hasVisibleContent = s => {
-  let inner = s.replace(/^[\s\S]*?<canvas\b[^>]*>/i, "").replace(/<\/canvas>[\s\S]*$/i, "").replace(/<!--[\s\S]*?-->/g, "");
-  for (const t of NONVISUAL) inner = inner
-    .replace(new RegExp(`<${t}\\b[^>]*\\/>`, "gi"), "")
-    .replace(new RegExp(`<${t}\\b[^>]*>[\\s\\S]*?<\\/${t}>`, "gi"), "");
-  return /<[a-zA-Z]/.test(inner);
-};
+// Faithful to the stock docs, EVERY runnable LZX program gets a Run button (the compile gate above
+// already excludes non-canvas / non-compiling fragments). Examples that drive the debugger — a
+// <debug> view, canvas debug="true", or a Debug.* call — were shown WITH the on-canvas debugger in
+// the stock SWF docs; in the distro the production runtime has no debugger, so a plain run shows an
+// empty canvas. Run those debug-ON instead (lzRun appends ?debug → the SW loads lfc-debug.js and the
+// framed LzDebugWindow displays their output, as the original did).
+const usesDebug = s => /<debug\b/.test(s) || /\bdebug\s*=\s*(["'])true\1/i.test(s) || /\bDebug\s*\./.test(s);
 
 // scan a guide's .dbk for live-examples → { map: normSource -> runUrl, inlines: name->content }
 function collectLiveExamples(srcGuideDir, outSub) {
-  const map = new Map(), inlines = new Map(), heights = new Map();
+  const map = new Map(), inlines = new Map(), heights = new Map(), debugUrls = new Set();
   const reEx = /<(example|informalexample)\b[^>]*role="live-example"[^>]*>([\s\S]*?)<\/\1>/g;
   (function walk(d) {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
@@ -138,17 +131,17 @@ function collectLiveExamples(srcGuideDir, outSub) {
             runName = "inline-" + crypto.createHash("md5").update(norm(source)).digest("hex").slice(0, 10) + ".lzx";
             inlines.set(runName, source.replace(/^\n+/, ""));
           }
-          if (!/<canvas[\s>/]/.test(source)) continue;     // only runnable apps get a toolbar
+          if (!/<canvas[\s>/]/.test(source)) continue;     // only runnable LZX programs get a toolbar
           if (validateCompile && !validateCompile(source, srcGuideDir, runName)) continue;  // …that compile
-          if (!hasVisibleContent(source)) continue;        // …and that render something (no empty windows)
           const url = "/docs/" + outSub + "/programs/" + runName;
           map.set(norm(stripCopyright(source)), url);      // match the copyright-stripped <pre> listing
+          if (usesDebug(source)) debugUrls.add(url);       // run debug-on so the framed debugger shows output
           const ch = canvasHeight(source); if (ch) heights.set(url, ch);
         }
       }
     }
   })(srcGuideDir);
-  return { map, inlines, heights };
+  return { map, inlines, heights, debugUrls };
 }
 
 // copy programs/ (sanitized names, minus oracle compile artifacts) + write inline files
@@ -168,9 +161,9 @@ function stagePrograms(srcGuideDir, htmlDir, inlines) {
   if (inlines.size) { fs.mkdirSync(dstP, { recursive: true }); for (const [n, c] of inlines) fs.writeFileSync(path.join(dstP, n), stripCopyright(stripDebug(c))); }
 }
 
-const liveWidget = (url, height) =>
+const liveWidget = (url, height, isDebug) =>
   `<div class="live-example"><div class="live-toolbar">` +
-  `<button class="live-run" type="button" data-run="${url}"${height ? ` data-height="${height}"` : ""} onclick="lzRun(this)">&#9654;&#xfe0e; Run</button>` +
+  `<button class="live-run" type="button" data-run="${url}"${height ? ` data-height="${height}"` : ""}${isDebug ? ` data-debug="1"` : ""} onclick="lzRun(this)">&#9654;&#xfe0e; Run</button>` +
   `<a class="live-edit" href="${url}?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a>` +
   `</div></div>`;
 const liveScript =
@@ -178,7 +171,7 @@ const liveScript =
   `if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';` +
   `var h=b.getAttribute('data-height');if(h)f.style.height=h+'px';` +
   `d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}` +
-  `f.src=b.getAttribute('data-run');}</script>`;
+  `var u=b.getAttribute('data-run');if(b.getAttribute('data-debug'))u+=(u.indexOf('?')<0?'?':'&')+'debug=true';f.src=u;}</script>`;
 
 function convertTextdata(dir) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -242,7 +235,7 @@ function buildGuide(srcSub, indexFile, outSub) {
   }
 
   // live examples: map runnable sources -> staged .lzx, copy them into the built tree
-  const { map: liveMap, inlines, heights } = collectLiveExamples(src, outSub);
+  const { map: liveMap, inlines, heights, debugUrls } = collectLiveExamples(src, outSub);
   stagePrograms(src, html, inlines);
   let live = 0;
   const matchedUrls = new Set();
@@ -262,7 +255,7 @@ function buildGuide(srcSub, indexFile, outSub) {
           const pre = `<pre class="programlisting">${clean}</pre>`;
           const url = liveMap.get(norm(clean));
           if (!url) return pre;
-          injected++; live++; matchedUrls.add(url); return pre + liveWidget(url, heights.get(url));
+          injected++; live++; matchedUrls.add(url); return pre + liveWidget(url, heights.get(url), debugUrls.has(url));
         });
         if (injected) h = h.replace(/<\/body>/i, liveScript + "</body>");
         h = h

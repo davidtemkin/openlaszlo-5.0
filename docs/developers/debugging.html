@@ -17,7 +17,7 @@
   &lt;debug y="5" /&gt;
 &lt;/canvas&gt;
  
-   </pre></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2070"></a>2.2. The <code class="literal">Debug</code> checkbox</h3></div></div></div><p>Check the <code class="literal">Debug</code> checkbox on the <em class="glossterm">developer
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/debugging-_2.lzx" data-height="125" data-debug="1" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/debugging-_2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2070"></a>2.2. The <code class="literal">Debug</code> checkbox</h3></div></div></div><p>Check the <code class="literal">Debug</code> checkbox on the <em class="glossterm">developer
         console</em> to request a copy of the application with debugging enabled. This is
         equivalent to recompiling the application with the <code class="literal">debug="true"</code>.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="id2071"></a>2.3. The <code class="literal">debug</code> query parameter</h3></div></div></div><p>Edit the URL that is used to request the application to include the
         <code class="literal">debug=true</code> query parameter. This is equivalent to checking the
@@ -55,7 +55,7 @@
   ]]&gt;&lt;/handler&gt;
 &lt;/canvas&gt;
  
-   </pre></div></div><br class="example-break"><p>Turning on runtime error checking makes an application bigger and slower. You should only
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/debugging-_3.lzx" data-height="150" data-debug="1" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/debugging-_3.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>Turning on runtime error checking makes an application bigger and slower. You should only
       perform size and speed optimization on the non-debug version of a program. Nonetheless, you
       will frequently want to run the debug warning to see whether you have introduced any runtime
       errors.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="loggingdebugger"></a>4. Logging to the Debugger</h2></div></div></div><p>The top portion of the debugger window is the <a class="indexterm" name="id17233"></a><em class="glossterm">debugger log</em>. Use <code class="literal">Debug.write()</code> or
@@ -69,7 +69,7 @@
   onclick="Debug.debug('click: x=%d, y=%d', getMouse('x'), getMouse('y'))" /&gt;
 &lt;/canvas&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/debugging-_4.lzx" data-height="200" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/debugging-_4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p><code class="literal">Debug.write()</code> is the simplest way to log to the debugger, but it's
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/debugging-_4.lzx" data-height="200" data-debug="1" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/debugging-_4.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p><code class="literal">Debug.write()</code> is the simplest way to log to the debugger, but it's
       often a better strategy to use <code class="literal">Debug.format()</code> or one of its variants
         (<code class="literal">Debug.debug()</code>, <code class="literal">Debug.info()</code>,
       <code class="literal">Debug.warn()</code>, and <code class="literal">Debug.error()</code>. These methods give you
@@ -85,7 +85,7 @@
         Debug.debug('LPS version %s', canvas.lpsversion)
     &lt;/handler&gt;
 &lt;/canvas&gt; 
-   </pre></div></div><br class="example-break"><p>You can get more information, for example the build number and target runtime, by using
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/canvasversion.lzx" data-height="200" data-debug="1" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/canvasversion.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>You can get more information, for example the build number and target runtime, by using
         <code class="literal">Debug.versionInfo()</code>.</p><div class="example"><a name="id17266"></a><p class="title"><b>Example 51.5. Using Debug.versionInfo()</b></p><div class="example-contents"><pre class="programlisting">
    &lt;canvas width="100%" height="225" debug="true"&gt;
 &lt;debug x="5" y="5" height="200" /&gt;
@@ -93,7 +93,7 @@
         Debug.versionInfo()
     &lt;/handler&gt;
 &lt;/canvas&gt; 
-   </pre></div></div><br class="example-break"><p>While the previous two methods give you version information, if you want to generat a full
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/debuginfo.lzx" data-height="225" data-debug="1" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/debuginfo.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>While the previous two methods give you version information, if you want to generat a full
       bug report, see <a class="xref" href="debugging.html#generate-bug-report" title="9. Generating a bug report">Section 9, “Generating a bug report”</a>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2075"></a>6. Using the Evaluator</h2></div></div></div><p>The bottom portion of the debugger window is the <a class="indexterm" name="id17273"></a><em class="glossterm">evaluator</em>. This is a command-line interface for evaluating
       JavaScript expressions and statements within the application. Enter a JavaScript statement
       into this area and press the Enter key (in single-line mode) or the Evaluate button (in
@@ -190,7 +190,7 @@ Function#2| foo
   &lt;/stylesheet&gt;
 
  
-      </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/dynamiccss.lzx" data-height="500" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/dynamiccss.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="debugging.inspecting"></a>8. Inspecting Objects</h2></div></div></div><p>Evaluating <code class="literal">Debug.debug(<code class="varname">object</code>)</code>, where <code class="literal">
+      </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/dynamiccss.lzx" data-height="500" data-debug="1" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/dynamiccss.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="debugging.inspecting"></a>8. Inspecting Objects</h2></div></div></div><p>Evaluating <code class="literal">Debug.debug(<code class="varname">object</code>)</code>, where <code class="literal">
         <code class="varname">object</code>
       </code> is an expression that evaluates to a JavaScript object, displays an <a class="indexterm" name="id17365"></a><em class="glossterm">inspectable representation</em> of the object in the debugger
       (not the actual object). Long objects are abbreviated based on the value of
@@ -225,7 +225,7 @@ Function#2| foo
   &lt;/handler&gt;
 &lt;/canvas&gt;
  
-   </pre></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="generate-bug-report"></a>9. Generating a bug report</h2></div></div></div><p>If you encounter a bug that prints a message in the debugger and you believe it is an
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/debugging-_5.lzx" data-height="250" data-debug="1" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/debugging-_5.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="generate-bug-report"></a>9. Generating a bug report</h2></div></div></div><p>If you encounter a bug that prints a message in the debugger and you believe it is an
       OpenLaszlo bug, take the following steps to generate a bug report:</p><div class="orderedlist"><ol class="orderedlist compact" type="1"><li class="listitem"><p>Enable Backtrace in the developer console</p></li><li class="listitem"><p>Provoke the error</p></li><li class="listitem"><p>Click on the debugger message to <span class="em">inspect</span> it</p></li><li class="listitem"><p>Invoke <code class="literal">Debug.bugReport()</code> in the debugger</p></li><li class="listitem"><p>Copy and Paste the output into your bug report</p></li></ol></div><p>The Bug Report gives details of the exact build of OpenLaszlo that you are reporting on,
       the detailed error message, backtrace, and the details of all objects involved.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2076"></a>10. Conditional Compilation of Debugging Code</h2></div></div></div><p> Sometimes you may have computations that you need to make only when you're debugging an
       application. For example, you may include some time stamps in order to measure performance of
@@ -294,7 +294,7 @@ if ($debug) {
   &lt;/script&gt;
 &lt;/canvas&gt;
  
-    </pre></div></div><br class="example-break"></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="logging-to-the-server"></a>12. Logging to the Server</h2></div></div></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>This section is unlikely to be of use to LZX users, but it can be helpful for LZX
+    </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/debuglevel.lzx" data-height="200" data-debug="1" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/debuglevel.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="logging-to-the-server"></a>12. Logging to the Server</h2></div></div></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>This section is unlikely to be of use to LZX users, but it can be helpful for LZX
         developers.</p></div><p>Messages can be written from an LZX application to the <em class="glossterm">server log</em>
       through the use of the <code class="literal">logdebug=true</code> query parameter and the
         <code class="literal">Debug.log()</code> method.</p><p>If you set <code class="literal">logdebug</code> to true, then <span class="em">any</span>
@@ -360,7 +360,7 @@ if ($debug) {
   &lt;/button&gt; 
 &lt;/canvas&gt;
  
-          </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/backtrace.lzx" data-height="300" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/backtrace.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2084"></a>14. Monitoring and tracing object properties</h2></div></div></div><p><code class="literal">Debug.monitor(who, what)</code>: Takes an object and property name and will
+          </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/backtrace.lzx" data-height="300" data-debug="1" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/backtrace.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2084"></a>14. Monitoring and tracing object properties</h2></div></div></div><p><code class="literal">Debug.monitor(who, what)</code>: Takes an object and property name and will
       emit a <span class="em">monitor message</span> each time that property is changed. </p><p>
       <code class="literal">Debug.unmonitor(who, what)</code>: Turns that off. </p><p> A monitor message consists of the function that caused the change, a timestamp, the
       object and property, and the old and new values. The following example uses
@@ -383,7 +383,7 @@ if ($debug) {
   &lt;/script&gt;
 &lt;/canvas&gt;
  
-   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/debug-mon-trace.lzx" data-height="225" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/debug-mon-trace.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>As shown in this example:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+   </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/developers/programs/debug-mon-trace.lzx" data-height="225" data-debug="1" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/developers/programs/debug-mon-trace.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div></div></div><br class="example-break"><p>As shown in this example:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
           <code class="literal">Debug.monitor()</code> monitors attribute modification. It gives a timestamp
           on attribute modification, shows the function doing the modification and the old and new
           value. </p></li><li class="listitem"><p>
@@ -469,4 +469,4 @@ if ($debug) {
         Therefore you should declare all your variables. In SWF, you could get by without declaring
         them, and they would just appear to be <code class="literal">undefined</code>, in DHTML, you will get
         a <code class="literal">has no properties</code> error if you refer to <code class="literal">foo</code> and you
-        have not first said <code class="literal">var foo</code>.</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="editing-lzx.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.methodology.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="lzunit.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 50. Editing </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 52. Unit Testing</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';var h=b.getAttribute('data-height');if(h)f.style.height=h+'px';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}f.src=b.getAttribute('data-run');}</script></body></html>
+        have not first said <code class="literal">var foo</code>.</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="editing-lzx.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="developers.methodology.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="lzunit.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 50. Editing </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 52. Unit Testing</td></tr></table></div><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';var h=b.getAttribute('data-height');if(h)f.style.height=h+'px';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}var u=b.getAttribute('data-run');if(b.getAttribute('data-debug'))u+=(u.indexOf('?')<0?'?':'&')+'debug=true';f.src=u;}</script></body></html>
