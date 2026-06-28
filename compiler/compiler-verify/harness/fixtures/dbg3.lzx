@@ -1,0 +1,6 @@
+<canvas debug="true">
+  <view width="${parent.height}">
+    <method name="meth" args="a,b">return a+b;</method>
+    <handler name="onclick">this.foo();</handler>
+  </view>
+</canvas>

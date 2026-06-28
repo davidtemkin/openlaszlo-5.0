@@ -5,11 +5,11 @@ import { parseXml, XmlElem, XmlNode } from "./xml.js";
 import { emitObject, emitObjectSpaced, emitTyped, jsString, Typed } from "./value.js";
 import { attrType, AttrType, mapType } from "./schema.js";
 import { canonicalColorHex, ColorFormatException, parseColor } from "./colors.js";
-import { compileFunction, compileFunctionDebug, compileBinderDebug, collectDependencies, compileExpr, compileExprDebug, compileProgramDebug, compileStylesheetDebug, compileScriptBody, compileScriptBodyDebug, compileProgram, compileLibraryProgram, finalSourceLine, ScUnsupported, setScDebug, setScBacktrace, resetKnownClassnames, addKnownClassname, resetKnownIds, addKnownId } from "./sc.js";
+import { compileFunction, compileFunctionDebug, compileBinderDebug, collectDependencies, compileExpr, compileExprDebug, compileProgramDebug, compileStylesheetDebug, compileScriptBody, compileScriptBodyDebug, compileProgram, compileLibraryProgram, finalSourceLine, ScUnsupported, setScDebug, setScBacktrace, setScProfile, meterEvent, resetKnownClassnames, addKnownClassname, resetKnownIds, addKnownId } from "./sc.js";
 import { schemaAttrType, schemaHasEvent } from "./schema-types.js";
 import { javaDouble } from "./value.js";
 import { buildStylesheetProgram, CssUnsupported } from "./css.js";
-import { assembleDebugProgram, debugConstructor, debugConstructorPlain, renderDebugClassMake, annoFileLine, forceBlankLnum, registerBinder, lastBinderSpec, resetBinderTable, registerReg, resetRegTable, litReset, pathOnlyReset, setPathname, setDebugBacktrace, type BinderSpec } from "./debug.js";
+import { assembleDebugProgram, debugConstructor, debugConstructorPlain, renderDebugClassMake, annoFileLine, forceBlankLnum, registerBinder, lastBinderSpec, resetBinderTable, registerReg, resetRegTable, litReset, pathOnlyReset, setPathname, setDebugBacktrace, setDebugProfile, setNoTrackLines, type BinderSpec } from "./debug.js";
 
 /** A resolved media resource (injected I/O — `fs` in Node, `fetch` in browser).
  *  `relPath` is the app/server-relative path the oracle emits in `frames`;
@@ -80,6 +80,14 @@ export interface CompileOptions {
    *  Equivalent to a source `compileroptions="backtrace: true"`; this flag lets a
    *  caller (the in-browser SW's `?backtrace`) request it without editing source. */
   backtrace?: boolean;
+  /** PROFILE (`lzc -p` / `--profile`): instrument the app's OWN functions with the
+   *  `$lzprofiler` call/return timing meter. The build is a nameFunctions build
+   *  (compress=false, displayName-IIFEs, no `/* file *​/` directives) with `$debug=
+   *  false` (production folding) + the per-function meter — the SAME machinery the
+   *  LFC profile variant uses. Independent of debug/backtrace. Equivalent to a source
+   *  canvas `compileroptions="profile: true"` (or `profile="true"`); this flag lets a
+   *  caller (the in-browser SW's `?profile`) request it without editing source. */
+  profile?: boolean;
 }
 
 /** A resolved font file (path the oracle emits in `LzFontManager.addFont`). */
@@ -594,8 +602,8 @@ function compileConstraintDebug(
     return {
       entries: [ent(setterName, setterFn)],
       // The debug build carries the binder's prettyBinderName as the init's last
-      // arg (the production build passes `null`).
-      initExpr: `new LzOnceExpr(${q}, ${jsString(exprType)}, ${jsString(setterName)}, ${jsString(dnSetter)})`,
+      // arg (production AND profile pass `null` — it is $debug-gated, NodeModel).
+      initExpr: `new LzOnceExpr(${q}, ${jsString(exprType)}, ${jsString(setterName)}, ${COMPILE_PROFILE ? "null" : jsString(dnSetter)})`,
       lastBody: setterBody, lastSrcLine: srcLine,
     };
   }
@@ -616,7 +624,7 @@ function compileConstraintDebug(
   const depsFn = compileFunctionDebug(`${name} dependencies`, [], depsBody, [], file, srcLine, srcLine, false, "throws", true, `${name} dependencies`);
   return {
     entries: [ent(setterName, setterFn), ent(depsName, depsFn)],
-    initExpr: `new LzAlwaysExpr(${q}, ${jsString(exprType)}, ${jsString(setterName)}, ${jsString(depsName)}, ${jsString(dnSetter)})`,
+    initExpr: `new LzAlwaysExpr(${q}, ${jsString(exprType)}, ${jsString(setterName)}, ${jsString(depsName)}, ${COMPILE_PROFILE ? "null" : jsString(dnSetter)})`,
     lastBody: depsBody, lastSrcLine: srcLine,
   };
 }
@@ -2511,27 +2519,54 @@ export function compile(source: string, opts: CompileOptions = {}): CompileResul
   // a `backtrace: true` canvas COMPILES in production (no longer refused).
   const backtraceWanted = wantsBacktrace;
   const backtrace = backtraceWanted && debug;
+  // PROFILE app build (`opts.profile` / canvas `compileroptions="profile: true"` /
+  // `profile="true"`): instrument the app's OWN functions with the `$lzprofiler` meter.
+  // PROFILE implies NAME_FUNCTIONS (compress=false displayName-IIFEs) but `$debug=false`
+  // (production folding — NO debugger library, NO makeDebugWindow, NO $reportException)
+  // and TRACK_LINES OFF (no `/* file */` directives). So it routes to the readable
+  // backend (`routeDebug`) like a debug build, but with SC_DEBUG=false + SC_PROFILE=true
+  // + setNoTrackLines — the SAME machinery the LFC profile variant uses, generalized to
+  // the app codegen. Orthogonal to debug/backtrace (mutually exclusive in practice).
+  // Profile applies to a PRODUCTION app (the `?profile` use case): instrument the app's
+  // own functions with the meter, $debug=false. A canvas that ALSO declares debug="true"
+  // (or backtrace) is a debug build — `--profile` then layers meters onto a debug build
+  // (debugger library + trackLines + $reportException), a distinct combined mode NOT
+  // covered here; such a canvas compiles as the plain debug build (profile inert).
+  const profile = (opts.profile === true
+    || /(?:^|;)\s*profile\s*:\s*true\b/.test(root.attrs["compileroptions"] ?? "")
+    || root.attrs["profile"] === "true") && !debug;
+  // The readable (compress=false displayName-IIFE) backend runs for a debug build OR a
+  // profile build; `$debug` (SC_DEBUG) stays FALSE for a pure profile build.
+  const routeDebug = debug || profile;
   try {
     setScDebug(debug);
     setScBacktrace(backtrace);
+    setScProfile(profile);
+    if (profile) setNoTrackLines(true); // profile = nameFunctions WITHOUT trackLines
     setDebugBacktrace(backtrace);
+    setDebugProfile(profile);
     resetKnownClassnames();
     resetKnownIds();
     resetBinderTable();
     resetRegTable();
-    COMPILE_DEBUG = debug;
+    COMPILE_DEBUG = routeDebug;
     COMPILE_BACKTRACE = backtrace;
+    COMPILE_PROFILE = profile;
     DEBUG_FILE = opts.debugFileName ?? ((id) => id);
     DEBUG_SOURCE_ID = opts.sourceId ?? "";
     SCRIPT_SRC = opts.resolveScriptSrc ?? null;
     DATASET_SRC = opts.resolveDatasetSrc ?? null;
-    return compileInner(root, opts, debug);
+    return compileInner(root, opts, routeDebug);
   } finally {
     setScDebug(false); // never let the debug fold leak into the next compile
     setScBacktrace(false);
+    setScProfile(false);
+    setNoTrackLines(false);
     setDebugBacktrace(false);
+    setDebugProfile(false);
     COMPILE_DEBUG = false;
     COMPILE_BACKTRACE = false;
+    COMPILE_PROFILE = false;
     DEBUG_FILE = (id) => id;
     DEBUG_STMTS = null;
     SCRIPT_SRC = null;
@@ -2600,8 +2635,19 @@ function debugMergeAttributes(file: string, classLine: number, bodyLine: number,
       ` && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException(${jsString(file)}, $3.lineno, $lzsc$e)\n} else {\nthrow $lzsc$e\n}`
     : debugCatchBody(file, bodyLine);
   const btFinally = bt ? `\n${GEN}finally {\nif ($2) {\n$2.length--\n}}` : "";
-  const tryWrap = `try {\n${btPrefix}${A(bodyLine)}${withPart}}\n${GEN}catch ($lzsc$e) {\n${catchBody}}${btFinally}`;
-  const funcBlock = `{\n${GEN}${btPrelude}${tryWrap}}`;
+  let funcBlock: string;
+  if (COMPILE_PROFILE) {
+    // PROFILE: the class initializer `(function ($0))` is a metered function VALUE →
+    // `calls` meter (try prefix) + the `with` body in the try, `returns` meter as the
+    // finally (no catch — $debug false). Meter regs $1/$2/$3 (param $0). withPart is the
+    // plain mergeAttributes (bt is false; profile/backtrace mutually exclusive).
+    const meterGet = 'arguments.callee["displayName"]';
+    const profTry = `try {\n${meterEvent("$1", "$2", "$3", meterGet, "calls")};\n${A(bodyLine)}${withPart}}\n${GEN}finally {\n${meterEvent("$1", "$2", "$3", meterGet, "returns")}}`;
+    funcBlock = `{\n${GEN}${profTry}}`;
+  } else {
+    const tryWrap = `try {\n${btPrefix}${A(bodyLine)}${withPart}}\n${GEN}catch ($lzsc$e) {\n${catchBody}}${btFinally}`;
+    funcBlock = `{\n${GEN}${btPrelude}${tryWrap}}`;
+  }
   const innerFn = `function ($0) ${funcBlock}${FB}`;
   const S1 = `var $lzsc$temp = ${innerFn};`;
   const S2 = `${A(bodyLine)}$lzsc$temp["displayName"] = ${jsString(file + "#" + bodyLine + "/1")};`;
@@ -2630,6 +2676,10 @@ let COMPILE_DEBUG = false;
 // Per-compile backtrace flag (compile.ts side), mirroring SC_BACKTRACE. Drives the
 // generated mergeAttributes IIFE's backtrace frame instrumentation.
 let COMPILE_BACKTRACE = false;
+// Per-compile profile flag (compile.ts side), mirroring SC_PROFILE. A profile build
+// uses the readable backend (COMPILE_DEBUG=true) but is otherwise production
+// ($debug=false): it must NOT splice the debugger library nor emit makeDebugWindow.
+let COMPILE_PROFILE = false;
 
 // Debug-build top-level-statement sink: in a debug build, each emitted top-level
 // statement (class `Class.make(…)` block, instance/LzInstantiateView, colors,
@@ -2741,7 +2791,9 @@ function compileInner(root: XmlElem, opts: CompileOptions, debug: boolean): Comp
     // expandAutoincludes: splicing it first would let the autoinclude partition
     // re-sort the debugger's carefully-ordered DFS closure. Insert it at the end
     // of the sorted autoinclude prefix (index = prefixLen), before canvas content.
-    if (debug) spliceDebuggerLibrary(root, opts, seenIncludes, prefixLen);
+    // A profile build is production ($debug=false) → no debugger library (the oracle
+    // --profile without --debug does not pull debugger/library.lzx).
+    if (debug && !COMPILE_PROFILE) spliceDebuggerLibrary(root, opts, seenIncludes, prefixLen);
     // canvas attributes: defaults + build constants + appbuilddate (overrides
     // applied after the type resolvers are defined, below).
     const cattrs: Record<string, string> = {};
@@ -3970,7 +4022,9 @@ function compileInner(root: XmlElem, opts: CompileOptions, debug: boolean): Comp
           // :179); the whole `; (function(){…})()` is compileScript'd WITH the element
           // (sourceLocationDirective(element,true) → the `<stylesheet>` line). Routed
           // through compileProgramDebug → the empty `;` stmt + the displayName-IIFE.
-          const progD = buildStylesheetProgram(cssText, debugFile(child));
+          // The per-rule `, "<file>", <i>` debug args are $debug-gated (StyleSheet
+          // Compiler) → omitted under profile (production folding, no debug args).
+          const progD = buildStylesheetProgram(cssText, COMPILE_PROFILE ? undefined : debugFile(child));
           if (progD) {
             const styleLine = child.line ?? 0;
             // displayName col of the inner generated `function ()` = the element's
@@ -4133,7 +4187,11 @@ function compileInner(root: XmlElem, opts: CompileOptions, debug: boolean): Comp
       // otherwise bring up the default debugger with `Debug.makeDebugWindow()`. Then
       // `canvas.initDone()`. Each is an `addScript` one-line synthetic source that
       // inherits the same generated-or-real context as the regs.
-      if (debugWindowScript) {
+      if (COMPILE_PROFILE) {
+        // A profile build is production ($debug=false): no makeDebugWindow, just the
+        // `canvas.initDone()` trailer (the oracle --profile emits the production trailer).
+        pushReg(registerReg({ body: "canvas.initDone()", file: regFile, seq: 1 }));
+      } else if (debugWindowScript) {
         // The stored user-debug script source ends with `;\n` (DebugCompiler), so the
         // following `canvas.initDone()` continues in the SAME translation unit with NO
         // directive of its own — unlike the `Debug.makeDebugWindow()` path (each its

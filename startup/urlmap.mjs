@@ -17,6 +17,14 @@ export const ROOT_FILES = new Set([
 ]);
 
 export function toSourceUrl(path) {
+  // Idempotent: an already-resolved Explorer source path passes through unchanged. The SW
+  // owns the namespace map and forwards the MAPPED url (…/explorer/…) to the Node server;
+  // without this, the server's own toSourceUrl would prepend `/explorer` a SECOND time
+  // (`/explorer/explorer/nav_dhtml.xml` → 404), breaking the whole Explorer namespace —
+  // nav feed, coverpages, images — in dynamic-server mode. No user URL is ever `/explorer/…`
+  // (those live at `/`), so this only ever fires on a re-map. Mirrors the real-namespace
+  // pass-throughs below (`/examples/`, `/runtime/`, …).
+  if (path.startsWith("/explorer/")) return path;
   if (path.startsWith("/examples/")) return path;
   if (path.startsWith("/runtime/")) return path;
   if (path.startsWith("/docs/")) return path;
@@ -29,3 +37,4 @@ export function toSourceUrl(path) {
   if (ROOT_FILES.has(path)) return path;
   return "/explorer" + path;   // Explorer default namespace (/coverpages/…, /nav_dhtml.xml, /explore-nav.lzx)
 }
+

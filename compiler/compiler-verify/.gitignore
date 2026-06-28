@@ -1,5 +1,11 @@
-# Regenerated oracle gold cache (hundreds of MB; never committed — see README.md).
+# Regenerated oracle gold caches (hundreds of MB; never committed — see README.md).
+# App-compile (production + source-driven debug), profile, explorer SOLO/debug, and
+# the 4 regenerated LFC golds. All produced on demand by harness/verify.mjs build*.
 .goldcache/
+.goldcache-profile/
+.goldcache-explorer-solo/
+.goldcache-explorer-debug/
+.goldcache-lfc/
 
 # Runtime symlinks recreated at run time by oracle/lzc.sh (never commit symlinks).
 oracle/lps-home/lps/components

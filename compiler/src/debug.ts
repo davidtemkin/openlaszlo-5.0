@@ -34,6 +34,34 @@ export const OP_SETPATH = "P";
 let DBG_BACKTRACE = false;
 export function setDebugBacktrace(v: boolean): void { DBG_BACKTRACE = v; }
 
+// PROFILE flag for the generated constructors (debugConstructor / debugConstructor
+// Plain): the synthetic `$lzsc$initialize` ctor is a metered function VALUE, so it
+// gets the `$lzprofiler` `calls` meter (try prefix) + `returns` meter (finally clause)
+// instead of the `$reportException` catch arm — $debug is FALSE under profile
+// (production folding, no exception wrappers). The ctor's 4 params occupy registers
+// $0-$3, so the three meter registers are always $4/$5/$6. Set per compile by
+// compile.ts (alongside setScProfile). Mutually exclusive with backtrace.
+let DBG_PROFILE = false;
+export function setDebugProfile(v: boolean): void { DBG_PROFILE = v; }
+// The in-line `Profiler#event` meter fragment (JavascriptGenerator.meterFunctionEvent),
+// compress=false with the three locals register-renamed. Identical to sc.ts meterEvent
+// (kept local to avoid a debug↔sc import cycle). `getname` = the metered name expr.
+function profileMeter(lzp: string, now: string, name: string, getname: string, event: string): string {
+  return (
+    "var " + lzp + ' = global["$lzprofiler"];\n' +
+    "if (" + lzp + ") {\n" +
+    "var " + now + ' = "" + (new Date().getTime() - ' + lzp + ".base);\n" +
+    "var " + name + " = " + getname + ";\n" +
+    "if (" + lzp + ".last == " + now + ") {\n" +
+    lzp + ".events[" + now + '] += ",' + event + ':" + ' + name + "\n" +
+    "} else {\n" +
+    lzp + "." + event + "[" + now + "] = " + name + "\n" +
+    "};\n" +
+    lzp + ".last = " + now + "\n" +
+    "}"
+  );
+}
+
 // PROFILE LFC build (`--profile`): nameFunctions is ON (compress=false, displayName-
 // IIFE wrappers, name_$N registers) but TRACK_LINES is OFF — the oracle's option
 // ordering (Compiler.java:317 sets TRACK_LINES from NAME_FUNCTIONS, which is still
@@ -460,6 +488,20 @@ export function debugConstructor(file: string, ctorLine: number): string {
   const switchText =
     "switch (arguments.length) {\ncase 0:\n" + A(B) +
     "parent_$0 = null;;case 1:\nattrs_$1 = null;;case 2:\nchildren_$2 = null;;case 3:\nasync_$3 = false\n}";
+  // PROFILE: the ctor is a metered function VALUE — `calls` meter (try prefix) + the
+  // switch + super-dispatch in the try, `returns` meter as the finally (no catch arm:
+  // $debug is FALSE → no $reportException). Meter regs $4/$5/$6 (params occupy $0-$3).
+  if (DBG_PROFILE) {
+    const meterGet = 'arguments.callee["displayName"]';
+    const FUNC = A(L) + "function (parent_$0, attrs_$1, children_$2, async_$3) {\n" +
+      "try {\n" + profileMeter("$4", "$5", "$6", meterGet, "calls") + ";\n" +
+      A(L) + switchText + ";\n" + A(B) + superDispatch + "\n}\n" +
+      Agen + "finally {\n" + profileMeter("$4", "$5", "$6", meterGet, "returns") + "}}" + FB;
+    const S1 = A(L) + "var $lzsc$temp = " + FUNC + ";";
+    const S2 = A(L) + '$lzsc$temp["displayName"] = "$lzsc$initialize";';
+    const S3 = A(L) + "return $lzsc$temp";
+    return "(function () {\n" + S1 + "\n" + S2 + "\n" + S3 + "\n}" + FB + ")()";
+  }
   const catchBody =
     'if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error)' +
     ' && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException(' + JSON.stringify(file) + ", " + L +
@@ -496,6 +538,27 @@ export function debugConstructor(file: string, ctorLine: number): string {
  *  is the last code-member's close-tag line + an offset (5 for method/setter, 6
  *  for handler). Verified vs the dbg3 gold (basefocusview, style, basecomponent…). */
 export function debugConstructorPlain(line: number): string {
+  // PROFILE: same metered ctor VALUE as debugConstructor, but no source directives
+  // (member-rich ctor inherits the generated `""` file context). Meter regs $4/$5/$6.
+  if (DBG_PROFILE) {
+    const meterGet = 'arguments.callee["displayName"]';
+    return (
+      "(function () {\n" +
+      annoFileLine(null, 0) +
+      "var $lzsc$temp = function (parent_$0, attrs_$1, children_$2, async_$3) {\n" +
+      "try {\n" + profileMeter("$4", "$5", "$6", meterGet, "calls") + ";\n" +
+      "switch (arguments.length) {\ncase 0:\n" +
+      "parent_$0 = null;;case 1:\nattrs_$1 = null;;case 2:\nchildren_$2 = null;;case 3:\nasync_$3 = false\n};\n" +
+      '(arguments.callee["$superclass"] && arguments.callee.$superclass.prototype["$lzsc$initialize"]' +
+      ' || this.nextMethod(arguments.callee, "$lzsc$initialize")).call(this, parent_$0, attrs_$1, children_$2, async_$3)\n' +
+      "}\n" +
+      "finally {\n" + profileMeter("$4", "$5", "$6", meterGet, "returns") + "}};\n" +
+      '$lzsc$temp["displayName"] = "$lzsc$initialize";\n' +
+      "return $lzsc$temp\n" +
+      "}" +
+      ")()"
+    );
+  }
   // A leading generated-file annotation: emits `/* -*- file: -*- */` ONLY when the
   // file context in effect before the ctor is a real source file (the child-only
   // member-rich case, where the ctor is the first instance prop and follows the

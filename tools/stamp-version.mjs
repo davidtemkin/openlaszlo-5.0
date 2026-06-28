@@ -20,8 +20,12 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SW = join(ROOT, "service-worker.js");
 const BUILD_RE = /const BUILD_ID = "[^"]*";/;
 
-// Platform inputs whose change should bust all caches.
-const INPUTS = ["index.html", "compiler/lzc-browser.js", "runtime"];
+// Platform inputs whose change should bust all caches. `startup/urlmap.mjs` is the
+// URL→source namespace map the Service Worker imports as a separate ES module; its
+// behavior is part of the platform, so a change to it must bump the build id (otherwise
+// installed SWs keep importing the cached old map). NOT the whole `startup/` dir —
+// that holds the generated `version.json`, which would make the hash self-referential.
+const INPUTS = ["index.html", "compiler/lzc-browser.js", "startup/urlmap.mjs", "runtime"];
 
 function* walk(p) {
   if (!existsSync(p)) return;

@@ -1142,7 +1142,7 @@ const PROFILE_VARS = ["$lzsc$lzp", "$lzsc$now", "$lzsc$name"];
  *  rendered compress=false with the three locals already register-renamed. `getname`
  *  is the metered name expression: `arguments.callee["displayName"]` for a function
  *  VALUE (meterFunctionName null), or a quoted literal for a named declaration. */
-function meterEvent(lzp: string, now: string, name: string, getname: string, event: string): string {
+export function meterEvent(lzp: string, now: string, name: string, getname: string, event: string): string {
   return (
     "var " + lzp + ' = global["$lzprofiler"];\n' +
     "if (" + lzp + ") {\n" +
@@ -2081,7 +2081,9 @@ class Printer {
         // branch). POSTFIX returns the OLD value, PREFIX returns the NEW value:
         //   postfix `X++` →  var $0 = X; X = $0 + 1; return $0
         //   prefix  `++X` →  var $0 = X; return X = $0 + 1
-        if (this.dbg && (n.op === "++" || n.op === "--") &&
+        // The expansion is WARN_UNDEFINED_REFERENCES-gated (isChecked needs the DEBUG
+        // option) → OFF under profile ($debug=false → no checked refs), so `++X` stays plain.
+        if (this.dbg && !SC_PROFILE && (n.op === "++" || n.op === "--") &&
             n.e.k === "id" && this.dbgFree && this.dbgFree.has(n.e.name) &&
             !this.dbgOuterVars.has(n.e.name)) {
           const sym = n.e.name;
@@ -3391,6 +3393,13 @@ export function compileScriptBodyDebug(
     // by collectVariables so they are available (not free); `canvas`/`lz`/… are free.
     printer.dbgFree = computeFree([], ast);
   }
+  // PROFILE: the `<script>` instance's function VALUE is metered too (it bypasses
+  // renderDebugFuncNode). The script printer uses an empty rename map (script-scope
+  // vars are globals), so the meter uses the LITERAL register names $lzsc$lzp/$lzsc$
+  // now/$lzsc$name. Mutually exclusive with backtrace.
+  const prof = SC_PROFILE;
+  const profGet = 'arguments.callee["displayName"]';
+  const profPrefix = prof ? meterEvent(PROFILE_VARS[0], PROFILE_VARS[1], PROFILE_VARS[2], profGet, "calls") : "";
   // The script-scope globals (var/funcdecl names) RESOLVE a nested function's free
   // reference, so a `++X`/`X++` on such a name inside a nested funcdecl is NOT
   // "checked" → stays plain (performance-tuning's `var j` → `j++` in
@@ -3424,7 +3433,11 @@ export function compileScriptBodyDebug(
   // Backtrace frame prefix (`if ($lzsc$s) {…push…}`) goes first in the lead, before
   // the hoist/funcAssigns and body (a no-param frame → `[]`).
   const btFramePrefix = bt ? btPrefix("$lzsc$d", "$lzsc$s", "$lzsc$a", [], [], file, elementLine, false) : "";
-  const lead = [btFramePrefix, hoist, funcAssigns].filter((s) => s !== "");
+  // The script-scope `name = void 0;` globals are the function's hoisted VARIABLES →
+  // they precede the meter prefix (JavascriptGenerator declares variables before the
+  // `prefix`); the backtrace frame prefix stays first (the gold ordering differs by
+  // mode). funcAssigns (funcdecl→global assignment) follow the meter prefix.
+  const lead = [btFramePrefix, hoist, profPrefix, funcAssigns].filter((s) => s !== "");
   // A lead ending in `;` (the `name = void 0;` hoist / funcdecl assigns) needs only
   // a newline before the next item; one not ending in `;` (the frame prefix `}}`)
   // needs `;\n`.
@@ -3451,15 +3464,20 @@ export function compileScriptBodyDebug(
   // `var X = {…}` globals → NO try). `dereferenced` stays TOP-scope only (computeDeref
   // skips nested funcs), so the funcdecl bodies' property accesses do NOT count.
   const freeReal = computeFree([], ast);
-  // Backtrace always establishes a try (for the finally/frame-pop suffix).
-  const needTry = bt || computeDereferenced(ast) || freeReal.size > 0;
+  // Backtrace/profile always establishes a try (for the finally/frame-pop or returns-
+  // meter suffix). Profile has NO catch arm ($debug=false → no $reportException).
+  const needTry = bt || prof || computeDereferenced(ast) || freeReal.size > 0;
   let funcBlock: string;
   if (needTry) {
+    const profSuffix = prof ? meterEvent(PROFILE_VARS[0], PROFILE_VARS[1], PROFILE_VARS[2], profGet, "returns") : "";
     const catchBody = bt ? debugCatchBodyBacktrace(file, "$lzsc$a") : debugCatchBody(file, elementLine);
     const finallyClause = bt
       ? "\n" + Agen + "finally {\n" + btSuffix("$lzsc$s") + blockNL(btSuffix("$lzsc$s")) + "}"
+      : prof
+      ? "\n" + Agen + "finally {\n" + profSuffix + blockNL(profSuffix) + "}"
       : "";
-    const tryWrap = "try {\n" + elided + blockNL(elided) + "}\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}" + finallyClause;
+    const catchPart = prof ? "" : "\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}";
+    const tryWrap = "try {\n" + elided + blockNL(elided) + "}" + catchPart + finallyClause;
     const preludeStr = bt ? btPrelude("$lzsc$d", "$lzsc$s") + "\n" : "";
     funcBlock = "{\n" + Agen + preludeStr + tryWrap + "}";
   } else {
@@ -3991,6 +4009,15 @@ export function compileFunctionDebug(
   if (bt) printer.btVar = avar;
   // LFC backtrace frame "user pathname" (`lfc/` + include path) — see renderDebugFuncNode.
   const utp = SC_LFC_NAMEFUNCS && bt ? "lfc/" + file : file;
+  // Profile: this body's three meter registers ($lzsc$lzp/$lzsc$now/$lzsc$name,
+  // reserved last in analyzeScope when SC_PROFILE). A method/setter is a function VALUE
+  // (displayName-IIFE) → the metered name expr is `arguments.callee["displayName"]`.
+  // (App methods/setters never carry a `#pragma 'profile=false'`, so prof = SC_PROFILE.)
+  const prof = SC_PROFILE;
+  const mlzp = prof ? scope.map.get("$lzsc$lzp")! : "";
+  const mnow = prof ? scope.map.get("$lzsc$now")! : "";
+  const mname = prof ? scope.map.get("$lzsc$name")! : "";
+  const meterGetName = 'arguments.callee["displayName"]';
   const A = (n: number) => annoFileLine(file, n);
   const Agen = annoFileLine(null, 0);
   const FB = forceBlankLnum();
@@ -4042,11 +4069,13 @@ export function compileFunctionDebug(
   // Assemble the leading generated statements (redecls/hoist/prologue), then body.
   // A lead ending in `;` (redecls/hoist) needs only a newline before the body; one
   // ending in `}` (the switch prologue) needs `;\n` (statement terminator).
-  // Backtrace prefix (frame push) — generated, after redecls, before body/prologue.
-  const prefix = bt ? btPrefix(dvar, svar, avar, params, scope.newParams, utp, methodLine, /*isStatic*/ false) : "";
-  // Backtrace: funcdecl `var` declarations hoist BEFORE the frame prefix; their
-  // assignments stay after it. Non-backtrace keeps `hoist` (decl+assign) together.
-  const lead = bt
+  // Backtrace frame-push prefix OR profile `calls` meter prefix (mutually exclusive) —
+  // generated, after redecls, before body/prologue.
+  const prefix = bt ? btPrefix(dvar, svar, avar, params, scope.newParams, utp, methodLine, /*isStatic*/ false)
+    : prof ? meterEvent(mlzp, mnow, mname, meterGetName, "calls") : "";
+  // Backtrace/profile: funcdecl `var` declarations hoist BEFORE the frame/meter prefix;
+  // their assignments stay after it. Non-instrumented keeps `hoist` (decl+assign) together.
+  const lead = (bt || prof)
     ? [redecls, hoistDecls, prefix, hoistAssigns, prologue].filter((s) => s !== "")
     : [redecls, hoist, prologue].filter((s) => s !== "");
   // The try/catch wrapper is emitted iff the ANALYZED body is dereferenced or has
@@ -4059,12 +4088,15 @@ export function compileFunctionDebug(
   // OFF, so `debugExceptions` is false: a method body is wrapped ONLY for a declared
   // throwsError (catchKind "throws") or backtrace — deref/free/default-params do NOT
   // force a try (they would only under the `--option debug=true` phantom).
-  const needTry = SC_LFC_NAMEFUNCS
-    ? (bt || catchKind === "throws")
+  const needTry = (SC_LFC_NAMEFUNCS || SC_PROFILE)
+    ? (bt || prof || catchKind === "throws")
     : (bt || scope.dereferenced || scope.free.size > 0 || cases.length > 0);
   // Enable the first-statement super quirk only for unwrapped bodies with no lead
   // (the super must directly follow the function's source `{`).
   printer.dbgNoWrapper = !needTry && lead.length === 0;
+  // PROFILE: nested function VALUEs in this body are eligible for the " closure"
+  // displayName suffix (printFunc reads dbgInsideFunc).
+  printer.dbgInsideFunc = true;
   const bodyStmts = printer.joinStmts(rest);
   printer.dbgNoWrapper = false;
   // `;`-aware lead joiner (the prefix `if(){}` block has no trailing `;`).
@@ -4082,12 +4114,17 @@ export function compileFunctionDebug(
   const elided = elideSemi(bodyInner);
   let funcBlock: string;
   if (needTry) {
+    // The profile `returns` meter is a `finally` clause (suffix.add(0, returns)); the
+    // backtrace frame-pop is too. Profile and backtrace are mutually exclusive.
+    const profSuffix = prof ? meterEvent(mlzp, mnow, mname, meterGetName, "returns") : "";
     const finallyClause = bt
       ? "\n" + Agen + "finally {\n" + btSuffix(svar) + blockNL(btSuffix(svar)) + "}"
+      : prof
+      ? "\n" + Agen + "finally {\n" + profSuffix + blockNL(profSuffix) + "}"
       : "";
-    // LFC nameFunctions backtrace: `try {…} finally {pop}`, NO $reportException catch
-    // (debugExceptions off) — only a throwsError body keeps a catch.
-    const noCatch = SC_LFC_NAMEFUNCS && bt && catchKind !== "throws";
+    // LFC nameFunctions backtrace/profile: `try {…} finally {…}`, NO $reportException
+    // catch (debugExceptions off) — only a throwsError body keeps a catch.
+    const noCatch = (SC_LFC_NAMEFUNCS || SC_PROFILE) && (bt || prof) && catchKind !== "throws";
     const catchBody = catchKind === "throws" ? debugCatchBodyThrows()
       : bt ? debugCatchBodyBacktrace(file, avar) : debugCatchBody(file, methodLine);
     const catchPart = noCatch ? ""
@@ -4098,7 +4135,9 @@ export function compileFunctionDebug(
   } else {
     funcBlock = elided === "" ? "{}" : "{\n" + elided + blockNL(elided) + "}";
   }
-  const innerFn = A(methodLine) + "function  (" + scope.newParams.join(", ") + ")" + " " + funcBlock + FB;
+  // The empty-name-slot 2-space (`function  (`) is a TRACK_LINES artifact; profile has
+  // TRACK_LINES off → 1-space (like renderDebugFuncNode's innerFn).
+  const innerFn = A(methodLine) + "function" + (SC_PROFILE ? " " : "  ") + "(" + scope.newParams.join(", ") + ")" + " " + funcBlock + FB;
   const S1 = A(methodLine) + "var $lzsc$temp = " + innerFn + ";";
   const S2 = A(methodLine) + '$lzsc$temp["displayName"] = ' + jsString(userName) + ";";
   const S2bt = bt
@@ -4285,7 +4324,7 @@ function renderDebugFuncNode(
     : [redecls, prefix, hoist, prologue]).filter((s) => s !== "");
   // Backtrace/profile always establishes a try (the finally/suffix), so force the wrapper.
   // A throwsError function is ALWAYS wrapped (THROWS_ERROR), regardless of deref/free.
-  const needTry = SC_LFC_NAMEFUNCS
+  const needTry = (SC_LFC_NAMEFUNCS || SC_PROFILE)
     ? (bt || prof || catchKind === "throws")
     : (bt || scope.dereferenced || scope.free.size > 0 || cases.length > 0 || catchKind === "throws");
   printer.dbgNoWrapper = !needTry && lead.length === 0;
@@ -4324,7 +4363,7 @@ function renderDebugFuncNode(
     // LFC nameFunctions build: the `debug` compiler option is OFF (debugExceptions
     // false), so a backtrace/profile body is `try {…} finally {…}` with NO
     // `$reportException` catch arm (the only catch is the throwsError "throws" arm).
-    const noCatch = SC_LFC_NAMEFUNCS && (bt || prof) && catchKind !== "throws";
+    const noCatch = (SC_LFC_NAMEFUNCS || SC_PROFILE) && (bt || prof) && catchKind !== "throws";
     const catchBody = catchKind === "throws" ? debugCatchBodyThrows()
       : bt ? debugCatchBodyBacktrace(file, avar) : debugCatchBody(file, funcLine);
     const catchPart = noCatch ? ""

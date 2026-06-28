@@ -67,6 +67,18 @@ fi
 
 CP="$PATCH:$ORACLE_CP"
 
+# --- SC mode (LZC_SC=1): the SCRIPT compiler (LFC library build) ----------
+# The LFC golds (LFCdhtml*.js) are built by org.openlaszlo.sc.Main, NOT the app
+# compiler. The caller (harness/verify.mjs build-oracle-lfc) runs this from a
+# SCRATCH copy of runtime/lfc-src (lzsc resolves #include relative to CWD) with
+# all flags + the explicit -o<outfile> + --default=LaszloLibrary.lzs. No SOLO
+# config, no --dir defaulting — sc.Main writes exactly the -o target. The minimal
+# lps-home is sufficient (sc.Main reads only property defaults from it).
+if [ "${LZC_SC:-}" = "1" ]; then
+  exec "$JAVA_HOME/bin/java" -cp "$CP" -DLPS_HOME="$LPS_HOME_DIR" \
+    org.openlaszlo.sc.Main "$@"
+fi
+
 # --- SOLO mode (LZC_SOLO=1) ----------------------------------------------
 # The corpus golds + the distro apps are SOLO builds (compile property
 # proxied=false -> the canvas.__LZproxied="false" one-byte delta). SOLO is

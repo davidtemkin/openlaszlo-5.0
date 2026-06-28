@@ -115,7 +115,7 @@ export async function compileInBrowser(mainUrl, o = {}) {
         tracker.record(mainUrl, validators.get(mainUrl) ?? { missing: true });
         const opts = browserOptions({ baseUrl: mainUrl, lpsUrl: o.lpsUrl, state, sprites });
         const r = compile(state.map.get(mainUrl).text, {
-            ...opts, debug: o.debug, backtrace: o.backtrace, proxied: o.proxied, sprites,
+            ...opts, debug: o.debug, backtrace: o.backtrace, profile: o.profile, proxied: o.proxied, sprites,
         });
         passes++;
         result = { js: r.js, unsupported: r.unsupported };

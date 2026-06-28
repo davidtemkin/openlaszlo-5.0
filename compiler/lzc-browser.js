@@ -650,7 +650,17 @@ var DBG_BACKTRACE = false;
 function setDebugBacktrace(v) {
   DBG_BACKTRACE = v;
 }
+var DBG_PROFILE = false;
+function setDebugProfile(v) {
+  DBG_PROFILE = v;
+}
+function profileMeter(lzp, now, name, getname, event) {
+  return "var " + lzp + ' = global["$lzprofiler"];\nif (' + lzp + ") {\nvar " + now + ' = "" + (new Date().getTime() - ' + lzp + ".base);\nvar " + name + " = " + getname + ";\nif (" + lzp + ".last == " + now + ") {\n" + lzp + ".events[" + now + '] += ",' + event + ':" + ' + name + "\n} else {\n" + lzp + "." + event + "[" + now + "] = " + name + "\n};\n" + lzp + ".last = " + now + "\n}";
+}
 var NO_TRACK_LINES = false;
+function setNoTrackLines(v) {
+  NO_TRACK_LINES = v;
+}
 function ctorBacktrace(file, ctorLine) {
   const D = "$4", S = "$5", Av = "$6";
   return {
@@ -935,6 +945,14 @@ function debugConstructor(file, ctorLine) {
   const FB = forceBlankLnum();
   const superDispatch = '(arguments.callee["$superclass"] && arguments.callee.$superclass.prototype["$lzsc$initialize"] || this.nextMethod(arguments.callee, "$lzsc$initialize")).call(this, parent_$0, attrs_$1, children_$2, async_$3)';
   const switchText = "switch (arguments.length) {\ncase 0:\n" + A(B) + "parent_$0 = null;;case 1:\nattrs_$1 = null;;case 2:\nchildren_$2 = null;;case 3:\nasync_$3 = false\n}";
+  if (DBG_PROFILE) {
+    const meterGet = 'arguments.callee["displayName"]';
+    const FUNC2 = A(L) + "function (parent_$0, attrs_$1, children_$2, async_$3) {\ntry {\n" + profileMeter("$4", "$5", "$6", meterGet, "calls") + ";\n" + A(L) + switchText + ";\n" + A(B) + superDispatch + "\n}\n" + Agen + "finally {\n" + profileMeter("$4", "$5", "$6", meterGet, "returns") + "}}" + FB;
+    const S12 = A(L) + "var $lzsc$temp = " + FUNC2 + ";";
+    const S22 = A(L) + '$lzsc$temp["displayName"] = "$lzsc$initialize";';
+    const S32 = A(L) + "return $lzsc$temp";
+    return "(function () {\n" + S12 + "\n" + S22 + "\n" + S32 + "\n}" + FB + ")()";
+  }
   const catchBody = 'if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error) && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException(' + JSON.stringify(file) + ", " + L + ", $lzsc$e)\n} else {\nthrow $lzsc$e\n}";
   const bt = DBG_BACKTRACE ? ctorBacktrace(file, L) : null;
   const dispatch = bt ? '(arguments.callee["$superclass"] && arguments.callee.$superclass.prototype["$lzsc$initialize"] || ' + bt.nextMethod + ").call(this, parent_$0, attrs_$1, children_$2, async_$3)" : superDispatch;
@@ -949,6 +967,10 @@ function debugConstructor(file, ctorLine) {
   return "(function () {\n" + S1 + "\n" + S2 + S2bt + "\n" + S3 + "\n}" + FB + ")()";
 }
 function debugConstructorPlain(line) {
+  if (DBG_PROFILE) {
+    const meterGet = 'arguments.callee["displayName"]';
+    return "(function () {\n" + annoFileLine(null, 0) + "var $lzsc$temp = function (parent_$0, attrs_$1, children_$2, async_$3) {\ntry {\n" + profileMeter("$4", "$5", "$6", meterGet, "calls") + ';\nswitch (arguments.length) {\ncase 0:\nparent_$0 = null;;case 1:\nattrs_$1 = null;;case 2:\nchildren_$2 = null;;case 3:\nasync_$3 = false\n};\n(arguments.callee["$superclass"] && arguments.callee.$superclass.prototype["$lzsc$initialize"] || this.nextMethod(arguments.callee, "$lzsc$initialize")).call(this, parent_$0, attrs_$1, children_$2, async_$3)\n}\nfinally {\n' + profileMeter("$4", "$5", "$6", meterGet, "returns") + '}};\n$lzsc$temp["displayName"] = "$lzsc$initialize";\nreturn $lzsc$temp\n})()';
+  }
   const bt = DBG_BACKTRACE ? ctorBacktrace("", line) : null;
   const dispatch = bt ? '(arguments.callee["$superclass"] && arguments.callee.$superclass.prototype["$lzsc$initialize"] || ' + bt.nextMethod + ").call(this, parent_$0, attrs_$1, children_$2, async_$3)\n" : '(arguments.callee["$superclass"] && arguments.callee.$superclass.prototype["$lzsc$initialize"] || this.nextMethod(arguments.callee, "$lzsc$initialize")).call(this, parent_$0, attrs_$1, children_$2, async_$3)\n';
   const catchTail = bt ? 'if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error) && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException("", $6.lineno, $lzsc$e)\n} else {\nthrow $lzsc$e\n}}' + bt.suffix + "}\n" : 'if ((Error["$lzsc$isa"] ? Error.$lzsc$isa($lzsc$e) : $lzsc$e instanceof Error) && $lzsc$e !== lz["$lzsc$thrownError"]) {\n$reportException("", ' + line + ", $lzsc$e)\n} else {\nthrow $lzsc$e\n}}}\n";
@@ -2101,6 +2123,9 @@ function setScBacktrace(v) {
   SC_BACKTRACE = v;
 }
 var SC_PROFILE = false;
+function setScProfile(v) {
+  SC_PROFILE = v;
+}
 var PROFILE_VARS = ["$lzsc$lzp", "$lzsc$now", "$lzsc$name"];
 function meterEvent(lzp, now, name, getname, event) {
   return "var " + lzp + ' = global["$lzprofiler"];\nif (' + lzp + ") {\nvar " + now + ' = "" + (new Date().getTime() - ' + lzp + ".base);\nvar " + name + " = " + getname + ";\nif (" + lzp + ".last == " + now + ") {\n" + lzp + ".events[" + now + '] += ",' + event + ':" + ' + name + "\n} else {\n" + lzp + "." + event + "[" + now + "] = " + name + "\n};\n" + lzp + ".last = " + now + "\n}";
@@ -3211,7 +3236,7 @@ var Printer = class _Printer {
       case "new":
         return "new " + this.wrap(n.c, 18) + "(" + n.args.map((a) => this.wrap(a, 1)).join(this.COMMA) + ")";
       case "unary":
-        if (this.dbg && (n.op === "++" || n.op === "--") && n.e.k === "id" && this.dbgFree && this.dbgFree.has(n.e.name) && !this.dbgOuterVars.has(n.e.name)) {
+        if (this.dbg && !SC_PROFILE && (n.op === "++" || n.op === "--") && n.e.k === "id" && this.dbgFree && this.dbgFree.has(n.e.name) && !this.dbgOuterVars.has(n.e.name)) {
           const sym = n.e.name;
           const step = n.op === "++" ? "+" : "-";
           const innerSrc = n.prefix ? `var $lzsc$tmp = ${sym}; return ${sym} = $lzsc$tmp ${step} 1;` : `var $lzsc$tmp = ${sym}; ${sym} = $lzsc$tmp ${step} 1; return $lzsc$tmp;`;
@@ -4168,6 +4193,9 @@ function compileScriptBodyDebug(source, file, elementLine, displayCol) {
     printer.btVar = "$lzsc$a";
     printer.dbgFree = computeFree([], ast);
   }
+  const prof = SC_PROFILE;
+  const profGet = 'arguments.callee["displayName"]';
+  const profPrefix = prof ? meterEvent(PROFILE_VARS[0], PROFILE_VARS[1], PROFILE_VARS[2], profGet, "calls") : "";
   for (const v of hoistNames)
     printer.dbgOuterVars.add(v);
   const A = (n) => annoFileLine(file, n);
@@ -4181,7 +4209,7 @@ function compileScriptBodyDebug(source, file, elementLine, displayCol) {
   }).join("\n") : "";
   const bodyStmts = printer.joinStmts(rest);
   const btFramePrefix = bt ? btPrefix("$lzsc$d", "$lzsc$s", "$lzsc$a", [], [], file, elementLine, false) : "";
-  const lead = [btFramePrefix, hoist, funcAssigns].filter((s) => s !== "");
+  const lead = [btFramePrefix, hoist, profPrefix, funcAssigns].filter((s) => s !== "");
   const joinSep = (acc, item) => acc + (unannotateStr(acc).replace(/\s+$/, "").endsWith(";") ? "\n" : ";\n") + item;
   const leadJoined = lead.length ? lead.reduce(joinSep) : "";
   const leadSep = unannotateStr(leadJoined).replace(/\s+$/, "").endsWith(";") ? "\n" : ";\n";
@@ -4189,12 +4217,14 @@ function compileScriptBodyDebug(source, file, elementLine, displayCol) {
   const blockNL = (b) => unannotateStr(b).endsWith("}") ? "" : NL;
   const elided = elideSemi(bodyInner);
   const freeReal = computeFree([], ast);
-  const needTry = bt || computeDereferenced(ast) || freeReal.size > 0;
+  const needTry = bt || prof || computeDereferenced(ast) || freeReal.size > 0;
   let funcBlock;
   if (needTry) {
+    const profSuffix = prof ? meterEvent(PROFILE_VARS[0], PROFILE_VARS[1], PROFILE_VARS[2], profGet, "returns") : "";
     const catchBody = bt ? debugCatchBodyBacktrace(file, "$lzsc$a") : debugCatchBody(file, elementLine);
-    const finallyClause = bt ? "\n" + Agen + "finally {\n" + btSuffix("$lzsc$s") + blockNL(btSuffix("$lzsc$s")) + "}" : "";
-    const tryWrap = "try {\n" + elided + blockNL(elided) + "}\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}" + finallyClause;
+    const finallyClause = bt ? "\n" + Agen + "finally {\n" + btSuffix("$lzsc$s") + blockNL(btSuffix("$lzsc$s")) + "}" : prof ? "\n" + Agen + "finally {\n" + profSuffix + blockNL(profSuffix) + "}" : "";
+    const catchPart = prof ? "" : "\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}";
+    const tryWrap = "try {\n" + elided + blockNL(elided) + "}" + catchPart + finallyClause;
     const preludeStr = bt ? btPrelude("$lzsc$d", "$lzsc$s") + "\n" : "";
     funcBlock = "{\n" + Agen + preludeStr + tryWrap + "}";
   } else {
@@ -4394,6 +4424,11 @@ function compileFunctionDebug(userName, params, source, defaults, file, methodLi
   if (bt)
     printer.btVar = avar;
   const utp = SC_LFC_NAMEFUNCS && bt ? "lfc/" + file : file;
+  const prof = SC_PROFILE;
+  const mlzp = prof ? scope.map.get("$lzsc$lzp") : "";
+  const mnow = prof ? scope.map.get("$lzsc$now") : "";
+  const mname = prof ? scope.map.get("$lzsc$name") : "";
+  const meterGetName = 'arguments.callee["displayName"]';
   const A = (n) => annoFileLine(file, n);
   const Agen = annoFileLine(null, 0);
   const FB = forceBlankLnum();
@@ -4429,10 +4464,11 @@ function compileFunctionDebug(userName, params, source, defaults, file, methodLi
     methodLine,
     /*isStatic*/
     false
-  ) : "";
-  const lead = bt ? [redecls, hoistDecls, prefix, hoistAssigns, prologue].filter((s) => s !== "") : [redecls, hoist, prologue].filter((s) => s !== "");
-  const needTry = SC_LFC_NAMEFUNCS ? bt || catchKind === "throws" : bt || scope.dereferenced || scope.free.size > 0 || cases.length > 0;
+  ) : prof ? meterEvent(mlzp, mnow, mname, meterGetName, "calls") : "";
+  const lead = bt || prof ? [redecls, hoistDecls, prefix, hoistAssigns, prologue].filter((s) => s !== "") : [redecls, hoist, prologue].filter((s) => s !== "");
+  const needTry = SC_LFC_NAMEFUNCS || SC_PROFILE ? bt || prof || catchKind === "throws" : bt || scope.dereferenced || scope.free.size > 0 || cases.length > 0;
   printer.dbgNoWrapper = !needTry && lead.length === 0;
+  printer.dbgInsideFunc = true;
   const bodyStmts = printer.joinStmts(rest);
   printer.dbgNoWrapper = false;
   const joinSep = (acc, item) => acc + (unannotateStr(acc).replace(/\s+$/, "").endsWith(";") ? "\n" : ";\n") + item;
@@ -4443,8 +4479,9 @@ function compileFunctionDebug(userName, params, source, defaults, file, methodLi
   const elided = elideSemi(bodyInner);
   let funcBlock;
   if (needTry) {
-    const finallyClause = bt ? "\n" + Agen + "finally {\n" + btSuffix(svar) + blockNL(btSuffix(svar)) + "}" : "";
-    const noCatch = SC_LFC_NAMEFUNCS && bt && catchKind !== "throws";
+    const profSuffix = prof ? meterEvent(mlzp, mnow, mname, meterGetName, "returns") : "";
+    const finallyClause = bt ? "\n" + Agen + "finally {\n" + btSuffix(svar) + blockNL(btSuffix(svar)) + "}" : prof ? "\n" + Agen + "finally {\n" + profSuffix + blockNL(profSuffix) + "}" : "";
+    const noCatch = (SC_LFC_NAMEFUNCS || SC_PROFILE) && (bt || prof) && catchKind !== "throws";
     const catchBody = catchKind === "throws" ? debugCatchBodyThrows() : bt ? debugCatchBodyBacktrace(file, avar) : debugCatchBody(file, methodLine);
     const catchPart = noCatch ? "" : "\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}";
     const tryWrap = "try {\n" + elided + blockNL(elided) + "}" + catchPart + finallyClause;
@@ -4453,7 +4490,7 @@ function compileFunctionDebug(userName, params, source, defaults, file, methodLi
   } else {
     funcBlock = elided === "" ? "{}" : "{\n" + elided + blockNL(elided) + "}";
   }
-  const innerFn = A(methodLine) + "function  (" + scope.newParams.join(", ") + ") " + funcBlock + FB;
+  const innerFn = A(methodLine) + "function" + (SC_PROFILE ? " " : "  ") + "(" + scope.newParams.join(", ") + ") " + funcBlock + FB;
   const S1 = A(methodLine) + "var $lzsc$temp = " + innerFn + ";";
   const S2 = A(methodLine) + '$lzsc$temp["displayName"] = ' + jsString(userName) + ";";
   const S2bt = bt ? NL + A(methodLine) + '$lzsc$temp["_dbg_filename"] = ' + jsString(utp) + ";" + NL + A(methodLine) + '$lzsc$temp["_dbg_lineno"] = ' + methodLine + ";" : "";
@@ -4593,7 +4630,7 @@ function renderDebugFuncNode(fn, userName, named, file, funcLine, catchKind = "r
     isStatic
   ) : prof ? meterEvent(mlzp, mnow, mname, meterGetName, "calls") : "";
   const lead = (bt || prof ? [redecls, hoistDecls, prefix, hoistAssigns, prologue] : [redecls, prefix, hoist, prologue]).filter((s) => s !== "");
-  const needTry = SC_LFC_NAMEFUNCS ? bt || prof || catchKind === "throws" : bt || scope.dereferenced || scope.free.size > 0 || cases.length > 0 || catchKind === "throws";
+  const needTry = SC_LFC_NAMEFUNCS || SC_PROFILE ? bt || prof || catchKind === "throws" : bt || scope.dereferenced || scope.free.size > 0 || cases.length > 0 || catchKind === "throws";
   printer.dbgNoWrapper = !needTry && lead.length === 0;
   if (bt && funcdecls.length)
     printer.btSuperSeen = true;
@@ -4610,7 +4647,7 @@ function renderDebugFuncNode(fn, userName, named, file, funcLine, catchKind = "r
   if (needTry) {
     const profSuffix = prof ? meterEvent(mlzp, mnow, mname, meterGetName, "returns") : "";
     const finallyClause = bt ? "\n" + Agen + "finally {\n" + btSuffix(svar) + blockNL(btSuffix(svar)) + "}" : prof ? "\n" + Agen + "finally {\n" + profSuffix + blockNL(profSuffix) + "}" : "";
-    const noCatch = SC_LFC_NAMEFUNCS && (bt || prof) && catchKind !== "throws";
+    const noCatch = (SC_LFC_NAMEFUNCS || SC_PROFILE) && (bt || prof) && catchKind !== "throws";
     const catchBody = catchKind === "throws" ? debugCatchBodyThrows() : bt ? debugCatchBodyBacktrace(file, avar) : debugCatchBody(file, funcLine);
     const catchPart = noCatch ? "" : "\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}";
     const tryWrap = "try {\n" + elided + blockNL(elided) + "}" + catchPart + finallyClause;
@@ -5230,8 +5267,8 @@ function compileConstraintDebug(name, exprType, expr, when, mGen, file, srcLine)
     return {
       entries: [ent(setterName, setterFn2)],
       // The debug build carries the binder's prettyBinderName as the init's last
-      // arg (the production build passes `null`).
-      initExpr: `new LzOnceExpr(${q}, ${jsString(exprType)}, ${jsString(setterName)}, ${jsString(dnSetter)})`,
+      // arg (production AND profile pass `null` — it is $debug-gated, NodeModel).
+      initExpr: `new LzOnceExpr(${q}, ${jsString(exprType)}, ${jsString(setterName)}, ${COMPILE_PROFILE ? "null" : jsString(dnSetter)})`,
       lastBody: setterBody2,
       lastSrcLine: srcLine
     };
@@ -5252,7 +5289,7 @@ this.setAttribute(${q},$lzc$newvalue)
   const depsFn = compileFunctionDebug(`${name} dependencies`, [], depsBody, [], file, srcLine, srcLine, false, "throws", true, `${name} dependencies`);
   return {
     entries: [ent(setterName, setterFn), ent(depsName, depsFn)],
-    initExpr: `new LzAlwaysExpr(${q}, ${jsString(exprType)}, ${jsString(setterName)}, ${jsString(depsName)}, ${jsString(dnSetter)})`,
+    initExpr: `new LzAlwaysExpr(${q}, ${jsString(exprType)}, ${jsString(setterName)}, ${jsString(depsName)}, ${COMPILE_PROFILE ? "null" : jsString(dnSetter)})`,
     lastBody: depsBody,
     lastSrcLine: srcLine
   };
@@ -6298,27 +6335,38 @@ function compile(source, opts = {}) {
   const debug = (opts.debug === true || isDebugBuild || wantsBacktrace) && !canvasDebugOff;
   const backtraceWanted = wantsBacktrace;
   const backtrace = backtraceWanted && debug;
+  const profile = (opts.profile === true || /(?:^|;)\s*profile\s*:\s*true\b/.test(root.attrs["compileroptions"] ?? "") || root.attrs["profile"] === "true") && !debug;
+  const routeDebug = debug || profile;
   try {
     setScDebug(debug);
     setScBacktrace(backtrace);
+    setScProfile(profile);
+    if (profile)
+      setNoTrackLines(true);
     setDebugBacktrace(backtrace);
+    setDebugProfile(profile);
     resetKnownClassnames();
     resetKnownIds();
     resetBinderTable();
     resetRegTable();
-    COMPILE_DEBUG = debug;
+    COMPILE_DEBUG = routeDebug;
     COMPILE_BACKTRACE = backtrace;
+    COMPILE_PROFILE = profile;
     DEBUG_FILE = opts.debugFileName ?? ((id) => id);
     DEBUG_SOURCE_ID = opts.sourceId ?? "";
     SCRIPT_SRC = opts.resolveScriptSrc ?? null;
     DATASET_SRC = opts.resolveDatasetSrc ?? null;
-    return compileInner(root, opts, debug);
+    return compileInner(root, opts, routeDebug);
   } finally {
     setScDebug(false);
     setScBacktrace(false);
+    setScProfile(false);
+    setNoTrackLines(false);
     setDebugBacktrace(false);
+    setDebugProfile(false);
     COMPILE_DEBUG = false;
     COMPILE_BACKTRACE = false;
+    COMPILE_PROFILE = false;
     DEBUG_FILE = (id) => id;
     DEBUG_STMTS = null;
     SCRIPT_SRC = null;
@@ -6369,12 +6417,24 @@ ${GEN}finally {
 if ($2) {
 $2.length--
 }}` : "";
-  const tryWrap = `try {
+  let funcBlock;
+  if (COMPILE_PROFILE) {
+    const meterGet = 'arguments.callee["displayName"]';
+    const profTry = `try {
+${meterEvent("$1", "$2", "$3", meterGet, "calls")};
+${A(bodyLine)}${withPart}}
+${GEN}finally {
+${meterEvent("$1", "$2", "$3", meterGet, "returns")}}`;
+    funcBlock = `{
+${GEN}${profTry}}`;
+  } else {
+    const tryWrap = `try {
 ${btPrefix2}${A(bodyLine)}${withPart}}
 ${GEN}catch ($lzsc$e) {
 ${catchBody}}${btFinally}`;
-  const funcBlock = `{
+    funcBlock = `{
 ${GEN}${btPrelude2}${tryWrap}}`;
+  }
   const innerFn = `function ($0) ${funcBlock}${FB}`;
   const S1 = `var $lzsc$temp = ${innerFn};`;
   const S2 = `${A(bodyLine)}$lzsc$temp["displayName"] = ${jsString(file + "#" + bodyLine + "/1")};`;
@@ -6394,6 +6454,7 @@ function debugCatchBody2(file, line) {
 }
 var COMPILE_DEBUG = false;
 var COMPILE_BACKTRACE = false;
+var COMPILE_PROFILE = false;
 var DEBUG_STMTS = null;
 function pushDebug(stmt) {
   if (DEBUG_STMTS)
@@ -6421,7 +6482,7 @@ function compileInner(root, opts, debug) {
     ORIGIN_RANK_NEXT = 0;
     expandIncludes(root, opts.sourceId ?? "", opts, seenIncludes);
     const prefixLen = expandAutoincludes(root, opts, seenIncludes);
-    if (debug)
+    if (debug && !COMPILE_PROFILE)
       spliceDebuggerLibrary(root, opts, seenIncludes, prefixLen);
     const cattrs = {};
     const defs = canvasDefaults(opts.proxied);
@@ -7182,7 +7243,7 @@ function compileInner(root, opts, debug) {
           throw new Unsupported(`<stylesheet src=\u2026>`);
         const cssText = child.children.map((n) => n.type === "text" ? n.value : "").join("");
         if (DEBUG_STMTS) {
-          const progD = buildStylesheetProgram(cssText, debugFile(child));
+          const progD = buildStylesheetProgram(cssText, COMPILE_PROFILE ? void 0 : debugFile(child));
           if (progD) {
             const styleLine = child.line ?? 0;
             const styleCol = (child.endCol ?? 0) + 4;
@@ -7241,7 +7302,9 @@ function compileInner(root, opts, debug) {
         regResetPrefix = "";
       };
       registrations.forEach((reg, i) => pushReg(registerReg({ body: reg.replace(/;$/, "").replace("]=", "] = "), file: regFile, seq: i + 1 })));
-      if (debugWindowScript) {
+      if (COMPILE_PROFILE) {
+        pushReg(registerReg({ body: "canvas.initDone()", file: regFile, seq: 1 }));
+      } else if (debugWindowScript) {
         pushReg(registerReg({ body: debugWindowScript + ";canvas.initDone()", file: regFile, seq: 1 }));
       } else {
         pushReg(registerReg({ body: "Debug.makeDebugWindow()", file: regFile, seq: 1 }));
@@ -7862,6 +7925,7 @@ async function compileInBrowser(mainUrl, o = {}) {
       ...opts,
       debug: o.debug,
       backtrace: o.backtrace,
+      profile: o.profile,
       proxied: o.proxied,
       sprites
     });

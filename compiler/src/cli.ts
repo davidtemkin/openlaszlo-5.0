@@ -52,6 +52,10 @@ if (process.env.LZC_DEBUG_FORCE === "1" || flags.includes("--debug")) opts.debug
 // DEBUG_BACKTRACE (lzc -g2): per-function call-stack frames + per-call line notes.
 // Implies debug (the compiler forces it). Byte-for-byte vs the oracle (backtrace.lzx).
 if (process.env.LZC_BACKTRACE === "1" || flags.includes("--backtrace")) opts.backtrace = true;
+// PROFILE app build (lzc -p / --profile): nameFunctions (compress=false displayName-
+// IIFEs) + the `$lzprofiler` per-function timing meter, $debug=false (production
+// folding). Instruments the APP's OWN functions. Byte-for-byte vs the oracle --profile.
+if (process.env.LZC_PROFILE === "1" || flags.includes("--profile")) opts.profile = true;
 // SOLO build: emit __LZproxied="false" (the one-byte oracle SOLO delta).
 if (process.env.LZC_SOLO === "1" || flags.includes("--solo") || flags.includes("--proxied=false"))
   opts.proxied = false;

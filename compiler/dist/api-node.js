@@ -21,7 +21,7 @@ export function compileFile(mainPath, o = {}) {
     tracker.file(abs); // the main source is the first dependency
     const source = readFileSync(abs, "utf8");
     const opts = nodeOptions(abs, o.lpsHome, tracker);
-    const r = compile(source, { ...opts, debug: o.debug, backtrace: o.backtrace, proxied: o.proxied, sprites: o.sprites });
+    const r = compile(source, { ...opts, debug: o.debug, backtrace: o.backtrace, profile: o.profile, proxied: o.proxied, sprites: o.sprites });
     return { js: r.js, unsupported: r.unsupported, closure: { entries: tracker.entries(), props: compileProps(o) } };
 }
 /** Compile with a disk cache: serve a fresh cached blob when every tracked
