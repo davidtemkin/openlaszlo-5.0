@@ -15,9 +15,13 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { toSourceUrl } from "../startup/urlmap.mjs";
-import { compileApp, DISTRO } from "./compile.mjs";
+import { classifyLzxRequest, OP } from "../startup/reqtypes.mjs";
+import { compileApp, DISTRO, RUNTIME } from "./compile.mjs";
 import { attachConnectionServer } from "./connection.mjs";
 import { handleApi } from "./example-data/index.mjs";
+import { handleDataProxy } from "./data-proxy.mjs";
+import { wrapperFor } from "./wrapper.mjs";
+import { serveSource, serveSrcText, serveEditor, editCompile, editToken, serveEditApp } from "./dev-views.mjs";
 
 const PORT = parseInt(process.argv[2] || "8090", 10);
 
@@ -109,6 +113,23 @@ function notFound(req, res) {
   send(res, 404, "404 Not Found\n", { "Content-Type": "text/plain" });
 }
 
+// Is a browser loading this URL as a PAGE? (`Accept: text/html` — the server's analogue of
+// the SW's `req.mode === "navigate"`.) The shared classifier uses this to decide a bare
+// `.lzx` between RUN (navigation) and RAWXML (a programmatic fetch by the runtime/includes).
+function lzxIsNavigation(req) {
+  return req.method === "GET" && (req.headers["accept"] || "").includes("text/html");
+}
+
+// Serve the HTML wrapper for a `.lzx` navigation (the app, running). Source on disk via the
+// shared namespace map; canvas bgcolor/size are read from it for the page chrome.
+function serveWrapper(req, res, p, url) {
+  const srcAbs = path.normalize(path.join(DISTRO, toSourceUrl(p)));
+  if (!srcAbs.startsWith(DISTRO) || !fs.existsSync(srcAbs)) return notFound(req, res);
+  const r = wrapperFor(p, srcAbs, url.searchParams);
+  if (r.unsupported) return send(res, 200, errStub("compile UNSUPPORTED: " + r.unsupported), JS_HDR);
+  send(res, 200, r.html, { "Content-Type": "text/html;charset=utf-8", "Cache-Control": "no-cache" });
+}
+
 const server = http.createServer(async (req, res) => {
   let url;
   try { url = new URL(req.url, `http://localhost:${PORT}`); }
@@ -116,13 +137,44 @@ const server = http.createServer(async (req, res) => {
   const p = decodeURIComponent(url.pathname);
 
   try {
+    // Classify any `.lzx`/`.lzx.js` request up front via the SHARED request table (startup/
+    //    reqtypes.mjs) — the Service Worker classifies the SAME way for static hosting, so
+    //    the two deployments answer one request vocabulary identically.
+    const op = /\.lzx(\.js)?$/.test(p)
+      ? classifyLzxRequest(p, url.searchParams, req.method, lzxIsNavigation(req)) : null;
+
+    // The editor's Run is an unambiguous `?edit` POST and reads the body ITSELF — handle it
+    // before the data proxy, which would otherwise consume the (form-encoded) body.
+    if (op === OP.EDIT_POST) return editCompile(req, res, p);
+
+    // 0) proxied data service (lzt=xmldata): a `<dataset>` request from an app in proxied
+    //    mode. Server-side fetch of `?url=…` (CORS bypass). Arrives on any path (proxyurl =
+    //    the app's base URL — its `.lzx.js`), so it must be checked before path routing.
+    if (await handleDataProxy(req, res, url)) return;
     // 1) /api/<name> (not the WS) → dynamic example-data handlers (fall back to fixtures).
     if (p.startsWith("/api/") && p !== "/api/connection") {
       if (await handleApi(req, res, p, url.searchParams)) return;
       return notFound(req, res);
     }
-    // 2) <name>.lzx.js → compile on demand.
-    if (p.endsWith(".lzx.js")) return compileEndpoint(req, res, url);
+    // 1c) RUNTIME resource the running app fetches as `…/lps/resources/lps/{components,fonts}/…`
+    //     → serve from the flat runtime/ tree (the SW's proxyRuntime, server-side).
+    if (p.includes("/lps/resources/")) {
+      const tail = p.replace(/^.*\/lps\/resources\//, "").replace(/^lps\//, "");
+      return serveStatic(req, res, path.normalize(path.join(RUNTIME, tail)));
+    }
+    // 2) the rest of the shared `.lzx`/`.lzx.js` dispatch.
+    if (op) {
+      const t = editToken(p);                              // `.edit-<token>` editor preview
+      if (t) return serveEditApp(res, p, t);
+      switch (op) {
+        case OP.COMPILED:  return compileEndpoint(req, res, url);
+        case OP.RUN:       return serveWrapper(req, res, p, url);
+        case OP.SOURCE:    return serveSource(res, p);
+        case OP.SRCTEXT:   return serveSrcText(res, p);
+        case OP.EDIT:      return serveEditor(res, p);
+        case OP.RAWXML:    break;     // fall through to static → the raw `.lzx` (text/xml)
+      }
+    }
     // 3) everything else → static, via the shared namespace map.
     const isIndex = (p === "/" || p === "/index.html");
     let rel = toSourceUrl(p);

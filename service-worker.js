@@ -27,6 +27,8 @@
 
 import { compileInBrowser, BrowserCache, COMPILER_VERSION } from "./compiler/lzc-browser.js";
 import { toSourceUrl, ROOT_FILES } from "./startup/urlmap.mjs";
+import { classifyLzxRequest, OP } from "./startup/reqtypes.mjs";
+import { framesetHtml, srcTextHtml, editorHtml } from "./startup/views.mjs";
 
 // COMPILE_MODE — "server" or "browser". index.html registers this worker as
 // `service-worker.js?compile=<mode>`: the live Node server injects window.__OL_COMPILE=
@@ -79,7 +81,7 @@ function rebaseHtml(text) {
 // (b) busts every cached asset. Host-agnostic: works on ANY static host (GitHub Pages,
 // S3, nginx, Cloudflare Pages…) with no build pipeline — just re-run the stamp before you
 // deploy. Left as "dev" when unstamped (local serving).
-const BUILD_ID = "7ccb1f4fbf51";
+const BUILD_ID = "358194df2b6a";
 
 // Per-build cache bucket: a new BUILD_ID -> a new bucket -> the old one is dropped on
 // activate, and compiled output is re-keyed, so a runtime/compiler change recompiles.
@@ -225,6 +227,11 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== ORIGIN) return;            // cross-origin → network
   const path = logical(url.pathname);            // BASE-stripped; query excluded (fixes app-name matching)
 
+  // NOTE on PROXIED DATA: this Service Worker is the STATIC-hosting capability, and a static
+  // deployment is SOLO — there is no server to proxy a cross-origin `<dataset>` through. The
+  // proxied data service (`lzt=xmldata`) is handled entirely by the Node server, which does
+  // NOT register this worker (see index.html). So nothing about proxied mode is handled here.
+
   // 1) RUNTIME resource (an `sr` component/font frame the running app fetches as
   //    `<page>/lps/resources/lps/{components,fonts}/…`). Proxy to the flat runtime/ tree.
   if (path.includes("/lps/resources/")) {
@@ -251,25 +258,20 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 2) `…/<name>.lzx` requests — run the app, or the source/edit views that mirror
-  //    server/index.mjs: `?source` (source frameset), `?srctext` (the source pane),
-  //    `?edit` (the live editor), and the editor's POST `?edit` (recompile in-browser).
-  //    The query lives in url.search, not `path`.
-  if (/\.lzx$/.test(path)) {
-    const q = url.searchParams;
-    if (req.method === "POST" && q.has("edit")) { event.respondWith(editCompile(url, req)); return; }
-    if (req.mode === "navigate") {
-      if (q.has("srctext")) { event.respondWith(sourceTextResponse(path)); return; }
-      if (q.has("source"))  { event.respondWith(htmlResponse(sourceViewHtml(path))); return; }
-      if (q.has("edit"))    { event.respondWith(editorResponse(path)); return; }
-      event.respondWith(navResponse(path, url.search)); return;   // bare .lzx → run the app
-    }
-  }
-
-  // 3) `…/<name>.lzx.js` → compile the sibling `…/<name>.lzx` in-browser.
-  if (/\.lzx\.js$/.test(path)) {
-    event.respondWith(compileResponse(url, req));
-    return;
+  // 2) `…/<name>.lzx` / `.lzx.js` → classify via the SHARED request table (startup/
+  //    reqtypes.mjs, the SAME one the Node server uses) and EMULATE the operation in-browser.
+  //    One request vocabulary, two implementations: static hosting (this worker) and the
+  //    server answer bare-`.lzx`=run, `?source`/`?srctext`/`?edit`, `.lzx.js`/`lzt=js`, and
+  //    the legacy-docs `lzt=html/source/xml` aliases identically.
+  {
+    const op = classifyLzxRequest(path, url.searchParams, req.method, req.mode === "navigate");
+    if (op === OP.EDIT_POST) { event.respondWith(editCompile(url, req)); return; }
+    if (op === OP.SRCTEXT)   { event.respondWith(sourceTextResponse(path)); return; }
+    if (op === OP.SOURCE)    { event.respondWith(htmlResponse(framesetHtml(physical(path)))); return; }
+    if (op === OP.EDIT)      { event.respondWith(editorResponse(path)); return; }
+    if (op === OP.RUN)       { event.respondWith(navResponse(path, url.search)); return; }
+    if (op === OP.COMPILED)  { event.respondWith(compileResponse(url, req)); return; }
+    // OP.RAWXML (a non-navigation `.lzx` fetch — include/dataset) → fall through to serveMapped.
   }
 
   // 4) Everything else: apply the namespace map. Explorer-namespace files
@@ -384,62 +386,19 @@ function jsonResponse(obj) {
 }
 const escHtml = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
 
-// `?source` — a frameset: the source pane beside the running app.
-function sourceViewHtml(path) {
-  const phys = physical(path);   // frame srcs are resolved by the browser → must carry BASE
-  return `<!doctype html><html><head><title>OpenLaszlo — Source</title></head>
-    <frameset cols="50%,50%" frameborder="1" framespacing="2">
-      <frame name="src" src="${phys}?srctext">
-      <frame name="app" src="${phys}">
-    </frameset></html>`;
-}
-
-// `?srctext` — the LZX source, read-only.
+// `?srctext` — the LZX source, read-only (shared template; `framesetHtml` handles `?source`).
 async function sourceTextResponse(path) {
   const res = await fetch(self.location.origin + physical(toSourceUrl(path)));
   if (!res.ok) return htmlResponse(`<h3>404 — ${path}</h3>`, 404);
-  const code = escHtml(await res.text());
-  return htmlResponse(`<!doctype html><html><head><meta charset=utf-8><title>${path}</title>
-    <link rel="stylesheet" href="${physical("/runtime/theme/explore.css")}">
-    <style>body{margin:0;font:12px monospace}h3{font:bold 13px sans-serif;margin:6px 8px;color:#335}
-      pre{margin:0 8px;white-space:pre;overflow:auto}</style></head>
-    <body class="source-view"><h3>${path}</h3><pre>${code}</pre></body></html>`);
+  return htmlResponse(srcTextHtml(path, await res.text(), physical("/runtime/theme/explore.css")));
 }
 
-// `?edit` — the live editor: editable source + Run that POSTs back here to recompile.
+// `?edit` — the live editor (shared template). The Run button POSTs the edited source to
+// `…?edit` → editCompile compiles it in-browser and the preview reloads to `.edit-<token>.lzx`.
 async function editorResponse(path) {
   const res = await fetch(self.location.origin + physical(toSourceUrl(path)));
   if (!res.ok) return htmlResponse(`<h3>404 — ${path}</h3>`, 404);
-  const code = escHtml(await res.text());
-  const name = path.split("/").pop();
-  return htmlResponse(`<!doctype html><html><head><meta charset=utf-8><title>Edit — ${name}</title>
-  <style>
-    html,body{margin:0;height:100%;font:13px -apple-system,sans-serif}
-    #bar{height:34px;display:flex;align-items:center;gap:10px;padding:0 12px;background:#2b3a55;color:#fff}
-    #bar b{font-weight:600} #bar .sp{flex:1}
-    #bar button{font:12px sans-serif;padding:4px 12px;border:0;border-radius:3px;background:#5a78c0;color:#fff;cursor:pointer}
-    #bar button:hover{background:#6f8ad0} #status{font-size:12px;color:#cdd6ea;min-width:90px}
-    #wrap{display:flex;height:calc(100% - 34px)}
-    #ed{width:50%;height:100%;border:0;resize:none;font:12px/1.5 monospace;padding:8px;box-sizing:border-box;background:#fbfbfd}
-    #out{width:50%;height:100%;border:0;border-left:1px solid #ccd}
-  </style></head><body>
-  <div id="bar"><b>${name}</b><span class="sp"></span><span id="status"></span>
-    <button id="reset">Reset</button><button id="run">▶ Run (⌘↵)</button></div>
-  <div id="wrap"><textarea id="ed" spellcheck="false">${code}</textarea>
-    <iframe id="out" src="${physical(path)}"></iframe></div>
-  <script>
-    var orig=document.getElementById('ed').value, st=document.getElementById('status');
-    function run(){ st.textContent='compiling…';
-      fetch(location.pathname+'?edit',{method:'POST',headers:{'Content-Type':'text/plain'},body:document.getElementById('ed').value})
-        .then(function(r){return r.json()}).then(function(j){
-          if(j.ok){ st.textContent='✓ compiled'; document.getElementById('out').src=j.url+'?t='+(new Date().getTime()); }
-          else { st.textContent='✗ compile error'; document.getElementById('out').srcdoc='<pre style="white-space:pre-wrap;color:#a00;font:12px monospace;padding:12px">'+(j.error||'compile failed').replace(/[&<]/g,function(c){return c==='&'?'&amp;':'&lt;'})+'</pre>'; }
-        }).catch(function(){ st.textContent='error'; });
-    }
-    document.getElementById('run').onclick=run;
-    document.getElementById('reset').onclick=function(){document.getElementById('ed').value=orig; run();};
-    document.getElementById('ed').addEventListener('keydown',function(e){ if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();run();} });
-  </script></body></html>`);
+  return htmlResponse(editorHtml(path.split("/").pop(), await res.text(), physical(path)));
 }
 
 // POST `?edit` — compile the EDITED source IN-BROWSER and stash the JS under a token; the

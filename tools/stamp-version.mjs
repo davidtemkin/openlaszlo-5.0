@@ -25,7 +25,8 @@ const BUILD_RE = /const BUILD_ID = "[^"]*";/;
 // behavior is part of the platform, so a change to it must bump the build id (otherwise
 // installed SWs keep importing the cached old map). NOT the whole `startup/` dir —
 // that holds the generated `version.json`, which would make the hash self-referential.
-const INPUTS = ["index.html", "compiler/lzc-browser.js", "startup/urlmap.mjs", "runtime"];
+const INPUTS = ["index.html", "compiler/lzc-browser.js", "startup/urlmap.mjs",
+  "startup/reqtypes.mjs", "startup/views.mjs", "runtime"];
 
 function* walk(p) {
   if (!existsSync(p)) return;

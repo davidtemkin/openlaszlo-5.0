@@ -170,6 +170,12 @@
       // "browser" (safe default). The mode rides on the SW's registration URL so the worker
       // reads it from its own location. Same distro, two modes, no host-probing.
       const COMPILE = (self.__OL_COMPILE === "server") ? "server" : "browser";
+      // SERVER mode: the Node server serves app wrappers, compiles `.lzx.js`, proxies data,
+      // serves runtime resources, and maps the namespace itself — everything the Service
+      // Worker does for STATIC hosting. With a server present the SW is redundant and would
+      // only sit in the path of server-side request types (the data proxy, etc.), so we do
+      // NOT register it. The SW is a static-hosting capability. Load the Explorer directly.
+      if (COMPILE === "server") return loadExplorer();
       let reg;
       try {
         reg = await navigator.serviceWorker.register("./service-worker.js?compile=" + COMPILE, { type: "module", scope: "./", updateViaCache: "none" });
