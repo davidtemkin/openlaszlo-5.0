@@ -1,0 +1,9 @@
+<canvas height="150" width="100%">
+
+  <script>
+    var myObj = {a: 'eh?', b: 'bee', c: 'sea'};
+    Debug.debug("My object using %%s conversion: %s", myObj);
+    Debug.debug("My object using %%w conversion: %w", myObj);
+    Debug.debug("My object using %%#w conversion: %#w", myObj);
+  </script>
+</canvas>

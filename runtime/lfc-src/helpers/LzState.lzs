@@ -1,0 +1,569 @@
+/**
+ * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+ *            Use is subject to license terms.
+ *
+ * @affects lzstate
+ * @access public
+ * @topic LFC
+ * @subtopic Helpers
+ */
+
+/**
+ * <p>A state is an object that holds its children and attributes
+ * for creation or application at a later time &#x2014; when the
+ * state's <method>apply</method> method is called. In addition to
+ * representing visual state by adding and removing children from a
+ * view, states are often used to control constraints which are
+ * applied and removed at different times during the run of an
+ * application.</p>
+ *
+ * <p>For the most part, the declarative style used in OpenLaszlo
+ * applications represents an initial state for the application. All
+ * modification to application state can be made using the script
+ * API's, but it is often convenient to declaratively describe a bit
+ * of application state which may be selectively applied or removed
+ * at runtime. The <tagname>state</tagname> tag is provided for this
+ * purpose.</p>
+ *
+ * <p>Everything within a <tagname>state</tagname> tag acts as if it
+ * were written inside the parent when the state is applied. States
+ * can contain attributes, methods, and other nodes.</p>
+ *
+ * <p>When a state is removed, any children or constraints created
+ * when the state was applied are then removed, but attributes that
+ * were set by the application of the state are not restored.</p>
+ *
+ * <example title="Using states to represent the min/max state of a window."><programlisting><![CDATA[
+ * <canvas>
+ *   <window id="demo" title="state demo" width="400" height="300">
+ *     <attribute name="maximized" value="true" />
+ *
+ *     <state name="big" applied="${demo.maximized}">
+ *       <animatorgroup duration="1000" process="simultaneous">
+ *         <animator attribute="width" to="400"/>
+ *         <animator attribute="height" to="300"/>
+ *         <animator attribute="x" to="100"/>
+ *         <animator attribute="y" to="100"/>
+ *       </animatorgroup>
+ *     </state>
+ *
+ *     <state name="little" applied="${! demo.maximized}">
+ *       <animatorgroup duration="1000" process="simultaneous">
+ *         <animator attribute="width" to="170"/>
+ *         <animator attribute="height" to="100"/>
+ *         <animator attribute="x" to="0"/>
+ *         <animator attribute="y" to="0"/>
+ *       </animatorgroup>
+ *     </state>
+ *
+ *     <button text="Toggle" placement="title_area" align="right" height="16">
+ *       <handler name="onclick">
+ *         demo.setAttribute('maximized', (! demo.maximized));
+ *       </handler>
+ *     </button>
+ *
+ *     <text name="display"
+ *           align="center" valign="middle"
+ *           width="120" multiline="true" />
+ *
+ *     <handler name="onapplied" reference="big">
+ *       demo.display.format("big.applied = %s\nlittle.applied = %s",
+ *                           demo.big.applied, demo.little.applied);
+ *     </handler>
+ *   </window>
+ * </canvas>
+ * ]]></programlisting></example>
+ *
+ * <p>By default, states are not applied.  It is often convenient to
+ * assign this attribute as a constraint in the tag.  For example:
+ * <code>&lt;state name="mystate" applied="${parent.opened}"</code>
+ * will apply the state when <code>parent.opened</code> is
+ * <code>true</code>.</p>
+ *
+ * <p>Note that for any script that is in the tag, the parent is the
+ * tag that encloses the script.  Any method that is declared within
+ * the state can only be called after the state is applied, and upon
+ * application <code>this</code> will refer to the view that
+ * encloses the state, rather than the state itself.</p>
+ *
+ * @shortdesc A description of an instance hierarchy that can be applied and removed at runtime.
+ * @lzxname state
+ */
+dynamic class LzState extends LzNode {
+  /**
+   * @access private
+   * @modifiers override
+   */
+  static var tagname = 'state';
+  /** @access private */
+  static var attributes = new LzInheritedHash(LzNode.attributes);
+
+  /** @access private */
+  var heldArgs;
+  /** @access private */
+  var releasedconstraints;
+  /** @access private */
+  var appliedChildren;
+  /** @access private */
+  var applyOnInit:Boolean = false;
+  /** @access private */
+  var __LZpool:Array = null;
+  /** @access private */
+  var __LZstateconstraintdelegates;
+
+
+  /** @access private */
+  public function LzState ( parent:* , attrs:* , children:* = null, instcall:*  = null) {
+    // TODO: [2010-06-09 ptw] (LPP-5232) Move these initializations to
+    // the declaration when LPP-5232 is fixed.  (Note that super calls
+    // our override of __LZapplyArgs, which uses these instance
+    // variables.)
+    this.heldArgs = {};
+    this.appliedChildren = [];
+    super(parent,attrs,children,instcall);
+  }
+
+  /**
+   * Sent before a state is applied. The event argument is the state
+   * that is being applied.
+   * @lzxtype event
+   */
+  var onapply:LzDeclaredEventClass = LzDeclaredEvent;
+
+  /**
+   * Sent before a state is removed.  The event argument is the state
+   * that is being removed.
+   * @lzxtype event
+   */
+  var onremove:LzDeclaredEventClass = LzDeclaredEvent;
+
+  /**
+   * Whether or not the state is applied.
+   * <code>setAttribute('applied', true)</code> will apply the state.
+   * <code>setAttribute('applied', false)</code> will remove the
+   * state.
+   *
+   * @devnote The actual setting of applied (and sending of the
+   * onapplied event) is handled by apply or remove.  The setter is
+   * just a thin veneer over those methods.  If it turned out that
+   * binding applied was much more popular than calling the methods,
+   * this could be inverted.
+   *
+   * @type Boolean
+   * @lzxtype boolean
+   * @lzxdefault false
+   */
+  var applied = false;
+  /** @access private */
+  function $lzc$set_applied(v) {
+    if ( v ){
+      if ( this.isinited ){
+        this.apply();
+      } else {
+        this.applyOnInit = true;
+      }
+    } else {
+      if ( this.isinited ){
+        this.remove();
+      }
+    }
+  }
+  /**
+   * Sent when a state is applied or removed.  The event argument is
+   * the new value of <code>applied</code> (<code>true</code> if the
+   * state is being applied, <code>false</code> if the state is being
+   * removed).
+   *
+   * @lzxtype event
+   *
+   * @devnote This is actually sent by apply and remove at the same
+   * time as onapply and onremove are sent, since they directly
+   * manipulate applied.  (Marked as private because we do not
+   * document implicit events associated with attributes.)
+   *
+   * @access private
+   */
+  var onapplied:LzDeclaredEventClass = LzDeclaredEvent;
+
+  /** @access private */
+  static var events = { onremove : true , onapply : true, onapplied : true };
+  prototype.$isstate = true; // Defined in LzNode
+  /** @access private */
+  var asyncnew = false;
+  /** @access private */
+  var subh = null;
+
+  /**
+   * If true, the state will merely hide any views it has created when
+   * it is removed (not applied), instead of destroying them.
+   *
+   * @type Boolean
+   * @lzxtype boolean
+   * @lzxdefault false
+   */
+  var pooling = false;
+
+  /** @access private */
+  function $lzc$set_asyncnew(v) { this.__LZsetProperty(v, 'asyncnew'); }
+
+  /** If true, the state will merely hide any views it has created
+   * when it is removed, instead of destroying them.
+   * @type Boolean
+   * @access private
+   */
+  function $lzc$set_pooling(v) { this.__LZsetProperty(v, 'pooling'); }
+
+  /** When __LZsourceLocation is set, it should only apply to the state,
+   * not the parent
+   * @access private
+   */
+  function $lzc$set___LZsourceLocation(v) { this.__LZsetProperty(v, '__LZsourceLocation'); }
+
+  /**
+   * @access private
+   */
+  override function init () {
+    super.init();
+    if (this.applyOnInit) {
+      this.apply();
+    }
+  }
+
+  /**
+   * @access private
+   */
+  override function createChildren ( carr ){
+    this.subh = carr;
+    this.__LZinstantiationDone();
+  }
+
+  /**
+   * Applies the state to the state's parent. If the state is already applied,
+   * has no effect.  This is the programmatic equivalent of
+   * <code>setAttribute('applied', true)</code>.
+   */
+  function apply (){
+    if ( this.applied ){
+      return;
+    }
+
+    var parent = this.parent;
+    this.applied = true;
+
+    // release any constraints you are about to override
+    var pia = parent._instanceAttrs;
+    if (pia) {
+      for (var key in this.heldArgs) {
+        if (pia[key] is LzConstraintExpr) {
+          if (this.releasedconstraints == null) { this.releasedconstraints = []; }
+          var constraintMethodName = pia[key].methodName;
+          if (parent.releaseConstraintMethod(constraintMethodName)) {
+            this.releasedconstraints.push(constraintMethodName);
+          }
+        }
+      }
+    }
+
+    // capture delegates created by process of applying state
+    var od = parent.__LZconstraintdelegates;
+    parent.__LZconstraintdelegates = null;
+
+    parent.__LZapplyArgs( this.heldArgs , null);
+
+    if (this.subh) var shl = this.subh.length;
+    parent.__LZsetPreventInit();
+
+    for ( var i = 0 ; i < shl;  i++ ){
+      if ( this.__LZpool && this.__LZpool[ i ] ){
+        this.appliedChildren.push( this.__LZretach( this.__LZpool[ i ] ) );
+      } else {
+        this.appliedChildren.push( parent.makeChild( this.subh[ i ] ,
+                                                     this.asyncnew));
+      }
+    }
+
+    parent.__LZclearPreventInit();
+
+    parent.__LZresolveReferences();
+    // capture constraint delegates
+    this.__LZstateconstraintdelegates = parent.__LZconstraintdelegates;
+
+    // restore delegates
+    parent.__LZconstraintdelegates = od;
+
+    if (this.onapply.ready) this.onapply.sendEvent( this );
+    if (this.onapplied.ready) this.onapplied.sendEvent( true );
+  }
+
+  /**
+   * Removes the constraints and views made when the state was applied. This
+   * method does <em>not</em> restore the previous values of any attributes that
+   * were changed by the state.  This is the programmatic equivalent of
+   * <code>setAttribute('applied', false)</code>.
+   */
+  function remove () {
+    if ( !this.applied ){
+      return;
+    }
+
+    this.applied = false;
+
+    if (this.onremove.ready) this.onremove.sendEvent( this );
+    if (this.onapplied.ready) this.onapplied.sendEvent( false );
+
+    var dels = this.__LZstateconstraintdelegates;
+    if (dels) {
+      for ( var i = 0, l = dels.length; i < l; i++ ){
+        var del = dels[i];
+        if (del.__LZdeleted == false) {
+          del.destroy();
+        }
+      }
+      this.__LZstateconstraintdelegates = null;
+    }
+
+    if ( this.pooling && this.appliedChildren.length ){
+      this.__LZpool = [];
+    }
+
+    for ( var i = 0; i < this.appliedChildren.length; i++ ){
+      var ac = this.appliedChildren[ i ];
+      if ( this.pooling ){
+        // if it's a view, we pool it -- otherwise we'll just reconstruct it
+        if (ac is LzView){
+          this.__LZpool.push ( this.__LZdetach( ac ) );
+        } else {
+          ac.destroy();
+          this.__LZpool.push ( null );
+        }
+      } else {
+        ac.destroy();
+      }
+    }
+
+    this.appliedChildren = [];
+
+    // This sounds good in theory, but breaks dragstate and
+    // resizestate which expect their effect to stick when they are
+    // removed.
+    if (this.releasedconstraints != null) {
+      //       // re-apply any constraints you released
+      //       var parent = this.parent;
+      //       // NOTE: [2008-02-13 ptw] Keep in sync with LzNode#__LZresolveReferences
+      //       var rc = this.releasedconstraints;
+      //       for (var i = 0, l = rc.length; i < l; i++) {
+      //         var constraintMethodName = rc[i];
+      //         // TODO: [2008-02-06 ptw] the dependency computation needs
+      //         // to be a method also, probably stored in the
+      //         // LzConstraintExpr object
+      //         var cm = parent[constraintMethodName];
+      //         if ($debug) {
+      //           if (!(cm && cm instanceof Function)) {
+      //             Debug.debug("Bad constraint %w on %w", c, this);
+      //           }
+      //         }
+      //         var dependencyMethod = cm.dependencies;
+      //         parent.applyConstraintMethod(constraintMethodName , dependencyMethod.call(parent));
+      //       }
+      this.releasedconstraints = null;
+    }
+  }
+
+  /**
+   * Clean up after yourself
+   * @access private
+   */
+  override function destroy ( ) {
+    if ( this.__LZdeleted ) return;
+    // stop pooling
+    this.pooling = false;
+    // clean up delegates and views
+    this.remove();
+    // continue
+    super.destroy();
+  }
+
+  /**
+   * @devnote We override some methods of LzNode to filter out
+   * attributes, and handlers that belong to the state, capturing those
+   * that do not for later application/removal to the parent node
+   */
+
+  /**
+   * @access private
+   * Filter out attributes that don't belong to the state for later
+   * application to parent.
+   *
+   * @devnote NOTE: [2006-12-09 ptw] Currently the only args that apply to the
+   * state are args that have setters
+   */
+  override function __LZapplyArgs ( args:Object , constcall){
+    var stateArgs = {};
+    var held = this.heldArgs;
+    var $delegates:Array = null;
+
+    for (var key in args) {
+      var val = args[key];
+      var setr = '$lzc$set_' + key;
+      if (key == '$delegates') {
+        $delegates = val;
+      } else if (this[setr]) {
+        stateArgs[key] = val;
+      } else {
+        held[key] = val;
+      }
+    }
+
+    // Capture handlers that don't belong to the state for later
+    // application to the parent (and pass the ones that do apply to the
+    // state on to your superclass).
+    if ($delegates != null) {
+      var pardels:Array = null;
+      var mydels:Array = null;
+      var ignore = LzNode._ignoreAttribute;
+      // $delegates is a sequence of triplets of the form
+      // eventname, methodname, referencemethodname
+      for (var i = 0, l = $delegates.length; i < $delegates.length; i +=3){
+        // does this go with the state or the state's owner?  goes
+        // with the state ONLY IF the event is an event that the state
+        // sends, and a reference isn't given.
+        if (LzState.events[$delegates[i]] && (! $delegates[ i + 2 ])){
+          if (mydels == null) { mydels = []; }
+          var arrtopush = mydels;
+          // now, capture the method that this calls
+          var mname = $delegates[i +1];
+          //check to see if we held the method (we shouldn't have,
+          //because it is used by this state handler)
+          if (mname in held){
+            stateArgs[mname] = held[mname];
+            delete held[ mname ];
+          }
+        } else {
+          if (pardels == null) { pardels = []; }
+          var arrtopush = pardels;
+        }
+        arrtopush.push($delegates[i], $delegates[i + 1], $delegates[i +2]);
+      }
+      if (mydels != null){
+        // pass state handlers
+        stateArgs.$delegates = mydels;
+      }
+      if (pardels != null){
+        // hold parent handlers
+        held.$delegates = pardels;
+      }
+    }
+
+    // If any stateArgs are LzOnceExpr's, we need to move the
+    // methods they call from held to stateArgs
+    for (var key in stateArgs) {
+      var val = stateArgs[key];
+      // TODO: [2008-03-24 ptw] Use `switch type`...
+      if (val is LzOnceExpr) {
+        var methodName = (val cast LzOnceExpr).methodName;
+        // Method could be in held args
+        if (methodName in held) {
+          stateArgs[methodName] = held[methodName];
+          delete held[methodName];
+        } else {
+          // If it is already a method on the state, nothing to do
+        }
+        // Now worry about dependency methods in LzAlwaysExpr's.
+        // TODO: [2008-03-24 ptw] Use `switch type`...
+        if (val is LzAlwaysExpr) {
+          var dependenciesName = (val cast LzAlwaysExpr).dependenciesName;
+          // Method could be in held args
+          if (dependenciesName in held) {
+            stateArgs[dependenciesName] = held[dependenciesName];
+            delete held[dependenciesName];
+          } else {
+            // If it is already a method on the state, nothing to do
+          }
+        }
+      }
+    }
+
+    // If any held args are LzOnceExprs, we need to rename their methods
+    // so they do not clober the parent's methods
+    // TODO: [2008-02-13 ptw] This should take place at compile time.
+    var rename = null;
+    for (var key in held) {
+      var val = held[key];
+      if (val is LzOnceExpr) {
+        if (rename == null) { rename = []; }
+        rename.push(key, val);
+      }
+    }
+
+    if (rename != null) {
+      for (var i = 0, l = rename.length; i < l; i += 2) {
+        var key = rename[i];
+        var expr = rename[i + 1];
+        var methodName = expr.methodName;
+        var newMethodName = methodName + this.__LZUID;
+        var dbgName = null;
+        if ($debug) {
+          dbgName = expr._dbg_name;
+        }
+        if (held[methodName] is Function) {
+          // Method could be in held args, in which case we just rename
+          // it
+          held[newMethodName] = held[methodName];
+          delete held[methodName];
+        } else if (this[methodName] is Function) {
+          // It could be a method on the state, in which case we have to
+          // attach it to the parent
+          held[newMethodName] = this[methodName];
+        }
+        // TODO: [2008-03-24 ptw] Use `switch type`...
+        if (expr is LzAlwaysExpr) {
+          var dependenciesName = (expr cast LzAlwaysExpr).dependenciesName;
+          var newDependenciesName = dependenciesName + this.__LZUID;
+          if (held[dependenciesName] is Function) {
+            // Method could be in held args, in which case we just rename
+            // it
+            held[newDependenciesName] = held[dependenciesName];
+            delete held[dependenciesName];
+          } else if (this[dependenciesName] is Function) {
+            // It could be a method on the state, in which case we have to
+            // attach it to the parent
+            held[newDependenciesName] = this[dependenciesName];
+          }
+          // Clone the init expr with the new names
+          held[key] = new (expr.constructor)(expr.attribute, expr.type, newMethodName, newDependenciesName, dbgName);
+        } else {
+          // Clone the init expr with the new name
+          held[key] = new (expr.constructor)(expr.attribute, expr.type, newMethodName, dbgName);
+        }
+      }
+    }
+
+    super.__LZapplyArgs(stateArgs, constcall);
+  }
+
+  /**
+   * @access private
+   */
+  function __LZsetProperty ( prop, propname ){
+    this[propname] = prop;
+  }
+
+  /**
+   * @access private
+   */
+  function __LZdetach ( aview ){
+    aview.$lzc$set_visible(false);
+    return aview;
+  }
+
+  /**
+   * @access private
+   */
+  function __LZretach ( aview ){
+    aview.$lzc$set_visible(true);
+    return aview;
+  }
+
+} // End of LzState
+
+lz[LzState.tagname] = LzState;  // publish

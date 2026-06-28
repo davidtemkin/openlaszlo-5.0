@@ -1,0 +1,47 @@
+<canvas height="300" width="680">
+    
+        
+        
+        <dataset name="googleDset" />
+        
+        <soap name="google" wsdl="http://api.google.com/GoogleSearch.wsdl">
+            <handler name="onload">
+                Debug.debug('google soap service stub loaded');
+            </handler>
+            
+            <handler name="onerror" args="error">
+                Debug.debug('error: %w', error);
+            </handler>
+            
+            <remotecall name="search" funcname="doGoogleSearch" 
+                dataobject="googleDset">
+                
+                <param value="'2TKUw4ZQFHJ84ByemZK0EXV0Lj+7xGOx'" />
+                <param value="'sweet'" />
+                <param value="1" />
+                <param value="10" />
+                <param value="true" />
+                <param value="''" />
+                <param value="true" />
+                <param value="''" />
+                <param value="''" />
+                <param value="''" />
+                
+                <handler name="ondata" args="value">
+                    Debug.debug('got result');
+                    Debug.inspect(value);
+                </handler>
+            
+            </remotecall>
+        </soap>
+        
+        <view layout="spacing: 5" >
+            <button text="search" onclick="google.search.invoke()" />
+            <view bgcolor="yellow" layout="axis: y" >
+                <view>
+                <datapath xpath="googleDset:/resultElements/item" pooling="true" />
+                <text datapath="URL/text()" resize="true"/>
+                </view>
+            </view>
+        </view>
+    </canvas>

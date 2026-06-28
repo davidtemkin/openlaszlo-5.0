@@ -1,0 +1,23 @@
+<canvas height="130">
+              <class name="mylistitem" extends="listitem" width="100%" height="20" >
+              <attribute name="text" value="" type="string"/>
+              <!-- place a red square in the left hand side of mylistitem -->
+              <view bgcolor="red" width="10" height="10" x="5" y="5"/>
+              <!-- constrain the text to the text attribute of listitem -->
+              <text x="20" text="${classroot.text}" fgcolor="0x4B4B4B">
+              </text>
+              </class>
+
+              <dataset name="items">
+              <item value="item1">item one</item>
+              <item value="item2">item two</item>
+              <item value="item3">item three</item>
+              <item value="item4">item four</item>
+              </dataset>
+
+              <combobox x="5" y="5"
+              width="130" editable="false">
+              <mylistitem datapath="items:/item" text="$path{'text()'}"
+              value="$path{'@value'}"/>
+              </combobox>
+              </canvas>

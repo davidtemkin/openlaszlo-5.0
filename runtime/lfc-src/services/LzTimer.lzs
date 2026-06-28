@@ -1,0 +1,261 @@
+/**
+ * @copyright Copyright 2001-2008, 2010 Laszlo Systems, Inc.  All Rights Reserved.
+ *            Use is subject to license terms.
+ *
+ * @affects lztimer
+ * @topic LFC
+ * @subtopic Services
+ * @access public
+ */
+
+/**
+ * <p><code>lz.Timer</code> is the single instance of the class
+ * <code>lz.TimerService</code>.</p>
+ *
+ * <p>lz.Timer is used to invoke functionality after a specific
+ * amount of time. By using a <xref linkend="LzDelegate"/> to refer
+ * to a particular method, and then by adding a timer to that
+ * delegate, the developer can control the timing of the method's
+ * start.  Use lz.Timer to tweak sequence and timing of visual
+ * animations, delay the effects of user events, or implement user
+ * experiences with expiration features.</p>
+ *
+ * <p>It should be noted that the time passed to the lz.Timer service
+ * describes the time <i>before</i> which the delegate may not run --
+ * it is not guaranteed that the delegate will run at that time.
+ * Depending on application needs and client performance, the
+ * specified delegate may be invoked at any time <i>after</i> the
+ * amount of time specified.</p>
+ *
+ * <p>The following example displays some text when a button is
+ * clicked, and uses lz.Timer to fade the text away after three
+ * seconds.</p>
+ *
+ * <example class="program" title="Using lz.Timer to invoke method" id="lztimer-1"><programlisting><![CDATA[
+ * <canvas height="50" >
+ *     <button text="Show then Fade" onclick="canvas.showText()" />
+ *     <text name="myText" opacity="0.0" bgcolor="#CCCCCC">The Invisible Man</text>
+ *     <simplelayout axis="y" spacing="10" />
+ *
+ *     <method name="showText">
+ *         myText.setAttribute( "opacity", 1.0 );
+ *         lz.Timer.addTimer( new LzDelegate( this, "fadeText" ), 3000 );
+ *     </method>
+ *
+ *     <method name="fadeText" args="ignore=null"> 
+ *         myText.animate( "opacity", 0.0, 1000 );
+ *     </method>
+ * </canvas>
+ * ]]></programlisting></example>
+ *
+ * @shortdesc Handles calling of a delegate after a specified number
+ * of milliseconds.
+ *
+ * @devnote The timer calls a given delegate in a specified number of
+ * miliseconds.
+ *
+ * @devnote Unfortunately the original semantics of lz.Timer allows
+ * one to add more than one timer to a single delegate, but only
+ * allows one to remove the oldest timer from a delegate -- there's
+ * no way of specifying which one.  The logic below is faithful to
+ * the original while still attempting to be efficient. In the common
+ * case of one timer per delegate, we simply store the timer id in
+ * the delegate's timer list entry. If the program attempts to store
+ * more than one timer with a single delegate, we shift to storing an
+ * array of them in the timer list entry. This saves an array
+ * allocation in the common single-timer case, at the cost of
+ * increased code complexity.
+ *
+ */
+public final class LzTimerService {
+    /** @access private */
+    var timerList :Object = new Object;
+
+    /**
+     * The timer service.  Also available as the global
+     * <code>lz.Timer</code>.
+     *
+     * @type LzTimerService
+     * @keywords readonly
+     * @devnote this should be a public getter to enforce readonly
+     */
+    public static const LzTimer:LzTimerService;
+
+    /** @access private
+     * @devnote AS3 does not allow private constructors, so we need the
+     * error
+     */
+    function LzTimerService () {
+      super();
+      //    if (LzTimerService.LzTimer) {
+      //      throw new Error("There can be only one LzTimer");
+      //    }
+    }
+
+    // Create the singleton
+    LzTimerService.LzTimer = new LzTimerService();
+
+    /**
+     * Executes the delegate 'p.delegate' and calls 'removeTimerWithID' to
+     * remove the timer from the timerlist.
+     *
+     * @param Object p: contains the delegate to be called and the timer-id
+     * @access private
+     */
+    var execDelegate:Function = function (p:Object) :void {
+        // Use lz.Timer explicitly below; "this" is not lz.Timer here.
+        var del:LzDelegate = p.delegate;
+        lz.Timer.removeTimerWithID(del, p.id);
+        // Inlining LzDelegate.execute()
+        if (del.enabled && del.c) {
+            del.execute( (new Date()).getTime() );
+            // TODO: inlining causes problems with DHTML, see LPP-5917
+            //if (! del.c.__LZdeleted && del.c[del.f]) del.c[del.f]( (new Date()).getTime() );
+        }
+    }
+
+    /**
+     * Removes the timer with the given id that calls the given delegate from the
+     * timerlist.
+     *
+     * @param LzDelegate d: The delegate called by the timer to be removed.
+     * @param id: the id of the timer to remove.
+     * @access private
+     */
+    function removeTimerWithID (d:LzDelegate, id:uint) :void {
+        var delID:int = d.__delegateID;
+        var tle:* = this.timerList[delID];
+        if (tle != null) {
+            if (tle instanceof Array) {
+                for (var i:int = 0; i < tle.length; i++) {
+                    if (tle[i] == id) {
+                        tle.splice(i, 1);
+                        if (tle.length == 0)
+                            delete this.timerList[delID];
+                        break;
+                    }
+                }
+            } else if (tle == id) {
+                delete this.timerList[delID];
+            }
+        }
+    }
+
+    /**
+     * Adds a timer. Note: The timer guarantees that the delegate will
+     * not be called before the number of milliseconds specified here,
+     * but cannot guarantee that it will be called at exactly that time.
+     *
+     * @param LzDelegate d: The delegate to call when the timer expires
+     * @param Number millisecs: The number of millisecondss to wait
+     * before calling the delegate.
+     */
+    function addTimer (d:LzDelegate, millisecs:Number) :uint {
+        // prevent bogus timeouts which cause exceptions in swf9
+        if (! millisecs || millisecs < 1) millisecs = 1;
+
+        // This object relies on the fact that p.id will
+        // have been set by the time 'execDelegate' is invoked.
+        var p:Object = {delegate: d};
+        var id:uint = LzTimeKernel.setTimeout(this.execDelegate, millisecs, p);
+        p.id = id;
+
+        if ($debug) {
+            // Debug.format("created timer %w for delegate %w\n", id, d);
+            if (id instanceof Array) {
+                // we rely on the setTimeout value being a non-array, otherwise
+                // our storage scheme won't work. Error if this happens -- should only
+                // occur when bootstrapping a new runtime.
+                Debug.error("setTimeout result type is unexpected; lz.Timer will fail");
+            }
+        }
+
+        var delID:int = d.__delegateID;
+        var tle:* = this.timerList[delID];
+        if (tle == null) {
+            // single items don't use an array
+            this.timerList[delID] = id;
+        } else if (! (tle instanceof Array)) {
+            // create an array to track ids
+            this.timerList[delID] = [tle, id];
+        } else {
+            // add onto the array
+            tle.push(id);
+        }
+        return id;
+    }
+
+    /**
+     * Removes the first timer that calls the given delegate from the
+     * timerlist.
+     *
+     * @param LzDelegate d: The delegate called by the timer to be
+     * removed. If there are multiple timerList entries that call
+     * delegate d, removes the first in the order received.
+     */
+    function removeTimer (d:LzDelegate) :* {
+        var delID:int = d.__delegateID;
+        var tle:* = this.timerList[delID];
+        var id:* = null;
+        if (tle != null) {
+            if (tle instanceof Array) {
+                id = tle.shift();
+                LzTimeKernel.clearTimeout(id);
+                if (tle.length == 0)
+                    delete this.timerList[delID];
+            } else {
+                id = tle;
+                LzTimeKernel.clearTimeout(id);
+                delete this.timerList[delID];
+            }
+            // Debug.format("cleared timer %w for delegate %w (2)\n", id, d);
+        }
+        return id;
+    }
+
+    /**
+     * Resets the timer for the given delegate to the new amount of
+     * time. If a timer for the delegate is not found, a new timer is
+     * created.
+     *
+     * @param LzDelegate d: The delegate whose timer to reset. If there
+     * are multiple timers for this delegate, the first one is reset. If
+     * this delegate is not found in the timer list, a new timer event
+     * is created for it.
+     *
+     * @param millisecs: The number of milliseconds to wait before
+     * calling the timer.
+     */
+    function resetTimer (d:LzDelegate, millisecs:Number) :uint {
+        this.removeTimer(d);
+        return this.addTimer(d, millisecs);
+    }
+
+if ($debug) {
+    /**
+     * Returns the number of timers registered for a delegate
+     *
+     * NOTE: Only available in debug mode.
+     *
+     * @param LzDelegate d: The delegate called by the timer to be
+     * reset.
+     */
+    function countTimers (d:LzDelegate) :uint {
+        var tle:* = this.timerList[d.__delegateID];
+        if (tle == null)
+            return 0;
+        else if (tle instanceof Array)
+            return tle.length;
+        else
+            return 1;
+    }
+}
+
+} // End of LzTimerService
+lz.TimerService = LzTimerService;  // publish
+
+/**
+ * lz.Timer is a shortcut for <link linkend="LzTimerService.LzTimer">lz.TimerService.LzTimer</link>
+ * @type LzTimerService
+ */
+lz.Timer = LzTimerService.LzTimer;

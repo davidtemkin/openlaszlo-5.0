@@ -1,0 +1,7 @@
+<canvas height="150">
+   
+   <script>
+     Debug.format("Hello %s!\n", 'world');
+     Debug.debug("Click there -> %w to inspect the object", {a: 1, b: 2});
+   </script>
+ </canvas>

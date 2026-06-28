@@ -1,0 +1,198 @@
+/* -*- mode: JavaScript; c-basic-offset: 2; -*- */
+
+/**
+  *
+  * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @affects lzbacktrace
+  * @access public
+  * @topic LZX
+  * @subtopic Debugging
+  */
+
+
+/**
+  * What we'd like an `arguments` array to be.  Really just a hook to
+  * hang a debug printer on
+  * @access private
+  */
+class __LzStackFrame {
+  // Private, so they are not displayed on inspection
+  var __filename:String;
+  var __lineno:Number;
+  // Public, so they are...
+  var arguments:Array;
+  // I would have liked to call these 'function' and 'this', but you
+  // can't do that.  We need custom _dbg_inspect routines...
+  var context:*;
+  var callee:*;
+
+  function __LzStackFrame (args:Array) {
+    if (args['this']) {
+      this.context = args['this'];
+    }
+    this.callee = args.callee;
+    this.__filename = args.filename;
+    this.__lineno = args.lineno;
+    // Copy out the numbered arguments, omitting the other properties
+    this.arguments = args.concat();
+  }
+
+  /**
+   * Is this a user stack frame?
+   * @access private
+   */
+  function isUserFrame ():Boolean {
+    return this.__filename.indexOf('lfc') != 0;
+  }
+
+  /**
+   * Filename associated with a stack frame
+   * @access private
+   */
+  function filename ():String {
+    return this.__filename;
+  }
+
+  /**
+   * Lineno associated with a stack frame
+   * @access private
+   */
+  function lineno ():Number {
+    return this.__lineno;
+  }
+
+  /**
+   * 'Pretty' printer
+   */
+  function toString ():String {
+    var callee = this.callee;
+    if (callee is Function) {
+      return Debug.functionName(callee, false);
+    }
+    return '' + callee;
+  }
+
+  /**
+   * Debug printer
+   * @access private
+   */
+  __LzStackFrame.prototype._dbg_name = function () {
+    return Debug.formatToString('%0.64s @%s#%d', this.callee, this.__filename, this.__lineno);
+  };
+
+  /**
+   * Debug printer
+   * @access private
+   */
+  __LzStackFrame.prototype._dbg_typename = "StackFrame";
+};
+
+/**
+ * Snapshot of the current backtrace.  Relies on compiler support that
+ * inserts code at the top of each function in debug mode that records
+ * the function's arguments in Debug.backtraceStack
+ * 
+ * @param skip:Number number of frames to omit from the backtrace.
+ * Defaults to 0.
+ *
+ * @devnote dynamic so it can have arbitrary numbered members.  Really
+ * wants to be a subclass of Array
+ *
+ * @access private
+ */
+dynamic class LzBacktrace {
+  var length:Number;
+
+  function LzBacktrace(skip=0) {
+    var bs = Debug.backtraceStack;
+    var l = bs.length - skip;
+    this.length = l;
+    for (var i = 0; i < l; i++) {
+      var fr = bs[i];
+      // Reuse stack frames so they are unique
+      if ((! fr.hasOwnProperty('__LzStackFrame')) ||
+          // Bad modularity
+          (fr['lineno'] != fr.__LzStackFrame.lineno())) {
+        fr.__LzStackFrame = new __LzStackFrame(fr);
+      }
+      this[i] = fr.__LzStackFrame;
+    }
+  }
+
+  /**
+   * Find the topmost user stack frame
+   * @access private
+   */
+  function userStackFrame():__LzStackFrame {
+    for (var i = this.length - 1; i >= 0; i--) {
+      var fr = this[i];
+      if (fr.isUserFrame()) {
+        return fr;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Map over a backtraces frames
+   * @param fn:Function the function to call on each frame
+   * @param limit:Maximum number of frames to map
+   * 
+   * @access private
+   */
+  function map(fn:Function, limit:Number=NaN):void {
+    if (fn is Function) {
+      if (isNaN(limit)) { limit = this.length; }
+      for (var i = this.length - 1; (i >= 0) && (limit > 0); i--, limit--) {
+        fn(this[i]);
+      }
+    }
+  }
+
+  /**
+   * Convert a backtrace to a string
+   * @param length:Number the length to abbreviate the string to
+   * 
+   * @access private
+   */
+  function toStringInternal(length:Number=NaN):String {
+    if (isNaN(length)) { length = Debug.printLength; };
+
+    var backtrace:String = "";
+    var sep:String = " <- ";
+    for (var i:Number = this.length - 1; (i >= 0) && (backtrace.length < length); i--) {
+      backtrace += this[i] + sep;
+    }
+    // Trim trailing sep
+    if (backtrace != '' && i < 0) {
+      backtrace = backtrace.substring(0, backtrace.length - sep.length);
+    }
+    backtrace = Debug.abbreviate(backtrace, length);
+    return backtrace;
+  }
+
+  /** Backtrace printer
+   * @access private
+   */
+  function toString():String {
+    return this.toStringInternal();
+  }
+
+  /**
+   * TODO: [2005-03-30 ptw] Doc tool should not bitch about inherited
+   * override
+   * @access private
+   */
+  LzBacktrace.prototype._dbg_name = function () {
+    return this.toStringInternal(Debug.inspectPrintLength);
+  };
+
+  /**
+   * Debug printer
+   * @access private
+   */
+  LzBacktrace.prototype._dbg_typename = "Backtrace";
+}
+

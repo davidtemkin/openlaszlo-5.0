@@ -1,0 +1,96 @@
+/**
+  *
+  * @copyright Copyright 2001-2008, 2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @access public
+  * @topic LFC
+  * @subtopic Data
+  * @access public
+  */
+
+/**
+  * <class>lz.DataRequest</class> is an abstract class that can be extended to create new kinds 
+  * of data requests, which are passed to a <sgmltag class="element" role="LzDataProvider">lz.DataProvider</sgmltag> when making a request.
+  *
+  * @shortdesc An abstract class to represent data requests.
+  */
+class LzDataRequest extends LzEventable {
+
+    /* Status value constants */
+    /**
+      * @type String
+      * @lzxdefault "success"
+      * @keywords read-only
+      */
+    static const SUCCESS :String = 'success';
+    /**
+      * @type String
+      * @lzxdefault "timeout"
+      * @keywords read-only
+      */
+    static const TIMEOUT :String = 'timeout';
+    /**
+      * @type String
+      * @lzxdefault "error"
+      * @keywords read-only
+      */
+    static const ERROR :String = 'error';
+    /**
+      * @type String
+      * @lzxdefault "ready"
+      * @keywords read-only
+      */
+    static const READY :String = 'ready';
+    /**
+      * @type String
+      * @lzxdefault "loading"
+      * @keywords read-only
+      */
+    static const LOADING :String = 'loading';
+
+    /** An optional property that's the object using the DataRequest to pass into the DataProvider's doRequest method.
+      * @type Object
+      */
+    var requestor :* = null;
+
+    /** An object which holds the protocol-specific source to load data from
+      * @type String
+      */
+    var src :String = null;
+
+    /** The timeout in milliseconds
+      * @type Number
+      */
+    var timeout :Number = Infinity;
+
+    /** The status, one of 'success', 'timeout', 'error', 'ready' or 'loading'
+      * @type String
+      */
+    var status :String = null;
+
+    /** Raw data returned by request 
+      * @type String
+      */
+    var rawdata :String = null;
+
+    /** Used by dataprovider to record error messages 
+      * @type String
+      */
+    var error :String = null;
+
+    /** Sent as data or other conditions occur during the execution of this request.
+      * @lzxtype event 
+      */
+    var onstatus :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /** 
+      * The object using the DataRequest to pass into the DataProvider's doRequest method.
+      * @param Object requestor: The object using the DataRequest to pass into the DataProvider's doRequest method.
+      */
+    function LzDataRequest (requestor:* = null) {
+        this.requestor = requestor;
+    }
+}
+
+lz.DataRequest = LzDataRequest;  //publish

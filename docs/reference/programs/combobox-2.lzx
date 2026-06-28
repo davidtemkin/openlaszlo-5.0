@@ -1,0 +1,16 @@
+<canvas height="130">
+              <dataset name="items">
+              <item value="item1">item one</item>
+              <item value="item2">item two</item>
+              <item value="item3">item three</item>
+              <item value="item4">item four</item>
+              </dataset>
+
+              <combobox x="5" y="5"
+              width="130"  
+              shownitems="3"
+              defaulttext="choose one..."  >
+              <textlistitem datapath="items:/item" text="$path{'text()'}"
+              value="$path{'@value'}"/>
+              </combobox>
+              </canvas>

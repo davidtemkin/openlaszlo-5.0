@@ -1,0 +1,738 @@
+/**
+  * LzDatapath.lzs
+  *
+  * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @topic LFC
+  * @subtopic Data
+  * @access public
+  */
+  
+/**
+  * 
+  * <p>
+  * Datapaths are used to merge data hierarchies with the hierarchy of an
+  * OpenLaszlo application. This is done using the the XPath syntax supported
+  * by <sgmltag class="element" role="LzDatapointer">lz.datapointer</sgmltag>.  When a node is given a
+  * <attribute link="true">datapath</attribute> attribute, a datapath with
+  * the given value as its XPath is created. If the datapath retrieves a
+  * node (<i>i.e.</i> it doesn't terminate in an attribute getter or a
+  * <code>()</code> operator) then the node is mapped to that data context
+  * and all child nodes will implicitly share the datacontext, but no
+  * further action is taken. If the datapath retrieves data, rather than
+  * just a node, a few extra things happen. First, the node's
+  * <attribute>data</attribute> property is set and the node's
+  * <event>ondata</event> event is sent. Second, the node's
+  * <method>applyData</method> method is called with the data as the
+  * argument. In cases where a datapath matches more than one data node,
+  * the view with the matching datapath is replicated once for each data
+  * node that matches, and a <xref linkend="LzReplicationManager"/> takes over 
+  * the view's spot in its parent.
+  * </p>
+  * <p>
+  * When a node is replicated, an LzReplicationManager takes it's place,
+  * and an <event>onclones</event> will be sent when the node's clones are updated.
+  * </p>
+  * 
+  * <p>
+  * A node can only have one datapath, and datapaths always have the name
+  * <code>datapath</code>.  Additional options available on datapath such
+  * as <link linkend="LzDatapath.__ivars__.pooling">pooling</link> and 
+  * <link linkend="LzDatapath.__ivars__.replication">replication</link> are specified 
+  * by writing the <tagname>datapath</tagname> tag as a separate node.
+  * </p>
+  * 
+  * <example title="Mapping data to views using datapaths">
+  * <programlisting>&lt;canvas height="120"&gt;
+  *   &lt;dataset name="testdata"&gt;
+  *     &lt;Monday temp="Hi 48"&gt; Partly Cloudly &lt;/Monday&gt;
+  *     &lt;Tuesday temp="Hi 60"&gt; Showers Likely &lt;/Tuesday&gt;
+  *     &lt;Wednesday temp="Hi 63"&gt; Chance Showers &lt;/Wednesday&gt;
+  *     &lt;Thursday temp="Hi 58"&gt; Mostly Sunny &lt;/Thursday&gt;
+  *     &lt;Friday temp="Hi 50"&gt; Clear and Cold &lt;/Friday&gt;
+  *   &lt;/dataset&gt;
+  *   &lt;simplelayout spacing="5"/&gt;
+  *   &lt;view datapath="testdata:/*"&gt;
+  *     &lt;view&gt;
+  *       &lt;simplelayout axis="x"/&gt;
+  *       &lt;text <em>datapath="name()"</em>/&gt;
+  *       &lt;text <em>datapath="text()"</em>/&gt;
+  *       &lt;text <em>datapath="@temp"</em>/&gt;
+  *     &lt;/view&gt;
+  *   &lt;/view&gt;
+  * &lt;/canvas&gt;</programlisting></example>
+  *
+  * @usage <programlisting>&lt;view&gt;
+  *   &lt;datapath xpath="<em>xpath</em>" sortorder="ascending"/&gt;
+  * &lt;/view&gt;</programlisting>
+  * <programlisting>&lt;view datapath="<em>xpath</em>" /&gt;</programlisting>
+  *
+  *
+  * @devnote This class is dynamic because it will acquire methods and
+  * attributes at runtime.  Not really optimal, since most likely
+  * these are intended for the replicator that this will create, but
+  * we can't be sure...  It would be better if we made implicit
+  * replication obsolete
+  *
+  * @shortdesc The binder between data and nodes.
+  * @lzxname datapath
+  */
+dynamic class LzDatapath extends LzDatapointer {
+  #pragma "warnUndefinedReferences=true"
+  
+/** @access private
+  * @modifiers override 
+  */
+static var tagname :String = 'datapath';
+/** @access private */
+static var attributes :Object = new LzInheritedHash(LzDatapointer.attributes);
+
+/** By default, this is false for instances
+  * of <classname>datapointer</classname>, and true for instances of
+  * <classname>datapath</classname>.
+  */
+// prototype.rerunxpath = true; // Defined in LzDatapointer
+
+/** This attribute is deprecated, and should not be used. Developers should use
+  * a view's <attribute>visible</attribute> property to control visibility.
+  * @type Boolean
+  * @access private
+  */
+var datacontrolsvisibility :Boolean = true;
+
+/**
+  * @access private
+  * @devnote Setter for datacontrolsvisiblity
+  */
+function $lzc$set_datacontrolsvisibility (v:Boolean) :void { 
+    this.datacontrolsvisibility = v;
+}
+
+/** @access private */
+var __LZtakeDPSlot :Boolean = true;
+/** @access private */
+var storednodes :Array = null;
+/** @access private */
+var __LZneedsUpdateAfterInit :Boolean = false;
+/** @access private */
+var __LZdepChildren :Array = null;
+/** @access private */
+var sel :Boolean = false;
+
+/** @access private */
+var __LZisclone :Boolean = false;
+
+/** Sent when the datapath's data changes.
+  */
+/* var ondata = LzDeclaredEvent; */
+/** Sent when the datapath's data results in an error.
+  */
+/* var onerror = LzDeclaredEvent; */
+/** Sent when the datapath's data encounters a
+  * timeout.
+  */
+/* var ontimeout = LzDeclaredEvent; */
+
+/**
+ * This attribute applies to datapaths which match multiple nodes and
+ * force replication.
+ *
+ * If pooling is true, views that are data-bound to this datapath are
+ * recycled if the dataset changes.  Otherwise, views are deleted when
+ * the data nodes they are bound to disappear, and created when new
+ * data nodes match the datapath.
+ *
+ * See the section on <link linkend="databinding.pooling">Pooling</link> in
+ * the Guide for information about the use of this attribute.
+ *
+ * @type Boolean
+ * @lzxtype boolean
+ * @lzxdefault false
+ * @keywords final
+ */
+var pooling :Boolean = false;
+
+/** 
+ * Determines whether to use normal or lazy replication, if the
+ * datapath matches more than one node.
+ *
+ * See the section on <link linkend="datareplication">Replication</link>
+ * in the Guide for information about the use of this attribute.
+ *
+ * <note>The choice of replication style implies a choice of
+ * replication manager.  Each replication manager may have additional
+ * attributes which are specified as attributes of the datapath.  For
+ * example, <xref linkend="LzLazyReplicationManager" /> takes
+ * <code>axis</code> and <code>spacing</code> attributes.  See the
+ * documentaion for the corresponding replication manager for detailed
+ * information on these additional attributes.</note>
+ *
+ * @type String
+ * @lzxtype 'normal' | 'lazy' | 'resize'
+ * @lzxdefault 'normal'
+ * @keywords final
+ */
+var replication :String;
+
+/**
+ * The direction in which the replicated elements will be layed out.
+ * <note>This attribute is only available if <code>replication</code>
+ * is set to either <code>"lazy"</code> or <code>"resize"</code>.</note>
+ *
+ * @type String
+ * @lzxtype 'x'|'y'
+ * @lzxdefault 'y'
+ * @keywords final
+ */
+var axis :String = "y";
+
+/**
+ * The spacing (in pixels) between replicated views.
+ * <note>This attribute is only available if <code>replication</code>
+ * is set to either <code>"lazy"</code> or <code>"resize"</code>.</note>
+ *
+ * @type Number
+ * @lzxtype number
+ * @lzxdefault 0
+ * @keywords final
+ */
+var spacing :Number = 0;
+
+/**
+ * An XPath to use to obtain the sort key for sorting if replication
+ * occurs. To change this attribute, use
+ * <code>.setAttribute('sortpath', ...)</code>,
+ *
+ * @type String
+ * @lzxtype string
+ */
+var sortpath :String;
+/** @access private */
+function $lzc$set_sortpath (xpath:String) :void {
+  this.setOrder(xpath);
+}
+
+/**
+  * Orders the replicated nodes based on the value of the path passed in.
+  *
+  * @param String xpath: An XPath giving the value to use for comparison.
+  * @param Function|String comparator: See the <param>comparator</param>
+  * parameter of <method>setComparator</method> for details.
+  * @deprecated Use setAttribute('sortpath', ...) instead when no comparator specified.
+  *
+  * @access private
+  */
+function setOrder( xpath:String , comparator:* = null ) :void {
+  if ( this.__LZisclone ){
+      this.immediateparent.cloneManager.setOrder( xpath , comparator );
+  } else {
+      this.sortpath = xpath;
+      if (comparator != null){
+          this.sortorder = comparator;
+      }
+  }
+}
+
+/**
+ * The order to use to sort the dataset if replication occurs. One of
+ * <code>"ascending"</code> or <code>"descending"</code> to use built
+ * in dictionary sort, or a function which compares two strings and
+ * returns <code>1</code> if the strings are in order, <code>0</code>
+ * if they are the same, and <code>-1</code> if they are out of
+ * order. To change this attribute, use <code>setAttribute('sortorder',
+ * ...)</code>.
+ *
+ * @type String|Function
+ * @lzxtype string
+ */
+var sortorder :* = "ascending";
+/** @access private */
+function $lzc$set_sortorder( comparator:* ) :void {
+  this.setComparator(comparator);
+}
+/**
+  * Sets the comparator for the sort used by the replication manager.
+  *
+  * @param Function comparator: "ascending" or "descending" for the
+  * appropriate dictionary sort, or a function to be used for comparison that
+  * takes two arguments and returns 1 if the second argument should follow the
+  * first, -1 if the first argument should follow the second, and 0 if the two
+  * arguments are equivalent
+  *
+  * @access private
+  */
+function setComparator( comparator:* ) :void {
+    if ( this.__LZisclone ){
+        this.immediateparent.cloneManager.setComparator( comparator );
+    } else {
+        this.sortorder = comparator;
+    }
+}
+
+/**
+  * @access private
+  */
+function LzDatapath ( v , args:* = null, children:* = null, instcall:* = null ){
+    super(v, args, children, instcall);
+}
+
+/** @access private */
+override function construct ( v , args ){
+    this.rerunxpath = true; // Defined in LzDatapointer
+
+    super.construct(v, args);
+
+    if ( args.datacontrolsvisibility != null ){
+        this.datacontrolsvisibility = args.datacontrolsvisibility;
+    }
+
+    if ( this.__LZtakeDPSlot ){
+        if ($debug) {
+            if (this.immediateparent.datapath != null) {
+                Debug.warn("overriding datapath %w with %w", this.immediateparent.datapath, this);
+            }
+        }
+        this.immediateparent.datapath = this;
+        var pdp:LzDatapath = this.immediateparent.searchParents( "datapath" ).datapath;
+        
+        if (pdp != null) {
+            //set it early, so that it's right when xpath first runs
+            var tarr:Array = pdp.__LZdepChildren;
+            if ( tarr != null ){
+                pdp.__LZdepChildren = [];
+            
+                for ( var i:int = tarr.length - 1; i >= 0; i-- ){
+                    var c:* = tarr[ i ];
+                    if ( c !== this && !(c is LzDataAttrBind) &&
+                        c.immediateparent != this.immediateparent &&
+                        c.immediateparent.childOf( this.immediateparent )){
+                        c.setDataContext( this ,true );
+                    } else {
+                        pdp.__LZdepChildren.push( c );
+                    }
+                }
+            }
+        } else if ($debug) {
+            Debug.warn("unexpected state for '%w', couldn't find parent-datapath!", this);
+        }
+    }
+}
+
+/**
+  * @access private
+  */
+override function __LZHandleMultiNodes ( nodes:Array ) :LzReplicationManager {
+    //uhoh! this should be a clone
+
+    var clonetype:Class;
+    if (this.replication == "lazy") {
+        clonetype = LzLazyReplicationManager;
+    } else if (this.replication == "resize") {
+        clonetype = LzResizeReplicationManager;
+    } else {
+        clonetype = LzReplicationManager;
+    }
+
+    //TODO: [20080327 anba] "storednodes" should be passed directly 
+    // to the ReplicationManager, instead of doing this kludge 
+    //TODO: [20080626 anba] _instanceAttrs gets modified by LzReplicationManager, 
+    // should we make a copy?
+    this.storednodes = nodes;
+    var rman:LzReplicationManager = new clonetype( this, this._instanceAttrs);
+    this.storednodes = null;
+
+    return rman;
+}
+
+/**
+  * Normally, replication is started when a datapath xpath binding returns
+  * multiple nodes. This function overides that behavior and forces replication,
+  * and replicates over the list of nodes supplied to this function. Note that
+  * once this function is called, the replication manager is no longer actively
+  * bound to the data it replicates over by its xpath (if it had one);
+  * henceforth the replication set can *only* be controlled by calling
+  * setNodes.
+  *
+  * @param Array nodes: A list of LzDataElements to replicate over.
+  */
+function setNodes ( nodes:Array ) :void {
+    var rman:LzDatapath = this.__LZHandleMultiNodes( nodes );
+
+    //__LZHandleMultiNodes will return the replication manager if "this" is a
+    //datapath
+    if ( !rman ) rman = this;
+
+    rman.__LZsetTracking( null );
+
+    if (nodes) {
+        for ( var i:int = 0; i < nodes.length; i++ ){
+            var n:LzDataElement = nodes[ i ];
+            var own:LzDataElementMixin = n.ownerDocument;
+            //third arg is an optimization -- if the node is unique, then we
+            //know we're not tracking it
+            rman.__LZsetTracking( own , true , n != own );
+        }
+    }
+}
+
+/**
+  * @access private
+  */
+override function __LZsendUpdate( upd:Boolean = false, upp:Boolean = false ) :Boolean {
+    var pchg:Boolean = this.__LZpchanged;
+    if ( !super.__LZsendUpdate(upd, upp) ){
+        return false;
+    }
+
+    if (  this.immediateparent.isinited ){
+        this.__LZApplyData( pchg );
+    } else {
+        this.__LZneedsUpdateAfterInit = true;
+    }
+
+    return true;
+}
+
+
+/**
+  * @access private
+  */
+function __LZApplyDataOnInit( ) :void {
+    if ( this.__LZneedsUpdateAfterInit ){
+        this.__LZApplyData();
+        this.__LZneedsUpdateAfterInit = false;
+    }
+}
+
+/**
+  * @access private
+  */
+function __LZApplyData( force:Boolean = false) :void {
+    var ip:LzNode = this.immediateparent;
+
+    if (this.datacontrolsvisibility) {
+        if (ip is LzView) {
+            var ipview = (ip cast LzView);
+            ipview.__LZvizDat = this.p != null;
+            ipview.__LZupdateShown();
+        }
+    }
+
+    var cdat:Boolean = force ||
+               ip.data != this.data ||
+               (this.parsedPath && this.parsedPath.operator == "attributes");
+
+    this.data = this.data == null ? null : this.data;
+    ip.data = this.data;
+    
+    if (cdat) {
+        if (ip.ondata.ready) ip.ondata.sendEvent( this.data );
+        
+        var ppath:LzParsedPath = this.parsedPath;
+        if (ppath && (ppath.operator != null || ppath.aggOperator != null)) {
+            ip.applyData( this.data );
+        }
+    }
+}
+
+/**
+  * @access private
+  */
+override function setDataContext (dc, implicit:Boolean = false) :void {
+    if (dc == null && this.immediateparent != null) {
+        dc = this.immediateparent.searchParents( "datapath" ).datapath;
+        implicit = true;
+    } else if ($debug) {
+        if (this.immediateparent == null) {
+           Debug.warn("immediateparent is null for %w in '%s'", this, arguments.callee);
+        }
+    }
+
+    if ( dc == this.context ) return;
+
+    if ( implicit ){
+        if ( dc.__LZdepChildren == null ){
+            dc.__LZdepChildren = [ this ];
+        } else {
+            dc.__LZdepChildren.push( this );
+        }
+    } else {
+        //not a depedent child
+
+        if ( this.context && this.context is LzDatapath ){
+            var dclist:Array = this.context.__LZdepChildren;
+            if ( dclist ){
+                //remove self from list
+                for ( var i:int = 0; i < dclist.length; i++ ){
+                    if ( dclist[ i ] === this ){
+                        dclist.splice( i, 1 );
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    super.setDataContext( dc );
+}
+
+
+/**
+  * Removes the datapath from its parent
+  * @access private
+  */
+override function destroy(){
+    if ( this.__LZdeleted ) return;
+    this.__LZupdateLocked = true; //so won't set data
+
+    var context:* = this.context;
+    if ( context && !context.__LZdeleted && context is LzDatapath ){
+        //remove self from __LZdepChildren
+        var dca:Array = context.__LZdepChildren;
+
+        if (dca != null) {
+            for ( var i:int = 0; i < dca.length; i++ ){
+                if ( dca [ i ] === this ){
+                    dca.splice( i , 1 );
+                    break;
+                }
+            }
+        }
+    }
+
+    var ip:LzNode = this.immediateparent;
+
+    //if immediate parent was deleted, don't worry about the datapaths dependent
+    //on this one -- they'll be deleted too
+    if ( ! ip.__LZdeleted ){
+        var depChildren = this.__LZdepChildren;
+        if (depChildren != null && depChildren.length > 0) {
+            //need to assign __LZdepChildren to parent
+            var dnpar:LzDatapath = ip.searchParents( "datapath" ).datapath;
+            
+            for ( var i:int = 0; i < depChildren.length; i++ ){
+                depChildren[ i ].setDataContext( dnpar, true );
+            }
+            
+            this.__LZdepChildren = null;
+        }
+    }
+
+    if (ip.datapath === this) {
+        ip.datapath = null;
+    }
+
+    super.destroy();
+}
+
+/**
+  * This method is used to transfer any values that may have been edited
+  * in a datamapped UI control back to the dataset. If the current
+  * datapath's <attribute>xpath</attribute> ends in a terminal selector
+  * (an attribute, <code>text()</code>, or <code>name()</code>
+  * expression), then the datapath attempts to call its parent's
+  * <method>updateData</method> method. If this method returns a 
+  * non-undefined value, the datapath sets the data element's 
+  * attribute, text, or name, respectively, to <method>updateData</method>'s 
+  * return value. The method then calls any other <method>updateData</method> 
+  * on any datapaths which depend on this one for context.
+  *
+  * In short, to make datamapping work both ways for a given UI
+  * control, define a <method>updateData</method> method that returns
+  * the value for the data mapped to the node.  This is already done
+  * for the base <sgmltag class="element" role="LzInputText">LzInputText</sgmltag> class, but not
+  * for any other LFC classes.
+  *
+  * @devnote Although this is an override, it is overriding the empty
+  * definition in LzNode, so we document the implementation here.
+  */
+override function updateData() {
+    this.__LZupdateData();
+}
+
+/**
+  * @access private
+  */
+function __LZupdateData (recursive:Boolean = false) :void {
+    if (!recursive && this.p) {
+        this.p.__LZlockFromUpdate( this );
+    }
+
+    var ppdo:String = this.parsedPath ? this.parsedPath.operator : null;
+    if (ppdo != null) {
+        var dat = this.immediateparent.updateData();
+        if (dat !== void(0)) {
+            if (ppdo == "name") {
+                this.setNodeName( dat );
+            } else if (ppdo == "text") {
+                this.setNodeText( dat );
+            } else if (ppdo == "attributes") {
+                this.p.$lzc$set_attributes( dat );
+            } else {
+                //remove the "attributes." from the operator
+                this.setNodeAttribute( ppdo.substring( 11 ) , dat );
+            }
+        }
+    }
+
+    var depChildren:Array = this.__LZdepChildren;
+    if (depChildren != null) {
+        for (var i:int = 0; i < depChildren.length; i++) {
+            //depChildren: Array of LzDatapath and LzDataAttrBind!
+            depChildren[ i ].__LZupdateData( true );
+        }
+    }
+
+    if (!recursive && this.p) {
+        this.p.__LZunlockFromUpdate( this );
+    }
+}
+
+/**
+  * @access private
+  */
+override function toString() /*:String*/ {
+    return "Datapath for " + this.immediateparent;
+}
+
+/**
+  * @access private
+  */
+override function __LZcheckChange (chgpkg:Object) :Boolean {
+    if ( !super.__LZcheckChange(chgpkg) ){
+        if ( chgpkg.who.childOfNode( this.p , true ) ){
+            if (this.onDocumentChange.ready) this.onDocumentChange.sendEvent( chgpkg );
+        }
+    }
+    
+    return false;
+}
+
+
+/**
+  * Overrides LzDatapointer.__LZsetTracking to handle the additive case
+  *
+  * @param who: the node to track
+  * @param Boolean additive: (default false) if true, add additional
+  * nodes to track, rather than changing the node
+  * @param Boolean needscheck: (default false) if additive is true, set
+  * this to true to check that you are not adding a duplicate
+  *
+  * @access private
+  */
+override function __LZsetTracking ( who, additive:Boolean = false, needscheck:Boolean = false) :void {
+#pragma 'warnUndefinedReferences=true'
+    // If setting tracking to null or not in additive mode, just
+    // invoke the superclass method, forcing tracking
+    if ((! who) || (! additive)) {
+        return super.__LZsetTracking(who, true);
+    }
+    var tracking:Array = this.__LZtracking;
+    var trackDel:LzDelegate = this.__LZtrackDel;
+    // This appears to be an assumption of the previous
+    // implementation.  Check that it is true.
+    if ($debug) {
+        if (! (tracking instanceof Array)) {
+            Debug.error('%w.__LZtracking is %w, expecting an array', this, tracking);
+        }
+    }
+    // Are we already tracking this?
+    if ( needscheck ){
+        var len:int = tracking.length;
+        for ( var i:int = 0; i < len; i++ ) {
+            if( tracking[ i ] === who ) {
+                return;
+            }
+        }
+    }
+    // Additive mode, so don't unregister any previous
+    // Always track, even if no xpath
+    // Ensure you have a delegate
+    if (! trackDel ){
+        this.__LZtrackDel = trackDel = new LzDelegate(this , "__LZcheckChange");
+    }
+    // Note that you are tracking
+    tracking.push( who );
+    trackDel.register( who , "onDocumentChange" );
+}
+
+/**
+  * @access private
+  * @devnote Setter for __LZmanager
+  */
+function $lzc$set___LZmanager ( m:LzReplicationManager ) :void {
+    this.__LZisclone = true;
+    this.immediateparent.cloneManager = m;
+    this.parsedPath = m.parsedPath;
+    this.xpath = m.xpath;
+    this.setDataContext( m );
+}
+
+/**
+  * Called by the clone manager to point the datapath to the right node
+  * @access private
+  */
+function setClonePointer( p /*:LzDataNodeMixin*/ ) :void {
+    //Debug.write("%s: for %w, was %w (dp.sel=%w, p.sel=%w)", arguments.callee, p, this.p, this.sel, p.sel);
+    var pc:Boolean = this.p != p;
+    this.p = p;
+
+    // FIXME: [20080327 anba] (LPP-5328) this needs some tweaks to detect structural changes
+    // of a data-element, e.g. an attribute-node or a text-node has changed
+    if ( pc ) {
+        if ( p && this.sel != p.sel ){
+            this.sel = p.sel || false;
+            this.immediateparent.setSelected( this.sel );
+        }
+
+        this.__LZpchanged = true;
+        this.__LZsetData();
+    }
+}
+
+/** Sets the selection state of the datapath, used by dataselectionmanager.lzx
+  * @access public
+  */
+override function setSelected (torf) /* :void */ {
+    this.p.sel = torf;
+    this.sel = torf;
+
+    this.immediateparent.setSelected( torf );
+}
+
+/**
+  * @access private
+  */
+override function __LZgetLast() :int {
+    var context:* = this.context;
+    if ( this.__LZisclone ) {
+        return context.nodes.length;
+    } else if ( this.p == context.getContext() &&
+              context is LzDatapointer ){
+        return context.__LZgetLast();
+    } else {
+        return 1;
+    }
+}
+
+/**
+  * @access private
+  */
+override function __LZgetPosition() :int {
+    if ( this.__LZisclone ) {
+        return this.immediateparent.clonenumber + 1;
+    } else {
+        var context:* = this.context;
+        if ( this.p == context.getContext() &&
+              context is LzDatapointer ){
+           return context.__LZgetPosition();
+        } else {
+            return 1;
+        }
+    }
+}
+
+} // End of LzDatapth
+
+lz[LzDatapath.tagname] = LzDatapath;  // publish

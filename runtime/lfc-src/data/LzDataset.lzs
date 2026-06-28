@@ -1,0 +1,1047 @@
+/**
+  *
+  * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @topic LFC
+  * @subtopic Data
+  * @access public
+  */
+
+
+/**
+  * 
+  * <p> A <tagname>dataset</tagname> tag defines a
+  *  local dataset.  The name of the dataset is used in the <attribute>datapath</attribute>
+  *  attribute of a view. </p>
+  * 
+  * <p>
+  * The <attribute>src</attribute> attribute of the <tagname>dataset</tagname> element specifies whether the data is compiled into the 
+  * application or fetched at runtime:
+  * </p>
+  * <ul>
+  * <li>If the src attribute is a URL, the value of
+  *  the dataset is the XML data that a request to the URL named by the
+  *  src attribute returns when the application is run.</li>
+  *  <li>If the src
+  *  attribute is a pathname, the value of the dataset is the content of
+  *  the XML file that the pathname refers to, and is compiled into the
+  *  application.</li>
+  * <li>  If the src attribute is not present, the value of the
+  *  dataset is the content of the <tagname>dataset</tagname> element.</li>
+  * </ul>
+  * 
+  * <p>All data in an OpenLazlo application is contained within one or more datasets. A given dataset usually represents a single conceptual set that may or may not be modified or reloaded during the execution of the application. 
+  * The data within a dataset is accessed using a <sgmltag class="element" role="LzDatapointer">datapointer</sgmltag> or a instance of one of its subclasses. 
+  * Datasets can represent</p>
+  * 
+  * <ul>
+  * <li>local data (i.e. data which is static after compile time), or </li>
+  * <li>http-data (data which is returned as XML over HTTP)</li>
+  * </ul>
+  * 
+  * <p>
+  * If a dataset is not explictly contained within in a <sgmltag class="element" role="LzDataProvider">lz.DataProvider</sgmltag>, it will make an instance of datasource and be contained inside that. A dataset can be populated or re-poplulated at runtime by calling <code>doRequest</code> on the dataset. The result of the request is then returned to the application and the dataset's <link linkend="LzNode.__ivars__.ondata"><literal>ondata</literal></link> event is run. Any <xref linkend="LzDatapointer"/> that is bound to the dataset will also run its <link linkend="LzNode.__ivars__.ondata"><literal>ondata</literal></link> event at this time as well.
+  * </p>
+  * <p>See the <a href="${dguide}data-structures.html">Developers's Guide</a> for more discussion of data and datasets. </p>
+  * <p>
+  * <b>Datasets in SOLO applications</b>.  Datasets are implemented differently in proxied and SOLO applications, with slight differences in functionality. For example, in SOLO applications in the SWF8 and SWF9 runtimes is it not possible to retrieve http response headers. Also, white space may be handled differently.  See the <a href="${dguide}proxied.html">Developer's Guide</a>.
+  * </p>
+  * 
+  * <p>
+  * The example below makes a request of the cgi script on Laszlo's website that serves up weather information in xml form.</p>
+  * 
+  * <example title="Making a request using a dataset">
+  * <programlisting>&lt;canvas height="250" debug="true"&gt;
+  *  &lt;debug y="100"/&gt; 
+  *  &lt;dataset type="http" name="weatherdata"
+  *           src="http://www.laszlosystems.com/cgi-pub/weather.cgi"/&gt; 
+  *  &lt;view&gt;
+  *     &lt;inputtext width="90" name="t"&gt;zip&lt;/inputtext&gt;
+  *     &lt;button&gt;  submit
+  *       &lt;handler name="onclick"&gt; var d = canvas.datasets.weatherdata;
+  *         Debug.debug("sending request for weather data.");
+  *         d.setQueryString({zip : parent.t.getText()});
+  *         d.doRequest(); 
+  *       &lt;/handler&gt;
+  *     &lt;/button&gt;
+  *     &lt;datapointer xpath="weatherdata:/weather"&gt;
+  *       &lt;handler name="ondata"&gt;
+  *         var duplicate_pointer = this.dupePointer();
+  *         duplicate_pointer.selectChild();
+  *         while (duplicate_pointer.selectNext()){
+  *           Debug.debug("%w", duplicate_pointer.serialize());
+  *         }
+  *       &lt;/handler&gt;
+  *     &lt;/datapointer&gt;
+  *     &lt;simplelayout axis="x"/&gt;
+  *   &lt;/view&gt;
+  * &lt;/canvas&gt;</programlisting></example>
+  *
+  *
+  * @shortdesc An in-memory xml-style data hierarchy.
+  * @lzxname dataset
+  * @initarg secureport
+  * @initarg querytype
+  * @initarg src
+  * @initarg timeout
+  */
+public dynamic class LzDataset extends LzNode with LzDataElementMixin, LzDataNodeMixin {
+/** @access private
+  * @modifiers override 
+  */
+static var tagname = 'dataset';
+
+/** @access private */
+static var attributes = new LzInheritedHash(LzNode.attributes);
+
+/** @access private */
+LzDataset.attributes.name = 'localdata';
+
+/** @access private */
+static const slashPat :String = "/";
+
+/** Holds raw data response string from data source
+ * @type String
+ * @lzxdefault null
+ */
+var rawdata:String = null;
+
+/** Holds a pointer to the DataProvider which handles data load requests for this dataset. 
+  * Default value is canvas.defaultdataprovider
+  * @lzxtype expression
+  */
+var dataprovider :LzDataProvider;
+
+/**  Create a new data request object for each request.
+  * @type Boolean
+  * @lzxdefault false
+  */
+var multirequest :Boolean = false;
+
+/** @access private */
+var dataRequest :LzHTTPDataRequest = null; 
+
+/** @access private */
+var dataRequestClass :Class = LzHTTPDataRequest;
+
+/** @access private */
+var dsloadDel :LzDelegate = null;
+
+/** @access private */
+var errorstring :String;
+
+/** @access private */
+var reqOnInitDel :LzDelegate;
+
+/** TCP port number to use for secure (HTTPS) requests
+  * @type uint
+  * @lzxtype integer
+  * @lzxdefault 443
+  */
+var secureport :uint;
+
+/** The URL of the proxy server, for proxied requests
+  * @type String
+  * @lzxtype string
+  */
+var proxyurl :String = null;
+
+/** Sent when the dataset's request results in an error. 
+  * @lzxtype event
+  */
+var onerror :LzDeclaredEventClass = LzDeclaredEvent;
+
+/** Sent when the request made by the dataset times out. 
+  * @lzxtype event
+  */
+var ontimeout :LzDeclaredEventClass = LzDeclaredEvent;
+
+/** The numer of milliseconds to wait before the request times out, and an ontimeout event is sent.
+  * @lzxtype Number
+  * @type Number
+  */
+var timeout :Number = 60000;
+
+/** @access private */
+function $lzc$set_timeout (t:Number) :void { this.timeout = t; }
+
+/** Used to send a string as the entire body of a POST request.
+ *
+ * For a POST request, setting postbody to a non-null string value
+ * will send that string as the complete body of the POST request. In
+ * this case any other query parameters that have been set via
+ * setQueryParam dataset will be ignored.
+ *
+ * The behavior of a GET request with a non-null postbody is not
+ * defined.
+ *
+ * Note, the swf8 runtime is forced to XML-quote the postbody, due to
+ * limitations in the Flash 8 player API. This restriction is not
+ * present in later swf runtimes, or in the DHTML runtime.
+ *
+ * @lzxtype string
+ * @type String
+*/
+var postbody :String = null;
+
+/** @access private */
+function $lzc$set_postbody (s:String) :void { this.postbody = s; }
+
+/** When true, the server will accept
+  * encoded responses for this request.  
+  * Encoded responses require more work for the LPS (encoding the 
+  * response) and client (decoding the response) in trade for lower 
+  * network bandwidth usage.
+  * @lzxtype boolean
+  * @type Boolean
+  * @keywords read-only
+  */
+var acceptencodings :Boolean = false;
+
+/**
+  * When set to "http" or "soap", the dataset
+  * interprets it's src attribute as a URL to be loaded at runtime.
+  * If the "src" attribute is set to a URL (e.g., starts with "http:") then
+  * the type attribute implicitly becomes "http".
+  * @type String
+  * @lzxtype http|soap
+  * @keywords read-only
+  * @devnote This is really a 'pseudo' attribute , it is handled by the tag processor phase
+  */
+var type :String = null;
+
+/** An lz.Param object which holds query key-value pairs.
+  * @type LzParam
+  */
+var params :LzParam = null;
+
+/** When true, the server will preserve namespace prefixes
+  * on data node names and attribute names
+  * @type Boolean
+  * @lzxtype boolean
+  * @keywords read-only
+  * @lzxdefault false
+  */
+var nsprefix :Boolean = false;
+
+/** When true, the proxy server (if making a proxied request) will encode and 
+  * send the HTTP response headers along with the data (defaults to false). 
+  * Due to a lack of a native API to get this information, SOLO SWF applications
+  * will always return an empty set.
+  *
+  * When making a proxied request,
+  * <attribute>getresponseheaders</attribute> must be true in
+  * order for the response headers to be retrieved via the
+  * <method>getResponseHeader</method> or
+  * <method>getAllResponseHeaders</method> methods.
+  *
+  * @type Boolean
+  * @lzxtype boolean
+  */
+var getresponseheaders :Boolean = false;
+
+/** HTTP request method. Value must be one of "GET" or "POST".
+  * @type String
+  * @lzxtype get|post|GET|POST
+  */
+var querytype :String = "GET";
+
+/** @access private */
+function $lzc$set_querytype (reqtype:String) :void { this.querytype = reqtype.toUpperCase(); }
+
+/** When true, the server will trim 
+  * whitespace in the XML data (defaults to false).  
+  * @type Boolean
+  * @lzxtype boolean
+  * @keywords final
+  */
+var trimwhitespace :Boolean = false;
+
+/** When true, the server will attempt to cache 
+  * response (defaults to false).  There are security concerns 
+  * when this field is true.  When this field is true, you will usually
+  * want the getresponseheaders field to be false.
+  * @type Boolean
+  * @lzxtype boolean
+  * @keywords read-only
+  * @lzxdefault false
+  */
+var cacheable :Boolean = false;
+
+/** When true, data responses can be cached by the client (browser).
+  * When false, a unique valued argument will be added to the request string in the format 
+  * '__lzbc__=1204685840777' to defeat the browser's cache.
+  * @type Boolean
+  * @lzxdefault false
+  */
+var clientcacheable :Boolean = false;
+
+/** A string to be appended to the request that
+  * the dataset makes. 
+  * @type String
+  * @lzxtype string
+  * @keywords read-only
+  */
+var querystring :String = null;
+
+/** The source for requests made by this dataset. The value can be a pathname or an absolute or relative URL.
+  * If the value is a URL (starts with "http:"), the dataset will be configured to load its data at runtime.
+  * Otherwise, the data is included inline into the application at compile time.
+  * @type String
+  */
+var src :String = null;
+
+/** @access private */
+function $lzc$set_src (src:String) :void {
+    this.src = src;
+    if (this.autorequest) {
+        this.doRequest() ;
+    }
+}
+
+/** If autorequest is true, a new request will be issued automatically when the source or query params are modified.
+ * @type Boolean
+ * @lzxdefault false
+*/
+var autorequest :Boolean = false;
+
+/** @access private */
+function $lzc$set_autorequest (b:Boolean) :void {
+    this.autorequest = b;
+}
+
+/** If true, the datset will make a request when it
+  * inits. The default for this is false.
+  * @type Boolean
+  * @lzxtype boolean
+  */
+var request :Boolean = false;
+
+/** @access private */
+function $lzc$set_request (b:Boolean) {
+    this.request = b;
+    if (b && !this.isinited) {
+        this.reqOnInitDel = new LzDelegate(this, "doRequest", this, "oninit");
+    }
+}
+
+/** @access private */
+var headers :LzParam = null;
+
+/** Proxy data requests via the proxy server. Inherits value from canvas.proxied flag.
+ * @type inheritableBoolean
+ * @lzxdefault "inherit"
+ * @access public 
+ */
+var proxied :* = null;
+
+/** @access private */
+function $lzc$set_proxied (val:*) :void {
+    // @devnote: Object lookup does an auto string-coercion
+    var nval:* = ({'true': true, 'false': false, 'null': null, inherit: null})[val];
+    if (nval !== void(0)) {
+        this.proxied = nval;
+    } else if ($debug) {
+        Debug.warn("%w.proxied must be one of 'inherit', 'true', or 'false', but was %w", this, val);
+    }
+}
+
+/**
+  * Compute the boolean value for 'proxied', using inheritance if needed
+  * @access private
+  * @return boolean
+  */
+function isProxied () :Boolean {
+    // Check if the dataset has a "proxied" attribute which overrides dataset's value
+    return (this.proxied != null) ? this.proxied : canvas.proxied;
+}
+
+/** HTTP response headers
+  * @access private
+  */
+var responseheaders :LzParam = null;
+
+/** If true, the client should ensure that each request is made, rather than just 
+  * making and reporting the last request.
+  * @access private 
+  */
+var queuerequests :Boolean = false;
+
+/** @access private */
+var oncanvas :Boolean;
+
+/** "initialdata" is a virtual attribute, it is only used by the data-compiler.
+  * @access private
+  */
+function $lzc$set_initialdata (d:String) :void {
+    if (d != null) {
+        var e:LzDataElement = LzDataElement.stringToLzData(d, this.trimwhitespace, this.nsprefix);
+        if (e != null) {
+            this.$lzc$set_data(e.childNodes);
+        }
+    }
+}
+
+/** @access private */
+function LzDataset (parent:* = null, args:* = null, children:* = null, instcall:* = null) {
+    super(parent, args, children, instcall);
+}
+
+/** @access private */
+override function construct (parent, args) {
+    this.nodeType = LzDataElement.DOCUMENT_NODE;
+    this.ownerDocument = this;
+    this.attributes = {};
+    this.childNodes = [];
+
+    this.queuerequests = false; // default to false, to emulate browser default
+
+    this.oncanvas = parent == canvas || parent == null;
+
+    // Default the proxyurl to the canvas value
+    if (!('proxyurl' in args)) {
+        this.proxyurl = canvas.getProxyURL();
+    }
+
+    if ('timeout' in args && args.timeout) {
+        this.timeout = args.timeout;
+    } else {
+        this.timeout = canvas.dataloadtimeout;
+    }
+
+    if ('dataprovider' in args && args.dataprovider) {
+        this.dataprovider = args.dataprovider;
+    } else {
+        this.dataprovider = canvas.defaultdataprovider;
+    }
+
+    // autorequest attr needs to be set early in order for it to
+    // be able to fire when the 'src' setter is called the first time.
+    if ('autorequest' in args) {
+        this.autorequest = args.autorequest;
+    }
+
+    super.construct(parent, args);
+}
+
+/**
+  * Sets the name of this datasource - used only by initializer
+  * @access private
+  */
+override function $lzc$set_name(name:String) {
+    super.$lzc$set_name(name);
+
+    // @devnote: Name is permitted to be null or undefined, meaning
+    // "don't name me", see LzNode#$lzc$set_name(..).
+    // But name shouldn't be set explictly to null for a dataset, 
+    // unless you know what you're doing, see AnonDatasetGenerator#getContext(..)!
+    if (name != null) {
+        //for compatibility with dataNode API
+        this.nodeName = name;
+
+        if (this.oncanvas) {
+            canvas[ name ] = this;
+        } else {
+            // it's local - add the parent's UID
+            name = this.parent.getUID() + '.' + name;
+        }
+
+        if ($debug) {
+            if (canvas.datasets[name] != null) {
+                Debug.warn("A dataset already exists with the name '%s': %w",
+                           name, canvas.datasets[name]);
+            }
+        }
+
+        canvas.datasets[name] = this;
+    }
+}
+
+/**
+  * Extend LzNode.destroy: remove yourself from the 97 places you
+  * installed yourself (do we really need all these aliases?).
+  * @access private
+  */
+override function destroy () {
+    this.$lzc$set_childNodes([ ]);
+    this.dataRequest = null;
+
+    var name:String = this.name;
+    if (this.oncanvas) {
+        if (canvas[ name ] === this) {
+            delete canvas[ name ];
+        }
+    } else {
+        name = this.parent.getUID() + '.' + name;
+    }
+    if (canvas.datasets[ name ] === this) {
+        delete canvas.datasets[ name ];
+    }
+
+    super.destroy();
+}
+
+/**
+  * Returns an error string if there was an error, or <code>undefined</code> if there was none.
+  * @return String: An error string, or <code>undefined</code> if none.
+  */
+function getErrorString () :String { 
+    return this.errorstring;
+}
+
+/**
+  * Returns the number of miliseconds it took to load the dataset's request
+  * @return Int: Number of miliseconds it took to load the last request.
+  */
+function getLoadTime () :Number {
+    var dreq:LzHTTPDataRequest = this.dataRequest;
+    return dreq ? dreq.loadtime : 0;
+}
+
+/**
+  * Return the src attribute of the dataset, if one was given.
+  * @return String: The src of attribute of the dataset
+  */
+function getSrc () :String {
+    return this.src;
+}
+
+/**
+  * Returns the querystring attribute of the dataset, if there is one
+  * @return String: The querystring attribute of the dataset
+  */
+function getQueryString () :String {
+    if (typeof(this.querystring) == 'undefined') {
+        return "";
+    } else {
+        return this.querystring;
+    }
+}
+
+/**
+  * Returns an lz.Param object holding any set request parameters for the 
+  * dataset.
+  * @return LzParam: The request parameters for the dataset.
+  */
+function getParams () :LzParam {
+    if (this.params == null) {
+        this.params = new lz.Param();
+    }
+
+    return this.params;
+}
+
+/**
+  * Sets the data for the dataset
+  * @param data a LzDataElement or list of Elements
+  * @access private
+  */
+override function $lzc$set_data (data:*) {
+    if (data == null) {
+        return;
+    } else if (data instanceof Array) {
+        this.$lzc$set_childNodes(data);
+    } else {
+        this.$lzc$set_childNodes([data]);
+    }
+
+    this.data = data;
+
+    if (this.ondata.ready) this.ondata.sendEvent(this);
+}
+
+/**
+  * Called when an error is received from the datasource.  
+  * @access private 
+  * @param String e: the dataset whose request resulted in error
+  */
+function gotError (e:String) :void {
+    this.errorstring = e;
+    if (this.onerror.ready) this.onerror.sendEvent(this);
+}
+
+/**
+  * Called when a timeout is recieved from the datasource.  
+  * @access private
+  */
+function gotTimeout () :void {
+    if (this.ontimeout.ready) this.ontimeout.sendEvent(this);
+}
+
+/**
+  * This is the shared interface with datapointer
+  * @access private
+  */
+function getContext (chgpkg = null) :* {
+    return this;
+}
+
+/**
+  * This is the shared interface with datapointer
+  * @access private
+  */
+function getDataset () :LzDataset {
+    return this;
+}
+
+/**
+  * Returns a datapointer pointing to the root of the dataset.
+  * @return LzDatapointer: A datapointer that points to the root of the dataset.
+  */
+function getPointer () :LzDatapointer {
+    var dp = new LzDatapointer(null);
+    dp.p = this.getContext();
+    return dp;
+}
+
+/**
+  * Sets the querystring parameter of the dataset to the given
+  * string. If an object is given instead of a string, the object will be 
+  * automatically converted to a string and used instead. The dataset's 
+  * querystring will be pre-pended to any request made for the dataset.
+  * @param String s: A string to be appended to any query made on behalf of
+  * this dataset.
+  */
+function setQueryString (s:*) :void {
+    this.params = null;
+    if (typeof( s ) == "object") {
+        if (s instanceof lz.Param){
+            this.querystring = s.toString();
+        } else {
+            var p:LzParam = new lz.Param();
+            for (var n:String in s) {
+                p.setValue(n, s[n], true);
+            }
+            this.querystring = p.toString();
+            p.destroy();
+        }
+    } else {
+        this.querystring = s;
+    }
+
+    if (this.autorequest) {
+        this.doRequest();
+    }
+}
+
+/**
+  * Sets a named query parameter to the given value. The query parameters are 
+  * sent with every request.  The key 'lzpostbody' has a specific interpretation,
+  * see setQueryType() for details.
+  * @param String key: The name of the parameter
+  * @param String val: The value for the parameter
+  */
+function setQueryParam (key:String, val:String) :void {
+    this.querystring = null;
+    if (! this.params) {
+        this.params = new lz.Param();
+    }
+    this.params.setValue(key, val);
+
+    if (this.autorequest) {
+        this.doRequest();
+    }
+}
+
+/**
+  * Sets multiple query parameters from using the keys in the argument as keys
+  * and the values of those keys as values. This method can also be used to
+  * clear the query params, by passing null to it.
+  * @param Object obj: An object whose keys are keys of parameters and whose 
+  * values are those parameters' values. Passing a value of null to this 
+  * method clears the query parameters.
+  * The key 'lzpostbody' has a specific interpretation, see setQueryType() for details.
+  */
+function setQueryParams (obj:Object) :void {
+    this.querystring = null;
+    if (! this.params) {
+        this.params = new lz.Param();
+    }
+
+    if (obj) {
+        this.params.addObject(obj);
+    } else if (obj == null) {
+        this.params.remove();
+    }
+
+    if (obj && this.autorequest) {
+        this.doRequest();
+    }
+}
+
+/**
+  * Sets the src attribute of the data request.
+  * @deprecated Use setAttribute('src', ...) instead.
+  * @param String src: A new src URL for data request.
+  *
+  * Need to handle these cases
+  * http:foo.html
+  * http:/foo/bar.html
+  * http:foo.ksp?q=12
+  * http:/foo.ksp?q=12
+  * http:/foo/bar.ksp?q=12
+  */
+final function setSrc (src:String) :void {
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_src(src);
+}
+
+/**
+  * Sets whether or not the dataset makes its request directly to the target server
+  * or via the LPS server proxy.
+  * @param String val: If 'true', the dataset will make its request when it is 
+  * initialized, if 'false', request will be direct, if 'inherit', it will inherit
+  * from its datasource.
+  * @deprecated Use setAttribute('proxied', ...) instead.
+  */
+final function setProxyRequests (val:String) :void {
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_proxied(val);
+}
+
+/**
+  * Sets whether or not the dataset makes its request upon initialization
+  * @param Boolean b: If true, the dataset will make its request when it is 
+  * initialized
+  * @deprecated Use setAttribute('request', ...) instead.
+  */
+final function setRequest (b:Boolean) :void {
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_request(b);
+}
+
+/**
+  * Turns autorequest on or off, depending on the value passed in. 
+  * If true, changes to dataset request parameters cause new datasets to be 
+  * automatically requested.  If autorequest is false, doRequest() must be 
+  * called manually after dataset request parameters are changed.
+  * 
+  * @access private
+  * @param b: A boolean value - true to turn on autorequest, false to turn off
+  * @deprecated Use setAttribute('autorequest', ...) instead.
+  */
+final function setAutorequest (b:Boolean) :void {
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_autorequest(b);
+}
+
+/** Sets the raw content of a POST body.
+  * This replaces the old "lzpostbody" convention for passing raw POST data.
+  * @param String str: The string to use as the raw POST body content
+  * @deprecated Use setAttribute('postbody', ...) instead.
+  */
+final function setPostBody (str:String) :void {
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_postbody(str);
+}
+
+/**
+  * Sets the query type of for the datasource to one of "POST" or "GET"
+  * by calling the method of the same name on this dataset's datasource.
+  * Note that this controls how the LPS server makes a request of the backend, as well 
+  * as how the client communicates with the LPS
+  * @param String reqtype: A string -- either "GET" or "POST". GET is the
+  * default. When the type is "POST", the query parameters will be sent in the 
+  * request body, encoded as application/x-www-form-urlencoded. If the type is "POST" and
+  * there is a exactly one request parameter and it is named "lzpostbody", it will be used
+  * as the raw request body (unencoded).  Use of "lzpostbody" with a request
+  * that has more than one request parameter is undefined.
+  * @deprecated Use setAttribute('querytype', ...) instead.
+  */
+final function setQueryType (reqtype:String) :void {
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_querytype(reqtype);
+}
+
+/** @access private
+  * @deprecated Use setAttribute('initialdata', ...) instead.
+  */
+final function setInitialData (d:String) :void {
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_initialdata(d);
+}
+
+/**
+  * Produce a hash table of key-value pairs.
+  * In the case of a duplicated key, creates an array of values.
+  */
+static function queryStringToTable (query:String) :Object {
+    var queries:Object = {};
+    var parameters:Array = query.split('&');
+    for (var i:int = 0; i < parameters.length; ++i) {
+        var key:String = parameters[i];
+        var value:String = '';
+        var n:int = key.indexOf('=');
+        if (n > 0) {
+            value = unescape(key.substring(n+1));
+            key = key.substring(0, n);
+        }
+        if (key in queries) {
+            var prev:* = queries[key];
+            if (prev instanceof Array) {
+                prev.push(value);
+            } else {
+                queries[key] = [prev, value];
+            }
+        } else {
+            queries[key] = value;
+        }
+    }
+    return queries;
+}
+
+/**
+  * Stops the load of the dataset's current request
+  */
+function abort () :void {
+    var dreq:LzHTTPDataRequest = this.dataRequest;
+    if (dreq) {
+        this.dataprovider.abortLoadForRequest(dreq);
+    }
+}
+
+/**
+  * Does a request immediately using the current values.  If autorequest is true,
+  * this method is called automatically when values change.
+  */
+function doRequest (ignore:* = null) :void {
+    // src can be null if the dataset is loaded from initialdata
+    if (! this.src) return
+
+    // We try to reuse the old datarequest object, unless
+    // multirequest is true. If multirequest is true, we need
+    // a separate datarequest obj for each request.
+    if (this.multirequest || this.dataRequest == null || this.queuerequests) {
+        this.dataRequest = new this.dataRequestClass(this);
+    }
+
+    var dreq:LzHTTPDataRequest = this.dataRequest
+
+    dreq.src     = this.src;
+    dreq.timeout = this.timeout;
+    dreq.status  = LzDataRequest.READY;
+    dreq.method = this.querytype;
+    dreq.postbody = null;
+
+    // If this.querystring is set, use it as the source of param
+    // values. Note, this is independent of the query portion of the
+    // this.src URL. 
+    if (this.querystring) {
+        dreq.queryparams = new lz.Param();
+        dreq.queryparams.addObject(lz.Param.parseQueryString(this.querystring));
+    } else {
+        // otherwise, use the this.params value
+        dreq.queryparams = this.params;
+    }
+
+    // Support for 'lzpostbody'.  If this is a POST, set
+    // the DataRequest.postbody field to the lzpostbody value.
+    if (this.querytype.toUpperCase() == "POST") {
+        dreq.postbody = this.postbody;
+
+        // Dev Note: If there is a lzpostbody query arg, we are going
+        // to remove it from the query args, and set it as the
+        // dreq.postbody arg.  Note: In SOLO mode, the DHTML runtime
+        // can actually support raw POST via the XMLHTTPRequest API.
+        //
+        // NB: The Flash swf8 native API has no way to support POST of
+        // arbitrary raw data in SOLO mode; the best we can do is to
+        // send a list of url-encoded key=value pairs.
+        if (dreq.queryparams) {
+            // a "lzpostbody" arg overrides postbody, for back
+            // compatibility
+            var lzpostbody = dreq.queryparams.getValue('lzpostbody');
+            if (lzpostbody != null) {
+                dreq.queryparams.remove('lzpostbody');
+                dreq.postbody = lzpostbody;
+            }
+        }
+    }
+
+    dreq.proxied            = this.isProxied();
+    dreq.proxyurl           = this.proxyurl;
+
+    // TODO [hqm 2007-08] does this interact with 'multirequests' flag?
+    dreq.queuerequests      = this.queuerequests;
+    dreq.requestheaders     = this.headers;
+    dreq.getresponseheaders = this.getresponseheaders;
+
+    dreq.secureport = this.secureport;
+
+    dreq.cacheable       =  this.cacheable;
+    dreq.clientcacheable =  this.clientcacheable;
+    dreq.trimwhitespace  =  this.trimwhitespace;
+    dreq.nsprefix        =  this.nsprefix;
+
+    // NB: You had better set the onstatus event handler *before* issuing request
+    if (this.dsloadDel == null) {
+        this.dsloadDel = new LzDelegate(this, "handleDataResponse", dreq, "onstatus");
+    } else {
+        this.dsloadDel.register(dreq, "onstatus");
+    }
+    this.dataprovider.doRequest(dreq);
+}
+
+/**
+  * @access private       
+  * Called when  data request status changes.
+  * If status is 'success', sets data and responseheaders (if available)
+  */
+function handleDataResponse (datareq:LzHTTPDataRequest) :void {
+    if (this.dsloadDel != null) {
+        this.dsloadDel.unregisterFrom(datareq.onstatus);
+    }
+
+    this.rawdata = datareq.rawdata;
+    this.errorstring = null;
+
+    if (datareq.status == LzDataRequest.SUCCESS) {
+        if (this.responseheaders != null) {
+            this.responseheaders.destroy();
+        }
+        this.responseheaders = datareq.responseheaders;
+        this.$lzc$set_data(datareq.xmldata);
+    } else if (datareq.status == LzDataRequest.ERROR) {
+        this.gotError(datareq.error);
+    } else if (datareq.status == LzDataRequest.TIMEOUT) {
+        this.gotTimeout();
+    }
+}
+
+/* Meta stuff */
+
+/**
+  * Sets a header for the next request
+  * @param String k: Key for the header
+  * @param String val: Value for the header
+  */
+function setHeader (k:String, val:String) :void { 
+    if (! this.headers) {
+        this.headers = new lz.Param();
+    }
+
+    this.headers.setValue(k, val);
+}
+
+/**
+  * Retrieves the lz.Param object which represents the headers sent with
+  * the dataset's last request
+  * @return LzParam: The headers from the dataset's last request
+  */
+function getRequestHeaderParams () :LzParam { 
+    return this.headers;
+}
+
+/**
+  * Clears all request header parameters which were set from <method>setHeader</method>
+  */
+function clearRequestHeaderParams () :void { 
+    if (this.headers) {
+        this.headers.remove();
+    }
+}
+
+/**
+  * Returns the value for the specified response header, or <code>null</code>
+  * if there was no header with that name.
+  * 
+  * @param String name: The name of the header to return
+  * @return String/Array: The value for the named header. If multiple headers
+  * are found, returns a list of values.
+  * @return String
+  */
+function getResponseHeader (name:String) :* {
+    var headers:LzParam = this.responseheaders;
+    if (headers) {
+        var val:Array = headers.getValues(name);
+        if (val && val.length == 1) {
+            return val[0];
+        } else {
+            return val;
+        }
+    }
+    return void(0);
+}
+
+/**
+  * Returns all response headers as an object of name/value pairs, or false
+  * if there were none.
+  * 
+  * @return LzParam: A hash table object containing the response headers.
+  */
+function getAllResponseHeaders () :LzParam {
+    return this.responseheaders;
+}
+
+/**
+  * Get string representation
+  * @access private
+  * @return: String representation of this object
+  */
+override function toString () {
+    return "LzDataset " + ":" + this.name;
+}
+
+} // End of LzDataset
+
+lz[LzDataset.tagname] = LzDataset;  // publish
+
+
+
+/**
+  * @shortdesc Allows http datasets to be pooled, or recycled when no longer in use
+  * @access private
+  */
+class __LzHttpDatasetPoolClass {
+
+var _uid :uint = 0;
+
+var _p :Array = [];
+
+/**
+  * Gets a new dataset from the pool
+  * @param dataDel: Delegate for the ondata event
+  * @param errorDel: Delegate for the onerror event
+  * @param timeoutDel: Delegate for the ontimeout event
+  * @param acceptenc: Whether to accept encodings or not - defaults to false
+  */
+function get (dataDel:LzDelegate = null, errorDel:LzDelegate = null, timeoutDel:LzDelegate = null, acceptenc:Boolean = false) :LzDataset {
+    var dset:LzDataset;
+    if (this._p.length > 0) {
+        dset = this._p.pop();
+    } else {
+        dset = new LzDataset(null, {name: 'LzHttpDatasetPool' + this._uid, type: 'http', acceptencodings: acceptenc});
+        this._uid++;
+    }
+    if (dataDel    != null) { dataDel.register(dset, 'ondata'); }
+    if (errorDel   != null) { errorDel.register(dset, 'onerror'); }
+    if (timeoutDel != null) { timeoutDel.register(dset, 'ontimeout'); }
+    return dset;
+}
+
+/**
+  * Recyles a dataset back into the pool for reuse
+  * @param dset: The dataset to be recycled
+  */
+function recycle (dset:LzDataset) :void {
+    // clear any request-parameter stuff
+    dset.setQueryParams(null);
+    dset.$lzc$set_postbody(null);
+    dset.clearRequestHeaderParams();
+    // clear events
+    dset.ondata.clearDelegates();
+    dset.ontimeout.clearDelegates();
+    dset.onerror.clearDelegates();
+    // clear any data
+    dset.$lzc$set_data([]);
+
+    this._p.push(dset);
+}
+
+} // End of __LzHttpDataSetPoolClass
+
+/** The single instance of this class
+  * @access private
+  */
+var LzHttpDatasetPool :__LzHttpDatasetPoolClass = new __LzHttpDatasetPoolClass();

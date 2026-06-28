@@ -1,0 +1,44 @@
+<canvas height="200">
+     <dataset name="vegetables">
+         <celery/> <celeriac/> <carrot/> <florence_fennel/> <parsnip/>
+         <parsley/> <winter_endive/> <witloof_chicory/> <cardoon/>
+         <artichoke/> <head_lettuce/> <cos_lettuce/> <black_salsify/>
+         <swedish_turnip/> <cauliflower/> <cabbage/> <brussels_sprouts/>
+         <kohlrabi/> <broccoli/> <savoy_cabbage/> <turnip/> <radish/>
+         <water_cress/> <garden_cress/> <foliage_beet/> <spinach/>
+         <sweet_potato/> <watermelon/> <melon/> <cucumber/> <winter_squash/>
+         <marrow/> <chickpea/> <lentil/> <runner_bean/> <common_bean/>
+         <pea/> <faba_bean/> <leek/> <shallot/> <onion/> <salsify/>
+         <welsh_onion/> <garlic/> <chives/> <asparagus/> <ladyfinger/>
+         <sweet_corn/> <rhubarb/> <capsicum_pepper/> <tomato/> <eggplant/>
+     </dataset>
+
+     <simplelayout spacing="10" />
+     <text width="200" oninit="countSubviews()">
+         <handler name="onaddsubview" reference="replicationParent">
+             countSubviews();
+         </handler>
+         <method name="countSubviews">
+             this.format("number of subviews: %d",
+                         replicationParent.subviews.length);
+         </method>
+     </text>
+
+     <view clip="true" width="200" height="160" id="clipper">
+         <view id="replicationParent">
+             <view bgcolor="#CCCCFF" height="15">
+                 <datapath xpath="vegetables:/* /name()" spacing="5" replication="resize"/>
+
+                 <text datapath="name()" valign="middle"/>
+                 <handler name="onclick">
+                     if ( this.height != 40 ){
+                         this.animate ( 'height', 40 , 500 );
+                     } else {
+                         this.animate ( 'height', 15 , 500 );
+                     }
+                 </handler>
+             </view>
+         </view>
+         <scrollbar/>
+     </view>
+ </canvas>

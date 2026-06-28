@@ -1,0 +1,51 @@
+<canvas>
+   
+      <dataset name="fruits">
+        <fruit>Oranges</fruit>
+        <fruit>Apples</fruit>
+        <fruit>Bananas</fruit>
+        <fruit>Grapes</fruit>
+        <fruit>Kiwis</fruit>
+        <fruit>Papayas</fruit>
+        <fruit>Watermelon</fruit>
+        <fruit>Strawberries</fruit>
+        <fruit>Cherries</fruit>
+      </dataset>
+   
+      <simplelayout/>
+   
+      <text>Select a series of items below. The control and shift-click modifiers
+      help select ranges.</text>
+   
+      <view name="fruitlist">
+        <selectionmanager name="selector" toggle="true"/>
+        <simplelayout/>
+   
+        <view name="listitem"
+              datapath="fruits:/fruit"
+              onclick="parent.selector.select(this);">
+          <text name="txt" datapath="text()"/>
+   
+          <method name="setSelected" args="amselected">
+            if (amselected) {
+              var txtColor = 0xFFFFFF;
+              var bgcolor = 0x999999;
+            } else {
+              var txtColor = 0x000000;
+              var bgcolor = 0xFFFFFF;
+            }
+            this.setAttribute('bgcolor', bgcolor);
+            this.txt.setAttribute('fgcolor', txtColor);
+          </method>
+        </view>
+   
+        <method name="deleteSelected">
+          var csel = this.selector.getSelection();
+          for (var i = csel.length - 1; i >= 0; i = i - 1) {
+            csel[i].destroy();
+          }
+          this.selector.clearSelection();
+        </method>
+      </view>
+      <button onclick="fruitlist.deleteSelected();">Delete selection</button>
+    </canvas>

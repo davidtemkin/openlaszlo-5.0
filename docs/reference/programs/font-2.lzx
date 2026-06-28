@@ -1,0 +1,14 @@
+<canvas height="60" fontsize="14">
+   <font name="Helvetica">
+     <face src="helmetr.ttf" style="plain"/>
+ 
+     <face src="helmetb.ttf" style="bold"/>
+     <face src="helmeti.ttf" style="italic"/>
+   </font>
+   
+   <simplelayout/>
+   <text font="Helvetica">Here is some text in Helvetica</text>
+ 
+   <text font="Helvetica"><b>Here is some bold text in Helvetica</b></text>
+   <text font="Helvetica"><i>Here is some italic text in Helvetica</i></text>
+ </canvas>

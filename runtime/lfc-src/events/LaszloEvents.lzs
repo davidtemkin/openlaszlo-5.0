@@ -1,0 +1,705 @@
+/**
+  *
+  * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @affects lzevent lzdelegate
+  * @topic LFC
+  * @subtopic Events
+  * @access public
+  */
+
+/**
+  * <p>A delegate is an object that calls a specific method on a
+  * specific object when its execute method is called. It is
+  * essentially a method closure.</p>
+  *
+  * <p>Delegates, along with <xref linkend="LzEvent"/>, comprise
+  * Laszlo's point to point event system. A delegate represents a
+  * named method of an object. Delegates are mostly registered with
+  * events, but they can be used anywhere a function callback would
+  * traditionally be called for: for instance, <xref
+  * linkend="LzTimerService.prototype.addTimer"/> takes a delegate as
+  * its argument.</p>
+  *
+  * <p>You can create a delegate explicitly using the <classname
+  * link="true">LzDelegate</classname> class, or implicitly by
+  * specifying an event handler.  There are two syntaxes with which
+  * you can specify an event handler: in the open tag used to create
+  * that object, or by using the <tagname
+  * link="true">handler</tagname> tag in the body of the object.</p>
+  *
+  * <p>To specify an event handler in an open tag, simply include it
+  * like any other attribute.</p>
+  *
+  * <programlisting class="code" extract="false"><![CDATA[
+  * <view onmouseover="doSomething()">
+  *   <method name="doSomething">
+  *     // code to be executed when mouse is over the view
+  *   </method>
+  * </view>
+  * ]]></programlisting>
+  *
+  * <p>To specify an event hander using the <tagname
+  * link="true">handler</tagname> tag, you include it in the body of
+  * the object.</p>
+  *
+  * <programlisting class="code" extract="false"><![CDATA[
+  * <view>
+  *  <handler name="onmouseover">
+  *    // code to be executed when the mouse is over the view
+  *  </name>
+  * </view>
+  * ]]></programlisting>
+  *
+  * <p>The above two examples are functionally equivalent.  Using the
+  * <tagname>handler</tagname> tag, however, can often lead to more
+  * readable code because it removes clutter from the object creation
+  * tag.  This is especially true if the handler code is complex.</p>
+  *
+  * <p><em>Note:</em> When creating a delegate explicitly using
+  * <code>new LzDelegate</code>, <code>methodName</code> must be a
+  * method of one parameter, because it will be invoked by <xref
+  * linkend="LzDelegate.prototype.execute" /> with one argument
+  * (typically the argument that is passed to <xref
+  * linkend="LzEvent.prototype.sendEvent" /> when that delegate is
+  * registered to receive events).  Similarly, when specifying an
+  * event handler method using <code>&lt;handler
+  * ... method="methodName" /&gt;</code>, the handler method must
+  * accept one argument (even if it ignores it).</p>
+  *
+  * <p>See also the code examples at <xref linkend="LzEvent"/> and the
+  * Developer's Guide for more detailed information on using events
+  * and delegates.</p>
+  *
+  * @shortdesc The receiver in Laszlo's point-to-point event system.
+  * @lzxname handler
+  * @see LzEvent
+  *
+  */
+public final class LzDelegate {
+  /** @access private */
+  var __delegateID:int = 0;
+  /** @access private */
+  var __events:Array = null;
+
+  /**
+   * Create an LzDelegate
+   *
+   * @param LzEventable context: The object whose method will be called by execute.
+   * @param String methodName: The name of the method to call (a
+   * string). Must be a method of one parameter.
+   * @param LzEventable eventSender: (Optional) The sender of the event to register the
+   * new delegate for.
+   * @param String eventName: (Optional, but required if eventSender is used) The name
+   * of the event to register the new delegate for.
+   *
+   * @devnote [20010-04-06 ptw] (LPP-7344) We intentionally do not
+   * declare the type of context and eventSender so that we can offer
+   * a more helpful diagnositic when they are not LzEventable's (e.g.,
+   * a generated constraint on a property of a non-node).
+   */
+  public function LzDelegate (context/*:LzEventable*/, methodName:String, eventSender/*:LzEventable*/ = null, eventName:String = null) {
+    super();
+
+    if (! (context is LzEventable)) {
+      if ($swf8) {
+        if (context is Object) {
+          // We proceed anyways, for back-compatibility with the swf8
+          // kernel
+        } else if ($debug) {
+          Debug.error('Not creating delegate:  invalid context: %.64w.%s', context, methodName);
+          return;
+        }
+      } else if ($debug) {
+        Debug.error("Not creating delegate: invalid context: %.64w.%s", context, methodName);
+        return;
+      }
+    }
+
+    if ((context == null) || (context['__LZdeleted'])) {
+        if ($debug) {
+          Debug.warn('Not creating delegate:  %s context %.64w.%s', ((context == null) ? 'null' : 'deleted'), context, methodName);
+        }
+        return;
+    }
+
+    this.c = context;
+    var m:* = context[methodName];
+    if (! (m is Function)) {
+      if ($debug) {
+        Debug.error("Not creating delegate:  invalid method %.64w.%=s (must be a Function)", context, m, methodName);
+      }
+      return;
+    }
+    this.m = m;
+    if (m.length != 1) {
+      if ($debug) {
+        Debug.warn("Invalid delegate method %.64w.%=s (must accept one argument)", context, m, methodName);
+      }
+      if ($as3) {
+        var a:Array = new Array(m.length);
+        this.m = function (ignore:*) :* { return m.apply(this, a); }
+      }
+    }
+
+    if (eventSender != null) {
+      this.register( eventSender, eventName );
+    }
+
+    this.__delegateID = LzDelegate.__nextID++;
+  }
+
+/** @access private */
+    static var __nextID:int = 1;
+
+/** The context in which to call the method
+ * @access private
+ * @type Object
+ */
+var c:LzEventable;
+
+/** The method to call (will be applied to context)
+ * @access private
+ * @type Function
+ */
+var m:Function;
+
+/** 
+  * Signals whether a call to unregisterAll() is needed, used by swf8 sprites
+  * @access private 
+  */
+var hasevents:Boolean = false;
+/** @access private */
+var enabled:Boolean = true;
+/** @access private */
+var event_called:Boolean = false;
+
+/**
+  * Executes the named method in the given context with the given data. Returns
+  * the result of the call.
+  *
+  * @param * eventValue: The data with which to call the method.
+  * @return *: The value returned by the method call.
+  */
+public function execute (eventValue:*) :* {
+    // Don't execute if context has been deleted, as that could
+    // 'resurrect' the deleted view, causing a memory leak
+    // Usually this is because a deleted view has idle or timer events
+    // still registered.
+    var context:LzEventable = this.c;
+    if (this.enabled && context) {
+        if (context['__LZdeleted']) {
+            return;
+        }
+        var m:Function = this.m;
+        return m && m.call(context, eventValue);
+    }
+}
+
+/**
+  * Registers the delegate for the named event in the given
+  * context.
+  * <para>An event is initially declared to contain the sentinel
+  * value LzDeclaredEvent which is of the correct type, but does not
+  * actually support registering for and sending events.  When a
+  * delegate attempts to register on this sentinel, the sentinel will
+  * automatically be replaced with a functional LzEvent.</para>
+  *
+  * <para>The valid event logic is duplicated in
+  * NodeModel#addHandlerInternal (to give better location information
+  * for handler references).</para>
+  *
+  * @param LzEventable eventSender: The object which publishes the event.
+  * @param String eventName: The name of the event to register for.
+  *
+  * @devnote [20010-04-06 ptw] (LPP-7344) We intentionally do not
+  * declare the type of eventSender so that we can offer a more
+  * helpful diagnositic when they are not LzEventable's (e.g., a
+  * generated constraint on a property of a non-node).
+  */
+  public function register (eventSender/*:LzEventable*/, eventName:String) :void {
+    var compatibilitymode = false;
+    if (! (eventSender is LzEventable)) {
+      if ($swf8) {
+        if (eventSender is Object) {
+          // We proceed anyways, for back-compatibility with the swf8
+          // kernel
+          compatibilitymode = true;
+        } else if ($debug) {
+          Debug.error('Not registering %.64w: invalid event sender: %.64w.%s', this, eventSender, eventName);
+          return;
+        }
+      } else if ($debug) {
+        Debug.error('Not registering %.64w: invalid event sender: %.64w.%s', this, eventSender, eventName);
+        return;
+      }
+    }
+
+    if ((this.c == null) || (this.c['__LZdeleted'])) {
+        // don't register to event when context is deleted
+        return;
+    }
+
+    // Delegates between LzEventables can cause memory leaks.  We record these 
+    // delegates so they can be cleaned up in destroy()
+    if (eventSender !== this.c && (! compatibilitymode)) {
+      // Don't track more than once
+      if (this.__tracked == false) {
+        this.__tracked = true;
+        var _dels:Array = this.c['__delegates'];
+        if (_dels == null) {
+          this.c.__delegates = [ this ];
+        } else {
+          _dels.push( this );
+        }
+      }
+    }
+
+    var anEvent:* = eventSender[ eventName ];
+    if (anEvent is LzEvent){
+      (anEvent cast LzEvent).addDelegate( this );
+    } else {
+      if (anEvent && (! (anEvent is LzDeclaredEventClass))) {
+        if ($debug) {
+          Debug.error("Not registering %.64w:  invalid event: %.64w.%=s", this, eventSender, anEvent, eventName);
+        }
+        return;
+      }
+      var eventclass = ( (anEvent && anEvent.actual) || LzEvent);
+      anEvent = new eventclass( eventSender, eventName, this );
+    }
+
+    var events:Array = this.__events;
+    if (events == null) {
+        this.__events = [anEvent];
+    } else {
+        events.push(anEvent);
+    }
+    this.hasevents = true;
+  }
+
+/**
+  * Unregisters the delegate for all of the events it is registered for.
+  */
+public function unregisterAll () :void {
+    if (this.hasevents == false) return;
+// Caused too many warnings for datapaths, e.g. demos/amazon/amazon.lzx
+//    if ($debug) {
+//        if (this.c == null) {
+//            Debug.warn('This delegate has already been destroyed, so there is no need for a call to unregisterAll() in this case.  LzDelegates are automatically destroyed by the event system when their context is destroyed.');
+//        }
+//    }
+    var events:Array = this.__events;
+    for (var i:int = 0, l:int = events.length; i < l; i++) {
+        events[ i ].removeDelegate( this );
+    }
+    events.length = 0;
+    this.hasevents = false;
+}
+
+/**
+  * Unregisters the delegate for the given event
+  * @param LzEvent event: The event to unregister the delegate from.
+  *                       (e.g.  myview.onmouseup)
+  */
+public function unregisterFrom (event:LzDeclaredEventClass) :void {
+    if (this.hasevents == false) return;
+    var events:Array = this.__events;
+    for (var i:int = 0, l:int = events.length; i < l; i++) {
+        var ev:LzEvent = events[ i ];
+        if (ev === event) {
+            ev.removeDelegate( this );
+            events.splice(i, 1);
+        }
+    }
+    this.hasevents = events.length > 0;
+}
+
+/**
+  * Disables the delegate until enable method is called.
+  */
+public function disable () :void {
+    this.enabled = false;
+}
+
+/**
+  * Enables a delegate that has been disabled
+  */
+public function enable () :void {
+    this.enabled = true;
+}
+
+  /**
+   * Drain a deferred delegates queue
+   * @access private
+   */
+  static function  __LZdrainDelegatesQueue (evq:Array) :void {
+    var n:int = evq.length;
+    var i:int = 0;
+    if (i < n) {
+      var calledDelegates:Array = new Array;
+      var lockedEvents:Array = new Array;
+      while (i < n) {
+        var e:LzEvent = evq[i];
+        var d:LzDelegate = evq[i+1];
+        var eventValue:* = evq[i+2];
+        // Mimic sendEvent which prohibits events and delegates from
+        // recursing
+        e.locked = true;
+        e.ready = false;
+        lockedEvents.push(e);
+        if (! d.event_called) {
+          d.event_called = true; //this delegate has been called
+          calledDelegates.push( d );
+          // d.execute( eventValue ); inlined
+          if (d.c && (! d.c.__LZdeleted) && d.m) { d.m.call(d.c, eventValue); }
+        }
+        i += 3;
+      }
+      while (d = calledDelegates.pop()) {
+        d.event_called = false;
+      }
+      while (e = lockedEvents.pop()) {
+        e.locked = false;
+        e.ready = (e.delegateList.length != 0);
+      }
+    }
+    evq.length = 0;
+  }
+
+/** @access private */
+public function toString (){
+    return ("Delegate for " + this.c + " calls " + this.m + " " + this.__delegateID );
+}
+
+/** 
+  * If true, the delegate is being tracked by __delegates
+  * @access private
+  */
+private var __tracked = false;
+ 
+/** 
+  * If true, the delegate has been destroyed
+  * @access private
+  */
+public var __LZdeleted = false;
+/**
+  * Unregisters from any events and clears the delegate state
+  * @access private
+  */
+public function destroy ():void {
+    if (this.__LZdeleted == true) return;
+    this.__LZdeleted = true;
+    if (this.hasevents) this.unregisterAll();
+    this.hasevents = false;
+    this.__events = null;
+    this.c = null;
+    this.m = null;
+}
+
+if ($debug) {
+/**
+  * If debugging, add an informative name
+  * @access private
+  */
+  LzDelegate.prototype._dbg_name = function (){
+    var name:String = Debug.formatToString("%.48w/<handler", this.c);
+    var method:String = Debug.functionName(this.m);
+    if (method.indexOf('$') != 0) {
+      name += " method=" + Debug.stringEscape(method, true);
+    }
+    if (this.__events is Array) {
+      var ev0:LzEvent = this.__events[0];
+      if (ev0) {
+        name += Debug.formatToString(" name='%s'", ev0._dbg_eventName);
+        if (ev0._dbg_eventSender !== this.c) {
+          name += Debug.formatToString(" reference='%.64w'", ev0._dbg_eventSender);
+        }
+        if (this.__events[1]) {
+          name += " \u2026";
+        }
+      }
+    }
+    name += ">";
+    return name;
+}
+}
+
+} // End of LzDelegate
+lz.Delegate = LzDelegate;  // publish
+
+
+/**
+  * <p>Events underly most of the functionality in OpenLaszlo
+  * applications.  Unlike events in similar systems, OpenLaszlo's
+  * events are point-to-point, meaning that there is no general
+  * broadcast mechanism for events, and events do not trickle up or
+  * down the instance hierarchy. Instead, objects called <xref
+  * linkend="LzDelegate"/>s use <xref
+  * linkend="LzDelegate.prototype.register"/> to register to receive
+  * events.</p>
+  *
+  * <p>An event is implicitly declared for every attribute of a class
+  * or instance and sent when that attribute is changed.  So, for
+  * instance, if a class has an attribute <code>foo</code>, you can
+  * receive events when foo changes by registering for the
+  * <code>onfoo</code> event.</p>
+  *
+  * <p>Events are sent with a single argument, which usually conveys
+  * information about the property that changed. The default behavior
+  * of the <xref linkend="LzEventable.prototype.setAttribute"/> method is
+  * to set the named property and send the event called "on" +
+  * property. This is general mechanism that updates constraints in a
+  * OpenLaszlo programs. For instance, when a view changes its
+  * <attribute>x</attribute> position, it sends the event
+  * <event>onx</event> with the new value for its
+  * <attribute>x</attribute> property.</p>
+  *
+  * <example class="program"
+  *          title="Event sending in response to setting an attribute"><![CDATA[
+  * <canvas height="40">
+  *   <simplelayout/>
+  *   <button name="eventSender"
+  *           onmouseover="this.setAttribute('avalue', this.avalue + 10)"
+  *           onmouseout="this.setAttribute('avalue', this.avalue + 5)">
+  *     <attribute name="avalue" value="0"/>
+  *   </button>
+  *
+  *   <view bgcolor="red" width="20" height="20">
+  *     // Handle the implicit `onavalue` event of the `eventSender` button
+  *     <handler name="onavalue" reference="eventSender" args="v">
+  *       this.setAttribute('x' , v);
+  *     </handler>
+  *
+  *   </view>
+  * </canvas>
+  *]]> </example>
+  *
+  * <p>An event can be explicitly declared using the <tagname
+  * link="true">event</tagname> tag and the <method>sendEvent</method>
+  * method is used to explicitly send an event.</p>
+  *
+  * <example class="program"
+  *          title="A simple example of publishing and listening for a custom event"><![CDATA[
+  * <canvas height="140" debug="true">
+  *   <simplelayout/>
+  *   <button name="eventSender"
+  *           onmouseover="this.customevent.sendEvent('over')"
+  *           onmouseout="this.customevent.sendEvent('out')">
+  *     <event name="customevent"/>
+  *   </button>
+  *
+  *   <view bgcolor="red" width="20" height="20">
+  *     <handler name="customevent" reference="eventSender" args="event">
+  *       Debug.debug("event: %s", event);
+  *       this.setAttribute('x', this.x + 10);
+  *     </handler>
+  *   </view>
+  * </canvas>
+  * ]]></example>
+  *
+  * <p>Sending an event that no delegate is listening for has nearly
+  * no cost, thus objects can freely publish events.</p>
+  *
+  * <p>See the Developer's Guide for more detailed information on
+  * using events and delegates.</p>
+  *
+  * @shortdesc The sender in Laszlo's point-to-point event system.
+  * @lzxname event
+  * @see LzDelegate
+  *
+  * @devnote NOTE: [2009-04-23 ptw]  This really wants to be final, we
+  * don't expect user programs to subclass it; but it is subclassed in
+  * LzIdle to create an auto-registering event and Flex lacks `sealed`.
+  */
+public class LzEvent extends LzDeclaredEventClass {
+    /** @access private */
+    var delegateList:Array = null;
+    if ($debug) {
+      /** @access private */
+      var _dbg_eventSender:*;
+      /** @access private */
+      var _dbg_eventName:String;
+    }
+    if ($profile) {
+      /** @access private */
+      var _profile_name:String;
+    }
+
+  /**
+   * @param LzEventable eventSender: The owner of this event
+   * @param String eventName: The name of this event.
+   * @access private
+   */
+  function LzEvent (eventSender:LzEventable, eventName:String, d:* = null) {
+    super();
+    var _evs:Array = eventSender['_events'];
+    if (_evs == null) {
+      eventSender._events = [ this ];
+    } else {
+      _evs.push( this );
+    }
+    eventSender[ eventName ] = this;
+    if (d) {
+      this.delegateList = [d];
+      this.ready = true;
+    } else {
+      this.delegateList = [];
+    }
+    // If debugging or profiling, add an informative name
+    if ($debug) {
+      this._dbg_eventSender = eventSender;
+      this._dbg_eventName = eventName;
+    }
+    if ($profile) {
+      this._profile_name = eventSender._profile_typename + '/' + eventName;
+    }
+  }
+
+/** True when event is being sent.
+  * @type Boolean
+  * @access private
+  */
+    var locked:Boolean = false;
+
+/**
+  * Adds the given delegate to the event's delegate list. Should
+  * rarely be called explicitly -- it is used by
+  * <b><i>LzDelegate</i>.register</b> and LzIdle.
+  *
+  * @param LzDelegate d: The delegate to add to the list of delegates called 
+  * by the event.
+  * @access private
+  */
+public function addDelegate (d:LzDelegate) :void {
+    this.ready = true;
+    this.delegateList.push(d);
+}
+
+/**
+ * Sends an event to all the delegates that are registered to receive
+ * this event.  Each registered delegate's method will be called with
+ * the single argument of sendEvent.
+ *
+ *  @param * eventValue: (Optional) The value to pass when executing
+ *  the delegates registered to receive the event.  If omitted,
+ *  <code>null</code> will be sent.
+ */
+public override function sendEvent (eventValue:* = null) :void {
+    if ( this.locked || (! this.ready) ) { return; }
+    // Our event system does not recurse
+    this.locked = true;
+    // You can't be ready if you are locked, this will avoid callers
+    // making a pointless call
+    this.ready = false;
+
+    if ($profile) {
+        var nm:* = this._profile_name;
+        if (nm) {
+            Profiler.event(nm, 'calls');
+        }
+    }
+
+    var dlist:Array = this.delegateList;
+    var calledDelegates:Array = new Array;
+    var d:LzDelegate;
+    var i:int = dlist.length;
+    while (--i >= 0) {
+        d = dlist[ i ];
+        //pointer may be bad due to deletions
+        if (d && d.enabled && (! d.event_called)) {
+            d.event_called = true; //this delegate has been called
+            calledDelegates.push( d );
+            // We _do_ worry about deleted contexts to make sure that
+            // executing a delegate does not resurrect one!
+            var c:LzEventable = d.c;
+            if (c && (! c.__LZdeleted)) {
+                if (c.__LZdeferDelegates) {
+                  var evq:Array = c.__LZdelegatesQueue;
+                  if (!evq) { 
+                    c.__LZdelegatesQueue = [this, d, eventValue]; 
+                  } else {
+                    evq.push(this, d, eventValue);
+                  }
+                } else if (d.m) {
+                  // d.execute( eventValue ); inlined
+                  d.m.call(c, eventValue);
+                }
+            }
+        }
+    }
+
+    while (d = calledDelegates.pop()) {
+        d.event_called = false;
+    }
+
+    if ($profile) {
+        var nm:* = this._profile_name;
+        if (nm) {
+            Profiler.event(nm, 'returns');
+        }
+    }
+
+    this.locked = false;
+    this.ready = (dlist.length != 0);
+}
+
+/**
+  * Removes the delegate from the delegate list. In practice, this is rarely
+  * called explicitly, since it does not update the delegate's list of stored
+  * events. Right now, this is called only by <b><i>LzDelegate</i>.
+  * unregisterAll</b>
+  *
+  * @param LzDelegate d: The delegate to remove from the delegateList.
+  * @access private
+  */
+public override function removeDelegate (d:LzDelegate = null) :void {
+    var dlist:Array = this.delegateList;
+    for (var i:int = 0, l:int = dlist.length; i < l; i++) {
+        if (dlist[i] === d) {
+            dlist.splice(i, 1);
+            break;
+        }
+    }
+    this.ready = (dlist.length != 0);
+}
+
+/**
+  * Removes all delegates from this event
+  * @access private
+  */
+public override function clearDelegates () :void {
+    var dlist:Array = this.delegateList;
+    while (dlist.length) {
+        dlist[ 0 ].unregisterFrom( this );
+    }
+    this.ready = false;
+}
+
+/**
+  * Returns the number of delegates registered for the event
+  * @return Number: The number of delegates registered for the event.
+  * @access private
+  */
+override public function getDelegateCount () :int {
+    return this.delegateList.length;
+}
+
+/** @access private */
+override public function toString (){
+    return ( "LzEvent");
+}
+
+if ($debug) {
+/**
+  * If debugging, add an informative name
+  * @access private
+  */
+LzEvent.prototype._dbg_name = function (){
+    return Debug.formatToString("%0.48w/<event name='%s'>", this._dbg_eventSender, this._dbg_eventName);
+}
+}
+
+} // End of LzEvent
+lz.Event = LzEvent;  // publish

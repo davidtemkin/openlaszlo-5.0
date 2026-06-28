@@ -34,10 +34,14 @@ function compilerVersion() {
 }
 const cache = new DiskCache(CACHE_DIR, compilerVersion());
 
-export function compileApp(srcAbs, { debug = false } = {}) {
+export function compileApp(srcAbs, { debug = false, backtrace = false, profile = false } = {}) {
+  // backtrace (?lzbacktrace) implies debug; it adds the DEBUG_BACKTRACE per-function
+  // call-stack frame instrumentation and pairs with the lfc-backtrace.js runtime.
+  // profile (?profile) is independent of debug; it cache-keys the build and pairs with
+  // the lfc-profile.js runtime (every LFC function $lzprofiler-metered, auto-started).
   return compileFileCached(
     srcAbs,
-    { lpsHome: RUNTIME, sprites: "none", proxied: false, debug },
+    { lpsHome: RUNTIME, sprites: "none", proxied: false, debug: debug || backtrace, backtrace, profile },
     cache,
   );
 }

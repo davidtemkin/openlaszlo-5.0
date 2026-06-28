@@ -1,0 +1,3952 @@
+/**
+  *
+  * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @affects lzview
+  * @access public
+  *
+  * @topic LFC
+  * @subtopic Views
+  */
+
+/**
+  * <p>The <tagname>view</tagname> is the most basic viewable element in an
+  * OpenLaszlo application. Anything that is displayed on the canvas is a view
+  * or extends the view class. A view is a rectangle, which can be visible or invisible, and which can contain other views or display "resources" such as images,
+  * .swf files, or other supported media. One view controls one
+  * displayable resource. The view system is strictly hierarchical; that is, each <code>view</code> has
+  *  a single parent but can have multiple children.
+  * 
+  * </p>
+  * <p>
+  * The following code shows one view nested inside another:</p>
+  *   
+  * <example class="code">
+  * &lt;canvas height="50"&gt;
+  *   &lt;view width="50" height="50" bgcolor="red"&gt;
+  *     &lt;view width="30" height="30" bgcolor="blue"/&gt;
+  *   &lt;/view&gt; 
+  * &lt;/canvas&gt;</example>
+  * 
+  * <p><tagname>view</tagname> extends <sgmltag class="element" role="LzNode">&lt;node&gt;</sgmltag>,
+  * which is the fundamental abstract class of LZX.</p>
+  * 
+  * <p>For an introduction to views see the <a
+  * href="${dguide}developers.tutorials.html">OpenLaszlo tutorials</a>, particularly <a
+  * href="${tutorials}laszlo_basics.html">OpenLaszlo Basics</a> and <a
+  * href="${tutorials}views-tutorial.html">Introduction to Views</a>. For a more
+  * rigorous explanation of views see the <a href="${dguide}">Application Developer's Guide</a>, particularly the <a
+  * href="${dguide}views.html">Views</a> chapter.</p>
+  * 
+  * @shortdesc The most basic viewable element.
+  * @lzxname view
+  * 
+  */
+dynamic class LzView extends LzNode {
+
+    /** @access private
+      * @modifiers override 
+      */
+    function LzView ( parent:LzNode? = null , attrs:Object? = null , children:Array? = null, instcall:Boolean  = false) {
+        super(parent,attrs,children,instcall);
+    }
+
+
+/** @access private
+  * @modifiers override 
+  */
+static var tagname = 'view';
+    /** @access private */
+    static var attributes = new LzInheritedHash(LzNode.attributes);
+
+    /** @access private */
+    var __LZlayout;
+
+    /** @access private */
+    var __LZstoredbounds;
+
+    /** @access private */
+    var __movecounter = 0;
+    /** @access private */
+    var __mousecache = null;
+
+    /** If true, this view is currently playing.
+      * @type Boolean
+      * @lzxtype boolean
+      * @keywords readonly
+      * @lzxdefault false
+      */
+    var playing = false;
+
+
+/** @access private */
+var _visible;
+
+/** @access private */
+function $lzc$set_visible( amVisible ) {
+    if (this._visible == amVisible) return;
+    this._visible = amVisible;
+
+    // make us compatible with the new 'visibility' attribute
+    if (amVisible) {
+        var v = "visible";
+    } else if (amVisible == null) {
+        if ($debug) {
+          Debug.info("%w.%s(%w) is deprecated.  Perhaps you meant %w.%s(%s)?  If not, use %w.%s('collapse').",
+                     this, arguments.callee, amVisible, this, arguments.callee, false, this, this.setVisibility);
+        }
+        var v = "collapse";
+    } else {
+        var v = "hidden";
+    }
+    this.visibility = v;
+
+    if (this.onvisibility.ready) this.onvisibility.sendEvent( this.visibility );
+    this.__LZupdateShown();
+}
+
+
+/** Event called when this view adds a subview   
+  * @access public
+  * @lzxtype event
+  */
+var onaddsubview = LzDeclaredEvent;
+/** The onblur event is sent when an element loses focus either
+  * by the pointing device or by tabbing navigation.
+  * @lzxtype event
+  * @access public
+  */
+var onblur = LzDeclaredEvent;
+/** The onclick event is sent when the pointing device button is
+  * clicked over an element.
+  * @lzxtype event  
+  * @access public
+  */
+var onclick = LzDeclaredEvent;
+/** Event for changes to view's <attribute>clickable</attribute> property 
+  * @lzxtype event
+  * @access public
+  */
+var onclickable = LzDeclaredEvent;
+/** The onfocus event is sent when an element receives focus
+  * either by the pointing device or by tabbing navigation.
+  * @lzxtype event  
+  * @access public
+  */
+var onfocus = LzDeclaredEvent;   // From LzFocus
+/** Sent onidle while view is playing its resource
+  * @lzxtype event
+  * @access public
+  */   
+var onframe = LzDeclaredEvent;
+
+/** Event for changes to view's <attribute>height</attribute> property 
+  * @lzxtype event
+  * @access public
+  */
+var onheight = LzDeclaredEvent;
+
+/** The onkeyup event is sent when this view has the focus and a
+  * key is released. This event is sent with the keycode for the key that 
+  * went up.
+  * @access public
+  * @lzxtype event
+  */
+var onkeyup = LzDeclaredEvent;   // From LzFocus
+
+/** The onkeydown event is sent when this view has the focus and
+  * a key is pressed down.  Multiple key down events are sent for a
+  * key that is held down.  If you want the script executed only
+  * once, use onkeyup. This event is sent with the keycode for the key that is
+  * down.
+  * @access public
+  * @lzxtype event
+  */
+var onkeydown = LzDeclaredEvent; // From LzFocus
+/** Sent when the view sets its frame (resource number) to the last
+  * frame. This can be used to find out when a streaming media clip is
+  * done playing.
+  * @lzxtype event
+  * @access public
+  */
+var onlastframe = LzDeclaredEvent;
+/** Send when the view finishes loading media.
+  * @lzxtype event
+  * @access public
+  */
+var onload = LzDeclaredEvent;
+
+/** Sends a percentage (0-1) reflecting the number of frames downloaded.
+  * @lzxtype event
+  * @access public
+  */
+var onframesloadratio = LzDeclaredEvent;
+
+/** Sends a percentage (0-1) reflecting the amount of a media file that's been downloaded.
+  * @lzxtype event
+  * @access public
+  */
+var onloadratio = LzDeclaredEvent;
+
+/** Sent when there is an error loading the view's resource.
+  * The argument sent with the event is an error string.
+  * @access public
+  * @lzxtype event
+  */
+var onerror = LzDeclaredEvent;
+
+/** Sent when the request to load media for the view times
+  * out
+  * @lzxtype event
+  * @access public
+  */
+var ontimeout = LzDeclaredEvent;
+/** The onmousedown event is sent when the pointing device button is
+  * pressed over an element.
+  * @access public
+  * @lzxtype event
+  */
+var onmousedown = LzDeclaredEvent;
+
+/** The onmouseout event is sent when the pointing device is moved
+  * so that is is no longer over an element.
+  * @lzxtype event
+  * @access public
+  */
+var onmouseout = LzDeclaredEvent;
+
+/** The onmouseover event is sent when the pointing device is
+  * moved onto an element.
+  * @lzxtype event  
+  * @access public
+  */
+var onmouseover = LzDeclaredEvent;
+
+/** Sent when the mouse is over a view that is registered to
+  * an active track group.
+  * @access public
+  * @lzxtype event
+  */
+var onmousetrackover = LzDeclaredEvent;
+
+/** Sent when the mouse button is released over a view that
+  * is registered to an active track group.
+  * @access public
+  * @lzxtype event
+  */
+var onmousetrackup = LzDeclaredEvent;
+
+/** Sent when the mouse leaves the visible area of a view
+  * that previously sent an 'ontrackover' event.
+  * @access public
+  * @lzxtype event
+  */
+var onmousetrackout = LzDeclaredEvent;
+
+/** The onmouseup event is sent when the pointing device button is
+  * released over an element.
+  * @lzxtype event
+  * @access public
+  */
+var onmouseup = LzDeclaredEvent;
+
+/** The onmousedragin event is sent when the pointing device button has moved 
+  * off the element and back on again while the button is down.
+  * @lzxtype event
+  * @access public
+  */
+var onmousedragin = LzDeclaredEvent;
+
+/** The onmousedragout event is sent when the pointing device is moved off 
+  * the element while the button is down.
+  * down. 
+  * @lzxtype event
+  * @access public
+  */
+var onmousedragout = LzDeclaredEvent;
+
+/** The onmouseup event is sent when the pointing device button is released 
+  * outside the element it went down on.
+  * @lzxtype event
+  * @access public
+  */
+var onmouseupoutside = LzDeclaredEvent;
+
+/** 
+  * Sent when a view changes its opacity 
+  * @lzxtype event
+  * @access public
+  */
+var onopacity = LzDeclaredEvent;
+
+/**
+ * Sent when a view begins playing its resource
+  * @lzxtype event 
+  * @access public
+  */
+var onplay = LzDeclaredEvent;
+
+/** 
+  * Event called when this view removes a subview 
+  * @lzxtype event
+  * @access public
+  */ 
+var onremovesubview = LzDeclaredEvent;
+
+/** @access private 
+  * @lzxtype event 
+  */
+var onresource = LzDeclaredEvent;
+/** @access private 
+  * @lzxtype event 
+  */
+var onresourceheight = LzDeclaredEvent;
+/** @access private 
+  * @lzxtype event 
+  */
+var onresourcewidth = LzDeclaredEvent;
+/** @access private 
+  * @lzxtype event 
+  */
+var onrotation = LzDeclaredEvent;
+/**
+  * Sent when a view's resource that is capable of playing is
+  * stopped. This is only called if stop is called directly; when a resource
+  * hits its last frame, the lz.view event onlastframe is called.
+  * @access public
+  * @lzxtype event 
+  */
+var onstop = LzDeclaredEvent;
+/** @access private 
+  * @lzxtype event 
+  */
+var ontotalframes = LzDeclaredEvent;
+/** @access private 
+  * @lzxtype event 
+  */
+var onunstretchedheight = LzDeclaredEvent;
+/** @access private 
+  * @lzxtype event 
+  */
+var onunstretchedwidth = LzDeclaredEvent;
+
+/** Sent when the view changes visibility (true/false)
+  * @lzxtype event
+  * @access public
+  */
+var onvisible = LzDeclaredEvent;
+
+/** @access private 
+  * @lzxtype event 
+  */
+var onvisibility = LzDeclaredEvent;
+
+/** event for changes to view's <attribute>width</attribute> property 
+ * @lzxtype event 
+ * @access public
+ */
+var onwidth = LzDeclaredEvent;
+
+/** event for changes to view's <attribute>x</attribute> property 
+ * @lzxtype event
+  * @access public
+ */
+var onx = LzDeclaredEvent;
+/** @access private 
+  * @lzxtype event 
+  */
+var onxoffset = LzDeclaredEvent;
+
+/** event for changes to view's <attribute>y</attribute> property 
+  * @lzxtype event
+  * @access public
+  */
+var ony = LzDeclaredEvent;
+/** @access private 
+  * @lzxtype event 
+  */
+var onyoffset = LzDeclaredEvent;
+
+/** @access private 
+  * @lzxtype event 
+  */
+var onfont = LzDeclaredEvent;
+
+/** @access private 
+  * @lzxtype event 
+  */
+var onfontsize = LzDeclaredEvent;
+
+/** @access private 
+  * @lzxtype event 
+  */
+var onfontstyle = LzDeclaredEvent;
+
+/**
+  * The ondblclick event is sent when the pointing device button
+  * is double clicked over an element.
+  *
+  * @devnote Sent when the mouse is doubleclicked over the view,
+  * but only if anyone is listening for the event. A view which is clicked
+  * twice in rapid succession, but has no delegates registered for its
+  * ondblclick event, will simply send two click events.
+  * The view's doubleclick time can be adjusted by setting its
+  * DOUBLE_CLICK_TIME attribute
+  * @access public
+  * @lzxtype event
+  */
+var ondblclick = LzDeclaredEvent;
+/** @access private */
+var DOUBLE_CLICK_TIME = 500;
+
+
+/** The onclip event is sent when the clip attribute of 
+  * a view is changed
+  * @lzxtype event  
+  * @access public
+  */
+var onclip = LzDeclaredEvent;
+
+/** An object containing properties corresponding to the current runtime's 
+  * capabilities.  For example, capabilities.rotation is true in swf and 
+  * recent versions of Safari and Firefox.
+  * @access public 
+  * @type Object
+  * @keywords read-only
+  */
+var capabilities;
+
+/**
+  * Base level constructor for views. See LzNode.<method
+  * classname="LzNode">construct</method> for more on this.
+  * @param LzView parent: Parent view to attach to
+  * @param Object args: Initialization args
+  * @access private
+  */
+override function construct ( parent , args) {
+    super.construct( (parent ? parent : canvas), args );
+
+    this.mask = this.immediateparent.mask;
+
+    this.__makeSprite(args);
+    // Cache capabilities
+    this.capabilities = this.sprite.capabilities;
+
+    if ($debug) {
+        if (this.capabilities.setid) {
+            this.sprite.setID(this._dbg_name());
+        }
+    }
+
+    /*
+     * Process arguments that need to be handled either early, or in a
+     * particular order
+     */
+    // See if we have a defined width/height
+    if (args['width'] != null || this.__LZhasConstraint('width')) {
+        this.hassetwidth = true;
+        this.__LZcheckwidth = false;
+    }
+    if (args['height'] != null || this.__LZhasConstraint('height')) {
+        this.hassetheight = true;
+        this.__LZcheckheight = false;
+    }
+    if (args['clip']){
+        this.clip = args.clip;
+        this.makeMasked();
+    }
+    var ignore = LzNode._ignoreAttribute;
+    if (args['stretches'] != null){
+        this.$lzc$set_stretches(args.stretches);
+        args.stretches = ignore;
+    }
+    // NOTE: [2010-06 max] I seem to remember stretches must come first for IE 
+    // DHTML...
+    if (args['resource'] != null){
+        this.$lzc$set_resource( args.resource );
+        args.resource = ignore;
+    }
+
+    if($debug){
+        if(args['valign'] && args['y']){
+            Debug.warn(this, "y attribute ignored; superseded by valign constraint.");
+        }
+        if(args['align'] && args['x']){
+            Debug.warn(this, "x attribute ignored; superseded by align constraint.");
+        }
+    }
+}
+
+/** Receive attribute/event change from sprites
+  * @param String attrname: Attribute name
+  * @param value: Value to set to
+  * @access private
+  */
+function __spriteAttribute(attrname:String, value){
+    if (this[attrname]) this.setAttribute(attrname, value);
+}
+
+/**
+  * Called to create the sprite object.  May be overridden to use a specific 
+  * version, e.g. LzTextSprite();
+  * @access private
+  */
+function __makeSprite(args) {
+    this.sprite = new LzSprite(this, false);
+}
+
+/**
+  * Called right before the view is shown. See <method
+  * ><link linkend="LzNode.prototype.init">lz.node.init()</link></method> for more.
+  * 
+  * @access public
+  */
+override function init( ) {
+    if (this.__updateshadowoninit) {
+        delete this.__updateshadowoninit;
+        this.__updateShadow();
+    }
+    if (this.sprite) {
+        this.sprite.init(this.visible);
+    }
+}
+
+
+/**
+  * Called when a subview is added to the view.
+  * @access private
+  * @param LzView s: The new subview
+  */
+function addSubview ( s ){
+    if ( s.addedToParent ) return;
+
+    if (this.sprite) {
+        this.sprite.addChildSprite(s.sprite);
+    }
+
+    // Don't use the prototype's default subviews array, it is a
+    // sentinel which lives on the prototype and is shared by all
+    // instances, make a new one if you want to push a view.
+    if (this.subviews.length == 0) {
+        // Make our own subviews array instance.
+        this.subviews = [];
+    }
+    this.subviews.push( s );
+
+    s.addedToParent = true;
+
+    if (this.__LZcheckwidth)
+        this.__LZcheckwidthFunction( s );
+    if (this.__LZcheckheight)
+        this.__LZcheckheightFunction( s );
+    
+    if (this.onaddsubview.ready) this.onaddsubview.sendEvent( s );
+}
+
+/**
+  * Called when the view itself and all its children have finished
+  * instantiating.
+  * @access private
+  */
+override function __LZinstantiationDone () : void {
+    var vip:LzView = (this.immediateparent cast LzView);
+    if (vip) {
+        (vip).addSubview( this );
+    } 
+
+    super.__LZinstantiationDone();
+}
+
+/** Reference to closest masked view in the hierarchy at or above
+  * this one
+  * @type LzView
+  * @keywords readonly
+  */
+var mask;
+
+/** If true, this view will receive focus events.
+  * See focus manager (lz.Focus) for more details.
+  * @type Boolean
+  * @lzxtype boolean
+  * @lzxdefault false
+  */
+var focusable = false;
+
+/** If true, this view "traps" the focus, for example in a window or dialog.
+  * See focus manager (lz.Focus) for more details.
+  * @type Boolean
+  * @lzxtype boolean
+  */
+var focustrap;
+
+/** Clip the view's contents to its size.
+  * @type Boolean
+  * @lzxtype boolean
+  * @lzxdefault false
+  * @keywords final
+  */
+var clip = false;
+/** @access private */
+function $lzc$set_clip (c:Boolean) {
+    this.clip = c;
+    if (c) {
+        this.makeMasked();
+    } else {
+        this.removeMask();
+    }
+    if (this.onclip.ready) this.onclip.sendEvent( this.clip );
+}
+
+/**
+  * @type String
+  * @lzxtype "left" | "center" | "right" | constraint
+  * @lzxdefault "left"
+  */
+var align = "left";
+
+/** @access private */
+function $lzc$set_align(align) {
+  if (this.align == align) return;
+  if ($debug) {
+    var view = this;
+  }
+  function map (align) {
+    switch (align) {
+      case "center": return "__LZalignCenter";
+      case "right": return "__LZalignRight";
+      case "left": return null;
+    }
+    if ($debug) {
+      Debug.error("%w.setAttribute(%w, %w): Invalid argument.  Valid choices are: 'left', 'center', or 'right'.",
+                    view, 'align', align);
+    }
+  }
+  var from = map(this.align);
+  var to = map(align);
+  if (from != null) {
+    this.releaseConstraintMethod(from);
+  }
+  if (to != null) {
+    this.applyConstraintMethod(to, [this.immediateparent, "width", this, "width"]);
+  } else {
+    this.$lzc$set_x(0);
+  }
+  this.align = align;
+}
+
+/**
+  * Creates a constraint on the view's y position which is a function
+  * of its height and its parent's height. The default for this is
+  * "top".
+  * @type String
+  * @lzxtype "top" | "middle" | "bottom" | constraint
+  * @lzxdefault "top"
+  */
+var valign = "top";
+
+/** @access private */
+function $lzc$set_valign(valign) {
+  if (this.valign == valign) return;
+  if ($debug) {
+    var view = this;
+  }
+  function map (align) {
+    switch (align) {
+      case "middle": return "__LZvalignMiddle";
+      case "bottom": return "__LZvalignBottom";
+      case "top": return null;
+    }
+    if ($debug) {
+      Debug.error("%w.setAttribute(%w, %w): Invalid argument.  Valid choices are: 'top', 'middle', or 'bottom'.",
+                    view, 'valign', valign);
+    }
+  }
+  var from = map(this.valign);
+  var to = map(valign);
+  if (from != null) {
+    this.releaseConstraintMethod(from);
+  }
+  if (to != null) {
+    this.applyConstraintMethod(to, [this.immediateparent, "height", this, "height"]);
+  } else {
+    this.$lzc$set_y(0);
+  }
+  this.valign = valign;
+}
+
+/** The URL from which to load the resource for this
+  * view.  If this attribute is set, the media for the view is loaded
+  * at runtime.
+  * @type String
+  * @lzxtype string
+  * @access public
+  */
+var source;
+/** 
+  * As a setter, this is private. It's not really a setter, because
+  * it talks to a private attribute, "source". 
+  * The method setSource, defined below, is public, but it's not
+  * a setter. [bshine 2007.11.07]
+  * @access private 
+  */ 
+function $lzc$set_source(v) { this.setSource(v); }
+
+/** Setting to a vector-based resource changes the clickable hotspot for the mouse.
+  * Check capabilities.clickregion before using to avoid debugger warnings.
+  * @access public
+  * @type String
+  * @lzxtype string
+  * @runtimes as2 as3
+  */
+var clickregion;   
+/** @access private */
+var onclickregion = LzDeclaredEvent;
+/** @access private */
+function $lzc$set_clickregion(region:*) { 
+    if (this.capabilities.clickregion) {
+        // Avoid unneeded calls
+        if (this.clickregion !== region) {
+            if (! this.clickable) {
+                // clickable is implied
+                this.$lzc$set_clickable(true);
+            }
+            this.sprite.setClickRegion(region);
+        }
+    } else if ($debug) {
+        LzView.__warnCapability('view.clickregion', 'clickregion'); 
+    }
+    this.clickregion = region;
+    if (this.onclickregion.ready) this.onclickregion.sendEvent(region);
+}
+
+/** The cursor to display when the mouse is over this view. Any
+  * resource can be used as a cursor. This attribute can be set for
+  * any view with clickable=true, or any view whose class defaults
+  * clickable to true.
+  * @lzxtype token
+  */
+var cursor;  
+
+/**
+ * The foreground color of any <sgmltag class="element" role="LzText">&lt;text&gt;</sgmltag> or <sgmltag class="element" role="LzInputText">&lt;inputtext&gt;</sgmltag> elements that
+ * appear inside this view.  To apply a color transform, see <code>tintcolor</code>.
+ *
+ * May be set to any valid CSS color specification.  When read, will
+ * be read as the equivalent numeric value.  To retrieve a CSS color
+ * specification, use <code>this.presentAttribute('fgcolor',
+ * 'color')</code>.  Default is <code>0</code> (black).
+ *
+ * @lzxtype color
+ * @type Number
+ * @lzxdefault 0
+ */
+var fgcolor = null;
+/** @access private */
+var onfgcolor = LzDeclaredEvent;
+/** @access private */
+function $lzc$set_fgcolor(c) {
+  if ($debug) {
+    if (this.tintcolor != '') {
+        Debug.warn('Setting fgcolor when tintcolor is already set on', this);
+    }
+  }
+  // This enables setting to symbolic color names, which people expect
+  // to work, although they should use
+  // `this.acceptAttribute('fgcolor', 'color', value)`
+  if ((c != null) && isNaN(c)) {
+    c = lz.Type.acceptTypeValue('color', c, this, 'fgcolor');
+  }
+  this.fgcolor = c;
+  if (this.onfgcolor.ready) this.onfgcolor.sendEvent( c );
+};
+
+/** The font to use for any <sgmltag class="element" role="LzText">&lt;text&gt;</sgmltag> or <sgmltag class="element" role="LzInputText">&lt;inputtext&gt;</sgmltag> elements that
+  * appear inside this view. Like all the font properties
+  * (<code>fontstyle</code> and <code>fontsize</code> too) these
+  * properties cascade down the view hierarchy until a new value is
+  * specified.
+  * @type String
+  * @lzxtype string
+  */
+var font:String;  
+
+/** @access private */
+function $lzc$set_font(val) {
+    this.font = val;
+    if (this.onfont.ready) { 
+        this.onfont.sendEvent( this.font ); 
+    }
+}
+
+/** The style to use to render text fields that appear inside of
+  * this view. One of "plain", "bold" , "italic" or "bolditalic".
+  * @type String
+  * @lzxtype string
+  */
+var fontstyle:String;
+
+/** @access private */
+function $lzc$set_fontstyle(val) {
+    if (val == 'plain' || val == 'bold' || val == 'italic' || val == 'bolditalic' || val == 'bold italic') {
+        this.fontstyle = val;
+        if (this.onfontstyle.ready) { 
+            this.onfontstyle.sendEvent( this.fontstyle ); 
+        }
+    } else if ($debug) {
+        Debug.warn('invalid font style "%s" on %w', val, this);
+    }
+}
+
+/** Pixel size to use to render text which appears inside this
+  * view. The default is 8.
+  * @type Number
+  * @lzxtype size
+  * @devnote - can't set type to :Number because Numbers aren't nullable, so 
+  * fontsize cascading fails in swf10...
+  */
+var fontsize;
+
+/** @access private */
+function $lzc$set_fontsize(val) {
+    if (! (val <= 0 || isNaN(val))) {
+        this.fontsize = val;
+        if (this.onfontsize.ready) { 
+            this.onfontsize.sendEvent( this.fontsize ); 
+        }
+    } else if ($debug) {
+        Debug.warn('invalid font size', val);
+    }
+}
+
+/**
+  * Setting <code>stretches</code> causes a view to change its
+  * coordinate space so that everything it contains (resources and
+  * other views) fit exactly into the view's width and/or height. The
+  * default for this property is "none". This is used to resize a
+  * view's contents by setting its width and/or height.
+  * @lzxtype "width" | "height" | "both" | "none"
+  * @type String
+  * @lzxdefault "none"
+  */
+var stretches = "none"; 
+
+/** @access private */
+function $lzc$set_stretches( stretch ){
+    if (!(stretch == "none" || stretch == "both" || stretch == "width" || stretch == "height")) {
+        //TODO: Remove null, x, y options from here when components are moved
+        var newstretch = (stretch == null ? "both" : stretch == "x" ? "width" : stretch == "y" ? "height" : "none");
+        if ($debug) {
+            if (newstretch != "none") {
+                Debug.info("%w.%s(%w) is deprecated.  Use %w.%s(%w) instead.",
+                    this, arguments.callee, stretch, this, arguments.callee, newstretch);
+            }
+        }
+        stretch = newstretch;
+    } else if (this.stretches == stretch) {
+        return;
+    }
+    if (this.backgroundrepeat != 'norepeat') {
+        if ($debug) Debug.warn("Backgroundrepeat and stretches can't be on at the same time. Canceling backgroundrepeat.", this);
+        this.$lzc$set_backgroundrepeat('norepeat');
+    }
+    
+    this.stretches = stretch;
+    this.sprite.stretchResource(stretch);
+    
+    if (stretch == "width" || stretch == "both") {
+        this._setrescwidth = true;
+        this.__LZcheckwidth = true;
+        this.reevaluateSize( "width" );
+    }
+
+    if (stretch == "height" || stretch == "both") {
+        this._setrescheight = true;
+        this.__LZcheckheight = true;
+        this.reevaluateSize( "height" );
+    }
+}
+
+/**
+  * Setting <code>backgroundrepeat</code> causes a view to repeat its resource 
+  * to fit the view's width and/or height.  Can be 'repeat', 'repeat-x',
+  * 'repeat-y' or 'norepeat' per the CSS1 background-repeat style.
+  * @lzxtype "repeat" | "repeat-x" | "repeat-y" | "norepeat"
+  * @type String
+  * @lzxdefault "norepeat"
+  */
+var backgroundrepeat = 'norepeat'; 
+/** event for changes to view's <attribute>backgroundrepeat</attribute> property 
+ * @lzxtype event 
+ * @access public
+ */
+var onbackgroundrepeat = LzDeclaredEvent;
+/** @access private */
+function $lzc$set_backgroundrepeat( backgroundrepeat ){
+    if (! this.capabilities.backgroundrepeat) {
+        if ($debug) {
+            LzView.__warnCapability('view.backgroundrepeat', 'backgroundrepeat'); 
+        }
+        return;
+    } else if (backgroundrepeat != 'repeat' && backgroundrepeat != 'repeat-x' && backgroundrepeat != 'repeat-y' && backgroundrepeat != 'norepeat') {
+        if ($debug) {
+            Debug.warn("backgroundrepeat must be set to 'repeat', 'repeat-x', 'repeat-y' or 'norepeat':", backgroundrepeat);
+        }
+        return;
+    }
+    if (backgroundrepeat !== this.backgroundrepeat) { 
+        if (backgroundrepeat != 'norepeat' && this.stretches != 'none') {
+            if ($debug) Debug.warn("Backgroundrepeat and stretches can't be on at the same time. Canceling stretches.", this);
+            this.$lzc$set_stretches('none');
+        }
+        this.backgroundrepeat = backgroundrepeat
+
+        // The kernel expects null for no backgroundrepeat
+        if (backgroundrepeat == 'norepeat') backgroundrepeat = null;
+        this.sprite.setBackgroundRepeat(backgroundrepeat);
+    }
+    if (this.onbackgroundrepeat.ready) this.onbackgroundrepeat.sendEvent(this.backgroundrepeat);
+}
+
+/**
+ * A CSS declaration of <replaceable>property:</replaceable>
+ * <replaceable>value</replaceable> pairs of layout attributes, which
+ * are used to create a layout that is attached to this view. If there
+ * is a <varname>class</varname> property, it names the class of the
+ * layout to be created, otherwise <tagname>simplelayout</tagname> is
+ * used.
+ *
+ * Examples:
+ * <code>layout="axis: x"</code>, <code>layout="class: constantlayout"</code>,
+ * <code>layout="axis: y"</code>, <code>layout="axis: x; spacing: 5"</code>.
+ *
+ * @type Object
+ * @lzxtype css
+ * @access public
+ */
+var layout; 
+
+/** @access private */
+function $lzc$set_layout(layoutobj) {
+    this.layout = layoutobj;
+    if (!this.isinited) {
+        this.__LZstoreAttr( layoutobj , "layout" );
+        return;
+    }
+
+    var classname = layoutobj['class'];
+    
+    if ( classname == null) {
+        classname = 'simplelayout';
+    }
+    
+    if ( this.__LZlayout ){
+        this.__LZlayout.destroy();
+    }
+    if (classname != 'none') {
+        var o = {};
+        for (var i in layoutobj) {
+           if (i != 'class')  {
+               o[i] = layoutobj[i];
+           }
+        }
+
+        if (classname == 'null') {
+            // FIXME [2006.09.25 bshine] (LPP-2759) This bogus check can be 
+            // removed when the underlying bug is fixed
+            // FIXME [2006.09.25 max] (LPP-2759) Actually, 
+            // laszlo-explorer/explore-nav.lzx counts on this failing 
+            // silently in the swf runtime - return here instead.
+            this.__LZlayout = null;
+            return;
+        }    
+        this.__LZlayout = new lz[ classname ] (this, o);
+   }
+}
+
+/** Activate/inactivate children for accessibility
+  * @type Boolean
+  * @lzxtype boolean
+  */
+var aaactive; 
+
+/** @access private */
+function $lzc$set_aaactive(s) {
+    if (this.capabilities.accessibility) {
+        this.aaactive = s;
+        this.sprite.setAAActive(s);
+    } else if ($debug) {
+        LzView.__warnCapability('view.aaactive', 'accessibility'); 
+    }
+}
+
+/** Set accessibility name
+  * @type String
+  * @lzxtype string
+  */
+var aaname;
+
+/** @access private */
+function $lzc$set_aaname(s) {
+    if (this.capabilities.accessibility) {
+        this.aaname = s;
+        this.sprite.setAAName(s);
+    } else if ($debug) {
+        LzView.__warnCapability('view.aaname', 'accessibility'); 
+    }
+}
+
+/** Set accessibility description
+  * @type String
+  * @lzxtype string
+  */
+var aadescription; 
+
+/** @access private */
+function $lzc$set_aadescription(s) {
+    if (this.capabilities.accessibility) {
+        this.aadescription = s;
+        this.sprite.setAADescription(s);
+    } else if ($debug) {
+        LzView.__warnCapability('view.aadescription', 'accessibility'); 
+    }
+}
+
+/** Set accessibility tab order
+  * @type Number
+  * @lzxtype number
+  */
+var aatabindex;   
+
+/** @access private */
+function $lzc$set_aatabindex(s) {
+    if (this.capabilities.accessibility) {
+        this.aatabindex = s;
+        this.sprite.setAATabIndex(s);
+    } else if ($debug) {
+        LzView.__warnCapability('view.aatabindex', 'accessibility'); 
+    }
+}
+
+
+/** Set accessibility silencing/unsilencing
+  * @type Boolean
+  * @lzxtype boolean
+  */
+var aasilent; 
+
+/** @access private */
+function $lzc$set_aasilent(s) {
+    if (this.capabilities.accessibility) {
+        this.aasilent = s;
+        this.sprite.setAASilent(s);
+    } else if ($debug) {
+        LzView.__warnCapability('view.aasilent', 'accessibility'); 
+    }
+}
+
+/** Sends an event to the Microsoft Active Accessibility API. Microsoft Active Accessibility handles that event and sends the event to any active screen reader application, which in turn reports the change to the user. For example, when a user toggles a RadioButton instance, the RadioButton's Accessibility Implementation calls Accessibility.sendEvent() with the eventType EVENT_OBJECT_STATECHANGE/0x800a. 
+  * @param number childID: The child id of the accessibility interface element to which the event applies (for example, an individual list item in a list box). Use 0 to indicate that the event applies to the DisplayObject supplied in the source parameter. 
+  * @param number eventType: A constant indicating the event type. Event names and values are a subset of the MSAA event constants. 
+  * @param boolean nonHTML: A Boolean indication of whether or not the event is one of the standard event types that can be generated from an HTML form. When set to true, this parameter helps prevent some problems that may occur with screen readers that interperet Flash content as part of the HTML page. The default value is false.  
+  */
+function sendAAEvent(childID:Number, eventType:Number, nonHTML:Boolean = false) {
+    if (this.capabilities.accessibility) {
+        this.sprite.sendAAEvent(childID, eventType, nonHTML);
+    } else if ($debug) {
+        LzView.__warnCapability('view.sendAAEvent()', 'accessibility'); 
+    }
+}
+
+/** @access private */
+var sprite:LzSprite = null;
+
+/** A value of true means that this view is shown. A
+  * value of false means that this view is hidden.
+  * Note that an otherwise clickable view that is not visible will have no click
+  * region and will not be clickable. 
+  * @type Boolean
+  * @lzxtype boolean
+  * @lzxdefault "true"
+  */
+var visible =   true;
+
+/** A value of "visible" means that this view is shown. A
+  * value of "hidden" means that this view is hidden. Setting this attribute to "collapse"
+  * means that the runtime will hide this view when: its opacity is zero, it has a
+  * datapath that does not match a node, or it is loading its media. In this
+  * case, the the value of the 'visible' attribute of the view will reflect the view's
+  * current visible state. 
+  * @type String
+  * @lzxtype string
+  * @lzxdefault "collapse"
+  */
+var visibility = "collapse";
+
+/** @access private */
+function $lzc$set_visibility(amVisible) {
+    if (this.visibility == amVisible) return;
+    this.visibility = amVisible;
+    if ($debug) {
+        if (! (amVisible == "visible" || amVisible == "hidden" || amVisible == "collapse")) {
+          Debug.error("%w.%s called with unknown arg '%s' use 'visible', 'hidden', or 'collapse'.",
+                      this, arguments.callee, amVisible);
+        }
+    }
+    if (this.onvisibility.ready) this.onvisibility.sendEvent( amVisible );
+    this.__LZupdateShown();
+}
+
+/** @access private */
+var __LZvizO = true;
+
+/** @access private */
+var __LZvizLoad= true;
+
+/** @access private */
+var __LZvizDat:Boolean = true;
+    
+/** 
+  * The opacity of the view's contents. <literal>1.0</literal> is opaque; <literal>0.0</literal> is
+  * totally transparent (invisible).
+  * @type Number
+  * @lzxtype Number
+  * @lzxdefault "1.0"
+  */
+var opacity =   1;
+
+/** @access private */
+function $lzc$set_opacity(v) {
+    if (this.opacity !== v) {
+        this.opacity = v;
+        if (this.capabilities.opacity) {
+            this.sprite.setOpacity(v);
+        } else if ($debug) {
+            LzView.__warnCapability('view.opacity', 'opacity'); 
+        }
+        var newoviz = v != 0;
+        if ( this.__LZvizO != newoviz ){
+            this.__LZvizO = newoviz;
+            this.__LZupdateShown();
+        }
+    }
+    if (this.onopacity.ready) this.onopacity.sendEvent( v );
+}
+
+/**
+ * The background color of the view.  Setting <code>bgcolor</code> to
+ * <code>null</code> will make the view transparent.
+ *
+ * May be set to any valid CSS color specification.  When read, will
+ * be read as the equivalent numeric value.  To retrieve a CSS color
+ * specification, use <code>this.presentAttribute('bgcolor',
+ * 'color')</code>.  Default is <code>null</code> (transparent).
+ *
+ * @lzxtype color
+ * @type Number
+ * @lzxdefault null
+ */
+var bgcolor = null;
+/** @access private */
+var onbgcolor = LzDeclaredEvent;
+/** @access private */
+function $lzc$set_bgcolor(bgc) {
+  // This enables setting to symbolic color names, which people expect
+  // to work, although they should use
+  // `this.acceptAttribute('bgcolor', 'color', value)`
+  if ((bgc != null) && isNaN(bgc)) {
+    bgc = lz.Type.acceptTypeValue('color', bgc, this, 'bgcolor');
+  } else if (bgc < 0) {
+    // handle -1 semaphore from compiler (transparent)
+    bgc = null;
+  }
+  this.sprite.setBGColor(bgc);
+  this.bgcolor = bgc;
+  if (this.onbgcolor.ready) this.onbgcolor.sendEvent( bgc );
+};
+
+/** The horizontal offset of this view's upper left corner from the
+  * upper left corner of its container.
+  * @type Number
+  * @lzxtype numberExpression
+  * @lzxdefault "0"
+  */
+var x = 0;
+
+/**
+ * Memo of last x _set_.  Used for optimizing out redundant calls
+ * (profiling showed many calls during initialization as constraints
+ * settled).
+ *
+ * @devnote [2009-01-06 ptw] This is strictly a memoization of the
+ * last value set.  It starts out as `undefined`, and the comparison
+ * uses identity (`===`) to ensure that an initial setting of `null`
+ * is not ignored.
+ *
+ * @access private
+ */
+var __set_x_memo:*;
+
+/** @access private */
+function $lzc$set_x(v) {
+    // Ensure the getter is accurate
+    this.x = v;
+    // NOTE: [2009-01-06 ptw] See @devnote at __set_x_memo
+    if (this.__set_x_memo === v) {
+      // Always send the event
+      if (this.onx.ready) { this.onx.sendEvent( this.x ); }
+      return;
+    }
+    // memoize
+    this.__set_x_memo = v;
+
+    // reset __mousecache
+    this.__mousecache = null;
+
+    if ( this.__LZhasoffset ){
+        if (this.capabilities.rotation) {
+            v -= ( this.xoffset * this.__LZrcos  -
+                   this.yoffset * this.__LZrsin );
+        } else {
+            v -= this.xoffset;
+        }
+    }
+
+    if ( this.pixellock ) { v = v | 0; }
+    this.sprite.setX(v)
+    var vip:LzView = (this.immediateparent cast LzView);
+    if (vip.__LZcheckwidth) { vip.__LZcheckwidthFunction( this ); }
+    if (this.onx.ready) { this.onx.sendEvent( this.x ); }
+}
+
+
+/** The vertical offset of this view's upper left corner from the
+  * upper left corner of its container
+  * @type Number
+  * @lzxtype numberExpression
+  * @lzxdefault "0"
+  */
+var y = 0;
+
+/**
+ * Memo of last y _set_.  Used for optimizing out redundant calls
+ * (profiling showed many calls during initialization as constraints
+ * settled).
+ *
+ * @devnote [2009-01-06 ptw] This is strictly a memoization of the
+ * last value set.  It starts out as `undefined`, and the comparison
+ * uses identity (`===`) to ensure that an initial setting of `null`
+ * is not ignored.
+ *
+ * @access private
+ */
+var __set_y_memo:*;
+
+/** @access private */
+function $lzc$set_y(v) {
+    // Ensure the getter is accurate
+    this.y = v;
+    // NOTE: [2009-01-06 ptw] See @devnote at __set_y_memo
+    if (this.__set_y_memo === v) {
+      // Always send the event
+      if (this.ony.ready) { this.ony.sendEvent( this.y ); }
+      return;
+    }
+    // memoize
+    this.__set_y_memo = v;
+
+    // reset __mousecache
+    this.__mousecache = null;
+
+    if ( this.__LZhasoffset ){
+        if (this.capabilities.rotation) {
+            v -= ( this.xoffset * this.__LZrsin  +
+                   this.yoffset * this.__LZrcos );
+        } else {
+            v -= this.yoffset;
+        }
+    }
+
+    if ( this.pixellock ) { v = v | 0; }
+    this.sprite.setY(v)
+    var vip:LzView = (this.immediateparent cast LzView);
+    if (vip.__LZcheckheight) { vip.__LZcheckheightFunction( this ); }
+    if (this.ony.ready) { this.ony.sendEvent( this.y ); }
+}
+
+
+/** The rotation value for the view (in degrees).
+  * Value may be less than zero or greater than 360.
+  * @type Number
+  * @lzxtype numberExpression
+  * @lzxdefault "0"
+  */
+var rotation = 0;
+
+/** @access private */
+function $lzc$set_rotation(v) {
+    if (this.capabilities.rotation) {
+        this.sprite.setRotation(v)
+    } else if ($debug) {
+        LzView.__warnCapability('view.rotation', 'rotation'); 
+    }
+    this.rotation = v;
+    this.usegetbounds = this.__LZhasoffset || this.rotation != 0 || this.xscale != 1 || this.yscale != 1;
+    var rrad = Math.PI /180 * this.rotation;
+    this.__LZrsin = Math.sin( rrad )
+    this.__LZrcos = Math.cos( rrad )
+    if (this.onrotation.ready) this.onrotation.sendEvent( v );
+
+    if ( this.__LZhasoffset ){
+        // Clear the memo cache to force a recompute
+        this.__set_x_memo = void 0;
+        this.$lzc$set_x(this.x);
+        // Clear the memo cache to force a recompute
+        this.__set_y_memo = void 0;
+        this.$lzc$set_y(this.y);
+    }
+
+    var vip:LzView = (this.immediateparent cast LzView);
+    if (vip.__LZcheckwidth)
+        vip.__LZcheckwidthFunction( this );
+    if (vip.__LZcheckheight)
+        vip.__LZcheckheightFunction( this );
+}
+
+
+/**
+  * The width of the view.  Can be set to either a number, or
+  * <code>null</code>, to indicate that the view should be sized to
+  * hold its content.  When read, reflects the actual size of the view.
+  *
+  * @access public
+  * @type *
+  * @lzxtype sizeExpression
+  */
+var width:* = 0;
+
+/**
+ * Memo of last width _set_.  Used for optimizing out redundant calls
+ * (profiling showed many calls during initialization as constraints
+ * settled).
+ *
+ * @devnote [2009-01-06 ptw] This is strictly a memoization of the
+ * last value set.  It starts out as `undefined`, and the comparison
+ * uses identity (`===`) to ensure that an initial setting of `null`
+ * is not ignored.
+ *
+ * @access private
+ */
+var __set_width_memo:*;
+
+/** @access private */
+function $lzc$set_width(v) {
+    // Ensure getters are accurate
+    if (v != null) {
+      this.hassetwidth = true;
+      this.width = v;
+    } else {
+      this.hassetwidth = false;
+    }
+    // NOTE: [2009-01-06 ptw] See @devnote at __set_width_memo
+    if (this.__set_width_memo === v) {
+      // Always send the event
+      if (this.onwidth.ready) { this.onwidth.sendEvent( this.width ); }
+      return;
+    }
+    // memoize
+    this.__set_width_memo = v;
+
+    // NOTE: [2009-01-06 ptw] We used to unconditionally call
+    // `sprite.setWidth` here, but that is bogus because a null value
+    // will immediately be overridden by `reevaluateSize` below, and a
+    // non-null value will not be adjusted by `pixellock`.
+    if ( v == null ){
+        // expose proto method
+        this.__LZcheckwidth = true;
+        if ( this._setrescwidth ){
+            // will be updated by reevaluateSize
+            this.unstretchedwidth = null;
+        }
+        // NOTE: [2009-01-06 ptw] This will end up setting `width` to
+        // the width of the contents, will call `sprite.setWidth`
+        // with that value, and will send `onwidth`.
+        this.reevaluateSize( 'width' );
+        return;
+    }
+
+    if ( this.pixellock ) { v = v | 0; }
+    if ( ! this._setrescwidth ){
+        this.__LZcheckwidth = false;
+    }
+    if (! (this is LzText)) {
+        // already called by LzText.$lzc$set_width()
+        this.sprite.setWidth(v);
+    }
+
+    var vip:LzView = (this.immediateparent cast LzView);
+    if (vip && vip.__LZcheckwidth) { vip.__LZcheckwidthFunction( this ); }
+
+    if (this.onwidth.ready) { this.onwidth.sendEvent( this.width ); }
+}
+
+
+/**
+  * The height of the view.  Can be set to either a number, or
+  * <code>null</code>, to indicate that the view should be sized to
+  * hold its content.  When read, reflects the actual size of the view.
+  *
+  * @access public
+  * @type *
+  * @lzxtype sizeExpression
+  */
+var height:* = 0;
+
+/**
+ * Memo of last height _set_.  Used for optimizing out redundant calls
+ * (profiling showed many calls during initialization as constraints
+ * settled).
+ *
+ * @devnote [2009-01-06 ptw] This is strictly a memoization of the
+ * last value set.  It starts out as `undefined`, and the comparison
+ * uses identity (`===`) to ensure that an initial setting of `null`
+ * is not ignored.
+ *
+ * @access private
+ */
+var __set_height_memo:*;
+
+/** @access private */
+function $lzc$set_height(v) {
+    // Ensure getters are accurate
+    if (v != null) {
+      this.hassetheight = true;
+      this.height = v;
+    } else {
+      this.hassetheight = false;
+    }
+    // NOTE: [2009-01-06 ptw] See @devnote at __set_height_memo
+    if (this.__set_height_memo === v) {
+      // Always send the event
+      if (this.onheight.ready) { this.onheight.sendEvent( this.height ); }
+      return;
+    }
+    // memoize
+    this.__set_height_memo = v;
+
+    // NOTE: [2009-01-06 ptw] We used to unconditionally call
+    // `sprite.setHeight` here, but that is bogus because a null value
+    // will immediately be overridden by `reevaluateSize` below, and a
+    // non-null value will not be adjusted by `pixellock`.
+    if ( v == null ){
+        // expose proto method
+        this.__LZcheckheight = true;
+        if ( this._setrescheight ){
+            // will be updated by reevaluateSize
+            this.unstretchedheight = null;
+        }
+        // NOTE: [2009-01-06 ptw] This will end up setting `height` to
+        // the height of the contents, will call `sprite.setHeight`
+        // with that value, and will send `onheight`.
+        this.reevaluateSize( 'height' );
+        return;
+    }
+
+    if ( this.pixellock ) { v = v | 0; }
+    if ( ! this._setrescheight ){
+        this.__LZcheckheight = false;
+    }
+    this.sprite.setHeight(v);
+
+    var vip:LzView = (this.immediateparent cast LzView);
+    if (vip && vip.__LZcheckheight) { vip.__LZcheckheightFunction( this ); }
+
+    if (this.onheight.ready) { this.onheight.sendEvent( this.height ); }
+}
+
+/** If stretches is not set to none, the width
+  * that this view would be if it weren't stretched. This attribute can be used
+  * to scale a view by a percentage of its original size, or to determine the
+  * aspect ratio for a view.
+  * @type Number
+  * @keywords readonly
+  */
+var unstretchedwidth =   0;
+/** If stretches is not set to none, the height
+  * that this view would be if it weren't stretched. This attribute can be used
+  * to scale a view by a percentage of its original size, or to determine the
+  * aspect ratio for a view.
+  * @type Number
+  * @keywords readonly
+  */
+var unstretchedheight =   0;
+/** An array of the subviews that are children of this
+  * view. This is initialized to an empty array for views that have no subviews.
+  * @type [LzView]
+  * @keywords readonly
+  */
+var subviews =   [];
+
+/**
+  * Specifies a translation point for drawing of this view. If the xoffset
+  * is set, then rotation and x position will be calculated by first adding
+  * the xoffset.
+  * @type Number
+  * @lzxtype numberExpression
+  * @lzxdefault "0"
+  */
+var xoffset =   0;
+
+/** 
+  * @type Number
+  * @access private 
+  */
+function $lzc$set_xoffset(o) {
+    this.xoffset = o;
+    this.__LZhasoffset = this.xoffset != 0 || this.yoffset != 0 || this.__widthoffset != 0 || this.__heightoffset != 0;
+    this.usegetbounds = this.__LZhasoffset || this.rotation != 0 || this.xscale != 1 || this.yscale != 1;
+    // Clear the memo cache to force a recompute
+    this.__set_x_memo = void 0;
+    this.$lzc$set_x(this.x);
+    // Clear the memo cache to force a recompute
+    this.__set_y_memo = void 0;
+    this.$lzc$set_y(this.y);
+    if (this.onxoffset.ready) this.onxoffset.sendEvent( o );
+}
+
+/**
+  * Specifies a translation point for drawing of this view. If the yoffset
+  * is set, then rotation and y position will be calculated by first adding
+  * the yoffset.
+  * @type Number
+  * @lzxtype numberExpression
+  * @lzxdefault "0"
+  */
+var yoffset =   0;
+
+/**
+  * @access private 
+  * @type Number
+  */
+function $lzc$set_yoffset(o) {
+    this.yoffset = o;
+    this.__LZhasoffset = this.xoffset != 0 || this.yoffset != 0 || this.__widthoffset != 0 || this.__heightoffset != 0;
+    this.usegetbounds = this.__LZhasoffset || this.rotation != 0 || this.xscale != 1 || this.yscale != 1;
+    // Clear the memo cache to force a recompute
+    this.__set_x_memo = void 0;
+    this.$lzc$set_x(this.x);
+    // Clear the memo cache to force a recompute
+    this.__set_y_memo = void 0;
+    this.$lzc$set_y(this.y);
+    if (this.onyoffset.ready) this.onyoffset.sendEvent( o );
+}
+
+/** @access private */
+var __LZrsin = 0;
+/** @access private */
+var __LZrcos = 1;
+
+/** The total number of frames for this view's resource.
+  * @type Number
+  * @keywords readonly
+  */
+var totalframes =   1;
+/** If this view has a multi-frame resource, this allows setting which
+  * resource frame is displayed.  Defaults to the first frame (1).
+  * See also the <attribute>resource</attribute>
+  * attribute.  Setting this attribute will change the frame that is
+  * being displayed by the resource associated with this view. The
+  * first frame of the resource is frame 1.  Setting a view's
+  * 'donttrackplay' option to true will allow the view's resource to
+  * play without updating the value of the view's frame property. This
+  * can save CPU usage in cases where the application doesn't need to
+  * know what frame the resource is showing while it is playing.
+  * @type Number
+  * @lzxtype numberExpression
+  * @lzxdefault "1"
+  */
+var frame = 1;
+
+/** @access private */
+function $lzc$set_frame(n) {
+    // prevent play status tracking from running if the frame was set oninit, like in windowframe class
+    this.frame = n;
+    this.stop( n );
+    if (this.onframe.ready) this.onframe.sendEvent(n);
+}
+
+/** For views whose resource is loaded at runtime,
+  * the ratio of the loaded frames to the total frames. This is a number between
+  * zero and 1.
+  * @type Number
+  * @keywords readonly
+  */
+var framesloadratio =   0;
+/** For views whose resource is loaded at runtime,
+  * ratio of the loaded bytes to the total bytes. This is a number between 
+  * zero and 1.
+  * @type Number
+  * @keywords readonly
+  */
+var loadratio =   0;
+
+/**
+ * If true, then this view has an assigned or constrained height, and
+ * the view will not be sized to its contents.
+ *
+ * @type Boolean
+ * @keywords readonly
+ */
+var hassetheight = false;
+/**
+ * If true, then this view has an assigned or constrained width, and
+ * the view will not be sized to its contents.
+ *
+ * @type Boolean
+ * @keywords readonly
+ */
+var hassetwidth = false;
+
+/** @access private */
+var addedToParent = null;
+/** @access private */
+var masked = false;
+
+/**
+  * The view system supports sub-pixel positioning to enable smooth
+  * animation. This may be turned off to make the view snap to a
+  * pixel boundary by setting pixellock to true.
+  * @type Boolean
+  * @lzxtype booleanLiteral
+  * @keywords final
+  */
+var pixellock = null;
+
+/** If true, this view intercepts click events; otherwise they are passed
+  * to its container.  This defaults to true if the view defines a mouse
+  * event handler or a cursor.
+  * @type Boolean
+  * @lzxtype boolean
+  * @lzxdefault false
+  */ 
+var clickable = false;
+
+/** @access private */
+function $lzc$set_clickable(amclickable) {
+    this.sprite.setClickable(amclickable);
+    this.clickable = amclickable;
+    if (this.onclickable.ready) this.onclickable.sendEvent( amclickable );
+}
+
+
+/** Show or hide the hand cursor for this view, if clickable
+  * @type Boolean
+  * @lzxtype boolean
+  */
+var showhandcursor = null;
+
+/** Show or hide the handcursor for this view, if clickable 
+  * @access private */
+function $lzc$set_showhandcursor(s) {
+    this.showhandcursor = s;
+    this.sprite.setShowHandCursor(s);
+}
+
+/**
+  * A resource that is presented in the background of this view.  The
+  * value can be either the name of a resource defined with the
+  * <tag>resource</tag> tag, a URL, or a pathname.  If the value is a URL,
+  * the resource is requested when the view is displayed.  If it's a
+  * pathname, the file named by the pathname is compiled into the
+  * application, and attached to this view.
+  * @type String
+  * @lzxtype string
+  */
+var resource:String = null;
+
+/** @access private */
+function $lzc$set_resource( resourceName ) {
+    if (resourceName == null || resourceName == this._resource) return;
+    this.resource = this._resource = resourceName;
+    this.sprite.setResource(resourceName);
+}
+
+/**
+  * The width of the resource that this view attached
+  * @keywords readonly
+  * @type Number
+  * @lzxtype number
+  */
+var resourcewidth:Number = 0;
+/**
+  * The height of the resource that this view attached
+  * @keywords readonly
+  * @type Number
+  * @lzxtype number
+  */
+var resourceheight:Number = 0;
+
+/** @access private */ var __LZcheckwidth = true;
+/** @access private */ var __LZcheckheight = true;
+/** @access private */ var __LZhasoffset = null;
+/** @access private */ var __LZoutlieheight = null;
+/** @access private */ var __LZoutliewidth = null;
+
+
+
+/**
+  * this creates a specific child layout for this view. When called a second time
+  * the first layout will be replaced by the second.
+  * @param Object layoutobj: A dictionary of attributes that describe the
+  * layout, where the class key specifies the class of the layout and the
+  * rest are passed as attributes for the layout.  By default the class will
+  * be <api>simplelayout</api> if not given.
+  * For example: <code>{'class': 'wrappinglayout', axis: 'x', spacing: 20}</code>
+  * To remove the previously set layout, use <code>{'class': 'none'}</code>
+  * (Note that you must use <code>'class'</code> as the key, because
+  * <code>class</code> is a keyword reserved for future use.)
+  * @deprecated Use setAttribute('layout', ...) instead.
+  */
+final function setLayout ( layoutobj ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_layout(layoutobj);    
+}
+
+/**
+  * Sets the font name for this view. The font information (font, fontsize, and
+  * fontstyle) will cascade down the runtime view hierarchy.
+  * @access private
+  * @param String val: The value for the new font name
+  * @deprecated Use setAttribute('font', ...) instead.
+  */
+final function setFontName ( val ,prop = null){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_font(val);    
+}
+
+/** If true, the view does not set its
+  * resource to the width given in a call to
+  * <method>setAttribute</method>. By default, views do not scale their
+  * resource
+  * @type Boolean
+  * @access private
+  */
+var _setrescwidth = false;
+/** If true, the view does not set its
+  * resource to the height given in a call to
+  * <method>setAttribute</method>. By default, views do not scale their
+  * resource
+  * @type Boolean
+  * @access private
+  */
+var _setrescheight = false;
+
+/**
+  * Search all subviews for a named property. For now, returns when it finds the
+  * first one. This is a width first search.
+  * 
+  * @param String prop: named property
+  * @param any val: value for that property
+  * @return LzView: the first subview whose property <param>prop</param> is set to value <param>val</param> or null
+  * if none is found
+  */
+function searchSubviews ( prop , val) {
+    var nextS = this.subviews.concat();
+
+    while ( nextS.length > 0  ){
+        var s = nextS;
+        nextS = new Array;
+        for (var i = s.length-1; i >=0; i-- ){
+            var si = s[ i ];
+            if (si[ prop ] == val ){
+                return si;
+            }
+            var sis = si.subviews;
+            for (var j = sis.length - 1; j>=0; j-- ){
+                nextS.push( sis[j] );
+            }
+        }
+    }
+    return null;
+}
+
+/**
+ * The layouts that are controlling the layout of this view.
+ * @type [LzLayout]
+ * @devnote Used by LzReplicationManager
+ * @access private
+ */
+var layouts = null;
+
+/**
+  * @access private
+  * Can be nulled by unload() to allow the same resource to be loaded again with setResource()
+  */
+var _resource = null;
+
+/**
+  * This method associates a view with a named library element. If the
+  * view's <attribute>visible</attribute> property is true, the
+  * resource will be displayed when it is attached
+  * 
+  * @deprecated Use setAttribute('resource', ...) instead.
+  * @param String v: a string naming the id of the resource to attach
+  */
+final function setResource(v) {
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_resource(v);    
+}
+
+
+/**
+  * @access private
+  * Called by sprites when the resource has been loaded to send the
+  * appropriate events
+  */
+function resourceload(i) {
+    if ('resource' in i) {
+        this.resource = i.resource;
+        if (this.onresource.ready) this.onresource.sendEvent(i.resource);
+    }
+
+    if (this.resourcewidth != i.width) {
+        if ('width' in i) {
+            this.resourcewidth = i.width;
+            if (this.onresourcewidth.ready) this.onresourcewidth.sendEvent(i.width);
+        }
+
+        //if no setwidth, then the view is sized to the resource
+        if ( (!this.hassetwidth && this.resourcewidth != this.width ) ||
+            (this._setrescwidth && this.unstretchedwidth !=
+                                                    this.resourcewidth)){
+            this.updateWidth( this.resourcewidth  );
+        }
+    }
+
+    if (this.resourceheight != i.height) {
+        if ('height' in i) {
+            this.resourceheight = i.height;
+            if (this.onresourceheight.ready) this.onresourceheight.sendEvent(i.height);
+        }
+
+        if ( (!this.hassetheight && this.resourceheight != this.height ) ||
+             (this._setrescheight && this.unstretchedheight != this.resourceheight)){
+            this.updateHeight( this.resourceheight  );
+        }
+    }
+
+    if (i.skiponload != true) {
+        if (this.onload.ready) this.onload.sendEvent(this);
+    }
+}
+
+/**
+  * @access private
+  * Called by the sprite when the resource load error occurs 
+  */
+function resourceloaderror(e=null) {
+    this.resourcewidth = 0;
+    this.resourceheight = 0;
+    if (this.onresourcewidth.ready) this.onresourcewidth.sendEvent(0);
+    if (this.onresourceheight.ready) this.onresourceheight.sendEvent(0);
+    this.reevaluateSize();
+    if (this.onerror.ready) this.onerror.sendEvent(e);
+}
+
+/**
+  * @access private
+  * Called by the sprite when the resource load timeout occurs 
+  */
+function resourceloadtimeout(e=null) {
+    this.resourcewidth = 0;
+    this.resourceheight = 0;
+    if (this.onresourcewidth.ready) this.onresourcewidth.sendEvent(0);
+    if (this.onresourceheight.ready) this.onresourceheight.sendEvent(0);
+    this.reevaluateSize();
+    if (this.ontimeout.ready) this.ontimeout.sendEvent(e);
+}
+
+/**
+  * @access private
+  * Called by the sprite when the resource playback events occur
+  */
+function resourceevent(name, value, eventonly = false, force = false) {
+    // send the event if force is true or eventonly is true or the value changed
+    var sendevent = force == true || eventonly == true || this[name] != value;
+    if (eventonly != true) this[name] = value;
+    if (sendevent) {
+        var ev = this['on'+ name];
+        if (ev.ready) ev.sendEvent(value);
+    }
+}
+
+/**
+  * This method should remove a view, its media, and any of its subviews.
+  * @access private
+  * 
+  */
+override function destroy( ){
+    if ( this.__LZdeleted ) return;
+    var vip:LzView = (this.immediateparent cast LzView);
+    var parentvalid = vip && (! vip.__LZdeleted);
+    
+    if (parentvalid) {
+        if (this.sprite) this.sprite.predestroy();
+
+        if (this.addedToParent) {
+            var svs =  vip.subviews;
+            if (svs != null) {
+                for( var i = svs.length - 1; i >= 0; i-- ){
+                    if ( svs[ i ] == this ){
+                        svs.splice( i , 1 );
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    super.destroy();
+
+    // always call sprite.destroy()
+    if (this.sprite) { this.sprite.destroy(parentvalid) }
+
+    if (parentvalid) { 
+        this.$lzc$set_visible ( false );
+
+        if (this.addedToParent) {
+            if ( vip['__LZoutliewidth'] == this) {
+                vip.__LZoutliewidth = null;
+            }
+
+            if ( vip['__LZoutlieheight'] == this) {
+                vip.__LZoutlieheight=null;
+            }
+
+            if (vip.onremovesubview.ready) vip.onremovesubview.sendEvent( this );
+        }
+    }
+}
+
+/**
+  * This method sets the <attribute>visible</attribute> attribute of the view
+  * and also disables or re-enables any click region associated with the view.
+  * 
+  * @param Boolean|Null v: Controls the visibility of a view.
+  * `true` makes the view visible, `false` makes the view hidden,
+  * `null` will make the view visible only if it has a data binding.
+  * @deprecated Use setAttribute('visible', ...) instead.
+  */
+final function setVisible(v) { 
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_visible(v)
+}
+
+/**
+  * This method sets the <attribute>visibility</attribute> attribute of the view
+  * and also disables or re-enables any click region associated with the view.
+  * 
+  * The argument is a string which can be "visible", "hidden", or "collapse".
+  *
+  * Setting the value to "collapse" will cause the view to become hidden when it has
+  * a datapath and there are no matching data nodes in its dataset.
+  *
+  * @param String amVisible: visibility of view
+  * @deprecated Use setAttribute('visibility', ...) instead.
+  */
+final function setVisibility( amVisible ) {
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_visibility(amVisible);
+}
+    
+/**
+  * TODO: max : should be made private, api call from replication should be cleaner
+  * @access private
+  */
+function __LZupdateShown( ) {
+    if ( this.visibility == "collapse" ){
+        var shown = this.__LZvizO && this.__LZvizDat && this.__LZvizLoad;
+    } else {
+        var shown = (this.visibility == "visible");
+    }
+
+    if ( shown != this.visible ){
+        this.visible = shown;
+
+        // FIXME: [hqm 2006-09] How do we end up with a null sprite? Some destroy ordering thing?
+        if (this.sprite ) {
+            this.sprite.setVisible(shown);
+        }
+
+        var vip:LzView = (this.immediateparent cast LzView);
+        if (vip && vip.__LZcheckwidth)
+            vip.__LZcheckwidthFunction( this );
+        if (vip && vip.__LZcheckheight)
+            vip.__LZcheckheightFunction( this );
+
+        if (this.onvisible.ready) this.onvisible.sendEvent( shown );
+    }
+}
+
+/**
+  * Sets the width of the view. If the view is set to stretch its resource, the
+  * resource will be resized to the new value. If the value 'null' is given for
+  * the new width, then the width is unset, and the width of the view will be
+  * the size of its contents.
+  * @param Number v: The new value for the width
+  * @deprecated Use setAttribute('width', ...) instead.
+  */
+final function setWidth ( v ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_width(v);
+}
+
+/**
+  * Sets the height of the view the given value. If the view is set to stretch
+  * its resource, the resource will be resized to the new value. If the value
+  * 'null' is given for the new height, then the height is unset, and the height
+  * of the view will be the size measured of its contents.
+  * @param Number v: The new value for the height
+  * @deprecated Use setAttribute('height', ...) instead.
+  */
+final function setHeight ( v ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_height(v);
+}
+
+/**
+  * Sets the opacity for the view.  The opacity is a number between 0.0
+  * (transparent) and 1.0 (opaque).
+  * @param Number v: The new value for the opacity
+  * @deprecated Use setAttribute('opacity', ...) instead.
+  */
+final function setOpacity ( v ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_opacity(v);
+}
+
+/**
+  * Sets the <attribute>x</attribute> position of the view to the given value.
+  * @param Number v: The new value for <attribute>x</attribute>.
+  * @deprecated Use setAttribute('x', ...) instead.
+  */
+final function setX (v){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_x(v);
+}
+
+/**
+  * Sets the <attribute>y</attribute> position for the view to the given value.
+  * @param Number v: The new value for <attribute>y</attribute>.
+  * @deprecated Use setAttribute('y', ...) instead.
+  */
+final function setY (v) {
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_y(v);
+}
+
+/**
+  * Sets the <attribute>rotation</attribute> for the view to the given value.
+  * @param Number v: The new value for <attribute>rotation</attribute>.
+  * @deprecated Use setAttribute('rotation', ...) instead.
+  */
+final function setRotation ( v ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_rotation(v);
+}
+
+/**
+  * Sets the <attribute>alignment</attribute> for the view to the
+  * given value. The alignment is based on the size of this view as
+  * compared to the size of the view's immediate parent.
+  *
+  * @param String align: The <attribute>alignment</attribute> for the
+  * view. This is one of "left", "center", and "right"
+  * @deprecated Use setAttribute('align', ...) instead.
+  *
+  * @devnote TODO: [2008-02-07 ptw] Apparently we never supported
+  * 'onalign', should we?
+  */
+final function setAlign ( align ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_align(align);
+}
+
+/** @access private */
+function __LZalignCenter (e=null) {
+  var vip:LzView = (this.immediateparent cast LzView);
+  this.$lzc$set_x(vip.width /2 - this.width /2);
+}
+
+/** @access private */
+function __LZalignRight (e=null) {
+  var vip:LzView = (this.immediateparent cast LzView);
+  this.$lzc$set_x(vip.width - this.width);
+}
+
+
+/**
+  * Sets the x offset  
+  * @param Integer o: The x offset
+  * @deprecated Use setAttribute('xoffset', ...) instead.
+  */
+final function setXOffset ( o ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_xoffset(o);
+}
+
+/**
+  * Sets the Y offset  
+  * @param Integer o: The y offset
+  * @deprecated Use setAttribute('yoffset', ...) instead.
+  */
+final function setYOffset ( o ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_yoffset(o);
+}
+
+
+/** @access private
+  * @devnote Initial value required to make interpreter happy
+  */
+static var __LZlastmtrix = [ 0,0,0,0,0,0,0,0,0,0,0 ];
+
+
+/**
+  * Returns an Object with x, y, width, and height properties that are the
+  * coordinates of the view's bounding box in its immediateparent's coordinate
+  * system. The OpenLaszlo view object uses a relatively simple notion for its
+  * coordinate system. Note that this function doesn't necessarily return the
+  * true bounding box of the view, but a box surrounding the view, since this
+  * method respects a set width and/or height and ignores subviews that appear
+  * left or above of the view's 0,0 point.
+  * The xoffset and yoffset properties of the bounds object are the distance
+  * between the view's x or y property and the top or left of the bounding
+  * box.
+  * @return Object: An object with x, y, width, height, xoffset and yoffset
+  * properties that describes the bounding box of the view.
+  */
+function getBounds (  ){
+    // account for size offset - may be set by boxmodel mixin
+    var width = (this.width + this.__widthoffset) * this.xscale;
+    var height = (this.height + this.__heightoffset) * this.yscale;
+    var mtrix = [ -this.xoffset, -this.yoffset,
+                   width-this.xoffset , -this.yoffset ,
+                  -this.xoffset, height - this.yoffset ,
+                   width - this.xoffset, height - this.yoffset ,
+                   this.rotation , this.x , this.y] ;
+                   //last three entries are just to track staleness
+
+    // Validate cache, if we have one
+    if (this.__LZstoredbounds) {
+      var i = mtrix.length - 1;
+      while ( mtrix[ i ] == LzView.__LZlastmtrix[ i ] ){
+        if ( i-- == 0 ) {
+          return this.__LZstoredbounds;
+        }
+      }
+    }
+
+    var o = {};
+
+    for ( var i = 0; i < 8; i +=2 ){
+        var x = mtrix[ i ];
+        var y = mtrix[ i+1 ];
+        var cx = x * this.__LZrcos  - y * this.__LZrsin;
+        var cy = x * this.__LZrsin  + y * this.__LZrcos;
+        //Debug.write( i +":" + cx , cy );
+
+        if ( o.xoffset == null || o.xoffset > cx ){
+            o.xoffset = cx;
+        }
+        if ( o.yoffset == null || o.yoffset > cy ){
+            o.yoffset = cy;
+        }
+        if ( o.width == null || o.width < cx ){
+            o.width = cx;
+        }
+        if ( o.height == null || o.height < cy ){
+            o.height = cy;
+        }
+    }
+    o.width -= o.xoffset;
+    o.height -= o.yoffset;
+
+    o.x = this.x + o.xoffset;
+    o.y = this.y + o.yoffset;
+
+    this.__LZstoredbounds = o;
+    LzView.__LZlastmtrix = mtrix;
+
+    return o;
+}
+/** @access private */
+function $lzc$getBounds_dependencies ( who , self ){
+    return [ self, 'rotation' , self, 'x' , self , 'y' , self , 'width' ,
+             self , 'height' ];
+}
+
+
+/**
+  * Sets the vertical alignment for the view to the given value. The
+  * alignment is based on the height of this view as compared to the
+  * height of the view's <attribute>immediateparent</attribute>.
+  *
+  * @param String valign: The vertical alignment for the view. This is
+  * one of "top", "middle", and "bottom"
+  * @deprecated Use setAttribute('valign', ...) instead.
+  *
+  * @devnote TODO: [2008-02-07 ptw] Apparently we never supported
+  * 'onvalign', should we?
+  */
+final function setValign ( valign ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_valign(valign);
+}
+
+/** @access private */
+function __LZvalignMiddle (e=null) {
+  var vip:LzView = (this.immediateparent cast LzView);
+  this.$lzc$set_y(vip.height /2 - this.height /2);
+}
+
+/** @access private */
+function __LZvalignBottom (e=null) {
+  var vip:LzView = (this.immediateparent cast LzView);
+  this.$lzc$set_y(vip.height - this.height);
+}
+
+/**
+  * Sets the color of the view (the view's resource and any subviews) to the
+  * the color given. This will completely override any color information in the
+  * view or subview resources. Use the view attribute
+  * <attribute>tintcolor</attribute> to tint a view.
+  * @param Integer c: A color in rgb format; for example, 0xff0000 is red.
+  * @deprecated Use setAttribute('tintcolor', ...) instead.
+  */
+final function setColor ( c ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_fgcolor(c);
+}
+
+/**
+  * Gets the color of the view (the view's resource and any subviews) view as
+  * as set with setColor().
+  * Returns A color in rgb format; for example, 0xff0000 is red.
+  * @deprecated
+  */
+function getColor (){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.fgcolor);
+    return this.fgcolor;
+}
+
+
+/**
+  * color transforms everything contained in the view (except the
+  * background) by the transformation dictionary given in <param>o</param>.  The dictionary has
+  * the following possible keys:
+  * 
+  * o.ra: percentage alpha for red component (-100 to 100);
+  * o.rb: offset for red component (-255 to 255);
+  * o.ga: percentage alpha for green component (-100 to 100);
+  * o.gb: offset for green component (-255 to 255);
+  * o.ba: percentage alpha for blue component (-100 to 100);
+  * o.bb: offset for blue component (-255 to 255);
+  * o.aa: percentage overall alpha (-100 to 100);
+  * o.ab: offset for alpha component (-255 to 255);
+  *
+  * @runtimes as2, as3
+  * @param Object o: A color transformation dictionary
+  * @deprecated Use setAttribute('colortransform', ...) instead.
+  */
+function setColorTransform ( o ){
+    if (this.capabilities.colortransform) {
+        if ($debug) Debug.deprecated(this, arguments.callee, this.colortransform);
+        this.$lzc$set_colortransform({redMultiplier: o.ra != null ? o.ra / 100 : 1, 
+                                      redOffset: o.rb, 
+                                      greenMultiplier: o.ga != null ? o.ga / 100 : 1, 
+                                      greenOffset: o.gb, 
+                                      blueMultiplier: o.ba != null ? o.ba / 100 : 1, 
+                                      blueOffset: o.bb, 
+                                      alphaMultiplier: o.aa != null ? o.aa / 100 : 1, 
+                                      alphaOffset: o.ab});
+    } else if ($debug) {
+        LzView.__warnCapability('view.setColorTransform()', 'colortransform'); 
+    }
+}
+
+/** Sent when colortransform is changed
+  * @lzxtype event 
+  * @access private
+  */
+var oncolortransform = LzDeclaredEvent;
+
+/**
+  * color transforms everything contained in the view (except the
+  * background) by the transformation dictionary given in <param>o</param>.  The dictionary has
+  * the following possible keys:
+  * 
+  * o.redMultiplier: multiplier for red component (0 to 1) defaults to 1
+  * o.redOffset: offset for red component (-255 to 255) defaults to 0
+  * o.greenMultiplier: multiplier for green component (0 to 1) defaults to 1
+  * o.greenOffset: offset for green component (-255 to 255) defaults to 0
+  * o.blueMultiplier: multiplier for blue component (0 to 1) defaults to 1
+  * o.blueOffset: offset for blue component (-255 to 255) defaults to 0
+  * o.alphaMultiplier: multiplier for alpha component (0 to 1) defaults to 1
+  * o.alphaOffset: offset for alpha component (-255 to 255) defaults to 0
+  *
+  * @runtimes as2, as3
+  * @param Object o: A color transformation dictionary
+  * @lzxtype expression
+  * @type Object
+  */
+var colortransform:Object;
+
+/** @access private */
+function $lzc$set_colortransform(o) {
+    if (this.capabilities.colortransform) {
+        if (this.colortransform === o) {
+            this.oncolortransform.sendEvent(o);
+            return;
+        }
+        // Set to defaults
+        if (o.redMultiplier == null) o.redMultiplier = 1;
+        if (o.redOffset == null) o.redOffset = 0;
+        if (o.greenMultiplier == null) o.greenMultiplier = 1;
+        if (o.greenOffset == null) o.greenOffset = 0;
+        if (o.blueMultiplier == null) o.blueMultiplier = 1;
+        if (o.blueOffset == null) o.blueOffset = 0;
+        if (o.alphaMultiplier == null) o.alphaMultiplier = 1;
+        if (o.alphaOffset == null) o.alphaOffset = 0;
+        this.colortransform = o;
+        this.sprite.setColorTransform(o);
+        if (this.oncolortransform.ready) this.oncolortransform.sendEvent(o);
+
+        if (o.redOffset || o.greenOffset || o.blueOffset || o.alphaOffset) {
+            // Convert multiplier/percentage to a color number
+            this.tintcolor = LzColorUtils.rgbatoint(o.redOffset, o.greenOffset, o.blueOffset, o.alphaOffset);
+            // update the tintcolor, but don't call the setter
+            //Debug.warn('tintcolor', color, this.tintcolor, o);
+            if (this.ontintcolor.ready) this.ontintcolor.sendEvent(this.tintcolor);
+        }
+    } else if ($debug) {
+        LzView.__warnCapability('view.colortransform', 'colortransform'); 
+    }
+}
+
+
+/**
+  * Returns an object that represents the color transformation currently applied
+  * to the view. The color transform object has the following possible keys
+  * 
+  * o.ra: percentage alpha for red component (-100 to 100);
+  * o.rb: offset for red component (-255 to 255);
+  * o.ga: percentage alpha for green component (-100 to 100);
+  * o.gb: offset for green component (-255 to 255);
+  * o.ba: percentage alpha for blue component (-100 to 100);
+  * o.bb: offset for blue component (-255 to 255);
+  * o.aa: percentage overall alpha (-100 to 100);
+  * o.ab: overall offset (-255 to 255);
+  *
+  * @runtimes as2
+  * @deprecated Use colortransform attribute instead.
+  */
+function getColorTransform (){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.tintcolor);
+    if (this.capabilities.colortransform) {
+        return this.sprite.getColorTransform();
+    } else if ($debug) {
+        LzView.__warnCapability('view.getColorTransform()', 'colortransform'); 
+    }
+}
+
+
+/**
+ * @devnote measureSize must agree with this
+ *
+ * @access private 
+ */
+function __LZcheckSize ( sview, axis , xory ){
+
+        if ( sview.addedToParent ) {
+            if ( sview.usegetbounds ){
+                var bobj = sview.getBounds();
+            } else {
+                var bobj = sview;
+            }
+            var ss = bobj[ xory ] + bobj[ axis ];
+
+            //calculating unstretchedsize (for stretches) or just size?
+            var ts = this[ "_setresc" + axis ] ?
+                     this[ "unstretched" + axis ] : this[axis];
+
+            if ( ss > ts && sview.visible ){
+                this[ "__LZoutlie" + axis ] = sview;
+                if (axis == "width")
+                    this.updateWidth(ss);
+                else
+                    this.updateHeight(ss);
+            } else if ( this[ "__LZoutlie" + axis ] == sview
+                        && ( ss < ts || ! sview.visible ) ){
+                //uhoh -- we need to recheck everything
+                this.reevaluateSize( axis );
+            }
+        }
+}
+
+/** The <function>checkWidth</function> and <function>checkHeight</function> functions handle changes in this view's
+  * subviews. The children call these functions on their immediateparents when
+  * they change x, y, width, height, or visibility. A view which doesn't care
+  * about changes in the size of its contents (because it has a set size and it's
+  * not stretching) puts null in this slot, so that it doesn't process calls from
+  * its subviews.
+  *  
+  *  N.B.: these internal methods do not obey the traditional camel-casing
+  *  because their names are often constructed on the fly.  Cf.,
+  *  updateSize
+
+  *  @devnote [2006-07-28 pbr] This adds another level of indirection. The original
+  *                   version built a function that got deleted. ptw suggests
+  *                   supporting inline. 
+  * @access private
+  */
+function __LZcheckwidthFunction ( sview ) {
+    this.__LZcheckSize (sview, "width", "x");
+}
+  
+/** @access private */
+function __LZcheckheightFunction ( sview ) {
+    this.__LZcheckSize (sview, "height", "y");
+}
+
+
+/**
+ * Mimic __LZcheckSize to determine the dimension a view would have if
+ * it did _not_ have an explicit dimension, i.e., the "natural"
+ * dimension of the view.
+ *
+ * TODO: [unknown] add dependencies so this can be used as a
+ * constraint
+ *
+ * NOTE: [2008-06-22 ptw] Which would mean accumulating getBounds
+ * dependencies for each subview, visibility of each subview, and
+ * whether or not the view has a resource!
+ *
+ * @access private
+ */
+function measureSize ( axis ) {
+  var w = this[ "resource" + axis];
+
+  for ( var i= this.subviews.length-1; i >= 0; i-- ){
+    var sview = this.subviews[ i ];
+    if (sview.visible) {
+      if ( sview.usegetbounds ){
+        var bobj = sview.getBounds();
+      } else {
+        var bobj = sview;
+      }
+      var svs = bobj[ axis == "width" ? "x" : "y" ] + bobj[ axis ];
+      if ( svs > w ){
+        w = svs;
+      }
+    }
+  }
+  return w;
+}
+
+/**
+  * Reports the "natural" width of the contents of the view. That is,
+  * the width the view would have if it did not have an explicit
+  * width.
+  *
+  * (Note: this method is not supported in a constraint expression.)
+  */
+function measureWidth () {
+    return this.measureSize ("width");
+}
+
+/**
+  * Reports the "natural" height of the contents of the view. That is,
+  * the height the view would have if it did not have an explicit
+  * height.
+  *
+  * (Note: this method is not supported in a constraint expression.)
+  */
+function measureHeight () {
+    return this.measureSize ("height");
+}
+
+/** @access private */
+function updateSize ( axis , newsize ){
+    if (axis == "width")
+        this.updateWidth(newsize);
+    else
+        this.updateHeight(newsize);
+}
+
+/** @access private */
+function updateWidth ( newsize ){
+    if ( this._setrescwidth ){
+        this.unstretchedwidth = newsize;
+
+        if (this.onunstretchedwidth.ready) this.onunstretchedwidth.sendEvent( newsize );
+    }
+
+    if ( !this.hassetwidth ){
+        this.width = newsize;
+        this.sprite.setWidth(newsize);
+        if (this.onwidth.ready) this.onwidth.sendEvent( newsize );
+
+        var vip:LzView = (this.immediateparent cast LzView);
+        if (vip.__LZcheckwidth)
+            vip.__LZcheckwidthFunction( this );
+    }
+
+}
+
+/** @access private */
+function updateHeight ( newsize ){
+    if ( this._setrescheight ){
+        this.unstretchedheight = newsize;
+
+        if (this.onunstretchedheight.ready) this.onunstretchedheight.sendEvent( newsize );
+    }
+
+    if ( !this.hassetheight ){
+        this.height = newsize;
+        this.sprite.setHeight(newsize);
+        if (this.onheight.ready) this.onheight.sendEvent( newsize );
+
+        var vip:LzView = (this.immediateparent cast LzView);
+        if (vip.__LZcheckheight) 
+            vip.__LZcheckheightFunction( this );
+
+    }
+}
+
+/** @access private */
+function reevaluateSize ( ia = null){
+    //if called with no args, check both
+    if ( ia == null ){
+        var axis = "height";
+        this.reevaluateSize( "width" );
+    } else {
+        var axis = ia;
+    }
+
+    if ( this[ "hasset" + axis ] && ! this[ '_setresc' + axis ] ) return;
+
+    //use 'unstretchedwidth' for stretches
+    var o = this[ "_setresc" + axis ] ? this[ "unstretched" + axis ] :
+                                        this[ axis ];
+
+    var w =  this[ "resource" + axis ] || 0;
+    //var w =  this[ "resource" + axis ] ;
+    this[ "__LZoutlie" + axis ] = this;
+
+    for ( var i= this.subviews.length-1; i >= 0; i-- ){
+        var sv = this.subviews[ i ];
+
+        if ( sv.usegetbounds ){
+            var b = sv.getBounds();
+            var svs = b[ axis == "width" ? "x" : "y" ] + b[ axis ];
+        } else {
+            var svs = sv[ axis == "width" ? "x" : "y" ] + sv[ axis ];
+        }
+        if ( sv.visible && svs > w ){
+            w = svs;
+            this[ "__LZoutlie" + axis ] = sv;
+        }
+    }
+
+    if ( o != w ){
+        if (axis == "width")
+            this.updateWidth(w);
+        else
+            this.updateHeight(w);
+    }
+}
+
+/**
+  * Since a view does not re-measure the size of its resource once that resource
+  * has loaded, this method is provided to force the view to update its size, 
+  * taking into account the current size of its resource. 
+  */
+function updateResourceSize ( ){
+    this.sprite.updateResourceSize();
+    this.reevaluateSize();
+}
+
+
+/**
+ * <p>Sets the named property of this view to the value that will cause
+ * the absolute value of the property in both views to be the same.</p>
+ *
+ * <p>For example, <tt>a.setAttributeRelative('x', b)</tt> will cause
+ * the left edge of view <replaceable>a</replaceable> to be aligned
+ * with the left edge of view <replaceable>b</replaceable> on the
+ * canvas.  This operation works for any two views on the canvas,
+ * regardless of their relative relationship.</p>
+ *
+ * <p>See also <method><link
+ * linkend="LzView.prototype.getAttributeRelative">lz.view.getAttributeRelative</link></method>.
+ * <tt>this.setAttributeRelative(property,
+ * that)</tt> is the same as (but more efficient than)
+ * <tt>this.setAttribute(property,
+ * that.getAttributeRelative(property, this))</tt>.</p>
+ * 
+ * @param String prop: the property to set: 'x', 'y', 'width',
+ * or 'height'
+ * @param LzView refView: the view whose property is to be matched
+ */
+  function setAttributeRelative(prop:String, refView:LzView):void {
+    var tLink = this.getLinkage( refView );
+    var val = refView[ prop ];
+    if (prop == "x" || prop =="y" ){
+        //these properties need to account for both offset and scale
+        tLink.update ( prop );
+        this.setAttribute (prop ,  (  val - tLink[prop + "offset"] )
+                                / tLink[prop + "scale"] );
+    }else if ( prop == "width" || prop == "height" ){
+        //these properties account only for scale
+        var axis = prop == "width" ? "x" : "y"
+        tLink.update ( axis )
+        // NOTE: [2010-09-04 ptw] Currently a view's scale _does_
+        // affect its absolute height/width, even though it does not
+        // affect its x/y, hence the additional factors.
+        var scale = axis + "scale";
+        this.setAttribute ( prop, val * refView[scale] / tLink[scale] / this[scale]);
+
+    }else{
+        //not yet implemented: rotation, alpha...
+    }
+}
+
+
+/** @access private
+ * @devnote This routine is unused.
+ * getAttributeRelative is the routine that is used in dependencies.
+ * "who" below should refer to "self"
+ */
+function $lzc$setAttributeRelative_dependencies ( who,self, prop ,
+                                                         refView ){
+    var tLink = who.getLinkage( refView );
+    var pass = 2;
+    var d = [] ;
+
+    if ( prop == "width" ){
+        var ax = "x";
+    } else if ( prop == "height" ){
+        var ax = "y";
+    } else {
+        var ax = prop;
+    }
+
+    var sax = ax == "x" ? "width" : "height";
+
+    while ( pass ){
+        if ( pass == 2 ){
+            var carr = tLink.uplinkArray;
+        } else {
+            var carr = tLink.downlinkArray;
+        }
+        pass--;
+        for ( var i = carr.length-1; i >= 0; i-- ){
+            d.push ( carr[ i ] , ax);
+            if ( d[ "_setresc" + sax ] ){
+                //view stretches; affects relative props
+                d.push( [ carr[ i ] , sax ] );
+            }
+        }
+    }
+    return d;
+}
+
+
+
+/**
+ * <p>Transform the specified attribute from this view's coordinate space
+ * to the reference view's coordinate space.  This operation works for
+ * any two views on the canvas, regardless of their relative
+ * relationship.</p>
+ *
+ * <p>This method answers these questions: For <tt>x</tt> or
+ * <tt>y</tt>: What value of <tt>x</tt> or <tt>y</tt> in the reference
+ * view will be the same absolute position as my current <tt>x</tt> or
+ * <tt>y</tt>? For <tt>width</tt> or <tt>height</tt>: What distance in
+ * the <tt>x</tt> or <tt>y</tt> axis in the reference view will be the
+ * same absolute distance as my current <tt>width</tt> or
+ * <tt>height</tt>.</p>
+ *
+ * <p>See also<method><link
+ * linkend="LzView.prototype.setAttributeRelative">lz.view.setAttributeRelative</link></method>.
+ * <tt>this.setAttributeRelative(property,
+ * that)</tt> is the same as (but more efficient than)
+ * <tt>this.setAttribute(property,
+ * that.getAttributeRelative(property, this))</tt>.</p>
+ * 
+ * @param String prop: the property to transform: 'x', 'y', 'width',
+ * or 'height'
+ * @param LzView refView: the view where the transformed property is measured
+ */
+function getAttributeRelative(prop:String, refView:LzView ) {
+    if (refView === this) {
+        return this[prop];
+    }
+    var tLink = this.getLinkage( refView );
+
+    if (prop == "x" || prop =="y") {
+        tLink.update (prop);
+        return (this[prop] * tLink[prop + "scale"]) + tLink[prop + "offset"];
+    } else if (prop == "width" || prop == "height") {
+        var axis = prop == "width" ? "x" : "y"
+        tLink.update (axis);
+        // NOTE: [2010-09-04 ptw] Currently a view's scale _does_
+        // affect its absolute height/width, even though it does not
+        // affect its x/y, hence the additional factors.
+        var scale = axis + "scale";
+        return this[ prop ] * this[scale] * tLink[scale] / refView[scale];
+    } else {
+        //not yet implemented: rotation, alpha...
+    }
+}
+
+/** @access private */
+function $lzc$getAttributeRelative_dependencies( who,self, prop ,
+                                                        refView ){
+    var tLink = self.getLinkage( refView );
+    var pass = 2;
+    var d = [ self , prop ] ;
+
+    if ( prop == "width" ){
+        var ax = "x";
+    } else if ( prop == "height" ){
+        var ax = "y";
+    } else {
+        var ax = prop;
+    }
+
+    var sax = ax == "x" ? "width" : "height";
+
+    while ( pass ){
+        if ( pass == 2 ){
+            var carr = tLink.uplinkArray;
+        } else {
+            var carr = tLink.downlinkArray;
+        }
+        pass--;
+        for ( var i = carr.length-1; i >= 0; i-- ){
+            var ci = carr[ i ];
+            d.push ( ci , ax);
+            if ( ci[ "_setresc" + sax ] ){
+                //view stretches; affects relative props
+                d.push( ci , sax );
+            }
+        }
+    }
+
+    return d;
+}
+
+
+/** @access private */
+var __LZviewLinks = null;
+
+/**
+  * This method creates a linkage that can provide transformations
+  * between views.  Once created, linkages are stored for reuse as a
+  * hash, with a pointer to the reference view serving as the key.
+  * @deprecated See note regarding <method>getAttributeRelative</method>.
+  * 
+  * @access private
+  * 
+  * @param refView: the view to which to create a linkage.
+  */
+function getLinkage( refView ) {
+    if ( this.__LZviewLinks == null ){
+        this.__LZviewLinks = new Object;
+    }
+
+    var uid = refView.getUID();
+    if (this.__LZviewLinks[ uid ] == null ){
+        //cache links for quick access
+        this.__LZviewLinks[ uid ] = new LzViewLinkage(this, refView );
+    }
+
+    return this.__LZviewLinks[ uid ];
+}
+
+/**
+  * @access private
+  * Receives mouse events from sprites/mode manager and sends the appropriate 
+  * events
+  */
+function mouseevent(eventname) {
+    if (this[eventname] && this[eventname].ready) this[eventname].sendEvent(this);
+}    
+
+/**
+  * The position of the mouse relative to this view.
+  *
+  * @param String xory: Which axis ("x" | "y") to return. If null returns
+  * both axes.
+  *
+  * @return Number: The position of the mouse relative to this
+  * view along the specified axis. If both axes are requsted returns
+  * <code>{x: Number, y: Number}</code>.
+  */
+function getMouse( xory : String=null ) {
+    if (this.__mousecache == null || this.__movecounter !== lz.GlobalMouse.__movecounter) {
+        this.__movecounter = lz.GlobalMouse.__movecounter;
+        this.__mousecache = this.sprite.getMouse();
+    }
+    if (xory == null) return this.__mousecache;
+    return this.__mousecache[xory];
+}
+
+/** @access private */
+function $lzc$getMouse_dependencies(...ignore ) {
+    return [ lz.Idle, "idle" ];
+}
+
+
+/**
+  * returns true if the point is contained within the view.  Considers visibility and clipping.
+  * @param Number x: an x value relative to the this view's coordinates
+  * @param Number y: an y value relative to the this view's coordinates
+  * @return Boolean: boolean indicating whether or not the point lies within the view
+  */
+function containsPt( x,y ) {
+  // NOTE: [2009-08-24 ptw] Pixels are 0-based, so the comparison with
+  // width and height is exclusive.
+  var offsetx = 0;
+  var offsety = 0;
+  var view = this;
+  do {
+    // if any view is invisible, we don't contain the point.
+    if (!view.visible) return false;
+
+    if (view.masked || view === this) {
+      // since we're walking up the chain looking for visible parents...
+      // convert x/y to the clip parents' coordinate space
+      var vx = x - offsetx;
+      var vy = y - offsety;
+
+      // the point is not on the view if it is not on the clipping parent
+      if (vx < 0 || vx >= view.width // outside width
+        || vy < 0 || vy >= view.height) { // outside height
+        return false;
+      }
+    }
+    // adjust the offsets
+    offsetx -= view.x;
+    offsety -= view.y;
+
+    view = view.immediateparent;
+  } while (view !== canvas)
+
+  return true;
+}
+
+/**
+  * This method makes this view the frontmost subview of this view's parent.
+  * */
+function bringToFront ( ){
+    // FIXME: [hqm 2006-09] in some cases I have seen this.sprite unbound, is that ever OK?
+    if (!this.sprite) {
+        if ($debug) {
+            Debug.warn("no sprite on ",this);
+        }
+        return;
+    }
+    this.sprite.bringToFront();
+}
+
+/**
+  * Returns an array of subviews in depth order
+  * @return [LzView]: An array of this view's subviews in depth order
+  */
+function getDepthList (){
+    var o = this.subviews.concat();
+    o.sort(this.__zCompare);
+
+    return o;
+}
+
+
+/**
+  * Sort comparator for sprite z order
+  * @access private
+  */
+function __zCompare(a, b) {
+   var az = a.sprite.getZ();
+   var bz = b.sprite.getZ();
+   if (az < bz)
+      return -1;
+   if (az > bz)
+      return 1;
+   return 0;
+}
+
+/**
+  * Puts this view directly behind one of its siblings. If this view is
+  * already in back of the target, but there are other views between this
+  * view and the target, that means this view will be moved in front of the
+  * intervening views.
+  * @param LzView v: The view this view should go behind. If the passed
+  * view is null or not a sibling, the method has no effect.
+  * @return Boolean: Method returns true if the operation is successful.
+  */
+function sendBehind ( v ){
+    // noop
+    if (v === this) return;
+
+    return (v ? this.sprite.sendBehind(v.sprite) : false);
+}
+
+/**
+  * Puts this view directly in front of one of its siblings. If this view is
+  * already in front of the target, but there are other views between this
+  * view and the target, that means this view will be moved in back of the
+  * intervening views.
+  * @param LzView v: The view this view should go in front of. If the passed
+  * view is null or not a sibling, the method has no effect.
+  * @return Boolean: Method returns true if the operation is successful.
+  */
+function sendInFrontOf ( v ){
+    // noop
+    if (v === this) return;
+
+    return (v ? this.sprite.sendInFrontOf(v.sprite) : false);
+}
+
+/**
+  * This method makes this view the hindmost subview of this view's parent.
+  */
+function sendToBack ( ){
+    this.sprite.sendToBack();
+}
+
+/**
+  * For resources which have more than one frame, this function sets
+  * the view
+  * to display the numbered resource. For Flash assets, resource numbers
+  * correspond to
+  * movieclip frames.
+  * 
+  * @param Integer n: the number of the resource to show
+  * @deprecated Use setAttribute('frame', ...) instead.
+  */
+final function setResourceNumber( n ) {
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_frame(n); 
+}
+
+/**
+  * Sets the view so that it stretches its resource in the given axis so that
+  * the resource is the same size as the view. The has the effect of distorting
+  * the coordinate system for all children of this view, so use this method
+  * with care.
+  * 
+  * @deprecated Use setAttribute('stretches', ...) instead.
+  * @param String v: Set the resource to stretch only in the given axis ("width" or
+  * "height") or in both axes ("both"). 
+  */
+final function stretchResource(v) { 
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_stretches(v); 
+}
+
+
+/**
+  * Gives the view a bgcolor that is the same size as the view.
+  * @param Integer bgc: The 0-FFFFFF number to be used for the new background color.
+  * @deprecated Use setAttribute('bgcolor', ...) instead.
+  */
+final function setBGColor ( bgc ) {
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_bgcolor(bgc);
+}
+
+/**
+  * This function allows the view to load its media from an URL at runtime.
+  * Resources loaded with <method>setSource</method> will replace compiled
+  * resources when the request is made.
+  * 
+  * @param String source: The URL from which to load the resource for this view.
+  * @param String cache: If set, controls caching behavior. Choices are
+  * <code>none</code> , <code>clientonly</code> , <code>serveronly</code> , <code>both</code> (the default for Flash).  
+  * DHTML applications cache media on the client only. DHTML supports the <code>memorycache</code> option which 
+  * enables in-memory resource caching. This enhances performance when swapping resources quickly, and is used 
+  * internally for multi-frame resources. Media loaded with <code>memorycache</code> will remain in memory until 
+  * the page is unloaded or unload() is called.
+  * @param String headers: Headers to send with the request, if any.
+  * @param String filetype: Filetype, e.g. 'mp3' or 'jpg'.  If not specified, it will be derived from the URL.
+  */
+function setSource ( source , cache = null, headers = null, filetype = null){
+    this.sprite.setSource(source, cache, headers, filetype);
+}
+
+/**
+  * Unloads media loaded with setSource or the source= attribute.
+  * */
+function unload ( ){
+    this._resource = null;
+    this.sprite.unload();
+}
+
+
+/**
+  * This function applies the MakeMasked view transformer.
+  * @access private
+  */
+function makeMasked ( ){
+    this.sprite.setClip(true);
+    this.masked = true;
+    this.mask = this;
+}
+
+/** @access private */
+function removeMask () {
+    this.sprite.setClip(false);
+    this.masked = false;
+    this.mask = null;
+}
+
+
+/**
+  * Makes a view clickable or not clickable.
+  * @param Boolean amclickable: Boolean indicating the view's clickability
+  * @deprecated Use setAttribute('clickable', ...) instead.
+  */
+final function setClickable ( amclickable ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_clickable(amclickable);
+}
+
+
+/** @access private */
+function $lzc$set_cursor(cursor) {
+    this.sprite.setCursor(cursor);
+}
+
+/**
+  * Sets the cursor to the given resource when the mouse is over this view
+  * @param String cursor: The name of the resource to use as a cursor when it is over
+  * this view. Or '' for default cursor.
+  * @deprecated Use setAttribute('cursor', ...) instead.
+  */
+final function setCursor ( cursor = null){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_cursor(cursor);
+}
+
+
+/** @access private */
+function $lzc$set_play (b:Boolean) :void {
+    if ( b ) {
+        this.play();
+    } else {
+        this.stop();
+    }
+}
+
+/**
+  * Start or stop playing the attached resource.
+  * @param Boolean b: If true, starts playing, otherwise stops
+  * @deprecated Use setAttribute('play', ...) instead.
+  */
+final function setPlay (b:Boolean) :void {
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_play(b);
+}
+
+/**
+  * Get a reference to the control mc
+  * @access private
+  * @deprecated Use getDisplayObject() instead.
+  */
+function getMCRef() :* {
+    if ($debug) Debug.deprecated(this, arguments.callee, this.getDisplayObject);
+    return this.getDisplayObject();
+}
+
+/**
+  * Get a reference to the underlying display object for this view.  For as2 this is a MovieClip, as3 an LzSprite and in dhtml it's a <div/>
+  */
+function getDisplayObject():* {
+    return this.sprite.getDisplayObject();
+}
+
+/**
+  * Start playing the attached resource. Note that a compiled resource that
+  * begins playing when it is attached (i.e. does not contain a 'stop'
+  * instruction in the first frame) will not send events and generally behave
+  * correctly unless it is told to play. Resources which are loaded via
+  * setSource don't have this issue.
+  * 
+  * @param Integer f: If defined, begin playing at the given frame. Otherwise,
+  * begin playing at the current frame.
+  * @param Boolean rel: If true, f is relative to the current frame.  Otherwise f is relative to the beginning of the resource.
+  */
+function play (f/*:Number?*/ = null, rel:Boolean = false) :void {
+    this.sprite.play(f, rel);
+}
+
+/**
+  * Stop playing the attached resource
+  * @param Integer f: If defined, stop playing at the given frame. Otherwise,
+  * stop at the current frame.
+  * @param Boolean rel: If true, f is relative to the current frame.  Otherwise it is relative to the start position of the resource.
+  */
+function stop (f/*:Number?*/ = null, rel:Boolean = false) :void {
+    this.sprite.stop(f, rel);
+}
+
+/**
+  * Set the volume of the attached resource
+  * @param Integer v: A number from 0 to 100 representing a volume level
+  */
+function setVolume (v:Number) :void {
+    if (this.capabilities.audio) {
+        this.sprite.setVolume(v);
+    } else if ($debug) {
+        LzView.__warnCapability('view.setVolume()', 'audio'); 
+    }
+}
+
+/**
+  * Get the volume of the attached resource
+  * @return Integer: A number from 0 to 100 representing a volume level
+  */
+function getVolume () :Number {
+    if (this.capabilities.audio) {
+        return this.sprite.getVolume();
+    } else if ($debug) {
+        LzView.__warnCapability('view.getVolume()', 'audio'); 
+    }
+    return NaN;
+}
+
+/**
+  * Set the pan of the attached resource
+  * @param Integer p: A number from -100 to 100 representing a pan level
+  */
+function setPan (p:Number) :void {
+    if (this.capabilities.audio) {
+        this.sprite.setPan(p);
+    } else if ($debug) {
+        LzView.__warnCapability('view.setPan()', 'audio'); 
+    }
+}
+
+/**
+  * Get the pan of the attached resource
+  * @return Integer: A number from -100 to 100 representing a pan level
+  */
+function getPan () :Number {
+    if (this.capabilities.audio) {
+        return this.sprite.getPan();
+    } else if ($debug) {
+        LzView.__warnCapability('view.getPan()', 'audio'); 
+    }
+    return NaN;
+}
+
+/**
+  * Get the Z order of the view
+  * @return Integer: A number representing z level relative to other siblings
+  * @access private
+  */
+function getZ () {
+    return this.sprite.getZ();
+}
+
+/**
+  * Skips forward or backward n seconds (depending on the sign of the argument).
+  * If playing, continue to play. If stopped, stay
+  * stopped
+  * 
+  * @param Integer secs: Number of seconds to skip forward or backward (if negative)
+  */
+function seek (secs:Number) :void {
+    if (this.capabilities.audio) {
+        if (this.sprite.isaudio) {
+            this.sprite.seek(secs, this.playing);
+            return;
+        }
+    }
+    var frames:Number = secs * canvas.framerate;
+    if (this.playing) {
+        this.play(frames, true);
+    } else {
+        this.stop(frames, true);
+    }
+}
+
+/**
+  * Return the elapsed play time within the view's resource.
+  * @return Number: The number of seconds of media between the current frame and the
+  * first frame
+  */
+function getCurrentTime () :Number {
+    if (this.capabilities.audio) {
+        if (this.sprite.isaudio) {
+            return this.sprite.getCurrentTime();
+        }
+    }
+    return this.frame / canvas.framerate;
+}
+
+/** @access private */
+function $lzc$getCurrentTime_dependencies ( who, self ) :Array {
+    return [ self, "frame" ];
+}
+
+/**
+  * Returns the total amount of time the resource would take to play.
+  * @return Number: Seconds of media controlled by this view.
+  */
+function getTotalTime () :Number {
+    if (this.capabilities.audio) {
+        if (this.sprite.isaudio) {
+            return this.sprite.getTotalTime();
+        }
+    }
+    return this.totalframes / canvas.framerate;
+}
+
+/** @access private */
+function $lzc$getTotalTime_dependencies ( who, self ) :Array {
+    return [ self, "load" ];
+}
+
+/**
+  * Returns an object containing the media's id3 tag, assuming it's mp3 loaded 
+  * with proxy == false;
+  * @return Object: Object containind id3 tag data, if available.
+  */
+function getID3 () :Object {
+    if (this.capabilities.audio) {
+        if (this.sprite.isaudio) {
+            return this.sprite.getID3();
+        }
+    } else if ($debug) {
+        LzView.__warnCapability('view.getID3()', 'audio'); 
+    }
+    return null;
+}
+
+
+/**
+  * Shows or hides the hand cursor for this view.
+  * @param Boolean s: true shows the hand cursor for this view, false hides 
+  * it
+  * @deprecated Use setAttribute('showhandcursor', ...) instead.
+  */
+final function setShowHandCursor ( s ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_showhandcursor(s);
+}
+
+/**
+  * @param Boolean accessible
+  */
+function setAccessible (accessible) {
+    if (this.capabilities.accessibility) {
+        this.sprite.setAccessible(accessible);
+    } else if ($debug) {
+        LzView.__warnCapability('view.setAccessible()', 'accessibility'); 
+    }
+}
+
+/**
+  * Activate/inactivate children for accessibility
+  * @param Boolean s: If true, activate the current view and all of its children
+  * @deprecated Use setAttribute('aaactive', ...) instead.
+  */
+final function setAAActive ( s ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_aaactive(s);
+}
+
+
+/**
+  * Set accessibility name
+  * @param string s: Sets the accessibility name for this view
+  * @deprecated Use setAttribute('aaname', ...) instead.
+  */
+final function setAAName ( s ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_aaname(s);
+}
+
+
+/**
+  * Set accessibility description
+  * @param string s: Sets the accessibility description for this view
+  * @deprecated Use setAttribute('aadescription', ...) instead.
+  */
+final function setAADescription ( s ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_aadescription(s);
+}
+
+/**
+  * Set accessibility tab order
+  * @param number s: The tab order index for this view.  Must be a unique number.
+  * @deprecated Use setAttribute('aatabindex', ...) instead.
+  */
+final function setAATabIndex ( s ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_aatabindex(s);
+}
+
+/**
+  * Set accessibility silencing/unsilencing
+  * @param string s: If true, this view is made silent to the screen reader.  
+  * If false, it is active to the screen reader.
+  * @deprecated Use setAttribute('aasilent', ...) instead.
+  */
+final function setAASilent ( s ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_aasilent(s);
+}
+
+/**
+  * Determine whether a view should give up focus. Override this method to
+  * specify your own policy.
+  */
+function shouldYieldFocus ( ){
+    return true;
+}
+
+
+/** blurring is true if the view is in the process of losing focus.
+  * @type Boolean
+  * @access private 
+  */
+var blurring = false;
+
+/** @access public
+ * @param url the url of the media resource being requested.
+ * @return returns a URL of a server through which to proxy the request
+ */
+function getProxyURL ( url = null ){
+    var proxy = this.proxyurl;
+    if (proxy == null) {
+        return null;
+    } else if (typeof(proxy) == "string") {
+        return proxy;
+    } else if (typeof(proxy) == "function") {
+        return proxy(url);
+    } else if ($debug) {
+        Debug.error("Unknown value for proxyurl expression %w on %w", proxy, this);
+    }
+}
+
+/** @access private */
+static var __LZproxypolicies = [];
+
+/** @access private */
+function __LZcheckProxyPolicy ( url ){
+    // TODO: walk up parent chain and look for __proxypolicy properties.
+    if (this.__proxypolicy != null) {
+        return this.__proxypolicy( url );
+    }
+
+    var pol = LzView.__LZproxypolicies;
+
+    for ( var i = pol.length-1; i >=0; i-- ){
+        var resp = pol[ i ] ( url );
+        if ( resp != null ) return resp;
+    }
+
+    return canvas.proxied;
+}
+
+/**
+  * Adds a function which can decide how the media at a given URL should be
+  * loaded
+  * 
+  * @param Function f: A function that takes a URL as a string and returns one
+  * of true, false, or null meaning respectively that the request should be
+  * proxied by the LPS server; made directly to the URL; or should be passed to
+  * the next policy function in the list. The default policy function returns
+  * the value of canvas.proxied
+  */
+static function addProxyPolicy ( f ){
+   LzView.__LZproxypolicies.push ( f );
+}
+
+/**
+  * Removes a proxy policy function that has been added using
+  * lz.view.addProxyPolicy
+  * 
+  * @param Function f: The function to remove from the policy list
+  * @return Boolean: Returns true if the function was found and removed, false
+  * if not
+  */
+static function removeProxyPolicy ( f ){
+    var pol = LzView.__LZproxypolicies;
+    for ( var i = 0; i < pol.length; i++ ) {
+        if ( pol[ i ] == f ){
+            LzView.__LZproxypolicies = pol.splice( i, 1 );
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+  * Sets a proxy policy function on a per-view basis.
+  * 
+  * @param Function f: A function that takes a URL as a string and returns
+  * true or false, meaning that the request should be
+  * proxied by the LPS server or made directly to the URL.
+  */
+function setProxyPolicy ( f ){
+    this.__proxypolicy = f;
+}
+
+/** @access private */ 
+var __proxypolicy = null;
+
+/**
+  * Sets a proxy policy function on a per-view basis.
+  * 
+  * @param Object f: If a string, use as a URL to the proxy server. If a function, it should take a URL of a resource, and return the URL of the proxy server to use to load that resource.
+  * @deprecated Use setAttribute('proxyurl', ...) instead.
+  */
+final function setProxyURL ( f ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_proxyurl(f);
+}
+
+
+
+/** The url of the proxy server, if the app is running in proxied mode.
+ *
+ * proxyurl can be null, a URL string, or a function.
+ *
+ * <ul>
+ * <li> If the value is a string, treat it as a URL to the proxy server. </li>
+ * <li> If the value is  a function, it should return the URL of the proxy server. </li>
+ * </ul>
+ * The default proxy policy references the proxyurl of the canvas.
+ * @type Object
+ * @lzxtype expression
+ * @lzxdefault function
+  */
+var proxyurl = function (url:String) {
+    /* TODO: It might be useful someday to implement a proxyurl
+     * function that searches up the parent chain instead of going
+     * directly to the canvas.
+     */
+    return canvas.getProxyURL(url);
+};
+
+/** @access private */ 
+function $lzc$set_proxyurl( f ){
+    this.proxyurl = f;
+}
+
+/**
+  * The current context menu object
+  * @type LzContextMenu
+  */
+var contextmenu:LzContextMenu = null;
+
+/** @access private */
+function $lzc$set_contextmenu (cmenu:LzContextMenu) :void {
+    this.contextmenu = cmenu;
+    this.sprite.setContextMenu( cmenu );
+}
+
+/**
+  * Install menu items for the right-mouse-button 
+  * @param LzContextMenu cmenu: lz.contextmenu to install on this view
+  * @deprecated Use setAttribute('contextmenu', ...) instead.
+  */
+final function setContextMenu ( cmenu ){
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_contextmenu(cmenu);
+}
+
+/**
+  * Returns the current context menu object
+  * @access public
+  * @deprecated Use 'view.contextmenu' instead
+  */
+function getContextMenu ( ){
+    if ($debug) Debug.deprecated(this, arguments.callee, 'contextmenu');
+    return this.contextmenu;
+}
+
+/** @access private */
+static function __warnCapability (msg:String, capabilityname:String=''):void {
+    if ($debug) {
+        var check = capabilityname == '' ? '' : 'Check "canvas.capabilities.' + capabilityname + '" to avoid this warning.';
+        Debug.warn('The %s runtime does not support %s. %s', canvas['runtime'], msg, check);
+    }
+}
+
+/**
+  * Override to specify the next view to be focused
+  * @access public
+  */
+function getNextSelection() {
+}
+/**
+  * Override to specify the previous view to be focused
+  * @access public
+  */
+function getPrevSelection() {
+}
+
+/** A value of true means that this view's bitmap will be cached, if available.
+  * @type Boolean
+  * @lzxtype boolean
+  * @lzxdefault false
+  */
+var cachebitmap = false;
+/**
+  * @param Boolean cache: Whether or not to cache bitmaps for this view
+  * @access private 
+  */
+function $lzc$set_cachebitmap( cache ) {
+    if (cache != this.cachebitmap) {
+        this.cachebitmap = cache;
+        if (this.capabilities.bitmapcaching) {
+            this.sprite.setBitmapCache(cache);
+        } else if ($debug) {
+            LzView.__warnCapability('view.cachebitmap', 'bitmapcaching'); 
+        }
+    }
+}
+
+/** Sent when the drawing context is ready to use, which can take some time in IE DHTML.
+ * @lzxtype event 
+ * @access public
+ */
+var oncontext = LzDeclaredEvent;
+
+/** Contains a reference to the raw drawing context.  The oncontext event is sent when the context is ready to use, which can take some time in IE DHTML.
+ * @access public
+ * @type Object
+ * @lzxtype expression
+ */
+var context = null;
+
+/**
+  * @param 2dcontext context: The 2d context for drawing
+  * @access private 
+  */
+function $lzc$set_context(context) {
+    this.context = context;
+    if (this.oncontext.ready) {
+        this.oncontext.sendEvent(context);
+    }
+}
+
+/**
+  * Creates a 2d graphics context. Sets the context attribute when it's ready.
+  * @access private 
+  */
+function createContext(){
+    if (this.capabilities['2dcanvas']) {
+        // Set the callback to use when the context has been created
+        this.sprite.setContextCallback(this, '$lzc$set_context');
+        // some runtimes need to use the callback
+        var context = this.sprite.getContext();
+        if (context) {
+            this.setAttribute('context', context);
+        }
+    } else if ($debug) {
+        LzView.__warnCapability('view.createContext', '2dcanvas'); 
+    }
+}
+
+/** Sent when shadowangle changes
+ * @lzxtype event 
+ * @access public
+ */
+var onshadowangle = LzDeclaredEvent;
+
+/** The angle for the drop shadow, in degrees
+ * @access public
+ * @type Number
+ * @lzxtype number
+ * @lzxdefault 0
+ */
+var shadowangle = 0;
+
+/**
+  * @param number angle: The angle for this view's drop shadow
+  * @access private 
+  */
+function $lzc$set_shadowangle(angle) {
+    if (this.capabilities['dropshadows']) {
+        this.shadowangle = angle;
+        this.__updateShadow();
+        if (this.onshadowangle.ready) {
+            this.onshadowangle.sendEvent(angle);
+        }
+    } else if ($debug) {
+        LzView.__warnCapability('view.shadowangle', 'dropshadows'); 
+    }
+}
+
+/** Sent when shadowdistance changes
+ * @lzxtype event 
+ * @access public
+ */
+var onshadowdistance = LzDeclaredEvent;
+
+/** The distance for the drop shadow, in pixels
+ * @access public
+ * @type Number
+ * @lzxtype number
+ * @lzxdefault 10
+ */
+var shadowdistance = 10;
+
+/**
+  * @param number distance: The distance for this view's drop shadow
+  * @access private 
+  */
+function $lzc$set_shadowdistance(distance) {
+    if (this.capabilities['dropshadows']) {
+        if (distance < .01) distance = 0;
+        this.shadowdistance = distance;
+        this.__updateShadow();
+        if (this.onshadowdistance.ready) {
+            this.onshadowdistance.sendEvent(distance);
+        }
+    } else if ($debug) {
+        LzView.__warnCapability('view.shadowdistance', 'dropshadows'); 
+    }
+}
+
+/** Sent when shadowcolor changes
+ * @lzxtype event 
+ * @access public
+ */
+var onshadowcolor = LzDeclaredEvent;
+
+/** The color for the drop shadow
+ * @access public
+ * @lzxtype color
+ * @type Number
+ * @lzxdefault 0
+ */
+var shadowcolor = 0;
+
+/**
+  * @param number color: The color for this view's drop shadow
+  * @access private 
+  */
+function $lzc$set_shadowcolor(color) {
+    if (this.capabilities['dropshadows']) {
+        this.shadowcolor = LzColorUtils.torgb(color);
+        this.__updateShadow();
+        if (this.onshadowcolor.ready) {
+            this.onshadowcolor.sendEvent(color);
+        }
+    } else if ($debug) {
+        LzView.__warnCapability('view.shadowcolor', 'dropshadows'); 
+    }
+}
+
+/** Sent when shadowblurradius changes
+ * @lzxtype event 
+ * @access public
+ */
+var onshadowblurradius = LzDeclaredEvent;
+
+/** The blur radius for the drop shadow, in pixels
+ * @access public
+ * @lzxtype number
+ * @type Number
+ * @lzxdefault 4
+ */
+var shadowblurradius = 4;
+
+/**
+  * @param number blurradius: The blur radius for this view's drop shadow
+  * @access private 
+  */
+function $lzc$set_shadowblurradius(blurradius) {
+    if (this.capabilities['dropshadows']) {
+        if (blurradius < .01) blurradius = 0;
+        this.shadowblurradius = blurradius;
+        this.__updateShadow();
+        if (this.onshadowblurradius.ready) {
+            this.onshadowblurradius.sendEvent(blurradius);
+        }
+    } else if ($debug) {
+        LzView.__warnCapability('view.shadowblurradius', 'dropshadows'); 
+    }
+}
+
+/** Called to update the sprite's shadow.  Stores all updates and gets called back at init time.
+  * @access private 
+  */
+function __updateShadow() {
+    if (! this.isinited) {
+        this.__updateshadowoninit = true;
+    } else {
+        this.sprite.updateShadow(this.shadowcolor, this.shadowdistance, this.shadowangle, this.shadowblurradius);
+    }
+}
+
+/** Sent when tintcolor is changed
+  * @lzxtype event 
+  * @access private
+  */
+var ontintcolor = LzDeclaredEvent;
+
+/** Sets the color offset, based on a hexadecimal color string, e.g. '#ff00ff'.  See setColorTransform() for details.
+  * @type String
+  * @lzxtype string
+  */
+var tintcolor = '';
+
+/**
+  * @param string color: a hexadecimal color value to use as a color offset
+  * @access private 
+  */
+function $lzc$set_tintcolor(color) {
+    if (this.capabilities.colortransform) {
+        if ($debug) {
+            if (this.fgcolor != null) {
+                Debug.warn('Setting tintcolor when fgcolor is already set on', this);
+            }
+        }
+
+        // Must set ra to 0 explicitly to emulate ColorTransform.rgb behavior 
+        // for swf8
+        var obj = {redMultiplier: 0, greenMultiplier: 0, blueMultiplier: 0, alphaMultiplier: 1};
+
+        if (color != null && color != '') {
+            if (isNaN(color)) {
+              var color = lz.Type.acceptTypeValue('color', color, this, 'tintcolor');
+            }
+            var rgba = LzColorUtils.inttorgba(color);
+            obj.redOffset = rgba[0];
+            obj.greenOffset = rgba[1];
+            obj.blueOffset = rgba[2];
+
+            if (rgba[3] != null) {
+                // add alpha component
+                obj.alphaOffset = rgba[3];
+            }
+        }
+
+        //Debug.warn('set_tintcolor', color, obj, rgba);
+            
+        this.$lzc$set_colortransform(obj);
+
+        //the colors should match
+        //if (this.tintcolor != color) {
+        //    Debug.warn('set_tintcolor', this.tintcolor, color);
+        //}
+
+        // the colortransform setter will update tintcolor, so return now
+        return;
+    } else if ($debug) {
+        LzView.__warnCapability('view.tintcolor', 'colortransform'); 
+    }
+    this.tintcolor = color
+    if (this.ontintcolor.ready) this.ontintcolor.sendEvent(color);
+}
+
+/** Sent when cornerradius changes
+ * @lzxtype event 
+ * @access public
+ */
+var oncornerradius = LzDeclaredEvent;
+
+/** The corner radius for the background
+ * @access public
+ * @lzxtype string
+ * @type String
+ * @lzxdefault 0
+ */
+var cornerradius = '4';
+
+/**
+  * @param number radius: The corner radius for this view's background
+  * @access private 
+  */
+function $lzc$set_cornerradius(radius) {
+    if (this.capabilities['cornerradius']) {
+        if (this.cornerradius !== radius) {
+            // handle list of border radii per http://www.w3.org/TR/css3-background/#the-border-radius
+            // The four values for each radii are given in the order top-left, top-right, bottom-right, bottom-left. 
+            var radii = String(radius).split(' ');
+            var l = radii.length;
+            if (l == 0) return;
+            // If top-right is omitted it is the same as top-left. 
+            if (l <= 1) radii[1] = radii[0];
+            // If bottom-left is omitted it is the same as top-right. 
+            if (l <= 3) radii[3] = radii[1];
+            // If bottom-right is omitted it is the same as top-left. 
+            if (l <= 2) radii[2] = radii[0];
+
+            // Convert to numbers
+            for (var i = 0, l = radii.length; i < l; i++) {
+                radii[i] = parseFloat(radii[i]);
+            }
+            this.sprite.setCornerRadius(radii);
+        }
+    } else if ($debug) {
+        LzView.__warnCapability('view.cornerradius', 'cornerradius'); 
+    }
+    this.cornerradius = radius;
+    if (this.oncornerradius.ready) this.oncornerradius.sendEvent(radius);
+}
+
+/** Returns true if the mouse is over this view */
+function isMouseOver() {
+    var mousepos = this.getMouse();
+    return this.containsPt(mousepos.x, mousepos.y);
+}
+
+/** @access private */
+function $lzc$isMouseOver_dependencies(...ignore ) {
+    return [ lz.Idle, "idle" ];
+}
+
+/** Returns true if this view is in front of a sibling view */
+function isInFrontOf(sibling:LzView) {
+    if (! sibling || sibling.parent !== this.parent) return null;
+    return this.sprite.getZ() > sibling.sprite.getZ();
+}
+
+/** Returns true if this view is behind a sibling view */
+function isBehind(sibling:LzView) {
+    if (! sibling || sibling.parent !== this.parent) return null;
+    return this.sprite.getZ() < sibling.sprite.getZ();
+}
+
+/** Tracks whether this view has margins/padding applied
+  * @access private */
+var __widthoffset = 0
+/*** @access private */
+var __heightoffset = 0
+
+/**
+  * Data about CSS styles for setCSS().
+  * @access private 
+  */
+var __styleinfo = {};
+
+/**
+  * Sets a CSS style directly on a sprite, sending an event a la a setter.  Warn when a matching capability isn't found for the stylename.
+  * @access private 
+  */
+function setCSS(stylename:String, value) {
+    var styleinfo = this.__styleinfo[stylename];
+    if (! styleinfo) {
+        if ($debug) {
+            Debug.warn('Unknown CSS property', stylename);
+        }
+        return;
+    }
+    //Debug.warn('setCSS', stylename, value);
+
+    if (this.capabilities[styleinfo.capability]) {
+        // Use lower case version of CSS name
+        this.sprite.setCSS(stylename, value, styleinfo.isdimension);
+    } else if ($debug) {
+        LzView.__warnCapability('view.' + stylename.toLowerCase(), styleinfo.capability); 
+        return;
+    }
+
+    if (styleinfo.affectsoffset) {
+        this.__LZhasoffset = this.xoffset != 0 || this.yoffset != 0 || this.__widthoffset != 0 || this.__heightoffset != 0;
+        this.usegetbounds = this.__LZhasoffset || this.rotation != 0 || this.xscale != 1 || this.yscale != 1;
+
+        var vip:LzView = (this.immediateparent cast LzView);
+        if (vip.__LZcheckwidth)
+            vip.__LZcheckwidthFunction( this );
+        if (vip.__LZcheckheight)
+            vip.__LZcheckheightFunction( this );
+    }
+}
+
+/**
+ * @access private
+ */
+function __LZresolveOtherReferences(rdict:Object) {
+    // Install layout attribute - vestigial support for LaszloView 
+    var layout = rdict['layout'];
+    if (layout != null) {
+        this.$lzc$set_layout( layout );
+    }
+}
+
+/**
+  * True if this view requires a call to getBounds() for accurate width and height measurement. This may be necessary when an offset or rotation are applied.
+  * @type Boolean
+  * @lzxtype boolean
+  * @keywords readonly
+  * @lzxdefault false
+  */
+var usegetbounds = false;
+
+/**
+  * Specifies this horizontal scale for this and all child views.
+  * @type Number
+  * @lzxtype numberExpression
+  * @lzxdefault "1"
+  */
+var xscale = 1;
+
+/** @access private 
+  * @lzxtype event 
+  */
+var onxscale = LzDeclaredEvent;
+
+/** @access private */
+function $lzc$set_xscale (xscale) {
+    if (this.capabilities.scaling) {
+        this.xscale = xscale;
+        this.usegetbounds = this.__LZhasoffset || this.rotation != 0 || this.xscale != 1 || this.yscale != 1;
+        this.sprite.setXScale(xscale)
+    } else if ($debug) {
+        LzView.__warnCapability("view.xscale", "scaling")
+    };
+    if (this.onxscale.ready) this.onxscale.sendEvent(xscale)
+}
+
+/**
+  * Specifies this vertical scale for this and all child views.
+  * @type Number
+  * @lzxtype numberExpression
+  * @lzxdefault "1"
+  */
+var yscale = 1;
+
+/** @access private 
+  * @lzxtype event 
+  */
+var onyscale = LzDeclaredEvent;
+
+/** @access private */
+function $lzc$set_yscale (yscale) {
+    if (this.capabilities.scaling) {
+        this.yscale = yscale;
+        this.usegetbounds = this.__LZhasoffset || this.rotation != 0 || this.yscale != 1 || this.yscale != 1;
+        this.sprite.setYScale(yscale)
+    } else if ($debug) {
+        LzView.__warnCapability("view.yscale", "scaling")
+    };
+    if (this.onyscale.ready) this.onyscale.sendEvent(yscale)
+}
+
+} // End of LzView
+
+lz[LzView.tagname] = LzView;  //publish

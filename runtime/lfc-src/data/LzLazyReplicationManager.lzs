@@ -1,0 +1,344 @@
+/**
+  *
+  * @copyright Copyright 2001-2009 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @access public
+  * @topic LFC
+  * @subtopic Data
+  */
+
+/**
+  * <p>If a datapath's <attribute>replication</attribute> attribute is set
+  * to <code>lazy</code>, then a match to multiple nodes will create an
+  * <classname>lz.LazyReplicationManager</classname> instead of an
+  *
+  * <sgmltag class="element" role="LzReplicationManager">lz.ReplicationManager</sgmltag>. The lazy replication
+  * manager creates only enough replicated views in order to display the
+  * data, so there is not a view for each data node. This enables the
+  * display of very large datasets.</p>
+  *
+  * <p>See <link linkend="databinding.lazy-replication">Lazy Replication</link> in the Guide for examples of how to use lazy
+  * replication, and restrictions on its use.</p>
+  *
+  * <p>Also see the <a href="${examples}paging.lzx">paging.lzx example</a>
+  * for an example of lazy replication.</p>
+  *
+  * <p>The lazy replicator implicitly includes a simple layout (since
+  * it needs to calculate how many replications will fit), hence it
+  * has two additional parameters (that are specified in the datapath)
+  * <attribute>axis</attribute>, and
+  * <attribute>spacing</attribute>.</p>
+  *
+  * @shortdesc An optimization for displaying large sets of data.
+  *
+  * @devnote A lazy replication manager is most like a regular replication manager
+  * except that it is designed to limit the amount of replication by recognizing
+  * a mask above the replicated views. The lazy replication manager creates
+  * only as many views as are necessary to display underneath the mask. As the
+  * view containing the replicated views is moved, the data for each view is
+  * updated to give the appearance that there is a much larger set of views.
+  *
+  * @devnote Views replicated by a lazy replication manager ignore layouts -- the
+  * replication manager controls the layout completely.
+  *
+  * @devnote This class is dynamic because it will acquire methods and
+  * attributes at runtime from the datapath that creates it.
+  */
+dynamic class LzLazyReplicationManager extends LzReplicationManager {
+
+/** @access private */
+var sizeAxis :String;
+/** @access private */
+var cloneimmediateparent :LzView;
+/** @access private */
+var updateDel :LzDelegate;
+/** @access private */
+var __LZoldnodelen :int;
+/** @access private */
+var viewsize :Number = 0;
+/** @access private */
+var totalsize :Number = 0;
+/** @access private */
+var mask :LzView = null;
+
+/**
+  * @access private
+  */
+function LzLazyReplicationManager ( odp , args, children:* = null, instcall:* = null ){
+    super(odp, args, children, instcall);
+}
+
+/** @access private */
+override protected function getDefaultPooling () :Boolean {
+    //replication argument needs to control pooling
+    return true;
+}
+
+/** @access private */
+override function construct ( odp , args ){
+    if ( args.pooling != null ){
+        args.pooling = true;
+        if ( $debug ){
+            Debug.warn( "Invalid pooling argument specified " +
+                        "with lazy replication in %w", this );
+        }
+    }
+
+    if ( args.axis != null ){
+        this.axis = args.axis;
+    }
+
+    this.sizeAxis = this.axis == "x" ? "width" : "height" ;
+
+    super.construct(odp, args);
+
+
+    this.mask = odp.immediateparent.immediateparent.mask;
+
+    /* TODO [20080605 anba]: why do we need this copy?
+     * isn't this done by __LZsetCloneAttrs() in LzReplicationManager#construct(..)!?
+     */
+    var cloneopt:Object;
+    if ( this.cloneAttrs.options != null ){
+        cloneopt = new LzInheritedHash(this.cloneAttrs.options);
+        cloneopt['ignorelayout'] = true;
+    } else {
+        cloneopt = { ignorelayout : true };
+    }
+
+    var firstcl:LzView = this.clones[ 0 ];
+    if (firstcl) {
+        firstcl.setOption( 'ignorelayout', true );
+        var layo:Array = firstcl.immediateparent.layouts;
+        if (layo != null) {
+            for ( var i:int = 0; i < layo.length; i++ ){
+                layo[ i ].removeSubview( firstcl );
+            }
+        }
+    }
+
+    this.cloneAttrs.options = cloneopt;
+
+    var v:LzView = (this.getNewClone( true ) cast LzView);
+    this.cloneimmediateparent = v.immediateparent;
+    
+    if (this.initialnodes) {
+        //datamap the new view, to make sure that any members which are datamapped
+        //are shown
+        v.datapath.setClonePointer( this.initialnodes[ 1 ] );
+    }
+
+    this.viewsize = v [ this.sizeAxis ];
+    v.datapath.setClonePointer( null );
+    this.clones.push ( v );
+
+    if (args.spacing == null) {
+        args.spacing = 0;
+    }
+
+    this.totalsize = this.viewsize + args.spacing;
+
+    v.setAttribute( this.axis , this.totalsize );
+
+
+    this.__LZdataoffset = 0;
+
+    this.updateDel = new LzDelegate( this , "__LZhandleUpdate" );
+    this.updateDel.register( this.cloneimmediateparent , "on" + this.axis );
+    this.updateDel.register( this.mask , "on" + this.sizeAxis );
+}
+
+
+/**
+ * Need to adjust the arglist coming from the event
+ * @access private
+ */
+function __LZhandleUpdate (ignore) :void {
+  this.__LZadjustVisibleClones(null, null);
+}
+
+/**
+  * @access private
+  */
+override function __LZsetCloneAttrs () :void {
+    var cloneopt:Object;
+    if ( this.cloneAttrs.options != null ){
+        cloneopt = new LzInheritedHash(this.cloneAttrs.options);
+        cloneopt['ignorelayout'] = true;
+    } else {
+        cloneopt = { ignorelayout : true };
+    }
+    this.cloneAttrs.options = cloneopt;
+}
+
+/**
+  * @access private
+  */
+override function __LZHandleNoNodes() :void {
+    this.__LZHandleMultiNodes( [ ] );
+}
+
+
+/**
+  * @devnote If the mask doesn't have a set size in the replication axis, don't affect it.
+  *
+  * Here's the idea. Coming in, we have an old list of clones that represents
+  * some window into the dataset. Let's say the nodes are labelled alpha-
+  * betically
+  * so to start, we have
+  * this.clones=[ m , n , o , p ]
+  * When the situation changes, we end up with a situation where we want
+  * the window to be like
+  * this.clones=[ l , m , n , o ]
+  *
+  * This algorithm moves the old list of clones to a temporary identifier
+  * and then constructs a new array for the clones going through one by one
+  * It keeps an offset, which represents the difference in position of the
+  * old new data windows. In the case above, the offset would be -2.
+  *
+  * Ideally, this would use a view linkage if necessary
+  * for now, the paging action will only happen in response to movement of
+  * the immediate parent of the replicated views
+  *
+  * @access private
+  */
+override function __LZadjustVisibleClones (lastnodes:Array, newnodes:Boolean) :void {
+    var cloneip:LzView = this.cloneimmediateparent;
+    
+    var _nodes:Array = this.nodes;
+    var _axis:String = this.axis;
+    var _sizeAxis:String = this.sizeAxis;
+    var _totalsize:Number = this.totalsize;
+    
+    if (_nodes) {
+        var nodelen:int = _nodes.length;
+        if ( this.__LZoldnodelen != nodelen ){
+            cloneip.setAttribute( _sizeAxis, nodelen * _totalsize - this.spacing );
+            this.__LZoldnodelen = nodelen;
+        }
+    }
+
+
+    if (! (this.mask && this.mask[ "hasset" + _sizeAxis ]) ) return;
+
+    var newstart:int = 0;
+
+    if (_totalsize != 0) {
+        newstart = Math.floor( - cloneip[ _axis ] / _totalsize );
+        if ( 0 > newstart  ) newstart = 0;
+    }
+
+    var oldstart:int = 0;
+    var oldlength:int = this.clones.length;
+    var offset:int = newstart - this.__LZdataoffset;
+
+    var remainder:* = ( newstart * _totalsize ) + cloneip[_axis];
+    var newlength:int = 0;
+
+    if (typeof(remainder) == 'number') {
+        newlength = 1 + Math.floor( ( this.mask[ _sizeAxis ] - remainder ) / _totalsize );
+    }
+
+    //newstart is the new absolute lowerbound of the data winodw
+    //newlength is the new length of the data window
+    if (_nodes != null) {
+        var nodelen:int = _nodes.length;
+        if ( newlength + newstart > nodelen ) {
+            newlength = nodelen - newstart;
+        }
+    }
+
+    //no change
+    if ( offset == 0 && newlength == oldlength ) return;
+
+    lz.Instantiator.enableDataReplicationQueuing(this);
+    var oldclones:Array = this.clones;
+    this.clones = [];
+
+    for ( var i:int = 0; i < newlength; i++ ){
+        //before the new beginning
+        var cl:LzView = null;
+        if ( i + offset < 0 ){
+            //this comes before the old data window
+            if ( newlength + offset < oldlength  && oldlength > 0){
+                //pull the clone off the end
+                cl = oldclones[ --oldlength ];
+            } else {
+                cl = (this.getNewClone() cast LzView);
+            }
+        } else if ( i + offset >= oldlength ){
+            //this comes after the old data window
+            if ( oldstart < offset && oldstart < oldlength  ){
+                //pull the clone off the end
+                cl = oldclones[ oldstart++ ];
+            } else {
+                cl = (this.getNewClone() cast LzView);
+            }
+        }
+
+        if ( cl ){
+            this.clones[ i ] = cl;
+            cl.setAttribute( _axis, ( i + newstart ) * _totalsize );
+            cl.clonenumber = newstart + i ;
+            if (_nodes) {
+                cl.datapath.setClonePointer( _nodes[ newstart + i ]);
+            }
+            if (cl.onclonenumber.ready) cl.onclonenumber.sendEvent( i );
+        } else {
+            //otherwise, the oldclone and the newclone match
+            this.clones[ i ] = oldclones[ i + offset ];
+        }
+    }
+
+    var cpool:Array = this.clonePool;
+    while ( oldstart < offset  && oldstart < oldlength ){
+        var v:LzView = oldclones[ oldstart++ ];
+        this.detachClone( v );
+        cpool.push ( v );
+    }
+
+    while ( oldlength > newlength + offset && oldlength > 0 ){
+        var v:LzView = oldclones[ --oldlength ];
+        this.detachClone( v );
+        cpool.push ( v );
+    }
+
+    this.__LZdataoffset = newstart;
+    lz.Instantiator.clearDataReplicationQueue(this);
+}
+
+/**
+  * @access private
+  */
+override function toString () /*:String*/ {
+    return "Lazy clone manager in " + this.cloneimmediateparent;
+}
+
+/**
+ * @access private
+ */
+override function getCloneForNode ( p:LzDataElement, dontmake:Boolean = false ) :LzNode {
+    var cl:LzView = (super.getCloneForNode( p ) cast LzView) || null;
+    if ( !cl && !dontmake ){
+        //even though we're going to return this to the pool immediately,
+        //use the class API to get a clone
+        cl = (this.getNewClone() cast LzView);
+        cl.datapath.setClonePointer( p );
+        this.detachClone( cl );
+        this.clonePool.push ( cl );
+    }
+
+    return cl;
+}
+
+
+/**
+ * @access private
+ */
+override function getCloneNumber ( n:int ) :LzNode {
+    return this.getCloneForNode(this.nodes[n]);
+}
+
+}; // End of LzLazyReplicationManager
+lz.LazyReplicationManager = LzLazyReplicationManager;  // publish

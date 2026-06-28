@@ -1,0 +1,5 @@
+<canvas height="30">      
+  <button onclick="animate('x', 100, 1000, true)">
+    Move me
+  </button>
+</canvas>

@@ -1,0 +1,11 @@
+<canvas>
+                <vbox>
+                    <handler name="onclick">
+                        this.animate('spacing', this.spacing == 10 ? 0 : 10, 1000);
+                    </handler>
+                    <text>click</text>
+                    <text>to</text>
+                    <text>animate</text>
+                    <text>spacing</text>
+                </vbox>
+            </canvas>

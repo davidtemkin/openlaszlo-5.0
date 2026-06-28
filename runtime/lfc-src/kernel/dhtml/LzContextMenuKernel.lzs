@@ -1,0 +1,239 @@
+/**
+  *
+  * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @access public
+  * @affects lzcontextmenukernel
+  * @topic LFC
+  * @subtopic Views
+  */
+
+/**
+  * @access private
+  */
+class LzContextMenuKernel {
+
+function LzContextMenuKernel (newowner:LzContextMenu) {
+    this.owner = newowner;
+}
+
+var owner:LzContextMenu = null;
+var showbuiltins = false;
+var _delegate = null;
+
+/**
+  * LzContextMenu.setDelegate
+  * Sets the delegate which will be called when the menu is opened
+  * @param LzDelegate delegate: delegate which is executed when item is selected. An
+  * onmenuopen event is also sent.
+  * 
+  * @access private
+  */
+function setDelegate (delegate) {
+    this._delegate = delegate;
+}
+
+/**
+  * LzContextMenu.addItem
+  * Adds a menu items into a menu
+  * @param LzContextMenuItem item: LzContextMenuItem to install on this menu
+  * @access private
+  */
+function addItem (item) {
+    // nothing to do
+}
+
+/**
+  * LzContextMenu.hideBuiltInItems
+  * @access private
+  */
+function hideBuiltInItems () {
+    this.showbuiltins = false;
+}
+
+/**
+  * LzContextMenu.showBuiltInItems
+  * @access private
+  */
+function showBuiltInItems () {
+    this.showbuiltins = true;
+}
+
+/**
+  * LzContextMenu.clearItems
+  * Remove all custom items from a menu
+  * @access private
+  */
+function clearItems () {
+    // nothing to do
+}
+
+/** @access private */
+static var lzcontextmenu = null;
+
+/** @access private */
+static function __create () {
+    var s = LzContextMenuKernel.lzcontextmenu;
+    if (! s) {
+        LzContextMenuKernel.lzcontextmenu = s = new lz.lzcontextmenu(canvas);
+    }
+    return s;
+}
+
+/** @access private */
+function __show () {
+    if (LzMouseKernel.__showncontextmenu === this) {
+        return;
+    } else {
+        LzMouseKernel.__showncontextmenu = this;
+    }
+
+    var owner = this.owner;
+
+    var del = this._delegate;
+    if (del != null) del.execute(owner);
+    if (owner.onmenuopen.ready) owner.onmenuopen.sendEvent(owner);
+    
+    var classlist = [];
+    var items = owner.getItems();
+    var _items = {};
+    for (var i = 0; i < items.length; i++) {
+        var v = items[i].kernel.cmenuitem;
+        var caption = v.caption;
+        // Don't display the same item twice (matches swf behavior)
+        if (v.visible != true || caption in _items) {
+            continue; 
+        }
+        // Mark as displayed
+        _items[caption] = true;
+
+        if (v.separatorBefore) {
+            classlist.push({type: 'separator'});
+            //o += '<div class="separator"></div>';
+        }
+
+        if (v.enabled) {
+            classlist.push({type: 'text', label: caption, offset: i});
+            //o += '<a href="" onmouseup="LzMouseKernel.__showncontextmenu.__select(arguments[0],' + i + ');">';
+        } else {
+            classlist.push({type: 'disabled', label: caption, offset: i});
+            //o += '<a href="" class="disabled">';
+        }
+        //o += caption + '</a>';
+    }
+
+    var s = LzContextMenuKernel.lzcontextmenu || LzContextMenuKernel.__create();
+    s.setItems(classlist);
+    s.show();
+}
+
+/** @access private */
+function __hide () {
+    LzMouseKernel.__showncontextmenu = null;
+}
+
+/** @access private */
+function __select (i) {
+    var items = this.owner.getItems();
+    if (items && items[i]) items[i].kernel.__select();
+}
+
+}; // End of LzContextMenuKernel
+
+
+
+/**
+  * @access private
+  */
+class LzContextMenuItemKernel {
+
+function LzContextMenuItemKernel (newowner:LzContextMenuItem, title, del) {
+    this.owner = newowner;
+    this.cmenuitem = {visible: true, enabled: true, separatorBefore: false, caption: title};
+    this.setDelegate(del);
+}
+
+var owner:LzContextMenuItem = null;
+var cmenuitem = null;
+var _delegate = null;
+
+
+/**
+  * LzContextMenuItem.setDelegate
+  * Sets the delegate which will be called when the menu item is selected
+  * @param LzDelegate delegate: delegate which is executed when item is 
+  * selected. An onselect event is also sent.
+  * 
+  * @access private
+  */
+function setDelegate (delegate) {
+    this._delegate = delegate;
+}
+
+/**
+  * LzContextMenuItem.setCaption
+  * Sets the text string which is displayed for the menu item
+  * @param String caption: text string to display
+  * @access public
+  */
+function setCaption (caption) {
+    this.cmenuitem.caption = caption;
+}
+
+/**
+  * LzContextMenuItem.getCaption
+  * Gets the text string which is displayed for the menu item
+  * @access public
+  */
+function getCaption () {
+    return this.cmenuitem.caption;
+}
+
+/**
+  * LzContextMenuItem.setEnabled
+  * @param boolean val: if false, menu item is grayed out and will not respond to clicks
+  * @access public
+  */
+function setEnabled (val) {
+    this.cmenuitem.enabled = val;
+}
+
+/**
+  * LzContextMenuItem.separatorBefore
+  * Draw a horizontal separator line before this item in the menu
+  * @param boolean val: sets visibility of separator line
+  * @access public
+  */
+
+function setSeparatorBefore (val) {
+    this.cmenuitem.separatorBefore = val;
+}
+
+/**
+  * LzContextMenuItem.setVisible
+  * Sets the visibility of the menu item
+  * @param boolean val: sets visibility
+  * @access public
+  */
+function setVisible (val) {
+    this.cmenuitem.visible = val;
+}
+
+/** @access private */
+function __select () {
+    var owner = this.owner;
+    var delegate = this._delegate;
+    if (delegate != null) {
+        if (delegate instanceof LzDelegate) {
+            delegate.execute(owner);
+        } else if (typeof delegate === 'function') {
+            delegate();
+        } else if ($debug) {
+            Debug.error("LzContextMenuItem.setDelegate must be passed a delegate", owner, delegate);
+        }
+    }
+    if (owner.onselect.ready) owner.onselect.sendEvent(owner);
+}
+
+}; // End of LzContextMenuItemKernel

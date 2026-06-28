@@ -1,0 +1,6 @@
+<canvas height="100">
+            <view bgcolor="blue" width="20" height="20"
+                  onmousedown="dragger.setAttribute('applied', true)" onmouseup="dragger.setAttribute('applied', false)">
+                <dragstate name="dragger"/>
+            </view>
+        </canvas>

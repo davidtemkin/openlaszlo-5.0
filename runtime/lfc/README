@@ -1,0 +1,71 @@
+OpenLaszlo 5.0 — runtime/lfc (the shipped client runtime)
+=========================================================
+
+This directory holds the SHIPPED LFC (Laszlo Foundation Classes — the DHTML client
+runtime) in two builds:
+
+    lfc.js         production (compressed)
+    lfc-debug.js   debug (readable, source-mapped, $reportException wrappers)
+
+These are NOT hand-maintained and NOT checked-in prebuilts to be edited in place. They
+are reproducible from source:
+
+    runtime/lfc-src/   ── TS compiler `--lfc` ──▶   pristine LFC   (byte-identical to
+                                                    the Java-oracle gold:
+                                                    production 426874, debug 1179351)
+                       ── apply-distro-deltas.mjs ──▶   runtime/lfc/{lfc.js, lfc-debug.js}
+
+    runtime/lfc-src/ stays PRISTINE. The distro deltas are re-applied on top of the
+    pristine build, never folded into source — so the byte-parity golds stay
+    426874 / 1179351.
+
+    The CORRECT debug LFC is the `$debug=true` (full on-canvas runtime debugger,
+    with makeDebugWindow) + nameFunctions build — the original `buildlfcdebug`.
+    An earlier shipped lfc-debug.js was mistakenly built from `--option debug=true`
+    (a source-location format with debugger STUBS and NO makeDebugWindow) which
+    broke `?debug=true`; the gold above (1179351, makeDebugWindow=2,
+    displayName=1723) is the corrected build.
+
+To rebuild the shipped runtime from scratch:
+
+    cd runtime/lfc
+    node apply-distro-deltas.mjs        # builds both pristine LFCs + applies the 3 deltas
+
+(Requires the distro compiler built once: `cd compiler && npm run build`.)
+
+
+The three distro deltas (what + why)
+------------------------------------
+All three apply identically to BOTH the production and debug build. (Historically the
+shipped lfc-debug.js was a stale prebuilt that carried only deltas a+b but NOT c, so
+window tinting was broken in debug/backtrace mode. apply-distro-deltas.mjs applies all
+three to both builds from one source of truth, fixing that inconsistency.)
+
+  (a) use_css_sprites: false
+      Flip LzSprite.quirks.use_css_sprites from the pristine `true` to `false`. The
+      Java-free distro renders multi-frame resources from individual frame PNGs, not
+      CSS sprite-sheets, so the sprite-sheet code path is disabled. (In-place flag flip;
+      the regex matches only the quirks-object definition, asserts exactly one hit.)
+
+  (b) iOS touchcancel recovery — distro-deltas/01-touchcancel.js
+      An appended self-contained IIFE. iOS Safari fires `touchcancel` (no desktop analog)
+      instead of `touchend` when it hijacks a touch; the runtime only clears its mouse-down
+      state on touchend, so a cancelled touch leaves the press stuck and the canvas stops
+      accepting clicks. The block releases the stuck press via the existing __globalmouseup.
+
+  (c) colortransform / setColorTransform — distro-deltas/02-colortransform.js
+      An appended self-contained IIFE. Flash's ColorTransform was native; DHTML never
+      implemented it, so the runtime DEFINED the `colortransform` view attribute +
+      setColorTransform()/tintcolor methods (LaszloView.lzs) but gated them on
+      `capabilities.colortransform`, which shipped FALSE. This block implements the
+      missing sprite-kernel primitive LzSprite#setColorTransform (an SVG feColorMatrix
+      filter) and flips the capability on, so the dashboard's window/scrollbar tinting
+      works through the proper view API instead of reaching into the DOM.
+
+
+Files
+-----
+  apply-distro-deltas.mjs     the post-build patch script (see its header for usage)
+  distro-deltas/01-touchcancel.js     canonical delta (b) block
+  distro-deltas/02-colortransform.js  canonical delta (c) block
+  lfc.js / lfc-debug.js       the produced, shipped runtime

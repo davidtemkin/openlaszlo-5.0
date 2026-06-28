@@ -1,0 +1,38 @@
+<canvas>
+   <window id="demo" title="state demo" width="400" height="300">
+     <attribute name="maximized" value="true" />
+
+     <state name="big" applied="${demo.maximized}">
+       <animatorgroup duration="1000" process="simultaneous">
+         <animator attribute="width" to="400"/>
+         <animator attribute="height" to="300"/>
+         <animator attribute="x" to="100"/>
+         <animator attribute="y" to="100"/>
+       </animatorgroup>
+     </state>
+
+     <state name="little" applied="${! demo.maximized}">
+       <animatorgroup duration="1000" process="simultaneous">
+         <animator attribute="width" to="170"/>
+         <animator attribute="height" to="100"/>
+         <animator attribute="x" to="0"/>
+         <animator attribute="y" to="0"/>
+       </animatorgroup>
+     </state>
+
+     <button text="Toggle" placement="title_area" align="right" height="16">
+       <handler name="onclick">
+         demo.setAttribute('maximized', (! demo.maximized));
+       </handler>
+     </button>
+
+     <text name="display"
+           align="center" valign="middle"
+           width="120" multiline="true" />
+
+     <handler name="onapplied" reference="big">
+       demo.display.format("big.applied = %s\nlittle.applied = %s",
+                           demo.big.applied, demo.little.applied);
+     </handler>
+   </window>
+ </canvas>

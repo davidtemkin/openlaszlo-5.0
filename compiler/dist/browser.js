@@ -36,7 +36,7 @@ function decode(bytes) {
 /** The compiler properties that gate cache staleness (must match api-node's). */
 function compileProps(o) {
     return { debug: String(!!o.debug || !!o.backtrace), backtrace: String(!!o.backtrace),
-        proxied: String(o.proxied !== false), sprites: o.sprites ?? "none" };
+        profile: String(!!o.profile), proxied: String(o.proxied !== false), sprites: o.sprites ?? "none" };
 }
 /** Compile an LZX app located at `mainUrl` entirely in the browser. Returns the JS,
  *  the dependency closure, the content tag (ETag), whether it was a cache hit, and

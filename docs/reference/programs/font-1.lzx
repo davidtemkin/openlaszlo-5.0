@@ -1,0 +1,4 @@
+<canvas height="50" fontsize="14">
+   <font src="helmetr.ttf" name="Helvetica"/>
+   <text font="Helvetica">Here is some text in Helvetica</text>
+ </canvas>

@@ -1,0 +1,6 @@
+<canvas height="60" layout="axis:y; spacing: 10">
+            <text>Mouse over the button to see the tip</text>
+            <button text="Button, button">
+              <tooltip>Click or mouse out to hide tip</tooltip>
+            </button>
+          </canvas>

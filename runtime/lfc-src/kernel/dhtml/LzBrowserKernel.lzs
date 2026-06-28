@@ -1,0 +1,210 @@
+/**
+  *
+  * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @access public
+  * @affects lzbrowserkernel
+  * @topic LFC
+  * @subtopic Views
+  */
+
+/**
+  * @access private
+  */
+class LzBrowserKernel {
+
+/**
+  * Loads a URL in the browser, optionally in a target
+  * 
+  * @param String url: URL to load
+  * @param String target: Optionally specifies a named frame to display the contents of the URL.  Otherwise defaults to the current window.
+  * @param String features: Optional features to use in the new window.
+  */
+static function loadURL ( url, target=null, features=null ){
+    if (target != null) {
+        if (features != null) {
+            window.open(url, target, features);
+        } else {
+            window.open(url, target);
+        }
+    } else {
+        window.location = url;
+    }
+}
+
+
+/**
+  * Runs Javascript in the browser using a javascript: url, optionally in a
+  * target
+  * 
+  * @param String js: Javascrit string to execute
+  * @param String target: Optionally specifies a named frame to display the contents of the URL.
+  * By default, the javascript specified in 'js' is executed in the current
+  * browser frame .
+  */
+static function loadJS ( js, target ){
+    LzBrowserKernel.loadURL('javascript:' + js + ';void(0);', target);
+}
+
+
+/**
+  * Runs a Javascript method in the browser, returning the result  
+  * @keywords flashspecific
+  * 
+  * @param String methodname: javascript method name to execute
+  * @param Function callback: Optional callback function to receive the return value of the javascript call
+  * @param Optional arguments to call
+  */
+static function callJS (methodname, callback) :* {
+    var scope = null;
+
+    var method = eval(methodname);
+    var path = methodname.split('.');
+    if (path.length > 1) {
+        path.pop();
+        scope = eval(path.join('.'));
+    }
+
+    var args = Array.prototype.slice.call(arguments, 2);
+    if (method) {
+        // method.apply() fails for native methods, e.g. window.prompt() in IE 6
+        var ret = method.apply(scope, args);
+    }
+    if (callback && typeof callback == 'function') callback(ret);
+    return ret;
+}
+
+/**
+  * Sets the browser history to a specified offset.
+  * @access private
+  */
+static function setHistory(n) {
+    //Debug.write('setHistory', n);
+    lz.embed.history.set(n);
+}
+
+/**
+  * Invoked by browser JavaScript to call a method
+  * @access private
+  */
+static function callMethod(js) { 
+    return eval(js);
+}
+
+/**
+  * Returns version information about the browser
+  */
+static function getVersion () {
+  return navigator.userAgent;
+}
+
+/**
+   * Returns information about the operating system
+   */
+static function getOS () {
+    return navigator.platform;
+}
+
+/**
+  * Returns the URL from which the application was loaded.
+  * @return String : the URL the swf was loaded from
+  * 
+  */
+static function getLoadURL () {
+    // get url app was loaded from
+    if (LzSprite.__rootSprite && LzSprite.__rootSprite._url) {
+        var url = LzSprite.__rootSprite._url;
+    } else {
+        // if the canvas sprite is not initted yet.
+        var url = lz.embed.__propcache.url;
+    }
+    if (! url) url = new String(window.location);
+    var colon = url.indexOf(':');
+    var slash = url.indexOf('/');
+    if (colon > -1) {
+        if (url.indexOf('://') == colon){
+            // absolute URL  http://foo.lzx with protocol - do nothing
+            return url;
+        } else if (url.charAt(colon + 1) == '/') {
+            // absolute URL  http:/foo.lzx with protocol - add a slash
+            url = url.substring(0, colon + 1) + '/' + url.substring(colon + 1);
+            return url;
+        } else {
+            // relative URL - http:foo.lzx - add path from window.location
+            var lzu = new LzURL(new String(window.location));
+            url = url.substring(0, colon + 1) + '/' + lzu.path + url.substring(colon + 1)
+            return url;
+        }
+    } else {
+        if ( slash == 0) {
+            // absolute URL begins with slash - do nothing
+            return url;
+        } else {
+            // url is relative (to request url)
+            var loc = new String(window.location);
+            var lastslash = loc.lastIndexOf('/');
+            loc = loc.substring(0, lastslash + 1);
+            return loc + url;
+        }
+    }
+}
+
+
+/**
+ * This function returns values from the the request string that
+ * loaded the the lzx app. This can be used to communicate initialization 
+ * arguments to an lzx app without forcing it to load data.
+ *
+ * @param String name: The name of the key whose value to return.  If null, 
+ * returns an Object containing all initialization arguments.
+ *
+ * @return: The value for a key that appears in the request string 
+ * that loaded the the lzx app or an Object containing all values 
+ */
+static function getInitArg (name) {
+    var initargs = global;
+    var id = LzSprite.__rootSprite._id
+    if (id) {
+        initargs = lz.embed.applications[id].initargs;
+    }
+    if (name == null) return initargs;
+    return initargs[name];
+}
+
+static function getLzOption (name) {
+    var options = global;
+    var id = LzSprite.__rootSprite._id
+    if (id) {
+        options = lz.embed.applications[id].options;
+    }
+    if (name == null) return options;
+    return options[name];
+}
+
+
+/**
+  * This function returns the id the app was started with
+  * 
+  * @return String: The id the app was started with
+  */
+static function getAppID() {
+    return LzSprite.__rootSprite._id;
+}
+
+
+
+/**
+  * Determines if the a screen reader is active and the Flash player is focused
+  * @keywords flashspecific
+  * 
+  * @return: True if a screen reader is active and the Flash player is focused
+  */
+static function isAAActive (){
+    // Not yet implemented;
+    if ($debug) Debug.warn("LzBrowserKernel.isAAActive not yet fully implemented");
+    return false;
+}
+
+
+} // End of LzBrowserKernel

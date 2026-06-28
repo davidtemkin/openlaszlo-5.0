@@ -1,0 +1,329 @@
+/**
+  *
+  * @copyright Copyright 2001-2009 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @access public
+  * @topic LFC
+  * @subtopic Data
+  */
+
+/**
+  * <p>The <classname>lz.ResizeReplicationManager</classname> extends
+  * the capabilities of the
+  * <sgmltag class="element" role="LzLazyReplicationManager">lz.LazyReplicationManager</sgmltag> so that the
+  * elements in the replication can be resized in their axis. All of
+  * the restrictions on the use of the
+  * <classname>lz.LazyReplicationManager</classname> apply to the
+  * <classname>lz.ResizeReplicationManager</classname> except for this
+  * one:</p>
+  *
+  * <ul>
+  *     <li>The replicated view <em>can</em> change its size in the
+  *     replication axis, and the size <em>can</em> be a
+  *     constraint. Resize replication should work in all cases,
+  *     even those in which the replicated view is sized by its
+  *     contents.</li>
+  * </ul>
+  *
+  * <p>Note that the performance of a resize replication manager is
+  * related to the number of items displayed and the length of the
+  * data, whereas the lazy replication manager performance is only
+  * determined by the number of items displayed.</p>
+  *
+  * <example title="Using a resize replication manager to display a large dataset when the elements resize"><programlisting><![CDATA[
+  * <canvas height="200">
+  *     <dataset name="vegetables">
+  *         <celery/> <celeriac/> <carrot/> <florence_fennel/> <parsnip/>
+  *         <parsley/> <winter_endive/> <witloof_chicory/> <cardoon/>
+  *         <artichoke/> <head_lettuce/> <cos_lettuce/> <black_salsify/>
+  *         <swedish_turnip/> <cauliflower/> <cabbage/> <brussels_sprouts/>
+  *         <kohlrabi/> <broccoli/> <savoy_cabbage/> <turnip/> <radish/>
+  *         <water_cress/> <garden_cress/> <foliage_beet/> <spinach/>
+  *         <sweet_potato/> <watermelon/> <melon/> <cucumber/> <winter_squash/>
+  *         <marrow/> <chickpea/> <lentil/> <runner_bean/> <common_bean/>
+  *         <pea/> <faba_bean/> <leek/> <shallot/> <onion/> <salsify/>
+  *         <welsh_onion/> <garlic/> <chives/> <asparagus/> <ladyfinger/>
+  *         <sweet_corn/> <rhubarb/> <capsicum_pepper/> <tomato/> <eggplant/>
+  *     </dataset>
+  *
+  *     <simplelayout spacing="10" />
+  *     <text width="200" oninit="countSubviews()">
+  *         <handler name="onaddsubview" reference="replicationParent">
+  *             countSubviews();
+  *         </handler>
+  *         <method name="countSubviews">
+  *             this.format("number of subviews: %d",
+  *                         replicationParent.subviews.length);
+  *         </method>
+  *     </text>
+  *
+  *     <view clip="true" width="200" height="160" id="clipper">
+  *         <view id="replicationParent">
+  *             <view bgcolor="#CCCCFF" height="15">
+  *                 <datapath xpath="vegetables:/* /name()" spacing="5" replication="resize"/>
+  *
+  *                 <text datapath="name()" valign="middle"/>
+  *                 <handler name="onclick">
+  *                     if ( this.height != 40 ){
+  *                         this.animate ( 'height', 40 , 500 );
+  *                     } else {
+  *                         this.animate ( 'height', 15 , 500 );
+  *                     }
+  *                 </handler>
+  *             </view>
+  *         </view>
+  *         <scrollbar/>
+  *     </view>
+  * </canvas>
+  * ]]></programlisting></example>
+  *
+  * @devnote This class is dynamic because it will acquire methods and
+  * attributes at runtime from the datapath that creates it.
+  *
+  * @shortdesc An optimization for displaying large sets of data that allows the elements to resize.
+  */
+dynamic class LzResizeReplicationManager extends LzLazyReplicationManager {
+  #pragma "warnUndefinedReferences=true"
+
+/** @access private */
+var datasizevar :String;
+/** @access private */
+var __LZresizeupdating :Boolean;
+
+/**
+  * @access private
+  */
+function LzResizeReplicationManager ( odp , args, children:* = null, instcall:* = null ){
+    super(odp, args, children, instcall);
+}
+
+/** @access private */
+override protected function getDefaultPooling () :Boolean {
+    //need to destroy the original clone for resize in order to insert the
+    //appropriate onwidth-/onheight-delegate
+    return false;
+}
+
+/** @access private */
+override function construct ( odp , args ){
+    super.construct(odp, args);
+
+    this.datasizevar = '$' + this.getUID() + 'track';
+}
+
+/**
+  * @access private
+  * Handle the clone changing dimension in the layout axis
+  *
+  * Added as a method to each clone and attached as a delegate
+  * listening for dimension changes in the layout axis
+  *
+  * @devnote:  This could be a closure over the cloneManager, but we
+  * believe this is a more efficient implementation
+  */
+var __LZHandleCloneResize = function ( s:Number ) :void {
+    var p /*:LzDataNodeMixin*/ = this.datapath.p;
+    if (p) {
+        var cloneManager:LzResizeReplicationManager = this.cloneManager cast LzResizeReplicationManager;
+        var datasizevar:String = cloneManager.datasizevar;
+        var osize:Number = p.getUserData(datasizevar) || cloneManager.viewsize;
+        if (s != osize) {
+            p.setUserData(datasizevar, s);
+            cloneManager.__LZadjustVisibleClones(null, false);
+        }
+    }
+}
+
+/**
+  * @access private
+  */
+override function __LZsetCloneAttrs () :void {
+  super.__LZsetCloneAttrs();
+
+  var cattrs:Object = this.cloneAttrs;
+  cattrs.__LZHandleCloneResize = this.__LZHandleCloneResize;
+  if (! cattrs['$delegates']) {
+    cattrs.$delegates = [];
+  }
+  cattrs.$delegates.push('on' + (this.axis == 'y' ? 'height' : 'width'),
+                                 '__LZHandleCloneResize',
+                                 null);
+}
+
+/**
+  * TODO: [20080605 anba] no reference to this function in the LFC, remove it?
+  * @access private
+  */
+function getPositionByNode ( n ) :Number? {
+    var pos:Number = -this.spacing;
+    var cnode /*:LzDataNodeMixin*/;
+    if (this.nodes != null) {
+        for ( var i:int = 0; i < this.nodes.length; i++ ){
+            cnode = this.nodes[ i ];
+            if ( n == this.nodes[ i ] ){
+                return pos + this.spacing;
+            }
+
+            pos += this.spacing + ( cnode.getUserData(this.datasizevar) || this.viewsize );
+        }
+    }
+    return undefined;
+}
+
+
+/**
+  * @access private
+  */
+function __LZreleaseClone ( v:LzView ) :void {
+    this.detachClone( v );
+    this.clonePool.push ( v );
+}
+
+/**
+  * @access private
+  * lastnodes: old list of nodes
+  * newnodes: boolean flag, true when __LZadjustVisibleClones is called
+  * because of a change in the node list (e.g. setdatapointer, sort, etc)
+  * (as opposed to, for example, when
+  * the mask changes its height or item changes size
+  */
+override function __LZadjustVisibleClones(lastnodes:Array, newnodes:Boolean) :void {
+    //if the mask doesn't have a set size in the replication axis, don't affect it
+
+    if (! this.mask[ "hasset" + this.sizeAxis ] ) return;
+    if ( this.__LZresizeupdating ) return;
+    this.__LZresizeupdating = true;
+
+    var nodelen:int = (this.nodes != null) ? this.nodes.length : 0;
+    var newstart:int = Math.floor( - this.cloneimmediateparent[ this.axis ] );
+    if (0 > newstart) newstart = 0;
+    var masksize:Number = this.mask[ this.sizeAxis ];
+
+    var newoffset:int = -1;
+    var oldoffset:int = this.__LZdataoffset;
+    if ( newnodes ){
+        while( this.clones.length ) this.poolClone();
+        var oldclones:Array = null;
+        var ocl:int = 0;
+    } else {
+        var oldclones:Array = this.clones;
+        var ocl:int = oldclones.length;
+    }
+
+    this.clones = [];
+
+    //cpos is used at the end of this method to size the immediateparent
+    //of the replication manager
+    var cpos:Number = -this.spacing;
+    var inwindow:Boolean = false;
+    var newend:int = -1;
+    var newstartpos:Number;
+
+    //Debug.write( 'oldclones', oldclones );
+    var notfirst:Boolean = true;
+    for ( var i:int = 0; i < nodelen; i++ ){
+        var cnode /*:LzDataNodeMixin*/ = this.nodes[ i ];
+        var ds:* = cnode.getUserData(this.datasizevar);
+        var csiz:Number = ( ds == null ) ? this.viewsize : ds;
+
+        cpos += this.spacing;
+
+        if ( !inwindow && newoffset == -1  && cpos - newstart +csiz >= 0 ) {
+            //Debug.write( 'inwindow at ' + i );
+            notfirst = i != 0;
+            inwindow = true;
+            newstartpos = cpos;
+            newoffset = i;
+            //we can keep what we had
+            var firstkept = i - oldoffset;
+            //Debug.write( 'fk' , firstkept  , i , oldoffset );
+            firstkept = firstkept > ocl ? ocl : firstkept;
+            //Debug.write( 'firstkept' , firstkept );
+            //don't setup loop unless we have to
+            if ( firstkept > 0 ) {
+                for ( var j:int = 0; j < firstkept; j++ ){
+                    var v:LzView = oldclones[ j ];
+                    //can't call poolClone here...
+                    this.__LZreleaseClone( v );
+                }
+            }
+        } else if ( inwindow && cpos - newstart > masksize ) {
+            inwindow = false;
+            //pool any left over clones here
+            newend = i - newoffset;
+            var lastkept:int = i - oldoffset;
+            lastkept = lastkept < 0 ? 0 : lastkept;
+            //Debug.write( 'lk' , lastkept , ocl );
+            //don't setup loop unless we have to
+            if ( lastkept < ocl ) {
+                for ( var j:int = lastkept; j < ocl; j++ ){
+                    var v:LzView = oldclones[ j ];
+                    //if ( v == null ) Debug.write( 'bad pool', j , lastkept );
+                    //can't call poolClone here...
+                    this.__LZreleaseClone( v );
+                }
+            }
+        }
+
+        if ( inwindow ){
+            if ( i >= oldoffset && i < oldoffset + ocl ){
+                //we can keep what we had
+                var cl:LzView = oldclones[ i - oldoffset ];
+                //if ( cl == null ) Debug.write( 'bad keep' , i );
+            } else {
+                var cl:LzView = null;
+                //if ( cl == null ) Debug.write( 'bad get' , i );
+            }
+
+            //Debug.write( i, newoffset );
+            this.clones[ i - newoffset ] = cl;
+        }
+
+        cpos += csiz;
+    }
+
+    var clpos:Number = newstartpos;
+    if ( notfirst ) clpos += this.spacing;
+    for( var i:int = 0; i < this.clones.length; i++ ){
+        var cnode /*:LzDataNodeMixin*/ = this.nodes[ i + newoffset ];
+
+        var cl:LzView = (this.clones[ i ] cast LzView);
+        if ( !cl ){
+            cl = (this.getNewClone( ) cast LzView);
+            cl.clonenumber = i + newoffset;
+            cl.datapath.setClonePointer( cnode );
+            if (cl.onclonenumber.ready) cl.onclonenumber.sendEvent( i + newoffset );
+            this.clones[ i ] = cl;
+        }
+        //Debug.write( i, cl , clpos, csiz );
+
+        this.clones[ i ] = cl;
+        cl.setAttribute( this.axis , clpos );
+        var ds:* = cnode.getUserData(this.datasizevar);
+        var csiz:Number = ( ds == null ) ? this.viewsize : ds;
+        if ( cl[ this.sizeAxis ] != csiz ){
+            cl.setAttribute( this.sizeAxis, csiz );
+        }
+        clpos += csiz + this.spacing;
+    }
+
+    //Debug.write( 'newoffset' , newoffset );
+    //Debug.write( 'this.clones' , this.clones );
+    this.__LZdataoffset = newoffset;
+    //Debug.write( 'clones' , this.clones.length, 'pool', this.clonePool.length);
+    //Debug.write( 'oldclones' , oldclones );
+    this.cloneimmediateparent.setAttribute( this.sizeAxis , cpos );
+    this.__LZresizeupdating = false;
+}
+
+
+/*
+ * @access private
+override function toString (){
+    return "Resize clone manager in " + this.immediateparent;
+}
+*/
+
+}; // End of LzResizeReplicationManager
+lz.ResizeReplicationManager = LzResizeReplicationManager;  // publish

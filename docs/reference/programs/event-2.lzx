@@ -1,0 +1,15 @@
+<canvas height="140">
+   <simplelayout/>
+   <button name="eventSender"
+           onmouseover="this.customevent.sendEvent('over')"
+           onmouseout="this.customevent.sendEvent('out')">
+     <event name="customevent"/>
+   </button>
+
+   <view bgcolor="red" width="20" height="20">
+     <handler name="customevent" reference="eventSender" args="event">
+       Debug.debug("event: %s", event);
+       this.setAttribute('x', this.x + 10);
+     </handler>
+   </view>
+ </canvas>

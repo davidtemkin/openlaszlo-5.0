@@ -1,0 +1,5 @@
+<canvas height="100">
+        <camera id="rtc" src="rtmp://localhost/test" autoconnect="false"/>
+        <text text="${rtc.status}"/>
+        <button onclick="rtc.connect()">Click to Connect</button>
+    </canvas>

@@ -1,0 +1,8 @@
+<canvas height="60">
+   <view width="240" height="40" bgcolor="#aeaeae">
+     <contextmenu>
+       <contextmenuitem caption="menu item"/>
+     </contextmenu>
+     <text align="center">Right click for context menu</text>
+   </view>
+ </canvas>

@@ -1,0 +1,43 @@
+<canvas height="280">
+    
+        
+    
+        <soap name="temperature" autoload="false"
+            wsdl="http://developerdays.com/cgi-bin/tempconverter.exe/wsdl/ITempConverter">
+    
+        <method name="init">
+            super.init();
+            Debug.debug('soap service loading...');
+            this.load();
+        </method>
+    
+        <handler name="onload">
+            Debug.debug('temperature service loaded!');
+            Debug.debug('---');
+    
+            // don't allow others to call RPC object until proxy is loaded.
+            canvas.convert.setAttribute('visible', true);
+        </handler>
+    
+        <remotecall funcname="FtoC">
+        <param value="100" />
+    
+            <handler name="ondata" args="value">
+                Debug.debug('got data: %w', value);
+                </handler>
+                <handler name="onerror" args="errmsg">
+                Debug.debug('error: %w', errmsg);
+            </handler>
+    
+        </remotecall>
+    
+    </soap>
+    
+    <button name="convert" text="convert" x="10" y="10" visible="false">
+        <handler name="onclick">
+            canvas.temperature.FtoC.invoke();
+        Debug.debug('Invoking FtoC...');
+        </handler>
+    </button>
+    
+    </canvas>

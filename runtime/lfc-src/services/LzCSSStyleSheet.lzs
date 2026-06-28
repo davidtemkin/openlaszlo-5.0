@@ -1,0 +1,107 @@
+/**
+  *
+  * @copyright Copyright 2001-2008 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @affects lzcssstylesheet
+  * @access public
+  * @topic LFC
+  * @subtopic CSS
+  */
+
+/**
+  * This service represents a CSS Style sheet
+  * Introduced in DOM Level 2:
+  * interface CSSStyleSheet : stylesheets::StyleSheet {
+  * readonly attribute CSSRule          ownerRule;
+  * readonly attribute CSSRuleList      cssRules;
+  * unsigned long      insertRule(in DOMString rule, 
+  * in unsigned long index)
+  * raises(DOMException);
+  *  void               deleteRule(in unsigned long index)
+  *                                        raises(DOMException);
+  * };
+  * 
+  */
+
+class LzCSSStyleSheet extends LzStyleSheet {
+
+
+/**
+  * @param String title: Title
+  * @param String href: Location of the style sheet.
+  * @param String media: Media where the document is to be rendered.
+  * @param String sstype: Language of the style sheet resource.
+  * @param String ownerRule:
+  * @param Array cssRules: Initial stylesheet rules array
+  * @access public
+ */ 
+function LzCSSStyleSheet( title, href, media, sstype, ownerRule, cssRules ) {
+    super (title, href, media, sstype);
+
+    this.ownerRule = ownerRule;
+    this.cssRules = cssRules;
+}
+
+/** @access private */
+var ownerRule = null;
+
+/** @access private */
+var cssRules = null;
+
+
+/**
+ * insertRule Used to insert a new rule into the style sheet. The new rule now
+ * becomes part of the cascade. 
+ * 
+ * <p>Error conditions: 
+ * <ul>
+ * <li>HIERARCHY_REQUEST_ERR: Raised if the rule cannot be inserted at the specified
+ * index e.g. if an @import rule is inserted after a standard rule set or other
+ * at-rule.</li>
+ * <li>INDEX_SIZE_ERR: Raised if the specified index is not a valid insertion point.</li>
+ * <li>NO_MODIFICATION_ALLOWED_ERR: Raised if this style sheet is readonly.</li>
+ * <li>SYNTAX_ERR: Raised if the specified rule has a syntax error and is unparsable</li>
+ * </ul>
+ * </p>
+ *
+ * @access public
+ *
+ * @param String rule: The parsable text representing the rule. For rule
+ * sets this contains both the selector and the style declaration. For
+ * at-rules, this specifies both the at-identifier and the rule content.
+ * 
+ * @param Number index: The index within the style sheet's rule list
+ * of the rule before which to insert the specified rule. If the specified
+ * index is equal to the length of the style sheet's rule collection, the rule
+ * will be added to the end of the style sheet.
+ * 
+ * @return Number: The index within the style sheet's rule collection of
+ * the newly inserted rule. 
+ *
+ */ 
+function insertRule (rule, index) {
+    if (!this.cssRules) {
+        this.cssRules = [];
+    }
+    
+    if (index < 0) {
+        // INDEX_SIZE_ERR
+        return null;
+    } 
+    if (index < this.cssRules.length) {
+        // INDEX_SIZE_ERR
+        this.cssRules.splice(index,0,rule);
+        return index; 
+    } 
+    if (index == this.cssRules.length) {
+        // the array.push returns the new rule's index + 1
+        // we correct with -1.
+        return (this.cssRules.push(rule) - 1);
+    }
+    // INDEX_SIZE_ERR
+    return null; 
+}
+
+} // End of LzCSSStyleSheet
+lz.CSSStyleSheet = LzCSSStyleSheet;  // publish

@@ -1,0 +1,5 @@
+<canvas height="50">
+   <view width="50" height="50" bgcolor="red">
+     <view width="30" height="30" bgcolor="blue"/>
+   </view> 
+ </canvas>

@@ -1,0 +1,24 @@
+<canvas height="200"> 
+              <datepicker showingdate="new Date()"
+              earliestdate="new Date( 2007, 1, 1)" 
+              latestdate="new Date( 2008, 11, 31)"
+              selecteddate="new Date()">
+              <handler name="onselecteddate">
+              if( this.selecteddate != null ) {
+              display.year.setAttribute('text', this.selecteddate.getFullYear() );
+              display.month.datapath.setXPath(
+              "datepicker_strings_en:/months/month[@index='" + 
+              this.selecteddate.getMonth() + "']/@full" ); 
+              display.date.setAttribute('text', this.selecteddate.getDate() );
+              } 
+              </handler>
+              </datepicker> 
+
+              <view id="display">
+              <text name="month" resize="true" datapath="."/>
+              <text name="date" resize="true"/>
+              <text name="year" resize="true"/> 
+              <simplelayout axis="x" spacing="2"/>
+              </view>
+              <simplelayout axis="y" spacing="10"/>
+              </canvas>

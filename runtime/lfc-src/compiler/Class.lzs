@@ -1,0 +1,622 @@
+/***
+ * Classes for Javascript with Mixins
+ *
+ * @copyright Copyright 2007-2010 Laszlo Systems, Inc.  All Rights Reserved.
+ * Use is subject to license terms.
+ *
+ * @access private
+ * @topic LZX
+ * @subtopic Runtime
+ * @author ptw
+ * @author adam
+ * @author max
+ */
+
+/**
+  * Instance class
+  *
+  * The root of the Class tree.  All LZX instances are
+  * instanceof Instance.
+  *
+  * @access private
+  * @bootstrap true
+  *
+  * @devnote This is the first class constructor.  Constructors for
+  * all other classes are created by Class.make (below).
+  */
+var Instance = function constructor () {
+  this.constructor = arguments.callee;
+  this.$lzsc$initialize.apply(this, arguments);
+};
+Instance.prototype.constructor = Instance;
+Instance.classname = 'Instance';
+Instance.prototype.classname = 'Object';
+if ($debug) {
+  Instance._dbg_typename = 'Class';
+}
+if ($profile) {
+  Instance[Debug.FUNCTION_NAME] = 'new Instance';
+  Instance.prototype._profile_typename = 'Instance';
+}
+
+
+/**
+  * Add a property to an instance
+  *
+  * If the property is a Function (method), annotates the method so
+  * nextMethod can find the next most applicable method
+  *
+  * @param String name: the name of the property
+  * @param value: the value of the property
+  *
+  * @access private
+  */
+(function () {
+  var addProperties = function addProperties (plist) {
+    for (var i = plist.length - 1; i >= 1; i -= 2) {
+      var value = plist[i];
+      var name = plist[i - 1];
+
+      if ((value !== void 0) || (! (name in this))) {
+        this[name] = value;
+      }
+
+      if (! (value instanceof Function)) continue;
+
+      var xtor = this.constructor;
+      if (value.hasOwnProperty('$superclasses')) {
+        var os = value.$superclasses, found = false;
+        for (var j = os.length - 1; j >= 0; j--) {
+          if (os[j] === xtor) {
+            found = true;
+            break;
+          }
+        }
+        if (! found) {
+          value.$superclasses.push(xtor);
+        }
+      } else if (value.hasOwnProperty('$superclass') && value.$superclass !== xtor) {
+        var $superclass = value.$superclass;
+        delete value.$superclass;
+        value.$superclasses = [ $superclass, xtor ];
+      } else {
+        value.$superclass = xtor;
+      }
+      if ($debug) {
+        if (! value._dbg_typename) {
+          // Delay 'til runtime so classes can adjust their name to be
+          // their tag name
+          value._dbg_owner = this;
+          value._dbg_typename = function _dbg_typename () {
+            var t = Debug.functionName(this._dbg_owner._dbg_prototype_for);
+            return t + ' function';
+          }
+        }
+      }
+      if ($profile) {
+        if (! value.hasOwnProperty('_profile_name')) {
+          // `this` is the prototype of the class here, not the class
+          var o = this['_profile_typename'];
+          if (o) {
+            if (value.hasOwnProperty(Debug.FUNCTION_NAME)) {
+              name = value[Debug.FUNCTION_NAME];
+            }
+            // Give the initializer an intelligible name for profiling
+            if (name == '$lzsc$initialize') {
+              var pn = o;
+            } else {
+              var pn = (o + '/' + name);
+            }
+            value._profile_name = value[Debug.FUNCTION_NAME] =  pn;
+          }
+        }
+      }
+    }
+  };
+  // Bootstrap self
+  addProperties.call(Instance.prototype, ['addProperties', addProperties]);
+})();
+
+
+/**
+  * Add a property to an instance
+  *
+  * If the property is a Function (method), annotates the method so
+  * nextMethod can find the next most applicable method
+  *
+  * @param String name: the name of the property
+  * @param value: the value of the property
+  *
+  * @access private
+  */
+Instance.prototype.addProperties(['addProperty', function addProperty(name, value) {
+      this.addProperties([name, value]);
+    }]);
+
+/**
+  * Find the next most applicable method
+  *
+  * Arguments are the current method and the name of the method you
+  * want.  Returns the method.  this.nextMethod(arguments.callee,
+  * 'aMethod').apply(this, arguments);
+  *
+  * @param Function currentMethod: the method from which this is callee,
+  * typically arguments.callee
+  * @param String nextMethodName: the method that is being looked for
+  * (can be other than the current method)
+  *
+  * @access private
+  */
+Instance.prototype.addProperty('nextMethod', function nextMethod (currentMethod, nextMethodName) {
+  var next;
+  if (currentMethod.hasOwnProperty('$superclass')) {
+    next = currentMethod.$superclass.prototype[nextMethodName];
+  } else if (currentMethod.hasOwnProperty('$superclasses')) {
+    var $superclasses = currentMethod.$superclasses;
+    for (var i = $superclasses.length - 1; i >= 0; i--) {
+      var sc = $superclasses[i];
+      if (this instanceof sc) {
+        next = sc.prototype[nextMethodName];
+        break;
+      }
+    }
+  }
+  // TODO: [2006-05-21 ptw] Call this.noNextMethod(nextMethodName, currentMethod)
+  if (! next) {
+    next = function () {
+      if ($debug) {
+        Debug.error('super.%s is undefined in %w', nextMethodName, currentMethod);
+      }
+    }
+  }
+  return next;
+});
+
+/**
+  * Instance $lzsc$initialize method
+  *
+  * Called by Instance constructor as the last operation on a new
+  * instance of a class.  Arguments are the arguments that were passed
+  * to make.
+  *
+  * Can be overridden in subclasses, but must call superclass initialze
+  * if so.
+  *
+  * Default method does nothing
+  *
+  * @access private
+  *
+  * @devnote The call to the default method is optimized away in class constructors
+  */
+Instance.prototype.addProperty('$lzsc$initialize', function $lzsc$initialize () {});
+if ($profile) {
+  Instance.prototype.$lzsc$initialize[Debug.FUNCTION_NAME] = 'Instance';
+}
+
+/**
+ * Workaround for https://bugs.webkit.org/show_bug.cgi?id=32402
+ *
+ * @devnote FIXME: [2010-01-12 ptw] (LPP-8704) Remove when no longer needed
+ *
+ * @access private
+ */
+if ($dhtml) {
+  // This no longer appears to be present in Safari 5
+  if (lz.embed.browser.isSafari && (lz.embed.browser.version >= "531.21") && (lz.embed.browser.version < "533.16")) {
+    Instance.prototype.addProperty('$lzsc$safarikludge', function $lzsc$safarikludge () {});
+  }
+}
+
+/**
+  * Bootstrap Class class
+  * @todo [2006-05-03 ptw] Rename to Class when LFC has been converted
+  */
+var Class = {
+  prototype: new Instance(),
+  addProperty: Instance.prototype.addProperty,
+  // Add properties to a class by adding them to the class's prototype
+  addProperties: function addProperties (plist) {
+    this.prototype.addProperties(plist);
+  },
+  addStaticProperty: function addStaticProperty (name, value) {
+    // TODO: [2006-09-28 ptw] Waiting for compiler support.  Enable
+    // this when the compiler allows you to declare your intent to
+    // override
+//     if ($debug) {
+//       if ((name in nc) && (nc[name] !== value)) {
+//         Debug.debug("%s.%s (%w) overrides %s.%s (%w)",
+//                     nc, name, value,
+//                     nc.prototype.constructor, name, nc[name]);
+//       }
+//     }
+    this[name] = value;
+    if ($debug) {
+      if (value instanceof Function && (! value._dbg_typename)) {
+        value._dbg_owner = this;
+        value._dbg_typename = function _dbg_typename () {
+          return Debug.functionName(this._dbg_owner) + ' static function'
+        };
+      }
+    }
+    if ($profile) {
+      if (value instanceof Function  && (! value._profile_name)) {
+        // Here `this` is the class
+        var o = this.prototype['_profile_typename'];
+        if (o) {
+          value._profile_name = value[Debug.FUNCTION_NAME] = (o + '.' + value[Debug.FUNCTION_NAME]);
+        }
+      }
+    }
+  },
+  allClasses: {Instance: Instance},
+  // Class class factory. This is how you make a new class. Arguments
+  // are classname:String (required); mixinsAndSuperclass:(Null ||
+  // Class || Array) if Null defaults to Instance, if Array, the
+  // elements of the array are the mixins followed by the superclass;
+  // instanceProperties:Array is a 'plist' of initial instance properties;
+  // staticProperties:Array is a 'plist' of the inital class
+  // properties;
+  // @devnote Arguments are in order of liklihood to permit unlikely
+  // ones to be omitted for better compression
+  make: function make (classname, instanceProperties=null, mixinsAndSuperclass=null, staticProperties=null, interfaces=null) {
+    if ($profile) {
+      var pcn = classname;
+      // Use tagname if it exists
+      if (staticProperties) {
+        for (var i = staticProperties.length - 1; i >= 1; i -= 2) {
+          var value = staticProperties[i];
+          var name = staticProperties[i - 1];
+          if (name == 'tagname') {
+            pcn = '<' + value + '>';
+            break;
+          }
+        }
+      }
+      Profiler.event('new Class(' + pcn + ')', 'calls');
+    }
+    var superclass = null;
+    if (mixinsAndSuperclass instanceof Array) {
+      for (var k = mixinsAndSuperclass.length - 1; k >= 0; k--) {
+        var c = mixinsAndSuperclass[k];
+        if (c instanceof Function) {
+          if ($debug) {
+            if (superclass) {
+              Debug.error("Class.make: Multiple superclasses %s and %s for class %s", superclass, c, classname);
+            }
+          }
+          mixinsAndSuperclass.splice(k, 1);
+          superclass = c;
+        }
+      }
+    } else if (mixinsAndSuperclass instanceof Function) {
+      superclass = mixinsAndSuperclass;
+      mixinsAndSuperclass = null;
+    } else if ($debug) {
+      if (mixinsAndSuperclass) {
+        Debug.error("Class.make: invalid superclass %w", mixinsAndSuperclass);
+      }
+    }
+    if (! superclass) { superclass = Instance; }
+    var nc = function constructor () {
+      // The constructor notes itself in every instance
+      this.constructor = arguments.callee;
+      if ($dhtml) {
+        // Workaround for
+        // https://bugs.webkit.org/show_bug.cgi?id=32402
+        // FIXME: [2010-01-12 ptw] (LPP-8704) Remove when no longer needed
+        if (this['$lzsc$safarikludge'] &&
+            (this.$lzsc$safarikludge !== Instance.prototype.$lzsc$safarikludge)) {
+          this.$lzsc$safarikludge();
+        }
+      }
+      // Call the initializer if it is not the default
+      if (this.$lzsc$initialize !== Instance.prototype.$lzsc$initialize) {
+        // Debug.debug('Initializing', this);
+        // Annotate construction of Node subclasses
+        if ($profile) {
+          var lzn = lz['node'];
+          if (lzn && (this is lzn)) {
+            var nm = null;
+            // Have to extract name from attrs
+            var attrs = arguments[1];
+            if (attrs) {
+                if (attrs['id'] && (attrs.id !== lzn._ignoreAttribute)) {
+                    nm = '#' + attrs.id;
+                } else if (attrs['name'] && (attrs.name !== lzn._ignoreAttribute)) {
+                    nm = ((parent === canvas)?'#':'.') + attrs.name;
+                } else if (attrs['_profile_name']) {
+                    nm = attrs._profile_name;
+                }
+            }
+            try {
+              // Note start of named instantiations, insert
+              // call/return events to split out named instantiations.
+              // Named or not, set _profile_instantiator_name for
+              // annotation in LzInstantiator.makeSomeViews
+              if (nm) {
+                nm = this.constructor[Debug.FUNCTION_NAME] + '(' + nm + ')';
+                this._profile_name = nm;
+                // done: event in __LZcallInit
+                Profiler.event('start: ' + nm);
+                Profiler.event(nm, 'calls');
+                this._profile_instantiator_name = nm;
+              } else {
+                this._profile_instantiator_name = this.constructor[Debug.FUNCTION_NAME];
+              }
+              this.$lzsc$initialize.apply(this, arguments);
+            } finally {
+              if (nm) {
+                Profiler.event(nm, 'returns');
+              }
+            }
+            return;
+          }
+        }
+        // Not $profile or not LzNode
+        this.$lzsc$initialize.apply(this, arguments);
+      }
+    };
+    nc.constructor = this;
+    nc.classname = classname;
+    if ($debug) {
+      nc._dbg_typename = this._dbg_name;
+      nc[Debug.FUNCTION_NAME] = classname;
+    }
+    if ($profile) {
+      // Give the constructor an intelligible name for profiling
+      nc[Debug.FUNCTION_NAME] = 'new ' + pcn;
+    }
+    // The prototype is an instance of our super, which causes us to
+    // inherit our super's instanceProperties
+    {
+      // This has to be constructed carefully, so as _not_ to run the
+      // class instance initializer
+      var xtor = function prototype () { this.constructor = superclass; };
+      if ($profile) {
+        xtor[Debug.FUNCTION_NAME] = pcn + '.prototype';
+      }
+      xtor.prototype = superclass.prototype;
+      var prototype = new xtor(); // --- superclass.make();
+    }
+    // Create any mixin interstitials, following the pattern above
+    if (mixinsAndSuperclass instanceof Array) {
+      for (var i = mixinsAndSuperclass.length - 1; i >= 0; i--) {
+        var t = mixinsAndSuperclass[i];
+        // The second argument is the class this will be the prototype for
+        prototype = t.makeInterstitial(prototype, i > 0 ? mixinsAndSuperclass[i -1] : nc);
+      }
+    }
+    // Add us to any interfaces we implement
+    if (interfaces instanceof Array) {
+      for (var i = interfaces.length - 1; i >= 0; i--) {
+        var t = interfaces[i];
+        t.addImplementation(classname, nc);
+      }
+    }
+    if ($profile) {
+      // Give the prototype an intelligible name for profiling
+      prototype._profile_typename = pcn
+    }
+    // Create super link
+    nc.prototype = prototype;
+    if ($debug) {
+      // For debugging, maintain a link from the prototype to the
+      // class it is the prototype for
+      prototype._dbg_prototype_for = nc
+    }
+    // Do this after installing the prototype, so profile names are correct
+    this.addStaticProperty.call(nc, 'addStaticProperty', this.addStaticProperty);
+    nc.addStaticProperty('addProperty', this.addProperty);
+    // NOTE: [2006-10-10 ptw] This could be inherited from the
+    // superclass, and hence overridable... not needed yet.
+    nc.addStaticProperty('addProperties', this.addProperties);
+    // Install the staticProperties
+    if (staticProperties) {
+      for (var i = staticProperties.length - 1; i >= 1; i -= 2) {
+        var value = staticProperties[i];
+        var name = staticProperties[i - 1];
+        nc.addStaticProperty(name, value);
+      }
+    }
+    // Class.initialize:  Install initial values
+    if (instanceProperties) {
+      nc.addProperties(instanceProperties);
+      if ($dhtml) {
+        // Workaround for
+        // https://bugs.webkit.org/show_bug.cgi?id=32402
+        // FIXME: [2010-01-12 ptw] (LPP-8704) Remove when no longer needed
+        if (lz.embed.browser.isSafari && (lz.embed.browser.version == "531.21")) {
+          nc.addProperty('$lzsc$safarikludge', function $lzsc$safarikludge () {
+              super.$lzsc$safarikludge();
+              for (var i = instanceProperties.length - 1; i >= 1; i -= 2) {
+                var value = instanceProperties[i];
+                if (value is Function) continue;
+                var name = instanceProperties[i - 1];
+                if ((value !== void 0) || (! (name in this))) {
+                  this[name] = value;
+                }
+              }
+            }
+            );
+        }
+      }
+    }
+    if ($debug) {
+      if (this.allClasses[classname]) {
+        Debug.error("Redefining %s from %w to %w", classname, this.allClasses[classname], nc);
+      }
+    }
+    global[classname] = this.allClasses[classname] = nc;
+    if ($profile) {
+      Profiler.event('new Class(' + pcn + ')', 'returns');
+    }
+    return nc;
+  }
+};
+
+if ($debug) {
+  Class._dbg_typename = 'Metaclass';
+  Class._dbg_name = 'Class';
+  Class.addProperties._dbg_typename = 'Class static function';
+  Class.addStaticProperty._dbg_typename = 'Class static function';
+  Class.make._dbg_typename = 'Class static function';
+}
+if ($profile) {
+  Class.addProperties._profile_name = Class.addProperties[Debug.FUNCTION_NAME] = 'Class.addProperties';
+  Class.addStaticProperty._profile_name = Class.addStaticProperty[Debug.FUNCTION_NAME] = 'Class.addStaticProperty'
+  Class.make._profile_name = Class.make[Debug.FUNCTION_NAME] = 'Class.make';
+}
+
+/** Bootstrap Mixin class */
+var Mixin = {
+  prototype: new Instance(),
+  allMixins: {},
+  // Adds a property to the Mixin, and to all implementations
+  addProperty: function addProperty (name, value) {
+    // Add to prototype
+    this.prototype[name] = value;
+    // Save for future implementations
+    this.instanceProperties.push(name, value);
+    // Add it to existing implementations
+    var impls = this.implementations;
+    for (var mash in impls) {
+      var t = impls[mash];
+      t.addProperty(name, value);
+    }
+    if ($debug) {
+      if (value instanceof Function && (! value._dbg_typename)) {
+        value._dbg_typename = this.classname + ' function';
+      }
+    }
+  },
+  addStaticProperty: function addStaticProperty (name, value) {
+    this[name] = value;
+    if ($debug) {
+      if (value instanceof Function && (! value._dbg_typename)) {
+        value._dbg_typename = this.classname + ' static function';
+      }
+    }
+  },
+  // TODO: [2006-05-19 ptw] Should mixins have make?  Can you
+  // instantiate a mixin?  Don't use make as the method for making
+  // an interstitial.
+  // Used internally to create a mixin interstitial
+  makeInterstitial: function makeInterstitial (superclassInstance, sharable) {
+    var impls = this.implementations;
+    // Remember combinations and re-use them if possible
+    var interstitialname = this.classname + '+' + superclassInstance.constructor.classname;
+    if ($profile) {
+      Profiler.event('new Interstitial(' + interstitialname + ')', 'calls');
+    }
+    var prototypename = sharable.classname + '|' + interstitialname;
+    if (impls[prototypename]) {
+      if ($debug) {
+        Debug.debug('Sharable interstitial: %s', prototypename);
+      }
+      return impls[prototypename];
+    }
+    // Add the properties to the prototype (superclassInstance)
+    superclassInstance.addProperties(this.instanceProperties);
+    // Make the interstitial
+    var xtor = function interstitial () { this.constructor = arguments.callee; };
+    xtor.prototype = superclassInstance;
+    // Unique name must identify superclass chain, punctuation is
+    // added for debugging
+    xtor.classname = interstitialname;
+    if ($debug) {
+      xtor._dbg_typename = 'Interstitial';
+      xtor[Debug.FUNCTION_NAME] = xtor.classname;
+    }
+    if ($profile) {
+      // Give the constructor an intelligible name for profiling
+      xtor[Debug.FUNCTION_NAME] = 'new ' + xtor.classname;
+    }
+    #pragma "passThrough=true"
+    var t = new xtor();
+    // Remember
+    impls[prototypename] = t;
+    if ($profile) {
+      Profiler.event('new Interstitial(' + interstitialname + ')', 'returns');
+    }
+    return t;
+  },
+  // Supports `is` for `implements`
+  addImplementation: function addImplementation (classname, constructor) {
+    // Classnames should never collide with actual interstitials, we
+    // fake storing a prototype, we only need the constructor field
+    // for `is`.
+    this.implementations[classname] = {constructor: constructor};
+  },
+  // Implements `is` operator for mixins
+  $lzsc$isa: function $lzsc$isa (obj) {
+    var impls = this.implementations;
+    for (var prototypename in impls) {
+      if (obj instanceof impls[prototypename].constructor) {
+        return true;
+      }
+    }
+    return false;
+  },
+  // How to make a Mixin
+  // @devnote Takes the same parameters as Class.make because emitted
+  // by the same generator.  Not all the arguments make sense for a
+  // mixin.
+  // @devnote Arguments are in order of liklihood to permit unlikely
+  // ones to be omitted for better compression
+  make: function make (classname, instanceProperties=null, superMixin=null, staticProperties=null, interfaces=null) {
+    if ($profile) {
+      Profiler.event('new Mixin(' + classname + ')', 'calls');
+    }
+    var nt = {
+      constructor: this,
+      classname: classname,
+      _dbg_typename: this._dbg_name,
+      _dbg_name: classname,
+      prototype: superMixin ? superMixin.make() : new Object,
+      instanceProperties: superMixin ? superMixin.instanceProperties.slice(0) : new Array,
+      // Remembers all implementations of the Mixin
+      implementations: {}
+    };
+    this.addStaticProperty.call(nt, 'addStaticProperty', this.addStaticProperty);
+    nt.addStaticProperty('addProperty', this.addProperty);
+    nt.addStaticProperty('makeInterstitial', this.makeInterstitial);
+    nt.addStaticProperty('addImplementation', this.addImplementation);
+    nt.addStaticProperty('$lzsc$isa', this.$lzsc$isa);
+    // Install the staticProperties
+    if (staticProperties) {
+      for (var i = staticProperties.length - 1; i >= 1; i -= 2) {
+        var value = staticProperties[i];
+        var name = staticProperties[i - 1];
+        nt.addStaticProperty(name, value);
+      }
+    }
+    // Mixin.initialize:  install initial values
+    if (instanceProperties) {
+      for (var i = instanceProperties.length - 1; i >= 1; i -= 2) {
+        var value = instanceProperties[i];
+        var name = instanceProperties[i - 1];
+        nt.addProperty(name, value);
+      }
+    }
+    global[classname] = this.allMixins[classname] = nt;
+    if ($profile) {
+      Profiler.event('new Mixin(' + classname + ')', 'returns');
+    }
+    return nt;
+  }
+};
+
+if ($debug) {
+  Mixin._dbg_typename = 'Metaclass';
+  Mixin._dbg_name = 'Mixin';
+  Mixin.addStaticProperty._dbg_typename = 'Mixin static function';
+  Mixin.addProperty._dbg_typename = 'Mixin static function';
+  Mixin.makeInterstitial._dbg_typename = 'Mixin static function';
+  Mixin.make._dbg_typename = 'Mixin static function';
+}
+if ($profile) {
+  Mixin.addProperty._profile_name = Mixin.addProperty[Debug.FUNCTION_NAME] = 'Mixin.addProperty';
+  Mixin.addStaticProperty._profile_name = Mixin.addStaticProperty[Debug.FUNCTION_NAME] = 'Mixin.addStaticProperty'
+  Mixin.makeInterstitial._profile_name = Mixin.makeInterstitial[Debug.FUNCTION_NAME] = 'Mixin.makeInterstitial'
+  Mixin.make._profile_name = Mixin.make[Debug.FUNCTION_NAME] = 'Mixin.make';
+}

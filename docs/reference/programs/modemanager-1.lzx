@@ -1,0 +1,14 @@
+<canvas height="160">
+   <button name="b1" onclick="winDia.openWindow()">Show modal dialog</button>
+   <window width="200" name="winDia" closeable="true" visible="false"
+           x="150" title="modal dialog">
+     <method name="openWindow">
+       this.open();
+       lz.ModeManager.makeModal(this);
+     </method>
+     <method name="close">
+       lz.ModeManager.release(this);
+       super.close();
+     </method>
+   </window>
+ </canvas>

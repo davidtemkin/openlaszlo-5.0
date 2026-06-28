@@ -5,7 +5,7 @@ import { parseXml, XmlElem, XmlNode } from "./xml.js";
 import { emitObject, emitObjectSpaced, emitTyped, jsString, Typed } from "./value.js";
 import { attrType, AttrType, mapType } from "./schema.js";
 import { canonicalColorHex, ColorFormatException, parseColor } from "./colors.js";
-import { compileFunction, compileFunctionDebug, compileBinderDebug, collectDependencies, compileExpr, compileExprDebug, compileProgramDebug, compileStylesheetDebug, compileScriptBody, compileScriptBodyDebug, compileProgram, finalSourceLine, ScUnsupported, setScDebug, setScBacktrace, resetKnownClassnames, addKnownClassname, resetKnownIds, addKnownId } from "./sc.js";
+import { compileFunction, compileFunctionDebug, compileBinderDebug, collectDependencies, compileExpr, compileExprDebug, compileProgramDebug, compileStylesheetDebug, compileScriptBody, compileScriptBodyDebug, compileProgram, compileLibraryProgram, finalSourceLine, ScUnsupported, setScDebug, setScBacktrace, resetKnownClassnames, addKnownClassname, resetKnownIds, addKnownId } from "./sc.js";
 import { schemaAttrType, schemaHasEvent } from "./schema-types.js";
 import { javaDouble } from "./value.js";
 import { buildStylesheetProgram, CssUnsupported } from "./css.js";
@@ -98,6 +98,72 @@ export const BUILD_CONSTANTS = {
 };
 /** Normalized in place of the live compile timestamp (harness normalizes the oracle to match). */
 export const NORMALIZED_APPBUILDDATE = "1970-01-01T00:00:00Z";
+
+/** The LFC (LaszloLibrary.lzs) production-build magic-constant banner — line 1 of
+ *  `LFCdhtml.js`. The oracle emits the `compileTimeConstants` HashMap (JavascriptGenerator
+ *  visitProgram, top=true under FLASH_COMPILER_COMPATABILITY) as `var <name>=<value>;`,
+ *  iterated in Java-17 String-keyed HashMap order. For runtime=dhtml, --option debug
+ *  unset, that order + these values are FIXED (14 keys; `:Boolean`/`:String` type
+ *  annotations are stripped by the JS printer). Hardcoded byte-for-byte vs the gold. */
+export const LFC_BANNER =
+  'var $swf10=false;var $runtime="dhtml";var $swf7=false;var $j2me=false;var $swf9=false;' +
+  'var $swf8=false;var $dhtml=true;var $as3=false;var $as2=false;var $debug=false;' +
+  'var $svg=false;var $backtrace=false;var $js1=true;var $profile=false;';
+
+/** Debug-build (compress=false) magic-constant banner: a SEPARATE makeTranslation-
+ *  Units unit emitted at LaszloLibrary.lzs#13 (the first real statement's line). The
+ *  14 spaced `var $X = Y;` decls share one leading source directive; the trailing
+ *  `\n` is the last decl's separator. The body unit (compileLibraryProgram debug)
+ *  re-emits the directive for `_Copyright` (fresh translation-unit line state). */
+export const LFC_BANNER_DEBUG =
+  "/* -*- file: LaszloLibrary.lzs#13 -*- */\n" +
+  'var $swf10 = false;\nvar $runtime = "dhtml";\nvar $swf7 = false;\nvar $j2me = false;\n' +
+  'var $swf9 = false;\nvar $swf8 = false;\nvar $dhtml = true;\nvar $as3 = false;\n' +
+  'var $as2 = false;\nvar $debug = true;\nvar $svg = false;\nvar $backtrace = false;\n' +
+  'var $js1 = true;\nvar $profile = false;\n';
+
+/** PROFILE-build magic-constant banner. nameFunctions (compress=false → the spaced
+ *  `var $X = Y;` form) but TRACK_LINES is OFF, so — unlike the debug banner — there is
+ *  NO leading `/* -*- file -*- *​/` directive and the body's first statement follows
+ *  with none either. `$debug = false` (production folding), `$profile = true`. */
+export const LFC_BANNER_PROFILE =
+  'var $swf10 = false;\nvar $runtime = "dhtml";\nvar $swf7 = false;\nvar $j2me = false;\n' +
+  'var $swf9 = false;\nvar $swf8 = false;\nvar $dhtml = true;\nvar $as3 = false;\n' +
+  'var $as2 = false;\nvar $debug = false;\nvar $svg = false;\nvar $backtrace = false;\n' +
+  'var $js1 = true;\nvar $profile = true;\n';
+
+/** Compile the LFC library root (`LaszloLibrary.lzs`) to a single production
+ *  `LFCdhtml.js` string: the magic-constant banner + the include-expanded,
+ *  constant-folded, compiled library body. `resolveInclude(path)` reads an
+ *  include's raw source (path is root-relative; see compileLibraryProgram). This
+ *  is an ADDITIVE entry — it does NOT touch the `<canvas>` app-compile path. */
+export function compileLibrary(
+  rootSource: string,
+  rootFile: string,
+  resolveInclude: (path: string) => string | null,
+  debug = false,
+  backtrace = false,
+  profile = false,
+): string {
+  // BACKTRACE LFC (`LFCdhtml-backtrace.js`) = the debug LFC (`$debug=true` +
+  // nameFunctions) PLUS the DEBUG_BACKTRACE per-function call-stack-frame
+  // instrumentation (the `Debug.backtraceStack` frame push/try/finally + per-call-
+  // site `$lzsc$a.lineno=N` notes — the SAME machinery the app `compileroptions=
+  // "backtrace:true"` build uses, proven byte-identical on backtrace.lzx). The
+  // magic-constant banner is IDENTICAL to the debug banner (the oracle does NOT set
+  // the `$backtrace` source-fold constant for DEBUG_BACKTRACE — verified vs the gold,
+  // `var $backtrace = false;` in both), so reuse LFC_BANNER_DEBUG.
+  if (backtrace)
+    return LFC_BANNER_DEBUG + compileLibraryProgram(rootSource, rootFile, resolveInclude, true, true);
+  if (debug)
+    return LFC_BANNER_DEBUG + compileLibraryProgram(rootSource, rootFile, resolveInclude, true);
+  // PROFILE LFC (`LFCdhtml-profile.js`) = nameFunctions (displayName-IIFEs, compress=
+  // false) + the `$lzprofiler` per-function timing meter, but `$debug=false` (production
+  // folding) and TRACK_LINES off (no directives). See compileLibraryProgram profile branch.
+  if (profile)
+    return LFC_BANNER_PROFILE + compileLibraryProgram(rootSource, rootFile, resolveInclude, false, false, true);
+  return LFC_BANNER + compileLibraryProgram(rootSource, rootFile, resolveInclude);
+}
 
 /** Canvas attribute defaults (pre-typed), overridden by the source <canvas>. */
 function canvasDefaults(proxied?: boolean): Record<string, Typed> {

@@ -1,0 +1,19 @@
+<canvas height="160">
+        
+        <simplelayout axis="y" spacing="10"/>
+        
+        <view id="across">
+            <simplelayout axis="x" spacing="10"/>
+            <view bgcolor="blue" height="30" width="50"/>
+            <view bgcolor="blue" height="30" width="50"/>
+            <view bgcolor="blue" height="30" width="50"/>
+        </view>
+        
+        <view id="down">
+            <simplelayout axis="y" spacing="10"/>
+            <view bgcolor="red" height="30" width="50"/>
+            <view bgcolor="red" height="30" width="50"/>
+            <view bgcolor="red" height="30" width="50"/>
+        </view>
+        
+    </canvas>

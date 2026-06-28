@@ -1,0 +1,18 @@
+<canvas height="150">
+              <dataset name="contacts" request="true"
+                  src="http:resources/contactsdata.xml"/>
+            
+              <basegrid datapath="contacts:/resultset" width="200"
+                           height="150">
+                <basegridcolumn>
+                  <text placement="header">Check 'em off</text>
+                  <checkbox text="$path{ '@displayname'}" 
+                            value="$path{'@checked'}">
+                    <handler name="onvalue">
+                      this.parent.parent.datapath.updateData();
+                    </handler>
+                  </checkbox>
+                </basegridcolumn>
+                <scrollbar placement="content"/>
+              </basegrid>
+            </canvas>

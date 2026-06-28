@@ -82,11 +82,8 @@
     <!-- This method is called when the context menu item "Switch runtime" is
          selected -->
   <method name="switchRuntime"><![CDATA[
-       if (canvas.runtime == "dhtml") {
-           lz.Browser.loadURL("./LZProject.lzx?lzt=html&lzr=swf8");
-       } else {
-           lz.Browser.loadURL("./LZProject.lzx?lzt=html&lzr=dhtml");
-       }
+       // The Flash runtime is retired; always (re)load in the DHTML runtime.
+       lz.Browser.loadURL("./LZProject.lzx?lzt=html&lzr=dhtml");
     ]]></method>
 
 

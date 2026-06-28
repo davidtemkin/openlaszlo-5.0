@@ -1,0 +1,23 @@
+<canvas>
+                <dataset name="imagedata">
+                    <image url="http://www.openlaszlo.org/images/horses/horse-1-sm.jpg"/>
+                </dataset>
+            
+                <wrappinglayout/>
+                <image src="http://www.openlaszlo.org/images/horses/horse-1-sm.jpg"/>
+                <image datapath="imagedata:/image/@url"/>
+                <image prefix="http://www.openlaszlo.org/images/horses/" src="horse-1-sm.jpg"/>
+                <image src="http://www.openlaszlo.org/images/horses/horse-1-sm.jpg"/>
+                <image>
+                    <text>Click me</text>
+                    <handler name="onclick">
+                        this.setAttribute('src', 'http://www.openlaszlo.org/images/horses/horse-1-sm.jpg');
+                    </handler>
+                </image>
+                <image forcereload="true">
+                    <text>Click me to reload</text>
+                    <handler name="onclick">
+                        this.setAttribute('src', 'http://www.openlaszlo.org/images/horses/horse-1-sm.jpg');
+                    </handler>
+                </image>
+            </canvas>

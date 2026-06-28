@@ -1,0 +1,702 @@
+/* -*- mode: JavaScript; c-basic-offset: 2; -*- */
+
+/**
+ * Formatted output
+ *
+ * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+ *            Use is subject to license terms.
+ */
+
+{
+#pragma "warnUndefinedReferences=true"
+
+  /**
+   * Wrapper that creates a general callback in place of the normal
+   * object inspection.
+   *
+   * @devnote NOTE: Yes this looks surprisingly like a LzDelegate, but
+   * we don't want it to be a delegate, since we want delegates to be
+   * inspectable.  This special wrapper object is not inspectable
+   * because it gets special handling in the object-link handler.  If
+   * callbacks were the more common case, we'd turn this upside down
+   * and make the object-links the distinguished case.  Since
+   * object-links are the most common case, we optimize them.
+   *
+   * @access private
+   */
+  class LzFormatCallback {
+    var callback:Function;
+
+    function LzFormatCallback (callback:Function) {
+      this.callback = callback;
+    }
+
+    // TODO: [2010-04-25 ptw] Maybe the event that caused the callback
+    // should be passed, so you can dispatch on the mouse gesture,
+    // etc.
+    function call () {
+      return this.callback.call(null);
+    }
+  }
+
+
+/**
+ * <p>See <xref linkend="LzText" /> and <xref linkend="LzDebugService+debug"
+ * /> for additional
+ * examples of how to present formatted text to the user
+ * interface.</p>
+ *
+ * <p>Here are some simple examples that show the use of the
+ * <code>s</code> and <code>w</code> conversions:</p>
+ * <example title="%s, %w, and %#w"><programlisting>
+<![CDATA[
+<canvas debug="true" height="150" width="100%">
+<debug y="5%" height="90%" />
+  <script>
+    var myObj = {a: 'eh?', b: 'bee', c: 'sea'};
+    Debug.debug("My object using %%s conversion: %s", myObj);
+    Debug.debug("My object using %%w conversion: %w", myObj);
+    Debug.debug("My object using %%#w conversion: %#w", myObj);
+  </script>
+</canvas>
+]]>
+ * </programlisting></example>
+ *
+ * <p>Here is an example showing how representations can be
+ * abbreviated.  If you click on the abbreviated representation, you can inspect
+ * the entire object.</p>
+ * <example title="Abbreviating representations"><programlisting>
+<![CDATA[
+<canvas debug="true" height="150" width="100%">
+<debug y="5%" height="90%" />
+  <script>
+    var myObj = {one: 1, too: 2, 3: 'threeee', 42: "The answer", 'a very long tag name': "With a very long value to boot"};
+    Debug.debug("My object using %%w: %w", myObj);
+    Debug.debug("My object using %%o.32w: %0.32w", myObj);
+  </script>
+</canvas>
+]]>
+ * </programlisting></example>
+ *
+ * <p>Here is an example showing how positional arguments could be
+ * used to accomodate parameterized control strings, say to support
+ * internationalizations where the values converted may have to be
+ * accessed in different orders.</p>
+ * <example title="Positional arguments"><programlisting>
+<![CDATA[
+<canvas layout="axis: y; spacing: 10" height="60" width="100%">
+  <debug y="5%" height="90%" />
+  <script>
+    var date = {us: "%2$d/%3$d/%1$d", eu: "%1$d-%2$02d-%3$02d"};
+    var now = new Date();
+  </script>
+  <text oninit="this.format(date.us, now.getFullYear(), now.getMonth(), now.getDay())" />
+  <text oninit="this.format(date.eu, now.getFullYear(), now.getMonth(), now.getDay());" />
+</canvas>
+]]>
+ * </programlisting></example>
+ *
+ * <p>Finally, here is an example of using a custom representation for
+ * an object</p>
+ * <example title="Custom object representation"><programlisting>
+<![CDATA[
+<canvas debug="true" height="150" width="100%">
+<debug y="5%" height="90%" />
+  <script>
+    var myObj = {a: "Complex", 'object with an': "ugly representation", 42: "The answer", length: 768};
+    Debug.debug("%=s &lt;-- click for further details", myObj, 'Complex!')
+  </script>
+</canvas>
+]]>
+ * </programlisting></example>
+ *
+ * @shortdesc Formatted output support
+ * @access public
+ * @topic LZX
+ * @subtopic Formatted Output
+ */
+mixin LzFormatter {
+
+  if ($as2) {
+    /** @access private */
+    static var cleanNumberPattern = null;
+    /** @access private */
+    function toNumber(s) {
+      // NOTE [2009-03-16 ptw] In swf8 we have to remove any 0 that
+      // would make the number be parsed as Octal, because the swf8
+      // implementors did not pay attention to the encouragement in
+      // section 15.1.2.2 of ECMAScript 262-3
+      var cnp = LzFormatter.cleanNumberPattern;
+      if (! cnp) {
+        cnp = LzFormatter.cleanNumberPattern = new RegExp("^([\\s+-]*)(?:0+(?=[1-9]))(.*)$");
+      }
+      if (typeof(s) == 'string') {
+        s = s.replace(cnp, "$1$2");
+        if (s == '') { s = 0; }
+      }
+      return Number(s);
+    }
+  } else {
+    /** @access private */
+    function toNumber(s) { return Number(s); }
+  }
+
+  /**
+   * <p>Pad or trim a string to a specified length</p>
+   *
+   * <p>This is a support method <xref
+   * linkend="LzFormatter.prototype.formatToString" />, which is the
+   * preferred interface.</p>
+   *
+   * @param * value: the value to pad, will be coerced to a string if not a number
+   * @param Number widthMin: the minimum width, if negative pad on the
+   * right, default 0
+   * @param Number decMax: for numbers: ensure decimals characters to the right
+   * of '.', padding with 0, otherwise maximum width
+   * @param String pad: character to pad on left with, default ' '
+   * @param String sign: ' ', '-', '+', default '-'
+   * @param Number radix: radix to represent numbers in, default 10
+   * @param Boolean force: ensure numbers always have a decimal
+   */
+  function pad (value='',
+                widthMin:Number=0,
+                // Why can't I say Number?=null
+                decMax=null,
+                pad:String=' ',
+                sign:String='-',
+                radix:Number=10,
+                force:Boolean=false) {
+    var isNumber = typeof(value) == 'number';
+    // coerce to be string
+    if (isNumber) {
+      if (decMax != null) {
+        var precision = Math.pow(10, (- decMax));
+        value = Math.round(value/precision)*precision;
+      }
+      value = Number(value).toString(radix);
+      if (sign != '-') {
+        if (value.indexOf('-') != 0) {
+          if (value != 0) {
+            value = sign + value;
+          } else {
+            // ' 0' not '+0'
+            value = ' ' + value;
+          }
+        }
+      }
+    } else {
+      value = '' + value;
+    }
+    var strlen = value.length;
+    // enforce precision
+    if (decMax != null) {
+      if (isNumber) {
+        var decimal = value.lastIndexOf('.');
+        if (decimal == -1) {
+          var decimals = 0;
+          if (force || (decMax > 0)) {
+            value += '.';
+          }
+        } else {
+          var decimals = strlen - (decimal + 1);
+        }
+        if (decimals > decMax) {
+          value = value.substring(0, strlen - (decimals - decMax));
+        } else {
+          for (var i = decimals; i < decMax; i++) value += '0';
+        }
+      } else {
+        value = value.substring(0, decMax);
+      }
+    }
+    // enforce minimum width
+    strlen = value.length;
+    var leftJustify = false;
+    if (widthMin < 0) {
+      widthMin = (- widthMin);
+      leftJustify = true;
+    }
+    if (strlen >= widthMin) {
+      return value;
+    }
+    if (leftJustify) {
+      for (var i = strlen; i < widthMin; i++) value = value + ' ';
+    } else {
+      sign = null;
+      if (pad != ' ') {
+        // Need to move sign to left of padding
+        if (" +-".indexOf(value.substring(0, 1)) >= 0) {
+          sign = value.substring(0, 1);
+          value = value.substring(1);
+        }
+      }
+      for (var i = strlen; i < widthMin; i++) value = pad + value;
+      if (sign != null) {
+        value = sign + value;
+      }
+    }
+    return value;
+  }
+
+  /**
+   * <p>Abbreviate a string</p>
+   *
+   * <p>This is a support method <xref
+   * linkend="LzFormatter.prototype.formatToString" />, which is the
+   * preferred interface.</p>
+   *
+   * @param String s: the string to abbreviate
+   * @param Number l: the desired length, defaults to Infinity
+   *
+   * @return String: the abbreviated string
+   */
+  function abbreviate(s:String, l=Infinity):String {
+    if (s) {
+    var ellipsis = '\u2026';
+      if (s.length > (l - ellipsis.length)) {
+        s = s.substring(0, l - ellipsis.length) + ellipsis;
+      }
+    }
+    return s;
+  };
+
+  /**
+   * Characters to escape in strings when escape is true.
+   * (These are the ECMAScript SingleEscapeCharacter's for String
+   * Literals (7.8.4).
+   * @access private
+   */
+  static var singleEscapeCharacters = (function (np) {
+      var result = [];
+      for (var i = 0, l = np.length; i < l; i += 2) {
+        var rep = np[i];
+        var ch = np[i+1];
+        result[ch.charCodeAt(0)] = rep;
+      }
+      return result;
+    })(
+      [
+        '\\b', '\b',
+        '\\t', '\t',
+        '\\n', '\n',
+        // @devnote IE doesn't implement '\v', use hexcode instead, but cannot
+        // use '\x0B' because compiler replaces it back to '\v' (LPP-3623)
+        '\\v', String.fromCharCode(0x0B),
+        '\\f', '\f',
+        '\\r', '\r',
+        '\\"', '\"',
+        '\\\'', '\'',
+        '\\\\', '\\'
+       ]);
+
+  /**
+   * Escape a string
+   *
+   * @param String s: the string to abbreviate
+   * @param Boolean quoted: whether to quote the string or not (and if
+   * you do, to not escape the opposite quote inside the string).
+   * Default false.
+   * @return String: the escaped (and optionally quoted) string
+   *
+   * @access private
+   *
+   * @devnote Intentionally written not using RegEx because some
+   * runtimes do not support RegEx
+   */
+  function stringEscape (s:String, quoted:Boolean=false) {
+    // FIXME [2009-12-13 ptw] (LPP-8666)
+    if ($as3) {
+      var sec = singleEscapeCharacters;
+    } else {
+      var sec = LzFormatter.singleEscapeCharacters;
+    }
+    // quotes are skipped and ignored unless quoted
+    var skip = '"';
+    var quote = "";
+    var ignore = "'";
+    if (quoted) {
+      ignore = "";
+      var singles = s.split("'").length;
+      var doubles = s.split('"').length;
+      if (singles > doubles) {
+        skip = "'";
+        quote = '"';
+      } else {
+        skip = '"';
+        quote = "'";
+      }
+    }
+    var output = '';
+    // escape control codes
+    for (var i = 0, l = s.length; i < l; i++) {
+      var ch = s.charAt(i);
+      var cc = s.charCodeAt(i);
+      if (cc in sec) {
+        if ((ch != skip) && (ch != ignore)) {
+          output += sec[cc];
+        } else {
+          output += ch;
+        }
+      } else if (((cc >= 0) && (cc <= 0x1F)) || ((cc >= 0x7f) && (cc <= 0x9f))) {
+        output += '\\x' + this.pad(cc,2,0,'0','',16);
+      } else {
+        output += ch;
+      }
+    }
+    return quote + output + quote;
+  };
+
+  /**
+   * <p>Formatted output to string</p>
+   *
+   * <p>Formats its arguments according to the control string.</p>
+   *
+   * <p>The standard <a href="x-man-page://3/printf">Unix printf(3)</a> conversion specifications are accepted (with
+   * the exception of <code>a</code>, <code>n</code>, and <code>p</code>).  <code>e</code>, <code>f</code>, and <code>g</code>
+   * conversions are accepted but equivalent to <code>f</code>.
+   * Positional arguments using the <code>$</code> field are
+   * supported.  All the standard flags (<code>#</code> for alternate,
+   * <code>0</code> for zero padding, <code>-</code> for left
+   * justification, <code>&#160;</code> for sign alignment, <code>+</code>
+   * for explicit sign) are supported.  The <code>'</code> flag
+   * (thousands separator) is ignored. Field width and precision are
+   * supported, including the use of parameterized (<code>*</code>)
+   * values.
+   * The <code>h</code> and <code>l</code>
+   * length modifiers are accepted but ignored.</p>
+   *
+   * <p>No errors are
+   * signalled for invalid conversion directives.</p>
+   *
+   * <p>There is an additional conversion
+   * specifier <code>w</code> that formats the argument in a readable
+   * representation, similar to that of <xref
+   * linkend="LzDebugService+debug.prototype.write">Debug.write</xref>, but with less
+   * detail.  If the alternate form is requested (with the <code>#</code> flag), <code>w</code> uses the
+   * full representation used by <xref
+   * linkend="LzDebugService+debug.prototype.write">Debug.write</xref>.  The <code>%w</code> directive obeys <link
+   * linkend="LzDebugService+debug.__ivars__.printLength">Debug.printLength</link>.  If a precision is specified,
+   * that is used as <code>Debug.printLength</code> for the
+   * corresponding conversion.  If a representation is truncated
+   * because of precision for <code>w</code> or <code>#s</code> conversions, the abbreviation
+   * will be noted by ellipsis (&#x2026;), rather than truncation.  If the debugger is not present,
+   * <code>w</code> conversion behaves the same as <code>s</code>.</p>
+   *
+   * <p>Any Object that is
+   * represented by <code>s</code> or <code>w</code> conversions using the <code>Debug</code> formatted
+   * output methods will create a link that can be clicked on
+   * to inspect the represented object.  There is an additional flag for the
+   * <code>s</code> and <code>w</code> formats (<code>=</code>) which will take the next argument as the object to
+   * be represented (i.e., linked to) by the conversion; thus
+   * permitting custom representations.</p>
+   *
+   * @param String control: A control string where % indicates a
+   * conversion directive that will be replaced by a representation of
+   * the corresponding argument as specified by the details of the
+   * conversion directive.
+   *
+   * @param [*] args: arguments to be formatted according to the
+   * control string.
+   *
+   * @return LzMessage: the return value is an LzMessage which can be
+   * coreced to a string or HTML (the latter supports the hot-linking
+   * feature).
+   *
+   * @devnote For backwards compatibility with <xref
+   * linkend="LzDebugService+debug.prototype.write"/>, if control is not a string or
+   * control has no formatting directives but there are multiple
+   * arguments, all the arguments are emitted separated by spaces.
+   */
+  function formatToString (control='', ...args) {
+    var al = args.length;
+    // 'write compatibility mode': control is not a string or # of
+    // arguments is incompatible with control directives.
+    if ((! (typeof control == 'string' || control is String)) ||
+        ((al > 0) != (control.indexOf('%') >= 0))) {
+      // Process each value to individually so they can be
+      // 'presented' as objects if applicable
+      args = [control].concat(args);
+      al++;
+      var out = new LzMessage();
+      for (var i = 0; i < al; i++) {
+        var arg = args[i];
+        var sep = ((i == (al-1)) ? '\n' : ' ');
+        out.append(arg);
+        // separator is not escaped
+        out.appendInternal(sep);
+      }
+      return out;
+    }
+    // Normal mode
+    var ctrl = '' + control;
+    // Zero-based
+    var argno = 0;
+    var maxarg = 0;
+    function getarg(i) {
+      if (i >= al) {
+        return null;
+      }
+      return args[i];
+    }
+    function consumearg (i) {
+      if ($debug) {
+        if (i >= al) {
+          Debug.warn("%#0.48w: insufficient arguments", control);
+        }
+      }
+    }
+    var base = 0, limit = ctrl.length;
+    var start = 0, end = 0;
+    var out = new LzMessage();
+    while (start < limit) {
+      end = ctrl.indexOf('%');
+      if (end == -1) {
+        out.append(ctrl.substring(start, limit));
+        break;
+      }
+      out.append(ctrl.substring(start, end));
+      // skip %
+      base = end;
+      start = end + 1;
+      end = end + 2;
+      var sign = '-';
+      var pad = ' ';
+      var alternate = false;
+      var length = '';
+      var precision = null;
+      var directive = null;
+      // The object that is to be represented
+      var object = null;
+//       var extra = null;
+      while ((start < limit) &&
+             // swf7 (! directive)
+             (directive == null)) {
+        var char = ctrl.substring(start, end);
+        start = end++;
+        // This is a little sloppy.  It will parse valid options,
+        // but also permits invalid ones, whose behaviour is
+        // undefined.
+        switch (char) {
+          case '-':
+            length = char;
+            break;
+          case '+': case ' ':
+            sign = char;
+            break;
+          case '#':
+            alternate = true;
+            break;
+          case '0':
+            if (length === '' && precision === null) {
+              pad = char;
+              break;
+            }
+          case '1': case '2': case '3': case '4': case '5':
+          case '6': case '7': case '8': case '9':
+            if (precision !== null) {
+              precision += char;
+            } else {
+              length += char;
+            }
+            break;
+          case '$':
+            // $ is 1-based, argno is 0-based
+            argno = length-1;
+            length = '';
+            break;
+          case '*':
+            if (precision !== null) {
+              precision = getarg(argno);
+              consumearg(argno++);
+            } else {
+              length = getarg(argno);
+              consumearg(argno++);
+            }
+            break;
+          case '.':
+            precision = '';
+            break;
+          case 'h': case 'l':
+            break;
+          case '=':
+            // Take the next argument to be the object represented
+            object = getarg(argno);
+            consumearg(argno++);
+            break;
+          case '^':
+            // Take the next argument as a callback to be invoked when
+            // the representation is clicked on
+            object = new LzFormatCallback(getarg(argno));
+            consumearg(argno++);
+            break;
+//           case '{':
+//             // Look for a match
+//             var close = ctrl.indexOf('}', start);
+//             if (close > start) {
+//               extra = ctrl.substring(start, close);
+//               start = close + 1;
+//               end = start + 1;
+//               break;
+//             }
+//             // Otherwise fall through
+          default:
+            directive = char;
+            break;
+        }
+      }
+      var value = getarg(argno);
+      if (object == null) { object = value; }
+      // set decimals
+      var decimals = null;
+      var force = false;
+      // NOTE: [2006-11-17 ptw] Number("010") -> 8 in swf, 10 in ECMA,
+      // hence use null/'' as flag not ''/'0'
+      if (precision !== null) {
+        decimals = 1 * precision;
+      } else {
+        switch (directive) {
+          case 'F': case 'E': case 'G':
+          case 'f': case 'e': case 'g':
+            decimals = 6;
+            force = alternate;
+            break;
+          case 'O': case 'o':
+            if (alternate && value != 0) {
+              out.append('0');
+            }
+            break;
+          case 'X': case 'x':
+            if (alternate && value != 0) {
+              out.append('0' + directive);
+            }
+            break;
+        }
+      }
+      // set radix
+      var radix = 10;
+      switch (directive) {
+        case 'o': case 'O':
+          radix = 8;
+          break;
+        case 'x': case'X':
+          radix = 16;
+          break;
+      }
+      //     Debug.write('directive', directive, 'value', value, 'length', length,
+      //                 'decimals', decimals, 'pad', pad, 'sign', sign, 'radix', radix);
+      // 'unsigned'
+      switch (directive) {
+        case 'U': case 'O': case 'X':
+        case 'u': case 'o': case 'x':
+          if (value < 0) {
+            value = (- value);
+            // NOTE: [2006-11-17 ptw] Number('') -> NaN in swf, 0 in
+            // ECMA, hence use parseInt
+            var wid = Math.abs(parseInt(length, 10));
+            if (isNaN(wid)) {
+              wid = this.toNumber(value).toString(radix).length;
+            }
+            var max = Math.pow(radix, wid);
+            value = max - value;
+          }
+          break;
+      }
+      //     Debug.write('directive', directive, 'value', value, 'length', length,
+      //                 'decimals', decimals, 'pad', pad, 'sign', sign, 'radix', radix);
+      // do the directive
+      // e, f, and, g could be implemented with toExponential or
+      // toPrecision if they existed in the runtime.
+      switch (directive) {
+        case 'D': case 'U': case 'I': case 'O': case 'X': case 'F': case 'E': case 'G':
+          value = this.toNumber(value);
+          out.appendInternal(this.pad(value, length, decimals, pad, sign, radix, force).toUpperCase(), object);
+          consumearg(argno++);               // consume value
+          break;
+        case 'c':
+          value = String.fromCharCode(value);
+        case 'w':
+          if ($debug) {
+            var width = decimals || Debug.printLength;
+            // alternate => Debug.write => escape _and_ readable (see
+            // LzMessage.append)
+            // We let __String abbreviate, for best legibility
+            out.appendInternal(this.pad(Debug.__String(value, true, width, alternate),
+                                        length, null, pad, sign, radix, force),
+                               object);
+            consumearg(argno++);               // consume value
+            break;
+          }
+        case 's':
+          // TODO: [2006-06-01 ptw] Generalize this to write 'pretty'
+          // values for all
+          var str;
+          if (value is Function) {
+            if ($debug) {
+              str = Debug.functionName(value, false);
+            }
+            if (! str) {
+              str =  'function () {\u2026}';
+            }
+          } else if (typeof value == 'number') {
+            // Must convert number to string for proper padding
+            str = Number(value).toString(radix);
+          } else if ((directive == 'w') && (typeof value == 'string')) {
+            // %w escapes strings
+            str = this.stringEscape(value, true);
+          } else {
+            str = '' + value;
+          }
+          // alternate => show abbreviation
+          if (alternate) {
+            if ($debug) {
+              var width = decimals || Debug.printLength;
+            } else {
+              var width = decimals;
+            }
+            if (width) {
+              str = this.abbreviate(str, width);
+              decimals = null;
+            }
+          }
+          out.appendInternal(this.pad(str, length, decimals, pad, sign, radix, force),
+                             object);
+          consumearg(argno++);               // consume value
+          break;
+        case 'd': case 'u': case 'i': case 'o': case 'x': case 'f': case 'e': case 'g':
+          value = this.toNumber(value);
+          out.appendInternal(this.pad(value, length, decimals, pad, sign, radix, force), object);
+          consumearg(argno++);               // consume value
+          break;
+        case '%':
+          out.append('%');
+          break;
+        default:
+          // treat unknown directive as literal
+          out.append(ctrl.substring(base, start));
+          break;
+      }
+      ctrl = ctrl.substring(start, limit);
+      base = 0, limit = ctrl.length;
+      start = 0, end = 0;
+      if (argno > maxarg) { maxarg = argno; }
+    }
+    if (maxarg < al) {
+      if ($debug) {
+        Debug.warn("%#0.48w: excess arguments", control);
+      }
+      // Output excess in 'write compatibility' mode
+      out.appendInternal(' ');
+      for (; maxarg < al; maxarg++) {
+        var arg = getarg(maxarg);
+        var sep = ((maxarg == (al-1)) ? '\n' : ' ');
+        out.append(arg);
+        out.appendInternal(sep);
+      }
+    }
+
+    return out;
+  }
+
+};
+// cannot publish lz.Formatter here
+};

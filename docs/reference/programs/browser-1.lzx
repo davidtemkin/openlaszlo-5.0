@@ -1,0 +1,10 @@
+<canvas height="140">
+   <!-- Load the OpenLaszlo site in a new window -->
+   <button onclick="lz.Browser.loadURL('http://www.openlaszlo.org/', '_blank')">
+     Click me
+   </button>
+   <script>
+     // List the player version
+     Debug.debug('Player version: %w', lz.Browser.getVersion());
+   </script>
+ </canvas>

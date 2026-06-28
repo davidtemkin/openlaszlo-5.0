@@ -1,0 +1,11 @@
+<canvas height="60">
+        <view bgcolor="#DDFFFF">
+            <text>Without a layout, it can be difficult</text>
+            <text x="2" y="5">to manually position your views</text>
+        </view>
+        <view y="25" bgcolor="#FFDDFF">
+            <simplelayout axis="y" />
+            <text>A layout makes</text>
+            <text>positioning simple and automatic</text>
+        </view>
+        </canvas>

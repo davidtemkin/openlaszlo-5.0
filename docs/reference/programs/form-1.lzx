@@ -1,0 +1,28 @@
+<canvas height="200">
+              <dataset name="echoer" type="http" src="/@WEBAPP@/examples/components/echo.jsp" />
+              <window id="win" >
+              <form>
+              <submit name="survey" dataset="${echoer}"/>
+              <statictext>What is your favorite vacation spot?</statictext>
+              <radiogroup name="place">
+              <radiobutton>Hawaii</radiobutton>
+              <radiobutton>Paris</radiobutton>
+              <radiobutton>Jamaica</radiobutton>
+              </radiogroup>
+              <button isdefault="true"
+              onclick="parent.survey.submit()">submit</button>
+              </form>
+              </window>
+              
+              <view x="260" y="20" 
+              layout="class: simplelayout" datapath="echoer:/response">
+              <text text="Data received" />
+              <view layout="axis: y" >
+              <view datapath="formcomponent" layout="axis:x" >
+              <text resize="true" datapath="@name"/>
+              <text text=":"/>
+              <text resize="true" datapath="text()"/>
+              </view>
+              </view>
+              </view>
+              </canvas>

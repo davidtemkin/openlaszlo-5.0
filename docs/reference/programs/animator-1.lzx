@@ -1,0 +1,5 @@
+<canvas height="65">
+   <window height="50" width="50">
+     <animator attribute="x" to="100" duration="1000"/>
+   </window>
+ </canvas>

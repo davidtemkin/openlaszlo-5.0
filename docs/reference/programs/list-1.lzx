@@ -1,0 +1,7 @@
+<canvas height="100">
+              <list x="10" y="10">
+              <textlistitem text="item 1" value="1" selected="true"/>
+              <textlistitem text="item 2" value="2"/>
+              <textlistitem text="item 3" value="3"/>
+              </list>
+              </canvas>

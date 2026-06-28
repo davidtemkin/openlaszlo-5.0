@@ -1,0 +1,6 @@
+<canvas height="35">
+        <view layout="class: simplelayout; axis: y">
+            <text>A layout makes</text>
+            <text>positioning simple and automatic</text>
+        </view>
+        </canvas>

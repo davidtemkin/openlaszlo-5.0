@@ -1,0 +1,10 @@
+<canvas> 
+                    <simplelayout spacing="10"/>
+
+                    <view bgcolor="red" width="200" height="200" onmousedown="this.res.setAttribute('applied', true)" onmouseup="this.res.setAttribute('applied', false)">
+                        <resizestatemin name="res"/>
+                    </view>
+                    <view bgcolor="green" width="200" height="200" onmousedown="this.res.setAttribute('applied', true)" onmouseup="this.res.setAttribute('applied', false)">
+                        <resizestatemin name="res" resize_min_width="${100}" resize_min_height="${50}"/>
+                    </view>
+                </canvas>

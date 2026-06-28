@@ -1,0 +1,7 @@
+<canvas height="150" width="100%">
+
+  <script>
+    var myObj = {a: "Complex", 'object with an': "ugly representation", 42: "The answer", length: 768};
+    Debug.debug("%=s &lt;-- click for further details", myObj, 'Complex!')
+  </script>
+</canvas>

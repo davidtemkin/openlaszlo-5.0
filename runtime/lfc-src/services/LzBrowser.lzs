@@ -1,0 +1,559 @@
+/**
+ * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+ *            Use is subject to license terms.
+ *
+ * @affects lzbrowser
+ * @topic LFC
+ * @subtopic Services
+ * @access public
+ */
+
+/**
+ * <p><code>lz.Browser</code> is the single instance of the class
+ * <code>lz.BrowserService</code>.</p>
+ *
+ * <p>Interface to the browser via the runtime kernel</p>
+ * <p>The <classname>lz.Browser</classname> service provides access to the browser and player environment.
+ * It includes methods to load URLs in the browser, and check the version of the player. For example:</p>
+ * <example title="Using lz.Browser to launch another browser">
+ * <![CDATA[<canvas height="140" debug="true">
+ *   <!-- Load the OpenLaszlo site in a new window -->
+ *   <button onclick="lz.Browser.loadURL('http://www.openlaszlo.org/', '_blank')">
+ *     Click me
+ *   </button>
+ *   <script>
+ *     // List the player version
+ *     Debug.debug('Player version: %w', lz.Browser.getVersion());
+ *   </script>
+ * </canvas>]]>
+ * </example>
+ *
+ * @shortdesc Provides access to the browser and player environment
+ */
+public final class LzBrowserService {
+    // TODO [hqm 2008-03] Will asking for LzSprite.prototype.xxx  work in SWF9?
+    if ($as3) {
+        /** @access private */
+        var capabilities :* = LzSprite.capabilities;
+    } else {
+        /** @access private */
+        var capabilities :* = LzSprite.prototype.capabilities;
+    }
+
+    /**
+     * The browser service.  Also available as the global
+     * <code>lz.Browser</code>.
+     *
+     * @type LzBrowserService
+     * @keywords readonly
+     * @devnote this should be a public getter to enforce readonly
+     */
+    public static const LzBrowser:LzBrowserService;
+
+    /**
+     * @access private
+     * @devnote AS3 does not allow private constructors, so we need the
+     * error
+     */
+    function LzBrowserService() {
+      super();
+      //    if (LzBrowserService.LzBrowser) {
+      //      throw new Error("There can be only one LzBrowser");
+      //    }
+    }
+
+    // Create the singleton
+    LzBrowserService.LzBrowser = new LzBrowserService();
+
+    /**
+     * Loads a URL in the browser, optionally in a target
+     *
+     * @param String url: URL to load
+     * @param String target: Optionally specifies a named frame to display the contents of the URL.  Otherwise defaults to the current window.
+     * @param String features: Optional features to use in the new window.
+     */
+    function loadURL (url:String, target:String = null, features:String = null) :void {
+        LzBrowserKernel.loadURL(url, target, features);
+    }
+
+    /**
+     * Runs Javascript in the browser using a javascript: url, optionally in a
+     * target window.  Note that Flash limits the javascript string to a maximum of 508 characters.
+     * See callJS() for a higher-performance alternative.
+     *
+     * @param String js: Javascript string to execute
+     * @param String target: Optionally specifies a named frame to display the contents of the URL.
+     * By default, the javascript specified in 'js' is executed in the current
+     * browser frame .
+     */
+    function loadJS (js:String, target:String = null) :void {
+        LzBrowserKernel.loadJS.apply(null, arguments);
+    }
+
+    /**
+     * Runs a Javascript method in the browser, optionally returning the result.  Note that this feature
+     * requires the application to be embedded by the embed-compressed.js library.
+     *
+     * @param String methodname: Browser javascript method to execute
+     * @param Function callback: Optional callback function to receive the return value of the javascript call.
+     * @param args: Optional arguments to call the method with
+     */
+    function callJS (methodname:String, callback:* = null, args:* = null) :* {
+        try {
+            return LzBrowserKernel.callJS.apply(null, arguments);
+        } catch (e) {
+            if ($debug) Debug.error('lz.Browser.callJS() failed:', e);
+            return null;
+        }
+    }
+
+    /**
+     * Returns version information about the browser
+     */
+    function getVersion () :String {
+        return LzBrowserKernel.getVersion();
+    }
+
+    /**
+     * Returns information about the operating system
+     */
+    function getOS () :String {
+        return LzBrowserKernel.getOS();
+    }
+
+    /**
+     * Returns the URL from which the application was loaded.
+     * @return String: the URL the application was loaded from
+     *
+     */
+    function getLoadURL () :String {
+        return LzBrowserKernel.getLoadURL();
+    }
+
+    /**
+     * Returns the URL in the browser location bar. May return null if called before the app initializes.
+     * @return String: the URL in the browser location bar
+     *
+     */
+    function getURL () :String {
+        return LzBrowserKernel.callJS('eval', false, 'window.location.href');
+    }
+
+    /**
+     * This function returns values from the the request string that
+     * loaded the the lzx app. This can be used to communicate initialization 
+     * arguments to an lzx app without forcing it to load data.
+     *
+     * @param String name: The name of the key whose value to return.  If null, 
+     * returns an Object containing all initialization arguments.
+     *
+     * @return: The value for a key that appears in the request string 
+     * that loaded the the lzx app or an Object containing all values 
+     */
+    function getInitArg (name:String=null) :* {
+        return LzBrowserKernel.getInitArg(name);
+    }
+
+
+    /**
+     * Updates accessibility data
+     * @access private
+     */
+    static var sOptionNameMap = {    runtime:    "lzr"
+                                     ,backtrace:  "lzbacktrace"
+                                     ,proxied:    "lzproxied"
+                                     ,usemastersprite: "lzusemastersprite"
+    }
+
+    /**
+     * Only the dev console uses this
+     * @access private
+     */
+    function oldOptionName (key:String) {
+        return LzBrowserService.sOptionNameMap[key];
+    }
+
+    /**
+     * This function returns values from the the lzoptions arg. If the
+     * arg name is not found in the lzoptions string, it falls back to
+     * look for the name in the regular query args. The arg name is
+     * mapped to the old "lz"-style name if needed.
+     *
+     * @param String name: The name of the key whose value to return.  If null, 
+     * returns an Object containing all initialization arguments.
+     *
+     * @return: The value for a key that appears in the lzoptions string
+     */
+    function getLzOption (name:String=null) :* {
+        var val = LzBrowserKernel.getLzOption(name);
+        if (val == null) {
+            // Maybe map new lzoption name to old "lz" query arg name
+            var lzname = LzBrowserService.sOptionNameMap[name];
+            if (lzname != null) {
+                name = lzname;
+            }
+            return LzBrowserKernel.getInitArg(name);
+        }
+    }
+
+
+    /**
+     * This function returns the id the app was started with
+     *
+     * @return String: The id the app was started with
+     */
+    function getAppID () :String {
+        return LzBrowserKernel.getAppID();
+    }
+
+    /**
+     * Turns the runtime-specific context menu on or off
+     *
+     * @param Boolean truefalse: boolean value - true for on, false for off.
+     */
+    function showMenu (truefalse:Boolean) :void {
+        if (this.capabilities.runtimemenus) {
+            LzBrowserKernel.showMenu(truefalse);
+        } else if ($debug) {
+            LzView.__warnCapability('lz.Browser.showMenu()', 'runtimemenus');
+        }
+    }
+
+    /**
+     * Sets the system clipboard to the specified string
+     *
+     * @param String str: String to set the system clipboard to
+     */
+    function setClipboard (str:String) :void {
+        if (this.capabilities.setclipboard) {
+            LzBrowserKernel.setClipboard (str);
+        } else if ($debug) {
+            LzView.__warnCapability('lz.Browser.setClipboard()', 'setclipboard');
+        }
+    }
+
+    /**
+     * Sets the browser window title
+     *
+     * @param String str: String to set the browser window title
+     */
+    function setWindowTitle (str:String) :void {
+        LzBrowserKernel.callJS('eval', null, 'top.document.title="' + str + '"');
+    }
+
+
+    /**
+     * Determines if a screen reader is active and the application is focused
+     *
+     * @return: True if a screen reader is active and the application is focused
+     */
+    function isAAActive () :Boolean {
+        if (this.capabilities.accessibility) {
+            return LzBrowserKernel.isAAActive();
+        } else {
+            if ($debug) {
+                LzView.__warnCapability('lz.Browser.isAAActive()', 'accessibility');
+            }
+            // must return a value for swf9
+            return false;
+        }
+    }
+
+    /**
+     * Updates accessibility data
+     * @access private
+     */
+    function updateAccessibility () :void  {
+        if (this.capabilities.accessibility) {
+            LzBrowserKernel.updateAccessibility();
+        } else if ($debug) {
+            LzView.__warnCapability('lz.Browser.updateAccessibility()', 'accessibility');
+        }
+    }
+
+    /**
+    * Loads a proxy policy file
+    * @access private
+    */
+    function loadProxyPolicy (url:String) :void {
+        if (this.capabilities.proxypolicy) {
+            LzBrowserKernel.loadProxyPolicy(url);
+        } else if ($debug) {
+            LzView.__warnCapability('lz.Browser.loadProxyPolicy()', 'proxypolicy');
+        }
+    }
+
+    /** @access private */
+    var postToLps :Boolean = true;
+    /** @access private */
+    var parsedloadurl :LzURL = null;
+    /** @access private */
+    var defaultPortNums :Object = { http: 80, https: 443 };
+
+    /**
+     * Returns the base URL the lzx was loaded from
+     * @keywords private
+     */
+    function getBaseURL (secure:* = null, port:* = null) :LzURL {
+        var url:LzURL = this.getLoadURLAsLzURL();
+
+        if (secure) {
+            url.protocol = "https";
+        }
+
+        if (port) {
+            url.port = port;
+        } else if (secure && port == null) {
+            url.port = this.defaultPortNums[url.protocol];
+        }
+
+        url.query = null;
+
+        //Debug.write('base url' + url.toString());
+        return url;
+    }
+
+    /**
+     * Returns the loadUrl as a new LzURL
+     *
+     * @return LzURL: the URL the application was loaded from, as an LzURL
+     */
+    function getLoadURLAsLzURL () :LzURL {
+        if (! this.parsedloadurl) {
+            this.parsedloadurl = new LzURL( this.getLoadURL() );
+        }
+        return this.parsedloadurl.dupe();
+    }
+
+    /**
+     * Converts relative URLs to absolute by prepending the load URL
+     * @keywords private
+     * @param String url: URL to convert
+     * @param Boolean secure: true if relative http is really https
+     * @return String: an absolute URL
+     */
+    function toAbsoluteURL (url:String, secure:Boolean) :String {
+        // If it begins with "/@WEBAPP@/", server will handle URL.
+        // or If it begins with "file:", server will handle URL.
+        // or do we have an absolute url?
+        if (url.indexOf("://") > -1 ||
+             url.indexOf("/@WEBAPP@/") == 0 ||
+             url.indexOf("file:") == 0) {
+            return url;
+        }
+
+        var u = this.getLoadURLAsLzURL();
+        u.query = null;
+
+        /* Description: lz.Browser.toAbsoluteURL('http:/zot/foo.bar') =>
+           http://127.0.0.1:8080/lps-dev-bug/examples//zot/foo.bar
+           I would have hoped for:
+           http://127.0.0.1:8080/zot/foo.bar
+        */
+
+        //do we have a protocol?
+        //no colons unless you specify protocol
+        if (url.indexOf(":") > -1) {
+            /* http:foo.lzx
+               http:/foo.lzx
+            */
+            var colon:int = url.indexOf(":");
+            var loadUrlIsSecure:Boolean = (u.protocol == 'https');
+            u.protocol = url.substring( 0, colon );
+            if (secure || loadUrlIsSecure) {
+                if (u.protocol == 'http') {
+                    u.protocol = 'https';
+                }
+            }
+            var path:String = url.substring(colon + 1, url.length);
+            // is URL of the form http:/zot/foo.bar?
+            if (path.charAt(0) == '/') {
+                u.path = url.substring( colon + 1 );
+                u.file = null;
+            } else {
+                u.file = url.substring( colon + 1 );
+            }
+        } else {
+            if (url.charAt( 0 ) == '/') {
+                //this is the root of the host
+                u.path = url;
+                //although this is really both the path and the file,
+                //it's expedient to handle it this way, since this
+                //method just returns a string
+                u.file = null;
+            } else {
+                //no protocol -- totally relative
+                u.file = url;
+            }
+        }
+        //Debug.write( "changed: " + url );
+        //Debug.write( " to: " + u.toString() );
+        return u.toString();
+    }
+
+    /**
+     * Escape special characters in message: &amp; and &lt;.
+     * @param String str: The string to escape
+     */
+    function xmlEscape (str:String) :String {
+        return LzDataElement.__LZXMLescape( str );
+    }
+
+    /**
+     * Escape a string using URL encoding.
+     * @param String str: The string to escape
+     * @return String: An URL escaped string
+     * @deprecated Use encodeURIComponent(string) instead.
+     */
+    function urlEscape (str:String) :String {
+        if ($debug) {
+            Debug.info('lz.Browser.urlEscape is deprecated, use encodeURIComponent instead');
+        }
+        return encodeURIComponent( str );
+    }
+
+    /**
+     * Escape a string using URL encoding.
+     * @param String str: The string to unescape
+     * @return String: An URL decoded string
+     * @deprecated Use decodeURIComponent(string) instead.
+     */
+    function urlUnescape (str:String) :String {
+        if ($debug) {
+            Debug.info('lz.Browser.urlUnescape is deprecated, use decodeURIComponent instead');
+        }
+        return decodeURIComponent(str);
+    }
+
+    /** @access private */
+    function usePost () :Boolean {
+        return this.postToLps && this.supportsPost();
+    }
+
+    /** @access private */
+    function supportsPost () :Boolean {
+        return true;
+    }
+
+    /**
+     * @access public
+     * @param Object params a hash table of key-value pairs
+     * The params arg has keys that have the following meaning:
+     * <ul>
+     * <li>url: url, including query args</li>
+     * <li>httpmethod: 'post' or 'get'</li>
+     * <li>service: 'xmldata' or 'media'</li>
+     * <li>headers: hash table of HTTP request headers</li>
+     * <li>postbody: optional, post body data string</li>
+     * <li>proxyurl: the url of the proxy server host. Should be just a path, must not contain a query string.</li>
+     * <li>nsprefix: boolean, if true preserve namespace prefixes in data response</li>
+     * <li>timeout: milliseconds for timeout</li>
+     * <li>cacheable: boolean, cache on server</li>
+     * <li>ccache: boolean, cache at client</li>
+     * <li>sendheaders: boolean, server sends back HTTP headers with data response</li>
+     * <li>secure: boolean, will be used when converting relative to absolute url, to make it https</li>
+     * <li>trimwhitespace: boolean</li>
+     *</ul>
+     */
+    public function makeProxiedURL (params:Object) :String {
+        var headers:Object = params.headers;
+        var postbody:String = params.postbody;
+        var proxyurl:String = params.proxyurl;
+        var custom_args:Object = params.serverproxyargs;
+
+        var qargs:Object; // the query args which accompany the proxy request
+
+        // If developer supplied their own custom proxy args, use them
+        if (custom_args) {
+            qargs = {
+                url: this.toAbsoluteURL(params.url, params.secure),
+                lzt: params.service,
+                reqtype: params.httpmethod.toUpperCase()
+            };
+            for (var opt:String in custom_args) {
+                qargs[opt] = custom_args[opt];
+            }
+        } else {
+            // Standard LPS proxy server control args
+            qargs = {
+                url: this.toAbsoluteURL(params.url, params.secure),
+                lzt: params.service,
+                reqtype: params.httpmethod.toUpperCase(),
+                sendheaders: params.sendheaders,
+                trimwhitespace: params.trimwhitespace,
+                nsprefix: params.trimwhitespace,
+                timeout: params.timeout,
+                cache: params.cacheable,
+                ccache: params.ccache
+            };
+        }
+
+        //If a postbody string is supplied, pass it to the proxy server as 'lzpostbody' arg.
+        if (postbody != null) {
+            qargs.lzpostbody = postbody;
+        }
+
+        // We need to pass the runtime, beause swf9 error responses are sent in a different
+        // way than swf8.
+        qargs.lzr = $runtime;
+
+        // Set HTTP headers
+        if (headers != null) {
+            var headerString:String = "";
+            for (var hname:String in headers) {
+                headerString += (hname + ": " + headers[hname] + "\n");
+            }
+            if (headerString != "") {
+                qargs['headers'] = headerString;
+            }
+        }
+
+        // break the browser cache by creating an arg with a unique value
+        if (! params.ccache) {
+            qargs.__lzbc__ = (new Date()).getTime();
+        }
+
+        // append query args onto url
+        var sep:String = "?";
+        for (var key:String in qargs) {
+            var val:* = qargs[key];
+            if (typeof(val) == "string") {
+                val = encodeURIComponent(val);
+                if ($dhtml) {
+                    // workaround bug with DHTML runtime's URL encoding
+                    val = val.replace(LzDataset.slashPat, "%2F");
+                }
+            }
+            proxyurl += sep + key + "=" + val;
+            sep = "&";
+        }
+
+        return proxyurl;
+    }
+
+} // End of LzBrowserService
+lz.BrowserService = LzBrowserService;  // publish
+
+/**
+ * lz.Browser is a shortcut for <link linkend="LzBrowserService.LzBrowser">lz.BrowserService.LzBrowser</link>
+ * @type LzBrowserService
+ */
+lz.Browser = LzBrowserService.LzBrowser;
+
+if ($dhtml) {
+} else {
+  lz.embed = new LzInheritedHash();
+  // proxy object for browser Lz
+  lz.embed.setCanvasAttribute = function (name, value, hist) {
+    lz.Browser.callJS('lz.embed.setCanvasAttribute', false, name, value, hist);
+  }
+  lz.embed.callMethod = function (js) {
+    lz.Browser.callJS('lz.embed.callMethod', false, js);
+  }
+  lz.embed.__updatebrowserprops = function(obj) {
+    lz.embed.browser = obj;
+    LzSprite.__updateQuirks(obj);
+  }
+  // Read in lz.embed.browser hash from browser
+  LzBrowserKernel.callJS('eval', lz.embed.__updatebrowserprops, 'lz.embed.browser');
+}

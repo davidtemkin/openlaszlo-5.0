@@ -1,0 +1,148 @@
+/**
+ *
+ * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+ *            Use is subject to license terms.
+ *
+ * @affects lzidle
+ * @access public
+ * @topic LFC
+ * @subtopic Services
+ */
+
+/**
+ * The idle event is a special event that enables/disables the idle
+ * kernel callback, depending on whether the event is ready or not
+ *
+ * @access private
+ */
+class LzIdleEvent extends LzNotifyingEvent {
+  function LzIdleEvent(eventSender:LzEventable, eventName:String, d:* = null) {
+    super(eventSender, eventName, d);
+  }
+
+  /**
+    * @access private
+    */
+  protected override function notify(ready:Boolean) :void {
+    if (ready) {
+      LzIdleKernel.addCallback( this, 'sendEvent' );
+    } else if (! ready) {
+      LzIdleKernel.removeCallback( this, 'sendEvent' );
+    }
+  }
+}
+
+
+/**
+ * <p><code>lz.Idle</code> is the single instance of the class
+ * <code>lz.IdleService</code>.</p>
+ *
+ * <p>The OpenLaszlo runtime generates idle events at a fixed,
+ * unspecified frequency.  Here is a simple example that shows how to
+ * receive the <event>onidle</event> event:</p>
+ *
+ * <example><programlisting><![CDATA[
+ * <canvas height="80">
+ *   <text name="display" />
+ *   <attribute name="counter" value="0" />
+ *   <handler name="onidle" reference="LzIdleService.LzIdle">
+ *     display.format("Received %d idle events", ++counter);
+ *   </handler>
+ * </canvas>
+ * ]]></programlisting></example>
+ *
+ * @shortdesc Idle service.
+ *
+ * @devnote This object sends an 'onidle' event when there is no synchronous script
+ * running after each frame update.
+ */
+public final class LzIdleService extends LzEventable {
+    /** @access private */
+    var coi :Array;
+    /** @access private */
+    var regNext :Boolean = false;
+    /** @access private */
+    var removeCOI :LzDelegate = null;
+
+    /** This is the idle event for the system, sent by this service
+     * @lzxtype event
+     */
+    var onidle:LzDeclaredEventClass = new LzDeclaredEventClass(LzIdleEvent);
+
+    /**
+     * The idle service.  Also available as the global
+     * <code>lz.Idle</code>.
+     *
+     * @type LzIdleService
+     * @keywords readonly
+     * @devnote this should be a public getter to enforce readonly
+     */
+    public static const LzIdle:LzIdleService;
+
+    /** @access private
+     * @devnote AS3 does not allow private constructors, so we need the
+     * error
+     */
+    function LzIdleService () {
+        super();
+        //    if (LzIdleService.LzIdle) {
+        //      throw new Error("There can be only one LzIdle");
+        //    }
+        // Create array on instance, not prototype
+        this.coi = new Array;
+        this.removeCOI = new LzDelegate( this, "removeCallIdleDelegates" );
+    }
+
+    LzIdleService.LzIdle = new LzIdleService();
+
+    /**
+     * Calls the given delegate at the next idle event. This can be used
+     * for a non-repeating callback.
+     *
+     * @param LzDelegate d: The delegate to be called on the next idle
+     * event.
+     */
+    function callOnIdle (d:LzDelegate) :void {
+        this.coi.push(d);
+        if (! this.regNext) {
+            this.regNext = true;
+            this.removeCOI.register( this , "onidle" );
+        }
+    }
+
+    /**
+     * @access private
+     */
+    function removeCallIdleDelegates (t:*) :void {
+        // Work on a copy so this is not seen as a leak
+        var arr:Array = this.coi.slice(0);
+        this.coi.length = 0;
+        // Call in order after emptying array, since delegates may add
+        // to array
+        for (var i:int = 0; i < arr.length; i++) {
+            arr[i].execute( t );
+        }
+        // Note that the executed items may have added to the (new)
+        // coi queue, only unregister if the queue is empty
+        if (this.coi.length == 0) {
+            this.removeCOI.unregisterFrom(this.onidle);
+            this.regNext = false;
+        }
+    }
+
+    /**
+     * Sets the frame rate (FPS) used for the idle update.
+     * @param Number fps: The number of frames per second to use for idle events
+     */
+    function setFrameRate(fps:Number = 30) :void {
+        LzIdleKernel.setFrameRate(fps);
+    }
+
+}
+lz.IdleService = LzIdleService;  // publish
+
+/**
+ * lz.Idle is a shortcut for <link linkend="LzIdleService.LzIdle">lz.IdleService.LzIdle</link>
+ * @type LzIdleService
+ */
+lz.Idle = LzIdleService.LzIdle;

@@ -32,3 +32,11 @@ ul.methods{columns:2;-webkit-columns:2;list-style:none;padding-left:0;font-size:
 a{color:#36c;text-decoration:none}a:hover{text-decoration:underline}
 .idx{columns:4;-webkit-columns:4;list-style:none;padding:0;font-family:Menlo,monospace;font-size:12.5px}
 @media(max-width:700px){#refnav{position:static;width:auto;height:auto;border-right:0;border-bottom:1px solid #dde}.refmain{margin-left:0}}
+.live-example{margin:-4px 0 18px}
+.live-toolbar{display:flex;gap:8px;align-items:center;background:#eef1f7;border:1px solid #d4dae8;border-top:0;border-radius:0 0 4px 4px;padding:6px 10px}
+.live-run,.live-edit{font:12px/1 -apple-system,Helvetica,Arial,sans-serif;padding:5px 12px;border-radius:3px;border:1px solid;cursor:pointer;text-decoration:none}
+.live-run{background:#3f6fd1;color:#fff;border-color:#3f6fd1}
+.live-run:hover{background:#4f7fe0}
+.live-edit{background:#fff;color:#36488f;border-color:#c2cbe0}
+.live-edit:hover{background:#f4f7ff;text-decoration:underline}
+.live-frame{display:block;width:100%;height:240px;margin-top:8px;border:1px solid #d4dae8;border-radius:4px;background:#fff}

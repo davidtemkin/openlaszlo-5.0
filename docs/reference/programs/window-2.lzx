@@ -1,0 +1,9 @@
+<canvas height="150">
+    <window x="10" y="10" width="200" height="100"
+        resizable="true">
+        <button width="${immediateparent.width}"
+            height="${immediateparent.height}">
+            This is a really big button
+        </button>
+    </window>
+</canvas>

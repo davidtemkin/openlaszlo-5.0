@@ -1,0 +1,436 @@
+/**
+  *
+  * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @access public
+  * @topic LFC
+  * @subtopic Data
+  */
+  
+/**
+  * <p><classname>lz.DataNode</classname> is the base class for the classes
+  * that represent OpenLaszlo's hierarchical data format.</p>
+  *
+  * <example>
+  * &lt;canvas height="300"&gt;
+  *   &lt;simplelayout axis="y"/&gt;
+  *
+  *   &lt;text width="300" height="250" bgcolor="silver"
+  *         multiline="true" name="display"/&gt;
+  *   &lt;button&gt;Make some data
+  *     &lt;attribute name="currentstep" value="0"/&gt;
+  * 
+  *     &lt;handler name="onclick"&gt;
+  *       &lt;![CDATA[
+  *       switch (this.currentstep++) {
+  *         case 0:
+  *           this.n = <em>new lz.DataElement('numbers');</em>
+  *           this.setAttribute('text', 'Add some children');
+  *           break;
+  *         case 1:
+  *           for (var i = 1; i &lt; 11; i++) {
+  *             <em>this.n.appendChild(new lz.DataElement('number', {value : i}));</em>
+  *           }
+  *           this.setAttribute('text', 'Add linebreaks');
+  *           break;
+  *         case 2:
+  *           var dp = new lz.datapointer();
+  *           dp.setPointer(this.n.getFirstChild());
+  *           do {
+  *             <em>dp.p.parentNode.insertBefore(new lz.DataText('\n'), dp.p);</em>
+  *           } while (dp.selectNext())
+  *           dp.p.parentNode.appendChild(new lz.DataText('\n'));
+  *           this.setAttribute('visible', false);
+  *           break;
+  *       }
+  *       canvas.display.setAttribute('text', canvas.display.escapeText(n.serialize()));
+  *       ]]&gt;
+  *     &lt;/handler&gt;
+  *   &lt;/button&gt;
+  * &lt;/canvas&gt;
+  * </example>
+  *
+  * @shortdesc The base class for a node of hierarchical data.
+  * @devnote LzDataNodeMixin is the abstract baseclass for LzDataElement and LzDataText.
+  * N.B.: LzDataNodeMixin may or may not be an LzNode, so _if_ it were
+  * to have an initialize method, it would have to match
+  * LzNode.initialize's signature.
+  *
+  * @devnote Also N.B.: If this _does_ descend from LzNode and has initial
+  * data, childNodes will have already been set by applyArgs, so
+  * don't set it here!
+  *
+  * @devnote W3C-DOM Node interface: http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/core.html#ID-1950641247
+  *
+  * @devnote uncomment typing when LPP-5840 is implemented
+  */
+mixin LzDataNodeMixin {
+/** @lzxtype event */
+var onownerDocument :LzDeclaredEventClass = LzDeclaredEvent;
+/** @lzxtype event */
+var onDocumentChange :LzDeclaredEventClass = LzDeclaredEvent;
+/** @lzxtype event */
+var onparentNode :LzDeclaredEventClass = LzDeclaredEvent;
+/** @lzxtype event */
+var onchildNode :LzDeclaredEventClass = LzDeclaredEvent;
+/** @lzxtype event */
+var onchildNodes :LzDeclaredEventClass = LzDeclaredEvent;
+/** @lzxtype event */
+var onattributes :LzDeclaredEventClass = LzDeclaredEvent;
+/** @lzxtype event */
+var onnodeName :LzDeclaredEventClass = LzDeclaredEvent;
+
+/**
+  * The type of this node -- one of <code>lz.DataElement.DOCUMENT_NODE</code>,
+  * <code>lz.DataElement.ELEMENT_NODE</code> or <code>lz.DataElement.TEXT_NODE</code>
+  * @type int
+  * @keywords read-only
+  */
+var nodeType :int; // This is undefined. Set elsewhere
+
+/**
+  * The parent of this node
+  * @type LzDataElementMixin
+  * @keywords read-only
+  */
+var parentNode /*:LzDataElementMixin*/ = null;
+
+/**
+  * The document object of this node
+  * @type LzDataElementMixin
+  * @keywords read-only
+  */
+var ownerDocument :LzDataElementMixin;
+
+/**
+  * An array of children of this node
+  * @type [LzDataNodeMixin]
+  */
+var childNodes :Array = null;
+
+/**
+  * The offset of this node in the parentNode's childNodes array
+  * @access private
+  */
+var __LZo :int = -1;
+
+/**
+  * Quick check for __LZo, see getOffset()
+  * @access private
+  */
+var __LZcoDirty :Boolean = true;
+
+/**
+  * Selection state of this node, used by dataselectionmanager
+  * @access public
+  */
+var sel :Boolean = false;
+
+/**
+ * Table to store user data objects.
+ * Stores pairs of {key := data}
+ * @access private
+ */
+var __LZuserData :Object = null;
+
+/**
+ * Table to store user data handlers.
+ * Stores pairs of {key := handler}
+ * @access private
+ */
+var __LZuserHandler :Object = null;
+
+/**
+ * Returns the parent of this node
+ * @return LzDataElementMixin: the parent of this node
+ */
+public function getParent () /*:LzDataElementMixin*/ {
+  return this.parentNode;
+}
+
+/**
+  * Gets offset of node in parent's childNodes array
+  * @return int
+  */
+public function getOffset () :int {
+    if (! this.parentNode) return 0;
+    if (this.parentNode.__LZcoDirty) this.parentNode.__LZupdateCO();
+
+    return this.__LZo;
+}
+
+/**
+  * Returns the sibling before this one in this node's parentNodes list of children
+  * @return LzDataNodeMixin: The node immediately preceeding this node
+  */
+public function getPreviousSibling () /*:LzDataNodeMixin*/ {
+    if (! this.parentNode) return null;
+    if (this.parentNode.__LZcoDirty) this.parentNode.__LZupdateCO();
+    return this.parentNode.childNodes[ this.__LZo - 1 ];
+}
+
+/** @access private */
+function $lzc$getPreviousSibling_dependencies (who:*, self:*) :Array {
+    return [ this.parentNode , "childNodes" , this , "parentNode" ];
+}
+
+/**
+  * Returns the sibling after this one in this node's parentNodes list of children
+  * @return LzDataNodeMixin: The node immediately succeeding this node
+  */
+public function getNextSibling () /*:LzDataNodeMixin*/ {
+    if (! this.parentNode) return null;
+    if (this.parentNode.__LZcoDirty) this.parentNode.__LZupdateCO();
+    return this.parentNode.childNodes[ this.__LZo + 1 ];
+}
+
+/** @access private */
+function $lzc$getNextSibling_dependencies (who:*, self:*) :Array {
+    return [ this.parentNode , "childNodes" , this , "parentNode" ];
+}
+
+/** @access private
+  * Renamed from childOf to avoid conflict with LzNode.childOf.
+  * childOf still exists because it is part of the public API.
+  */
+function childOfNode (el/*:LzDataNodeMixin*/, allowself:Boolean = false) :Boolean {
+    var p /*:LzDataNodeMixin*/ = allowself ? this : this.parentNode;
+    while (p) {
+        if (p === el) return true;
+        p = p.parentNode;
+    }
+    return false;
+}
+
+/**
+  * Tells whether the given node is above this one in the node hierarchy.
+  * @param LzDataElement el: The LzDataElement to test to see if it is above
+  * this one
+  * @param Boolean allowself: If true, this function returns true if the given
+  * node is the same as this node.
+  */
+override function childOf (el, allowself = false) {
+  return this.childOfNode(el, allowself);
+}
+
+/** @access private */
+function $lzc$set_ownerDocument (ownerDoc:LzDataElementMixin) :void {
+    this.ownerDocument = ownerDoc;
+    if (this.childNodes) {
+        for (var i:int = 0; i < this.childNodes.length; i++) {
+            this.childNodes[ i ].$lzc$set_ownerDocument( ownerDoc );
+        }
+    }
+
+    if (this.onownerDocument.ready) {
+        this.onownerDocument.sendEvent( ownerDoc );
+    }
+}
+
+/**
+  * Sets the lz.DataElementMixin which is the ownerDocument for this node.
+  * @param LzDataElementMixin ownerDoc: The lz.DataElementMixin to act as the
+  * ownerDocument for this node.
+  * @deprecated Use setAttribute('ownerDocument', ...) instead.
+  */
+public final function setOwnerDocument (ownerDoc) :void {
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_ownerDocument(ownerDoc);
+}
+
+/**
+  * Returns a copy of this node.
+  * @param Boolean deep: If true, the children of this node will be part of the
+  * new node
+  * @return LzDataNodeMixin: A copy of this node.
+  */
+public function cloneNode (deep:Boolean = false) /*:LzDataNodeMixin*/ {
+    /* not implemented here */
+    return undefined;
+}
+
+/**
+  * Returns this node as a string of xml.
+  * @return String: The string serialization of this node.
+  */
+public function serialize () :String {
+    /* not implemented here */
+    return undefined;
+}
+
+/**
+  * @access private
+  * @see LzDatapath
+  */
+function __LZlockFromUpdate (locker:LzDatapath) :void {
+    this.ownerDocument.__LZdoLock( locker );
+}
+
+/**
+  * @access private
+  * @see LzDatapath
+  */
+function __LZunlockFromUpdate (locker:LzDatapath) :void {
+    this.ownerDocument.__LZdoUnlock( locker );
+}
+
+/**
+  * Associate an object to a key on this node. The object can later be
+  * retrieved from this node by calling getUserData with the same key.
+  * (See <a href="http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-setUserData">setUserData (DOM Level 3)</a>)
+  * @param String key: The key to associate the object to.
+  * @param Object data: The object to associate to the given key, or null to remove any existing association to that key.
+  * @param Object handler: (optional) The handler to associate to that key, or null.
+  * @return Object: the user data previously associated to the given key on this node, or null if there was none.
+  *
+  * @access public
+  *
+  */
+public function setUserData (key:String, data:*, handler:* = null) :* {
+    if (this.__LZuserData == null) {
+        this.__LZuserData = {};
+    }
+
+    if ($debug) {
+        if (handler != null) {
+            Debug.warn("use of the handler arg to setUserData is not currently implemented");
+        }
+    }
+
+    // If there is previous data stored, our API is to return it
+    var prevdata:* = this.__LZuserData[key];
+
+    if (data != null) {
+        this.__LZuserData[key] = data;
+        // TODO: [20090826 anba] enable when LPP-8425 is finished
+        // if (handler != null) {
+        //     if (this.__LZuserHandler == null) {
+        //         this.__LZuserHandler = {};
+        //     }
+        //     this.__LZuserHandler[key] = handler;
+        // }
+    } else if (prevdata != null) {
+        delete this.__LZuserData[key];
+        // TODO: [20090826 anba] enable when LPP-8425 is finished
+        // if (this.__LZuserHandler != null) {
+        //     delete this.__LZuserHandler[key];
+        // }
+    }
+
+    // must return 'null' instead of 'undefined'
+    return (prevdata != null ? prevdata : null);
+}
+
+/**
+  * Retrieves the object associated to a key on a this node. The object
+  * must first have been set to this node by calling setUserData with the
+  * same key.
+  * (See <a href="http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-getUserData">getUserData (DOM Level 3)</a>)
+  * @param String key: The key the object is associated to.
+  * @return Object: the user data associated to the given key on this node, or null if there was none.
+  *
+  * @access public
+  *
+  */
+public function getUserData (key:String) :* {
+    if (this.__LZuserData == null) {
+        return null;
+    } else {
+        var udata:* = this.__LZuserData[key];
+        // must return 'null' instead of 'undefined'
+        return (udata != null ? udata : null);
+    }
+}
+
+// TODO: [20090826 anba] enable when LPP-8425 is finished
+// /**
+//   * @access private
+//   */
+// function __LZhandleUserData (operation:uint, src:LzDataNodeMixin, dst:LzDataNodeMixin) :void {
+//     var userData:Object = this.__LZuserData;
+//     var userHandler:Object = this.__LZuserHandler;
+//     for (var key:String in userHandler) {
+//         var handler:* = userHandler[key];
+//         handler.handle(operation, key, userData[key], src, dst);
+//     }
+// }
+
+} // End of LzDataNodeMixin
+lz.DataNodeMixin = LzDataNodeMixin;  // publish
+
+
+/**
+ * @topic LFC
+ * @subtopic Data
+ *
+ * @shortdesc The base class for a node of hierarchical data.
+ *
+ * <p><code>lz.DataNode</code> is deprecated, all methods and constants have been moved to <link linkend="LzDataElement">lz.DataElement</link></p>
+ *
+ * @access public
+ * @deprecated Use <code>LzDataElement.ELEMENT_NODE</code> instead. The methods and constants in this class are deprecated
+ *
+ */
+class LzDataNode extends LzEventable {
+
+/**
+  * @access private
+  */
+    function LzDataNode () {
+        super();
+    }
+
+/** @deprecated Use <code>LzDataElement.ELEMENT_NODE</code> instead
+  * @type int
+  * @lzxdefault 1
+  * @keywords read-only
+  */
+static const ELEMENT_NODE :int = 1;
+
+/** @deprecated Use <code>LzDataElement.TEXT_NODE</code> instead
+  * @type int
+  * @lzxdefault 3
+  * @keywords read-only
+  */
+static const TEXT_NODE :int = 3;
+
+/** @deprecated Use <code>LzDataElement.DOCUMENT_NODE</code> instead
+  * @type int
+  * @lzxdefault 9
+  * @keywords read-only
+  */
+static const DOCUMENT_NODE :int = 9;
+
+
+/**
+  * Converts string to XML data.
+  * @param String str: A valid string of XML. If the string is simple text, or
+  * that there isn't a single root element, this function returns null. In cases
+  * where the string is an invalid but well formatted snippet of XML, this
+  * function will close any tags to make for a valid XML document
+  * @param boolean trimwhitespace: if true, text nodes have whitespace trimmed from start and end.
+  * @param boolean nsprefix: if true, preserve namespace prefixes on node names and attribute names.
+  * @return LzDataElement: An LzDataElement which is the top of the hierarchy
+  * generated from the string
+  * @deprecated Use <code>LzDataElement.stringToLzData</code> 
+  */
+static function stringToLzData (str:String, trimwhitespace:Boolean = false, nsprefix:Boolean = false) :LzDataElement {
+    if ($debug) {
+        Debug.info("lz.DataNode.stringToLzData is deprecated.  Use `lz.DataElement.stringToLzData` instead.");
+    }
+    return LzDataElement.stringToLzData(str, trimwhitespace, nsprefix);
+}
+
+/**
+ * Needed because LzDataElementMixin wants to override this, and it is
+ * mixed in to both this and LzNode which defines toString, so _we_
+ * have to define it too.
+ * @access private
+ */
+function toString () /*:String*/ {
+    return "lz.DataNode";
+}
+
+} // End of LzDataNode
+lz.DataNode = LzDataNode;  // publish

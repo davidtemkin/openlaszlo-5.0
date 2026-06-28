@@ -1,0 +1,9 @@
+<canvas height="120">
+        <view >
+            <view bgcolor="blue" height="30" width="50"/>
+            <view bgcolor="blue" height="30" width="50"/>
+            <view bgcolor="blue" height="30" width="50"/>
+            <simplelayout axis="x" spacing="0"/>
+            <simplelayout axis="y" spacing="0"/>
+        </view >
+    </canvas>

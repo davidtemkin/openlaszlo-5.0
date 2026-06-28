@@ -1,0 +1,12 @@
+<canvas width="500" height="350">
+            <view bgcolor="blue" x="100" y="40" width="300" height="200">
+                <view bgcolor="red" width="20" height="20"
+                      onmousedown="dragger.setAttribute('applied', true)" onmouseup="dragger.setAttribute('applied', false)">
+                    <dragstate name="dragger" drag_axis="both"
+                        drag_min_x="0"
+                        drag_max_x="$once{parent.width - this.width}"
+                        drag_min_y="0"
+                        drag_max_y="$once{parent.height - this.height}"/>
+                </view>
+            </view>
+        </canvas>

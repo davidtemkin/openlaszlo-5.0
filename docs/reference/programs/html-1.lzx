@@ -1,0 +1,8 @@
+<canvas> 
+    <view y="50" width="100%" height="300" bgcolor="blue" onmousedown="res.apply()" onmouseup="res.remove()">
+        <resizestate name="res"/>
+        <dragstate name="drg"/>
+        <text width="100%" bgcolor="gray" onmousedown="parent.drg.apply()" onmouseup="parent.drg.remove()">Drag here</text>
+        <html id="ht" src="http://google.com/" x="15" y="15" width="${parent.width - 30}" height="${parent.height - 30}"/>
+    </view>
+</canvas>

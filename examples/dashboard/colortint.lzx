@@ -1,37 +1,10 @@
 <library>
     <script> <![CDATA[
         // Tint a view's (grayscale) resource by a color. The original used Flash's
-        // setColorTransform (a no-op in DHTML — which is why dashboard tinting went
-        // missing). In DHTML we tint the resource <img> with an SVG color-multiply
-        // filter (luminance -> per-channel multiply), reproducing the color transform.
-
-        function __lzEnsureTintFilter(id, cr, cg, cb) {
-            var doc = global.window.document;
-            if (doc.getElementById(id)) return id;
-            var ns = 'http://www.w3.org/2000/svg';
-            var svg = doc.getElementById('lztint_svg');
-            if (!svg) {
-                svg = doc.createElementNS(ns, 'svg');
-                svg.setAttribute('id', 'lztint_svg');
-                svg.setAttribute('width', '0'); svg.setAttribute('height', '0');
-                svg.style.position = 'absolute'; svg.style.left = '-1px'; svg.style.top = '-1px';
-                doc.body.appendChild(svg);
-            }
-            var f = doc.createElementNS(ns, 'filter');
-            f.setAttribute('id', id);
-            f.setAttribute('color-interpolation-filters', 'sRGB');
-            var m = doc.createElementNS(ns, 'feColorMatrix');
-            m.setAttribute('type', 'matrix');
-            var l = 0.3333;   // luminance of the (grayscale) source, then scale by the tint color
-            m.setAttribute('values',
-                (cr*l)+' '+(cr*l)+' '+(cr*l)+' 0 0 ' +
-                (cg*l)+' '+(cg*l)+' '+(cg*l)+' 0 0 ' +
-                (cb*l)+' '+(cb*l)+' '+(cb*l)+' 0 0 ' +
-                '0 0 0 1 0');
-            f.appendChild(m);
-            svg.appendChild(f);
-            return id;
-        }
+        // ColorTransform; in DHTML that capability was never implemented, so tinting
+        // silently went missing. It now works through the LZX `colortransform` view
+        // attribute (LzSprite#setColorTransform -> an SVG feColorMatrix filter in the
+        // runtime kernel), so this code is PURE LZX -- no DOM access.
 
         function setColorTint (what, color, brightness) {
             if (color == "" || color == null) return;
@@ -39,24 +12,15 @@
             var red = (rgb >> 16) & 0xFF, green = (rgb >> 8) & 0xFF, blue = rgb & 0xFF;
             var b = brightness ? brightness : 0;
 
-            // SWF path (native color transform; harmless no-op in DHTML)
-            if (what['setColorTransform']) what.setColorTransform({ ra: red + b, ga: green + b, ba: blue + b });
+            // COLORIZE: multiply by the pastel tint (keeps its natural low saturation +
+            // lightness) so the grayscale chrome shifts hue without over-darkening. The
+            // brightness arg is a GENTLE lightness scale, not folded into the color.
+            var scale = Math.max(0.5, Math.min(1.1, 1 + b / 1000));   // -150 -> 0.85, -60 -> 0.94
+            var cr = (red / 255) * scale, cg = (green / 255) * scale, cb = (blue / 255) * scale;
 
-            // DHTML path: SVG filter on the resource image. COLORIZE (normalize the tint
-            // so its brightest channel = 1) so the grayscale chrome keeps its lightness and
-            // only shifts hue — a plain multiply by these dark-ish tints over-darkens. The
-            // brightness arg becomes a gentle lightness scale (not folded into the color).
-            var sprite = what['sprite'];
-            if (sprite && global['window'] && global.window.document) {
-                // multiply by the pastel tint (keeps its natural low saturation + lightness);
-                // brightness is a GENTLE scale, not folded into the color (which over-darkened).
-                var scale = Math.max(0.5, Math.min(1.1, 1 + b / 1000));   // -150 -> 0.85, -60 -> 0.94
-                var cr = (red / 255) * scale, cg = (green / 255) * scale, cb = (blue / 255) * scale;
-                var idkey = 'lztint_' + color + '_' + (b < 0 ? 'n' + (-b) : b);
-                var id = __lzEnsureTintFilter(idkey, cr, cg, cb);
-                var img = sprite['__LZimg'] || sprite['__LZdiv'];
-                if (img) img.style.filter = 'url(#' + id + ')';
-            }
+            // Route through the LZX color-transform API (per-channel multipliers).
+            what.setAttribute('colortransform',
+                { redMultiplier: cr, greenMultiplier: cg, blueMultiplier: cb });
         }
     ]]></script>
 </library>

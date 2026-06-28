@@ -1,0 +1,186 @@
+<library>
+    <!-- NOTE: this file is manually compiled to a .js include
+         $ cd WEB-INF/lps/lfc/
+         $ lzc -c -g contextmenu.lzx
+         rename contextmenu.lzo to contextmenu.zip, uncompress it and copy the contents of the <script> block from the lzo file into contextmenu.js
+    -->
+         
+    <class name="lzcontextmenuseparator" height="10">
+        <handler name="oninit">
+            this.parent.registerRedraw(this);
+        </handler>
+        <handler name="ondestroy">
+            this.parent.unregisterRedraw(this);
+        </handler>
+        <method name="redraw" args="context">
+            context.moveTo(0,this.y + 9)
+            context.lineTo(this.parent.width - 3, this.y + 9); 
+            context.strokeStyle = '#E5E5E5';
+            context.stroke();
+        </method>
+    </class>
+
+    <class name="lzcontextmenutext" extends="text" fgcolor="black" fontsize="11" fontstyle="plain">
+        <handler name="onmouseover">
+            this.parent.__overnow = this.data;
+            this.parent.registerRedraw(this);
+        </handler>
+        <handler name="onmouseout">
+            this.parent.__overnow = null;
+            this.parent.unregisterRedraw(this);
+        </handler>
+        <handler name="onmousedown">
+            this.parent.select(this.data);
+            this.parent.unregisterRedraw(this);
+        </handler>
+        <method name="redraw" args="context">
+            // draw highlight
+            context.rect(this.x,this.y + 3, this.parent.width - 3, this.height);
+            context.fillStyle = '#CCCCCC';
+            context.fill();
+        </method>
+    </class>
+
+    <class name="lzcontextmenudisabled" extends="text" fgcolor="0xCCCCCC" fontsize="11" fontstyle="plain"/>
+
+    <class name="lzcontextmenu" visible="false" options="ignorelayout">
+        <attribute name="defaultplacement" value="container" type="string"/>
+        <attribute name="inset" value="5" type="number"/>
+        <attribute name="__drawnitems" value="{}"/>
+        <attribute name="__overnow" value="null"/>
+        <handler name="oninit">
+            this.__globalmousedel = new lz.Delegate(this, '__handlemouse');
+        </handler>
+        <method name="select" args="offset">
+            var cmenu = LzMouseKernel.__showncontextmenu;
+            if (cmenu) cmenu.__select(offset);
+            //Debug.debug('select', cmenu, offset);
+            this.hide();
+        </method>
+        <method name="show">
+            <![CDATA[
+            if (this.visible && this.__overnow != null) {
+                // check to see if an item was under the mouse
+                this.select(this.__overnow);
+                this.__overnow = null;
+                return;
+            }
+            this.__overnow = null;
+            var pos = canvas.getMouse();
+            if (pos.x > canvas.width - this.width) pos.x = canvas.width - this.width;
+            if (pos.y > canvas.height - this.height) pos.y = canvas.height - this.height;
+            this.bringToFront();
+            this.setAttribute('x', pos.x);
+            this.setAttribute('y', pos.y);
+            this.setAttribute('visible', true);
+            this.__globalmousedel.register(lz.GlobalMouse, 'onmousedown');
+            //Debug.info('show', LzMouseKernel.__showncontextmenu);
+            ]]>
+        </method>
+        <method name="hide">
+            this.__globalmousedel.unregisterAll();
+            var cmenu = LzMouseKernel.__showncontextmenu;
+            if (cmenu) cmenu.__hide();
+            this.setAttribute('visible', false);
+        </method>
+        <method name="setItems" args="newitems">
+            <![CDATA[
+            this.__drawnitems = {};
+            var subviews = this.container.subviews;
+            // clear items
+            for (var i = subviews.length - 1; i >= 0; i--) {
+                var subview = subviews[i];
+                if (! subview ) continue;
+                subview.destroy();
+            }
+
+            var l = newitems.length;
+            var ypos = 0;
+            for (var i = 0; i < l; i++) {
+                var item = newitems[i];
+                var classref = lz['lzcontextmenu' + item.type];
+                if (classref) {
+                    var newview = new classref(this, {data: item.offset, text: item.label});
+                    newview.setAttribute('y', ypos);
+                    ypos += newview.height;
+                }
+            }
+            this.items = newitems;
+            this.background.redraw();
+            ]]>
+        </method>
+        <method name="registerRedraw" args="who">
+            this.__drawnitems[who.getUID()] = who;
+            this.background.redraw();
+        </method>
+        <method name="unregisterRedraw" args="who">
+            delete this.__drawnitems[who.getUID()];
+            this.background.redraw();
+        </method>
+        <method name="__handlemouse" args="view">
+            if (! view) {
+                this.hide();
+                return;
+            }
+            do {
+                if (view is lz.lzcontextmenu) {
+                    return;
+                }
+                view = view.immediateparent;
+            } while (view !== canvas)
+            this.hide();
+        </method>
+
+        <view name="background" width="${this.parent.container.width + 9}" height="${this.parent.container.height + 9}">
+            <handler name="oninit">
+                this.createContext();
+            </handler>
+            <!--- @keywords private -->
+            <handler name="onwidth" method="__doredraw"/>
+            <!--- @keywords private -->
+            <handler name="onheight" method="__doredraw"/>
+            <!--- @keywords private -->
+            <handler name="oncontext" method="__doredraw"/>
+            <!--- @keywords private -->
+            <handler name="onvisible" method="__doredraw"/>
+            <!--- @keywords private -->
+            <method name="__doredraw" args="ignore=null">
+                <![CDATA[
+                if (this.visible && this.width && this.height && this.context) this.redraw(this.context);
+                ]]>
+            </method>
+
+            <method name="redraw" args="context=this.context">
+                context.beginPath();
+                context.clearRect(0, 0, this.width, this.height);
+
+                LzKernelUtils.rect(context,2.5,3.5,this.width - 3,this.height - 3, this.classroot.inset);
+                context.fillStyle= '#000000';
+                context.globalAlpha = .2;
+                context.fill();
+
+                context.beginPath();
+                LzKernelUtils.rect(context,0,0, this.width - 3, this.height - 3, this.classroot.inset);
+                context.globalAlpha = .9;
+                context.fillStyle= '#FFFFFF';
+                context.fill();
+
+                context.globalAlpha = 1;
+                context.strokeStyle = '#CCCCCC';
+                context.stroke();
+
+                for (var uid in this.parent.__drawnitems) {
+                    context.beginPath();
+                    this.parent.__drawnitems[uid].redraw(context);
+                }
+            </method>
+        </view>
+
+        <view name="container" x="3" y="3">
+        </view>
+    </class>
+</library>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2009, 2010 Laszlo Systems, Inc.  All Rights Reserved.                   *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->

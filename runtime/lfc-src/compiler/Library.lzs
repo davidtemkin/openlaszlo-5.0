@@ -1,0 +1,43 @@
+/* -*- mode: JavaScript; c-basic-offset: 2; -*- */
+
+/**
+  * Compiler runtime support
+  *
+  * @copyright Copyright 2007, 2008, 2009 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @access private
+  */
+
+/*
+ * The ordering of these includes is crucial.  Do not reorder unless
+ * you understand why they are the way they are.
+ */
+
+// Basic runtime and stubs
+// Debugger stub required for debugging and profiling, must be loaded
+// before anything else
+if ($debug) {
+#include "compiler/LzDebugStub.lzs"
+} else if ($profile) {
+#include "compiler/LzDebugStub.lzs"
+}
+// Compiler runtime support
+#include "compiler/LzRuntime.lzs"
+if ($as3) {
+} else {
+// Class runtime for js1 runtimes, must load before BootstrapDebugService
+// TODO [2007-12-17 ptw] Move to platform/js1
+#include "compiler/Class.lzs"
+}
+
+// Now the boostrap debugger can be loaded
+if ($debug) {
+   #include "compiler/LzBootstrapDebugService.lzs"
+}
+
+
+// Debugger (and LzFormatter) requires this, so must be loaded very early
+#include "compiler/LzMessage.lzs"
+
+#include "compiler/LzFormatter.lzs"

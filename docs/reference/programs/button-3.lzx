@@ -1,0 +1,8 @@
+<canvas height="30">      
+  <button onclick="moveHoriz(5);">
+    Move <b>me</b>
+    <method name="moveHoriz" args="moveAmount">
+      this.setAttribute("x", this.x+moveAmount);
+    </method>
+  </button>
+</canvas>

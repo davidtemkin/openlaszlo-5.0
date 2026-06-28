@@ -1,0 +1,23 @@
+/**
+  * Library.lzs
+  *
+  * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @access private
+  */
+
+#include "core/LzDefs.lzs"
+#include "core/LzDeclaredEvent.lzs"
+#include "core/LzConstants.lzs"
+#include "core/LzCache.lzs"
+#include "core/LzEventable.lzs"
+// LzStyleAttrBinder extends LzEventable
+#include "core/LzStyleAttrBinder.lzs"
+#include "core/PresentationTypes.lzs"
+#include "core/LzNode.lzs"
+
+if ($as3) {
+} else {
+    #include "core/UserClass.lzs"
+}

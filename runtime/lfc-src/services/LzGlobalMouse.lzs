@@ -1,0 +1,233 @@
+/**
+ *
+ * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+ *            Use is subject to license terms.
+ *
+ * @affects lzglobalmouse
+ * @access public
+ * @topic LFC
+ * @subtopic Services
+ */
+
+/**
+ * <p><code>lz.GlobalMouse</code> is the single instance of the class
+ * <code>lz.GlobalMouseService</code>.</p>
+ *
+ * <p>The <code>lz.GlobalMouse</code> service sends events any time the
+ * mouse button state changes, even if mouse events are locked using
+ * the <classname>lz.ModeManager</classname> API. The lz.GlobalMouse is
+ * also useful for detecting when the mouse button goes up or down on
+ * a non-clickable view.</p>
+ *
+ * <example><programlisting><![CDATA[
+ * <canvas height="100">
+ *   <simplelayout inset="10" spacing="10"/>
+ *
+ *   <checkbox>Lock mouse events
+ *     <handler name="onvalue">
+ *       if (this.value){
+ *         lz.ModeManager.globalLockMouseEvents();
+ *       }
+ *     </handler>
+ *
+ *     <handler name="onclick" reference="lz.GlobalMouse" args="who">
+ *       //need to use lz.GlobalMouse, since we don't get clicks if we're
+ *       //checked. Note: lz.GlobalMouse sends its events before the view
+ *       //receives the events, so we can just unlock it here, and the
+ *       //checkbox can do its normal onclick handling.
+ *       if (this.value &amp;&amp; who == this){
+ *         lz.ModeManager.globalUnlockMouseEvents();
+ *       }
+ *     </handler>
+ *   </checkbox>
+ *
+ *   <button>click me!</button>
+ *
+ *   <text resize="true">
+ *     <method name="showEvent" args="what, who">
+ *       this.format("%s: %w", what, who);
+ *     </method>
+ *
+ *     <handler name="onmouseover" reference="lz.GlobalMouse" args="who">
+ *       this.showEvent("mouseover" , who);
+ *     </handler>
+ *     <handler name="onmouseout" reference="lz.GlobalMouse" args="who">
+ *       this.showEvent("mouseout" , who);
+ *     </handler>
+ *
+ *     <handler name="onmousedown" reference="lz.GlobalMouse" args="who">
+ *       this.showEvent("mousedown" , who);
+ *     </handler>
+ *     <handler name="onmouseup" reference="lz.GlobalMouse" args="who">
+ *       this.showEvent("mouseup" , who);
+ *     </handler>
+ *
+ *     <handler name="onclick" reference="lz.GlobalMouse" args="who">
+ *       this.showEvent("mouseclick" , who);
+ *     </handler>
+ *   </text>
+ * </canvas>
+ * ]]></programlisting></example>
+ *
+ * <p>Use the lz.GlobalMouse service in conjunction with <classname>lz.ModeManager</classname>'s event lock.</p>
+ *
+ * @shortdesc Application-wide control of and information about the mouse.
+ * @see mode example
+ *
+ * @devnote The global mouse service sends onmouse*** and onclick events when the mouse
+ * rollover or button state changes.  The argument sent with the events is the
+ * view that was clicked. If no view was clicked, the argument is null.
+ */
+public final class LzGlobalMouseService extends LzEventable {
+    /**
+     * The global mouse service.  Also available as the global
+     * <code>lz.GlobalMouse</code>.
+     *
+     * @type LzGlobalMouseService
+     * @keywords readonly
+     * @devnote this should be a public getter to enforce readonly
+     */
+    public static const LzGlobalMouse:LzGlobalMouseService;
+
+    /** @access private
+     * @devnote AS3 does not allow private constructors, so we need the
+     * error
+     */
+    function LzGlobalMouseService() {
+        super();
+        //    if (LzGlobalMouseService.LzGlobalMouse) {
+        //      throw new Error("There can be only one LzGlobalMouse");
+        //    }
+    }
+
+    // Create the singleton
+    LzGlobalMouseService.LzGlobalMouse = new LzGlobalMouseService();
+
+    /** Sent whenever the mouse moves
+     * @access public
+     * @lzxtype event
+     */
+    var onmousemove :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /** Sent whenever the mouse button goes up
+     * @access public
+     * @lzxtype event
+     */
+    var onmouseup :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /** Sent whenever the mouse button goes up outside the view where it
+     * first went down
+     * @access public
+     * @lzxtype event
+     */
+    var onmouseupoutside :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /** Sent whenever the mouse enters a view
+     * @access public
+     * @lzxtype event
+     */
+    var onmouseover :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /** Sent whenever the mouse leaves a view
+     * @access public
+     * @lzxtype event
+     */
+    var onmouseout :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /** Sent whenever the mouse button goes down
+     * @access public
+     * @lzxtype event
+     */
+    var onmousedown :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /** Sent whenever the mouse is dragged in to a view
+     * @access public
+     * @lzxtype event
+     */
+    var onmousedragin :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /** Sent whenever the mouse is dragged out of a view
+     * @access public
+     * @lzxtype event
+     */
+    var onmousedragout :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /** Sent whenever the mouse is moved off the canvas
+     * @access public
+     * @lzxtype event
+     */
+    var onmouseleave :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /** Sent whenever the mouse is moved over the canvas
+     * @access public
+     * @lzxtype event
+     */
+    var onmouseenter :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /** Sent for all mouse events
+     * @access public
+     * @lzxtype event
+     */
+    var onmouseevent :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /** Sent whenever the mouse button is clicked
+     * @access public
+     * @lzxtype event
+     */
+    var onclick :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /** Sent whenever the mouse button is double-clicked
+     * @access public
+     * @lzxtype event
+     */
+    var ondblclick :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /** @access private */
+    var __movecounter:int = 0;
+
+    /** True if the mouse is over the canvas 
+      * @access private */
+    var __mouseactive:Boolean = true;
+
+    /** @access private */
+    function __mouseEvent (eventname:String, view:*) :void {
+        if (eventname == 'onmouseleave') {
+            this.__mouseactive = false;
+            if (canvas.onmouseleave.ready) {
+                canvas.onmouseleave.sendEvent(null);
+            }
+        } else if (eventname == 'onmouseenter') {
+            this.__mouseactive = true;
+            if (canvas.onmouseenter.ready) {
+                canvas.onmouseenter.sendEvent(null);
+            }
+        } else if (eventname == 'onmousemove') {
+            this.__movecounter++;
+        }
+        var ev:LzDeclaredEventClass = this[eventname];
+        if (ev) {
+            if (ev.ready) { ev.sendEvent(view); }
+            if (this.onmouseevent.ready) {
+                // send generic mouse event
+                this.onmouseevent.sendEvent({type: eventname, target: view});
+            }
+        } else if ($debug) {
+            Debug.debug("Unknown mouse event %s", eventname);
+        }
+    }
+
+    /**
+     * Trampoline so we can call from lz.embed
+     * @access private
+     */
+    function __mouseUpOutsideHandler () :void {
+      LzMouseKernel.__mouseUpOutsideHandler();
+    }
+}
+lz.GlobalMouseService = LzGlobalMouseService;  // publish
+
+/**
+ * lz.GlobalMouse is a shortcut for <link linkend="LzGlobalMouseService.LzGlobalMouse">lz.GlobalMouseService.LzGlobalMouse</link>
+ * @type LzGlobalMouseService
+ */
+lz.GlobalMouse = LzGlobalMouseService.LzGlobalMouse;

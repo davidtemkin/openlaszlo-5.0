@@ -1,0 +1,19 @@
+<canvas height="230">
+               
+               <menubar width="200" >
+               <menu text="Menu 1" width="100">
+               <menuitem text="Item 1" onselect="canvas.whichOne(this);"/>
+               <menuitem text="Item 2" onselect="canvas.whichOne(this);"/>
+               <menuitem text="Item 3" onselect="canvas.whichOne(this);"/>
+               <menuseparator/>
+               <menuitem text="Item 4" onselect="canvas.whichOne(this);"/>
+               </menu>
+               <menu text="Menu 2" width="100">
+               <menuitem text="More items..." onselect="canvas.whichOne(this);"/>
+               </menu>
+               </menubar>
+
+               <method name="whichOne" args="vThis">
+               Debug.debug("%w - %w", vThis.parent.owner.text, vThis.text);
+               </method>
+               </canvas>

@@ -1,0 +1,7 @@
+<canvas height="80">
+   <text name="display" />
+   <attribute name="counter" value="0" />
+   <handler name="onidle" reference="LzIdleService.LzIdle">
+     display.format("Received %d idle events", ++counter);
+   </handler>
+ </canvas>

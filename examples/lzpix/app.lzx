@@ -558,10 +558,10 @@
             windowopts="" 
         />
 
-        <!-- [TODO: change link and fix this comment ] load flash app in place -->        
-        <linkbutton label="Flash application" 
+        <!-- Re-load this app in the DHTML runtime in place (the Flash runtime is retired). -->
+        <linkbutton label="DHTML application"
             width="500"
-            url="http:app.lzx?lzr=swf8&amp;lzt=html"
+            url="app.lzx?lzr=dhtml&amp;lzt=html"
             targetframe="_top" 
             windowopts="" 
         />

@@ -1,0 +1,9 @@
+<canvas height="250">
+  <tabslider width="150" x="10" y="10"
+             height="200"
+             spacing="2" slideduration="300">
+    <tabelement text="Tabelement One"/>
+    <tabelement text="Tabelement Two"/>
+    <tabelement text="Tabelement Three"/>
+  </tabslider>
+</canvas>

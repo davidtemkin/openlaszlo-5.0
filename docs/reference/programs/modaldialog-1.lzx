@@ -1,0 +1,12 @@
+<canvas height="300">
+  <modaldialog name="mydialog" width="300" height="200">
+    <text>Are you really sure you want to do something?</text>
+    <view align="right" layout="axis:x; spacing:20">
+      <button onclick="parent.parent.close()">Cancel</button>
+      <button onclick="parent.parent.close()" isdefault="true">OK</button>
+    </view>
+    <simplelayout spacing="5"/>
+  </modaldialog>
+
+  <button onclick="canvas.mydialog.open()">Open Dialog</button>
+</canvas>

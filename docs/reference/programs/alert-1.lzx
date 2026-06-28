@@ -1,0 +1,7 @@
+<canvas height="140">
+        <alert name="myalert">
+            Danger! Danger, Will Robinson!
+        </alert>
+        
+        <button onclick="canvas.myalert.open()">Show Alert</button>
+    </canvas>

@@ -1,0 +1,8 @@
+<canvas height="100">
+          <view name="main" width="100" height="80" clip="true">
+          <text multiline="true">
+          1<br/>2<br/>3<br/>4<br/>5<br/>6<br/>7<br/>8<br/>9<br/>10
+          </text>
+          <scrollbar/>
+          </view>
+          </canvas>

@@ -1,0 +1,24 @@
+<canvas height="160">
+              <dataset name="contacts" request="true"
+              src="http:resources/contactsdata.xml"/>
+
+              <grid datapath="contacts:/resultset">
+              <gridcolumn showheader="false" width="50">
+              <view bgcolor="#CCCCCC" width="${parent.width}"
+              placement="header"
+              height="${parent.immediateparent.height-1}"/>
+              <text datapath="position()"/>
+              </gridcolumn>
+              <gridcolumn width="200"> Name
+              <text datapath="@displayname" resize="false"/>
+              </gridcolumn>
+              <gridcolumn sortable="false"> Home
+              <checkbox value="$path{'@home_default'}"
+              xoffset="${10-parent.width/2}">
+              <handler name="onvalue">
+              this.datapath.updateData();
+              </handler>
+              </checkbox>
+              </gridcolumn>
+              </grid>
+              </canvas>

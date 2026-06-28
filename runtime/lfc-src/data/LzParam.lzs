@@ -1,0 +1,304 @@
+/**
+  *
+  * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @access public
+  * @topic LFC
+  * @subtopic Data
+  * @affects lzparam
+  */
+
+/**
+  * <p>lz.Param provides utilities for manipulating name-value pairs. 
+  *   For example, lz.Param objects can be used to manage a name/value pairs for an 
+  *   HTTP request.</p>
+  * 
+  * <programlisting>
+  *     &lt;method name=&quot;sendData&quot; args=&quot;action&quot;&gt;
+  *         var d=canvas.datasets.dsSendData;
+  *         var p=new lz.Param();
+  *         p.addValue( &quot;action&quot;, action, true);
+  *         p.addValue( &quot;firstName&quot;, &quot;Bob&quot;, true);
+  *         p.addValue( &quot;lastName&quot;, &quot;Jones&quot;, true);
+  *         p.addValue( &quot;phone&quot;, &quot;415-255-2392&quot;, true);
+  *         p.addValue( &quot;email&quot;, &quot;bob@jones.com&quot;, true);
+  *         d.setQueryString( p );
+  *         d.doRequest();
+  *     &lt;/method&gt;
+  * </programlisting>
+  * 
+  * @shortdesc A utility class for manipulating name-value pairs  
+  * @devnote lz.Param objects hold onto parameters (name/value pairs) and provide methods 
+  * and utilities to reserialize them. 
+  * 
+  * @lzxname params
+  */
+class LzParam extends LzEventable {
+
+/** @access private */
+var d :Object = null;
+
+// default separator and delimiter
+/** @access private */
+var delimiter :String = "&";
+
+/** @access private */
+function $lzc$set_delimiter (d:String) :void { this.setDelimiter(d); }
+
+/** @access private */
+var separator :String = "=";
+
+/** @access private */
+function $lzc$set_separator (s:String) :void { this.setSeparator(s); }
+
+/**
+  * @access private
+  */
+function LzParam () {
+    super();
+    this.d = {};
+}
+
+
+/**
+  * Parse a URL query string, returns an object with key-value pairs
+  * @return Object
+  */
+static function parseQueryString (query:String) :Object {
+  var queries:Object = {};
+  if (! query) return queries;
+  var parameters:Array = query.split('&');
+  for (var i:int = 0; i < parameters.length; ++i) {
+    var key:String = parameters[i];
+    var value:String = '';
+    var n:int = key.indexOf('=');
+    if (n > 0) {
+      value = unescape(key.substring(n + 1));
+      key = key.substring(0, n);
+    }
+    queries[key] = value;
+  }
+  return queries;
+}
+
+
+/**
+  * Parse a URL query string, returns an object with key-value pairs
+  * @return Object
+  * @deprecated: Use lz.Param.parseQueryString() instead
+  */
+function parseQueryString (query:String) :Object {
+    if ($debug) {
+        Debug.info(this, ".parseQueryString is deprecated. Use lz.Param.parseQueryString instead");
+    }
+    return lz.Param.parseQueryString(query);
+}
+
+
+/**
+  * Adds a series of name/value pairs from an object
+  * @param Object o: An object containing name/value pairs to add
+  */
+function addObject (o:Object) :void {
+    for (var n:String in o) {
+        this.setValue( n, o[n] );
+    }
+}
+
+/**
+  * Returns a clone of this lz.Param. Argument is deprecated.
+  * @keywords deprecated: Argument is deprecated
+  * @return LzParam
+  */
+function clone (arg=null) :LzParam {
+    if ($debug) {
+        //TODO: [20080917 anba] deprecated since 4.1 remove in 4.3+
+        if (arg) Debug.info("%w.%s is deprecated. Do not pass as argument to clone()", this, arguments.callee);
+    }
+    var o:LzParam = new lz.Param();
+    for (var n:String in this.d) {
+        o.d[ n ] = this.d[ n ].concat();
+    }
+    return o;
+}
+
+
+/**
+  * Remove specified value by name or all values if null
+  * @param String name: The name of the value to remove.  If null, removes 
+  * all values
+  */
+function remove (name:String? = null) :void {
+    if (name == null) {
+        this.d = {};
+    } else {
+        var a:Array = this.d[ name ];
+        if (a != null) {
+            // bwcomp: remove only first entry
+            // TODO: [20080813 anba] is this what we expect?
+            a.shift();
+            if (! a.length) {
+                // remove empty arrays
+                delete this.d[ name ];
+            }
+        }
+    }
+}
+
+
+/**
+  * Sets a value.  Replaces existing entries with the same name.
+  * @param String name: The name to set - must evaluate to a string
+  * @param String val: The value to set
+  * @param Boolean enc: If true, URI-encodes the value
+  */
+function setValue (name:String, val:String, enc:Boolean = false) :void {
+    if (enc) val = encodeURIComponent(val);
+    // replace existing value
+    this.d[ name ] = [ val ];
+}
+
+
+/**
+  * Adds a value.  Does not replace existing entries with the same name.
+  * @param String name: The name to set - must evaluate to a string
+  * @param String val: The value to set
+  * @param Boolean enc: If true, URI-encodes the value
+  */
+function addValue (name:String, val:String, enc:Boolean = false) :void {
+    if (enc) val = encodeURIComponent( val );
+    var a:Array = this.d[ name ];
+    if (a == null) {
+        // add first 
+        this.d[ name ] = [ val ];
+    } else {
+        // add new value
+        a.push( val );
+    }
+}
+
+
+/**
+  * Get a value by name
+  * @param String name: The name to look up - must evaluate to a string
+  * @return String: The value for the specified name
+  */
+function getValue (name:String) :String? {
+    var a:Array = this.d[name];
+    if (a != null) {
+        return a[ 0 ];
+    }
+    return null;
+}
+
+
+/**
+  * Get values by name
+  * @param String name: The name to look up - must evaluate to a string
+  * @return [String]: An array of values for the specified name
+  */
+function getValues (name:String) :Array? {
+    var a:Array = this.d[ name ];
+    if (a != null) {
+        return a.concat();
+    }
+    return null;
+}
+
+
+/**
+  * Get a value by name irrespective of case.
+  * @param String name: The name to look up - must evaluate to a string
+  * @return [String]: An array of values that case-insensitively match name
+  * @deprecated Use getValues(...) instead
+  */
+function getValueNoCase (name:String) :* {
+    //TODO: [20080917 anba] deprecated since 4.2 remove in 4.3+
+    if ($debug) {
+        Debug.deprecated(this, arguments.callee, this.getValues);
+    }
+    var a:Array = this.getValues(name);
+    return a != null && a.length == 1 ? a[0] : a;
+}
+
+
+/**
+  * Get a list of all names, not necessarily in order
+  * @return [String]: A list of keys
+  */
+function getNames () :Array {
+    var o:Array = [];
+    for (var n:String in this.d) {
+        o.push(n);
+    }
+    return o;
+}
+
+
+/**
+  * Set delimiter string used between records in serialize();
+  * @param String d: String to use as delimiter
+  * @return String: Old delimiter
+  */
+function setDelimiter (d:String) :String {
+    var o:String = this.delimiter;
+    this.delimiter = d;
+    return o;
+}
+
+
+/**
+  * Set separator string used between name/value pairs in each record in 
+  * serialize();
+  * 
+  * @param String s: String to use as separator
+  * @return String : Old separator
+  */
+function setSeparator (s:String) :String {
+    var o:String = this.separator;
+    this.separator = s;
+    return o;
+}
+
+
+/**
+  * Returns a string representation using the current separator and delimiter 
+  * @return String: All names and values for this object
+  */
+function toString () :String {
+    return this.serialize();
+}
+
+
+/**
+  * Returns a string representation using the current separator and delimiter 
+  * @param String sep: String to use as separator
+  * @param String delim: String to use as delimiter
+  * @param Boolean uriencode: If true, uri-encode values
+  * @return: String representation of parameters
+  */
+function serialize (sep:String? = null, delim:String? = null, uriencode:Boolean = false) :String {
+    var sep:String = sep == null ? this.separator : sep;
+    var dlm:String = delim == null ? this.delimiter : delim;
+
+    var o:String = "";
+
+    var c:Boolean = false;
+    for (var mk:String in this.d) {
+        var n:Array = this.d[ mk ];
+        if (n != null) {
+            for (var i:int = 0; i < n.length; ++i) {
+                if ( c ) o += dlm;
+                o += mk + sep + (uriencode ? encodeURIComponent( n[i] ) : n[i]);
+                c = true;
+            }
+        }
+    }
+
+    return o;
+}
+
+} // End of LzParam
+
+lz.Param = LzParam;  // publish

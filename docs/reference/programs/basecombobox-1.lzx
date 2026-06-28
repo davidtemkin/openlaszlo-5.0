@@ -1,0 +1,20 @@
+<canvas height="100">
+              <font name="smallfont" src="verity/verity9.ttf"/>
+            
+              <class name="minicombo" extends="basecombobox" font="smallfont"
+                     bgcolor="0xeaeaea" editable="false" height="14">
+                <attribute name="text_y" value="-2"/>
+                <view bgcolor="green" x="${parent.width-10}"
+                      y="3" height="8" width="8"
+                      placement="bkgnd" onclick="parent.toggle()" />
+              </class>
+            
+              <class name="minilistitem" extends="textlistitem"
+                     font="smallfont" text_y="-2" height="12"/>
+            
+              <minicombo x="20" y="20"  >
+                <minilistitem value="1">one</minilistitem>
+                <minilistitem value="2">two</minilistitem>
+                <minilistitem value="3">three</minilistitem>
+              </minicombo>
+            </canvas>

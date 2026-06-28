@@ -1,0 +1,24 @@
+<canvas height="200">
+   
+   <script>
+   <![CDATA[
+     // Add a find method to Array
+     Array.prototype.find = function ( what ) {
+       for (var i = 0; i < this.length; ++i) {
+         if (this[i] === what) {
+           return i;
+         }
+       }
+     }
+
+     var sneaky = {example: 'sneaky'};
+     var tryit = ['foo', 42, sneaky, Math.PI, false];
+
+     Debug.format("42 is at: %s\n", tryit.find(42));
+     Debug.format("false is at: %s\n", tryit.find(false));
+     Debug.format("'bar' is at: %s\n", tryit.find('bar'));
+     Debug.format("{example: 'sneaky'} is at: %s\n", tryit.find({example: 'sneaky'}));
+     Debug.format("sneaky is at: %s\n", tryit.find(sneaky));
+   ]]>
+   </script>
+ </canvas>

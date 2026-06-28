@@ -1,0 +1,66 @@
+<canvas height="280">
+    
+        
+        
+        <soap name="temperature" autoload="false"
+                wsdl="http://developerdays.com/cgi-bin/tempconverter.exe/wsdl/ITempConverter">
+        
+            <method name="init">
+                super.init();
+                Debug.debug('soap service loading...');
+                this.load();
+            </method>
+            
+            <handler name="onload">
+                Debug.debug('temperature service loaded!');
+                Debug.debug('---');
+                
+                // don't allow others to call RPC object until proxy is loaded.
+                canvas.convert.setAttribute('visible', true);
+            </handler>
+            
+            <handler name="ondata" args="value">
+                Debug.debug('soap object ondata: %w', value);
+                </handler>
+                
+                <handler name="onerror" args="errmsg">
+                Debug.debug('error: %w', errmsg);
+            </handler>
+        
+        </soap>
+        
+        <view name="convert" x="10" y="10" visible="false" 
+                layout="axis: x; spacing: 5">
+        
+            <button text="convert 100F to C">
+            
+                <handler name="onclick">
+                    this.FtoC.invoke()
+                    Debug.debug('Converting 100F to Celsius...');
+                </handler>
+                
+                <remotecall funcname="FtoC" 
+                    remotecontext="$once{canvas.temperature}">
+                    <param value="100" />
+                </remotecall>
+            
+            </button>
+            
+            <button text="convert 200F to C">
+            
+                <handler name="onclick">
+                this.FtoC.invoke()
+                    Debug.debug('Converting 200F to Celsius...');
+                </handler>
+                
+                <remotecall funcname="FtoC"
+                    remotecontext="$once{canvas.temperature}">
+                    <param value="200" />
+                    <handler name="ondata" args="value">
+                        Debug.debug('200F in Celsius is %w', value);
+                    </handler>
+                </remotecall>
+            </button>
+        </view>
+        
+    </canvas>

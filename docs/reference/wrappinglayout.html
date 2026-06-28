@@ -38,7 +38,7 @@
     &lt;view bgcolor="blue" height="30" width="50"/&gt;
   &lt;/view&gt;
 &lt;/canvas&gt;
-              </pre>
+              </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/reference/programs/wrappinglayout-1.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/reference/programs/wrappinglayout-1.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div>
                       
         <code>&lt;para&gt;The following example shows how the layout of views is dynamically recalculated when the size of the container view changes. 
               The contained views have been given different shapes and colors to make it easier for you to follow how they're rearranged.&lt;/para&gt;</code>
@@ -58,7 +58,7 @@
     Resize the gray view with your mouse to see dynamic layout.
   &lt;/text&gt;
 &lt;/canvas&gt;
-              </pre>
+              </pre><div class="live-example"><div class="live-toolbar"><button class="live-run" type="button" data-run="/docs/reference/programs/wrappinglayout-2.lzx" data-height="100" onclick="lzRun(this)">&#9654;&#xfe0e; Run</button><a class="live-edit" href="/docs/reference/programs/wrappinglayout-2.lzx?edit" target="_blank" rel="noopener">&#9998;&#xfe0e; Edit</a></div></div>
                 
       <h3>Attributes</h3><table><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr><tr><td class="nm">axis</td><td class="ty">string</td><td class="ty">x</td><td>The primary axis for wrapping.</td></tr><tr><td class="nm">duration</td><td class="ty">expression</td><td class="ty">0</td><td>If given, a number of miliseconds to use to animate the views in to
           place.</td></tr><tr><td class="nm">spacing</td><td class="ty">expression</td><td class="ty">1</td><td>A pixel amount to use between the views controlled by the layout in
@@ -68,4 +68,4 @@
           the x axis.</td></tr><tr><td class="nm">yinset</td><td class="ty">expression</td><td class="ty">0</td><td>A pixel amount to offset the first view controlled by the layout in y
           axis</td></tr><tr><td class="nm">yspacing</td><td class="ty">expression</td><td class="ty">this.spacing</td><td>A pixel amount to use between the views controlled by the layout in
           the y axis.</td></tr></table>
-</main><script src="_nav.js"></script></body></html>
+</main><script src="_nav.js"></script><script>function lzRun(b){var d=b.parentNode.parentNode,f=d.querySelector('iframe.live-frame');if(!f){f=document.createElement('iframe');f.className='live-frame';f.title='live example';var h=b.getAttribute('data-height');if(h)f.style.height=h+'px';d.appendChild(f);b.innerHTML='&#8635;&#xfe0e; Reload';}var u=b.getAttribute('data-run');if(b.getAttribute('data-debug'))u+=(u.indexOf('?')<0?'?':'&')+'debug=true';f.src=u;}</script></body></html>

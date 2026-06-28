@@ -1,0 +1,13 @@
+<canvas height="120" >
+              <class name="myfocusclass" extends="basefocusview">
+                <view bgcolor="blue" y="${parent.height+1}" height="2" width="${parent.width}"/>
+              </class>
+            
+              <attribute name="focusclass" value="myfocusclass" type="string"/>
+              <view x="20" y="20">
+                <simplelayout spacing="10"/>
+                <checkbox>I would like fries with that</checkbox>
+                <checkbox>Rush delivery</checkbox>
+                <button>Order</button>
+              </view>
+            </canvas>

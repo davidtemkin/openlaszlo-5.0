@@ -1,0 +1,8 @@
+<canvas height="150" width="100%">
+
+  <script>
+    var myObj = {one: 1, too: 2, 3: 'threeee', 42: "The answer", 'a very long tag name': "With a very long value to boot"};
+    Debug.debug("My object using %%w: %w", myObj);
+    Debug.debug("My object using %%o.32w: %0.32w", myObj);
+  </script>
+</canvas>

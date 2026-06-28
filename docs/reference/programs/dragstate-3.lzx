@@ -1,0 +1,7 @@
+<canvas height="100">
+            <view bgcolor="red" width="20" height="20"
+                  onmousedown="dragger.setAttribute('applied', true)" onmouseup="dragger.setAttribute('applied', false)">
+                <dragstate name="dragger" drag_axis="x"
+                        drag_min_x="0"  drag_max_x="100"/>
+            </view>
+        </canvas>

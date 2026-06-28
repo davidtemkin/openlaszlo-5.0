@@ -1,0 +1,123 @@
+/**
+  *
+  * @copyright Copyright 2001-2009 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @access public
+  * @topic LFC
+  * @subtopic Data
+  */
+
+/**
+  * An <code>lz.DataText</code> represents a text node a in a hierarchical
+  * dataset. An <code>lz.DataText</code> can only contain text data. It can be
+  * a child a of an <sgmltag class="element" role="LzDataElement">lz.DataElement</sgmltag>.
+  * See the example on <sgmltag class="element" role="LzDataNodeMixin">lz.DataNodeMixin</sgmltag>.
+  *
+  * @shortdesc Represents a text node in a set of data.
+  * @see lzdatanodemixin, lzdataelement, datapointer
+  *
+  * @devnote W3C-DOM Text interface: http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/core.html#ID-1312295772
+  *
+  * @devnote uncomment typing when LPP-5840 is implemented
+  */
+class LzDataText extends LzDataNode with LzDataNodeMixin {
+
+/**
+ * This object represents a text node in a set of data.
+ * @param String text: The text that this node holds.
+ */
+function LzDataText (text:String) {
+    super();
+    this.nodeType = LzDataElement.TEXT_NODE;
+    this.data = text;
+}
+
+/** @lzxtype event */
+var ondata :LzDeclaredEventClass = LzDeclaredEvent;
+
+/** This property is of type int, can raise a DOMException object on setting
+  * and can raise a DOMException object on retrieval.
+  */
+//var nodeType = LzDataElement.TEXT_NODE;
+
+/** The name of this node.
+  * According to <a href="http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/core.html#ID-1841493061">W3C-specs</a>,
+  * nodeName for LzDataText should return "#text".
+  * @type String
+  * @lzxdefault "#text"
+  * @keywords read-only
+  */
+var nodeName :String = '#text';
+
+/** The data held by this node.
+  * @type String
+  * @lzxdefault ""
+  */
+var data :String = "";
+
+/** @access private */
+function $lzc$set_data (newdata:String) :void {
+    this.data = newdata;
+    if (this.ondata.ready) {
+        this.ondata.sendEvent( newdata );
+    }
+    if (this.ownerDocument) {
+        this.ownerDocument.handleDocumentChange( "data", this, 1 );
+    }
+}
+
+/**
+  * Sets the string that this node holds.
+  * @param String newdata: The new string for this node.
+  * @deprecated Use setAttribute('data', ...) instead.
+  */
+public function setData (newdata:String) {
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_data(newdata);
+}
+
+/**
+  * @access private
+  */
+override public function cloneNode (deep:Boolean = false) /*:LzDataNodeMixin*/ {
+    var n:LzDataText = new LzDataText(this.data);
+
+    // TODO: [20090826 anba] enable when LPP-8425 is finished
+    // if (this.__LZuserHandler) {
+    //     this.__LZhandleUserData(LzDataElement.NODE_CLONED, this, n);
+    // }
+
+    return n;
+}
+
+/**
+  * @access private
+  */
+override public function serialize () :String {
+    return LzDataElement.__LZXMLescape( this.data );
+}
+
+/**
+  * @access private
+  */
+override function toString () /*:String*/ {
+    //return this.serialize();
+    return this.data;
+}
+
+if ($debug) {
+/**
+  * Same as serialize, but will abbreviate at printLength.
+  * @access private
+  */
+function _dbg_name () :String {
+    var s:String = this.serialize();
+    var len:Number = Debug.printLength;
+    if (s.length > len) { s = Debug.abbreviate(s, len); }
+    return s;
+}
+}
+
+} // End of LzDataText
+lz.DataText = LzDataText;  //publish

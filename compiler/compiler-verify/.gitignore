@@ -1,0 +1,6 @@
+# Regenerated oracle gold cache (hundreds of MB; never committed — see README.md).
+.goldcache/
+
+# Runtime symlinks recreated at run time by oracle/lzc.sh (never commit symlinks).
+oracle/lps-home/lps/components
+oracle/lps-home/lps/fonts

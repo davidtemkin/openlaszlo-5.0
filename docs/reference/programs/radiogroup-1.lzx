@@ -1,0 +1,7 @@
+<canvas height="100">
+              <radiogroup id="group1">
+                <radiobutton value="1" text="one"/>
+                <radiobutton value="2" text="two" selected="true"/>
+                <radiobutton value="3" text="three"/>
+              </radiogroup>
+            </canvas>

@@ -1,0 +1,33 @@
+<canvas height="280">
+    
+        
+    
+        <soap name="temperature" autoload="false"
+            wsdl="http://developerdays.com/cgi-bin/tempconverter.exe/wsdl/ITempConverter">
+            <method name="init">
+                super.init();
+                Debug.debug('soap service loading...');
+                this.load();
+            </method>
+        <handler name="onload">
+            Debug.debug('temperature service loaded!');
+            Debug.debug('---');
+    
+            // don't allow others to call RPC object until proxy is loaded.
+            canvas.convert.setAttribute('visible', true);
+            </handler>   
+            </soap> 
+            <button name="convert" text="convert" x="10" y="10" visible="false">      
+            <attribute name="myDel" value="$once{new LzDelegate(this, 'myhandler')}" />       
+            <handler name="onclick">
+            var f = 100;
+            canvas.temperature.proxy.FtoC([ f ], this.myDel)
+            Debug.debug('Invoking FtoC...');
+        </handler>
+        <method name="myhandler" args="data">
+            Debug.debug('got data: %w', data);
+        </method>
+    
+        </button>
+    
+    </canvas>

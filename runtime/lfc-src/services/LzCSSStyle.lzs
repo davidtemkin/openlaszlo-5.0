@@ -1,0 +1,765 @@
+/**
+ *
+ * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+ *            Use is subject to license terms.
+ *
+ * @affects lzcssstyle lzcssstylerule
+ * @access public
+ * @topic LFC
+ * @subtopic CSS
+ */
+
+/**
+ * <p>This service provides style information.</p>
+ * <p>This implements Interface ViewCSS (introduced in DOM Level 2)
+ * from here: http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-ViewCSS
+ * </p>
+ */
+final class LzCSSStyleRule {
+  /** @access private */
+  var parsed = null;
+  //No rule has a specificity of zero
+  /** @access private */
+  var specificity:Number = 0;
+  /** @access private */
+  var properties;
+
+  if ($debug) {
+    // In debug mode, the constructor fills these in
+//     LzCSSStyleRule.prototype[Debug.FUNCTION_FILENAME] = null;
+//     LzCSSStyleRule.prototype[Debug.FUNCTION_LINENO] = null;
+    // Don't really want to have to make this class dynamic just for
+    // that...  So, we cheat.
+    var _dbg_filename:String = null;
+    var _dbg_lineno:Number = 0;
+
+    function LzCSSStyleRule(selector, properties, source:String, line:Number) {
+      this.parsed = selector;
+      if (selector['length']) {
+        var s:Number = 0;
+        for (var i = 0, l = selector.length; i < l; i++ ){
+          s += selector[ i ].s
+        }
+        this.specificity = s;
+      } else {
+        this.specificity = selector.s;
+      }
+      this.properties = properties;
+      // You will find out if these are the wrong names
+      this[Debug.FUNCTION_FILENAME] = source;
+      this[Debug.FUNCTION_LINENO] = line;
+    };
+  } else {
+    function LzCSSStyleRule(selector, properties) {
+      this.parsed = selector;
+      if (selector['length']) {
+        var s:Number = 0;
+        for (var i = 0, l = selector.length; i < l; i++ ){
+          s += selector[ i ].s
+        }
+        this.specificity = s;
+      } else {
+        this.specificity = selector.s;
+      }
+      this.properties = properties;
+    };
+  }
+
+  /** @access private */
+  var _lexorder
+
+  /** @access private */
+  var _dbg_name = function ():String {
+    function pname (rp) {
+      var rptn:String = rp['t'];
+      var rpi:String = rp['i'];
+      var rpa:String = rp['a'];
+      if (! (rptn||rpi||rpa)) { return '*'; }
+      var rpv = rp['v'];
+      var rpm = rp['m'] || '=';
+      return ((rptn ? rptn : '') +
+              (rpi ? ('#'+rpi) : '') +
+              (rpa ? (rpa=='styleclass' ?
+                      ('.'+rpv) :
+                      ('[' +
+                       rpa + (rpv ? (rpm+rpv) : '') +
+                       ']')
+                      ) : '') +
+              (('&' in rp) ? pname(rp['&']) : '')
+              );
+    }
+    var rp = this.parsed;
+    if (rp['length']) {
+      var n:String = '';
+      for (var i = 0; i < rp.length; i++) {
+        n += pname(rp[i]) + ' ';
+      }
+      n = n.substring(0, n.length-1);
+    } else {
+      var n = pname(rp);
+    }
+    return n;
+  };
+
+  function equal (that):Boolean {
+    function equal (pa, pb):Boolean {
+      return ((pa['t'] == pb['t']) &&
+              (pa['i'] == pb['i']) &&
+              (pa['a'] == pb['a']) &&
+              (pa['v'] == pb['v']) &&
+              (pa['m'] == pb['m']) &&
+              (((! pa['&']) && (!pb['&'])) ||
+               (pa['&'] && pb['&'] && equal(pa['&'], pb['&']))));
+    }
+    var rap = this.parsed;
+    var rbp = that.parsed;
+    if (rap['length'] != rbp['length']) {
+      return false;
+    }
+    if (rap['length']) {
+      for (var i:Number = rap.length - 1; i >= 0; i--) {
+        if (! equal(rap[i], rbp[i])) {
+          return false;
+        }
+      }
+    }
+    if (! equal(rap, rbp)) {
+      return false;
+    }
+    var aprops = this.properties;
+    var bprops = that.properties;
+    for (var ak:String in aprops) {
+      if (aprops[ak] !== bprops[ak]) { return false; }
+    }
+    for (var bk:String in bprops) {
+      if (aprops[bk] !== bprops[bk]) { return false; }
+    }
+    return true;
+  };
+
+};                                // End of LzCSSStyleRule
+lz.CSSStyleRule = LzCSSStyleRule; // publish
+
+final class LzCSSStyleDependencies {
+  var count:Number = 0;
+  var deps;
+
+  function LzCSSStyleDependencies () {
+    this.deps = {};
+  }
+
+  function gather (node:LzNode, attr:String):void {
+    if (! (attr in this.deps)) {
+      this.deps[attr] = [ node ];
+      this.count++;
+      return;
+    }
+    var nodes:Array = this.deps[attr];
+    for (var i:Number = 0, l:Number = nodes.length; i < l; i++) {
+      if (node === nodes[i]) {
+        return;
+      }
+    }
+    this.deps[attr].push(node);
+    this.count++;
+  }
+}
+
+final class LzCSSStyleClass {
+
+  function LzCSSStyleClass () {
+    // See LPP-5232
+    this._rules = [];
+    this._attrRules = {};
+    this._idRules = {};
+    this._tagRules = {};
+  };
+
+  function getComputedStyle ( node ){
+    var csssd:LzCSSStyleDeclaration = new LzCSSStyleDeclaration( );
+    csssd.setNode( node );
+    return csssd;
+  };
+
+  // Hand-inlined in LzNode/__LZstyleBindAttribute
+  // Must be kept in sync
+  function getPropertyValueFor (node:LzNode, pname:String) {
+    var pc = node['__LZPropertyCache'] || this.getPropertyCache(node);
+    if (pname in pc) {
+      return pc[pname];
+    }
+    if ($debug) {
+      // Fix for LPP-3024: if we're in debug mode, warn when CSS lookup
+      // results in a null or undefined value. [bshine 08.03.2007]
+      Debug.warn("No CSS value found for node %#w for property name %s", node, pname);
+    }
+    // Cache negative values lazily
+    return pc[pname] = (void 0);
+  };
+
+  function getPropertyCache ( node:LzNode ) {
+    if (!node) return {};
+    var pc = node['__LZPropertyCache'];
+    if ( pc ) { return pc; }
+    // The cache is initialized from the parent, then our rules are
+    // added.
+    var ip:LzNode = node.immediateparent;
+    // Apparently there can be orphan nodes that get styled?
+    if ((! ip ) || (ip === canvas)) {
+      var ipc = {};
+    } else {
+      var ipc = ip['__LZPropertyCache'] || this.getPropertyCache(ip);
+    }
+    var rules = node['__LZRuleCache'] || this.getRulesCache(node);
+
+    // If we have no rules, we just share the parent cache
+    if (rules.length == 0) {
+      return node.__LZPropertyCache = ipc;
+    }
+
+    // If we have rules, copy the parent cache and add the properties
+    // our rules define
+    var pc = {};
+    for (var k:String in ipc) { pc[k] = ipc[k]; }
+    // Process the rules from least to most specific, so the
+    // most-specific win
+    for (var i:Number = rules.length - 1; i >= 0; i--)  {
+      var props = rules[i].properties;
+      for (var pname:String in props) {
+        pc[pname] = props[pname];
+      }
+    }
+    return node.__LZPropertyCache = pc;
+  };
+
+  // Will we ever use this cache more than once?
+  //
+  // Yes, if we fix this...
+  // TODO: [2010-04-27 ptw] (LPP-8945) Dynamic CSS rules need better caching
+  function getRulesCache (node:LzNode):Array {
+    var rules:Array = node['__LZRuleCache'];
+    if (rules) { return rules; }
+    rules = new Array();
+    var tryRules:Array = new Array();
+    // Repeat for rules, tag rules, attr rules, id rules; accumulating
+    // the rules that might apply (which are filtered more carefully in
+    // the second pass).
+
+    /**
+     * NOTE: [2008-09-08 ptw] These rules are gathered in approximate
+     * specificity order, to minimize the cost of the sort below.  Take
+     * great care if you muck with this code that you don't screw that
+     * up!
+     */
+    // Ensure the rule cohorts are in order
+    if (this._rulenum != this._lastSort) {
+      this._sortRules();
+    }
+
+    // Gather the id rules that could apply
+    var id:String = node['id'];
+    // Does this node have an id with rules?
+    if (id) {
+      var ir = this._idRules;
+      if (id in ir) {
+        tryRules = tryRules.concat(ir[id]);
+      }
+    }
+
+    // Gather the attribute rules that could apply
+    var ar = this._attrRules;
+    for (var k:String in ar) {
+      // Does this node have that attribute? NOTE: [2010-08-19 ptw]
+      // We'd like to ask `k in node` but this does not work for as3,
+      // so we approximate.  This is why attributes have to at least
+      // be initialized to `null` in applyArgs
+      if (node[k] !== (void 0)) {
+        // Get the rules for that attribute
+        tryRules = tryRules.concat(ar[k]);
+      }
+    }
+
+    // Gather the tag rules that could apply
+    var cr = this._tagRules;
+    for (var tn:String in cr) {
+      var c:Class = lz[tn];
+      // Can we filter these any further here?
+      if (c && (node is c)) {
+        tryRules = tryRules.concat(cr[tn]);
+      }
+    }
+
+    // * rules end up here
+    tryRules.concat(this._rules);
+
+    // The dependencies for the applicability of this rule cache.  If
+    // any of these dependencies change, the rules cache needs to be
+    // recomputed.
+    var deps:LzCSSStyleDependencies = new LzCSSStyleDependencies();
+
+    // Now winnow the rules by applicability, at the same time, see if
+    // any sorting is needed
+    var sortNeeded:Boolean = false;
+    var lastSpecificity:Number = Infinity;
+    for ( var i:Number = 0, l:Number = tryRules.length; i < l; i++ ) {
+      var r:LzCSSStyleRule = tryRules[ i ];
+      if (! sortNeeded) {
+        var rs:Number = r.specificity;
+        if ((! rs) || (rs >= lastSpecificity)) {
+          sortNeeded = true;
+        } else {
+          lastSpecificity = rs;
+        }
+      }
+      var rp = r.parsed;
+      var compound:Boolean = (!! rp['length'])
+      // Quick test for compound _not_ applying:  If the last selector
+      // is not applicable, no need to even try.  It will either apply
+      // to our parent (already cached) or a child, but not us.
+      if (compound) {
+        // Look at the last selector
+        rp = rp[rp.length - 1];
+      }
+      var rptn:String = rp['t'];
+      // Classes get defined lazily, way after rules are parsed, so
+      // we have to look this up each time. But NOTE, in the
+      // optimization below, we only check the class if there is a
+      // TAGNAME.
+      var rpc:Class = rptn ? lz[rptn] : null;
+      var rpi:String = rp['i'];
+      // Optimized test for applicability: we can ignore type because
+      // if a rule has a class, id, or attrname, they have to apply,
+      // and a 'star' rule has none of those
+      var applies:Boolean = false;
+      if (((! rptn) || (rpc && node is rpc)) &&
+          ((! rpi) || (node['id'] == rpi))) {
+        if (! compound) {
+          // NOTE: [2010-08-24 ptw] This entire block is "inlined"
+          // in _compoundSelectorApplies.  Keep in sync
+          if ((! rp['a']) && (! rp['&'])) {
+            // No attr selector, no conjunction, done
+            applies = true;
+          } else {
+            // attr rules and  conjunctions
+            var tp = rp['a'] ? rp : rp['&'];
+            var tpa:String = tp.a;
+            do {
+              // Reset each time around
+              applies = false;
+              // NOTE: [2010-08-19 ptw] We'd like to ask `tpa in node`
+              // but this does not work for as3, so we approximate.
+              // This is why attributes have to at least be initialized
+              // to `null` in applyArgs
+              if (node[tpa] !== (void 0)) {
+                // `name` is not a dynamic attribute, but if the node
+                // otherwise has the attribute...
+                if (tpa != 'name') {
+                  // ...note the applicability dependency on this node
+                  // and attribute
+                  deps.gather(node, tpa);
+                }
+                // Only add the rule to the cache if it is _currently_
+                // applicable NB: must use `in` here
+                if (! ('v' in tp)) {
+                  // Just looking for presence of attribute
+                  applies = true;
+                } else {
+                  var nav = node[tpa];
+                  // TODO: [2010-04-26 ptw] (LPP-8940) CSS dynamic
+                  // attribute comparison needs to use presentAttribute;
+                  // for now, we just coerce to a String.
+                  nav += '';
+                  var tpv = tp.v;
+                  if (! tp['m']) {
+                    // equality-test is the default
+                    applies = (nav == tpv);
+                  } else {
+                    // Do it the hard way
+                    var tpm:String = tp.m;
+                    if (tpm == "~=") {
+                      // space-anchored search
+                      applies = (nav == tpv) ||
+                        (node.__LZCSSStyleclass && (node.__LZCSSStyleclass.indexOf(' ' + tpv + ' ') >= 0));
+                    } else if (tpm == "|=") {
+                      // hyphen-anchored search
+                      applies = nav.indexOf(tpv + '-') == 0;
+                    } else if ($debug) {
+                      Debug.error("Unknown attribute match %#s", tp.m);
+                    }
+                  }
+                }
+              }
+              if (applies && tp['&']) {
+                // verify the next condition
+                tp = tp['&'];
+                tpa = tp.a;
+              } else {
+                // done
+                tp = null;
+              }
+            } while (tp);
+          }
+        } else {
+          // Last selector applies, so verify that the whole rule
+          // applies.  (Need to go back to original rule to do this.)
+          // At the same time, we accumulate any dependencies that
+          // could change the applicability of the compound rule.
+          applies = this._compoundSelectorApplies( r.parsed, node, deps );
+        }
+      }
+      if (applies) { rules.push(r); }
+    }
+
+    if (sortNeeded) {
+      //     if ($debug) {
+      //       var s = "";
+      //       for (var i = 0, l = rules.length; i < l; i++) {
+      //         s += rules[i].specificity + ' ';
+      //       }
+      //       Debug.debug("Sorting %w (%s)", rules, s);
+      //     }
+      rules.sort(this.__compareSpecificity);
+      //   } else if ($debug) {
+      //     Debug.debug("Saved a sort! %w", rules);
+    }
+
+    node.__LZRuleCache = rules;
+    // Note style dependencies
+    if (deps.count > 0) {
+        node.__LZCSSDependencies = deps.deps;
+    }
+    // Debug.info('%w rules: %w, binders: %w', node, rules, deps);
+    return rules;
+  };
+
+  /** @access private */
+  function __compareSpecificity (rA:LzCSSStyleRule, rB:LzCSSStyleRule):Number {
+    // Specificity is stored when the rule is parsed
+    var specificityA:Number = rA.specificity;
+    var specificityB:Number = rB.specificity;
+
+    // Simplest case: they have different specificity
+    if ( specificityA != specificityB ) {
+      return (specificityA < specificityB) ? 1 : -1;
+    }
+
+    // Ties that involve tag selectors are broken by comparing the
+    // specificity of the classes of the tags
+    var rap = rA.parsed;
+    var rbp = rB.parsed;
+    var lexorder:Number = ((rA._lexorder < rB._lexorder ) ? 1 : -1);
+
+    // Simple rules have no length
+    if ((! rap['length']) && (! rbp['length'])) {
+      // Simple tag rules have a class name property
+      var ratn:String = rap['t'];
+      var rbtn:String = rbp['t'];
+
+      // Simpler case: Not tag rules, or the classes are the same
+      if ((! ratn) || (! rbtn) || (ratn == rbtn)) {
+        return lexorder;
+      }
+
+      // Simple case: Neither compound
+      //  Push comes to shove -- the classes had better exist now
+      var rac:Class = lz[ratn];
+      var rbc:Class = lz[rbtn];
+      // Subclass test
+      // TODO: [2008-09-09 ptw] Will this work in JS2?
+      // We really want to test the subclass relationship of rac and rbc
+      if (rac && rbc) {
+        if (rac subclassof rbc) { return -1; }
+        if (rbc subclassof rac) { return 1; }
+      }
+      // The classes are not comparable, default
+      return lexorder;
+    }
+
+    // Hard case: Compound rule must be examined step-by-step
+    for ( var i:Number = 0; i < rap.length; i++ ) {
+      var rapi = rap[i];
+      var rbpi = rbp[i];
+      // if we get here, it means that two rules have the same
+      // specificity but different numbers of descendants?
+      if ( !rapi || !rbpi ) {
+        //       if ($debug) {
+        //         Debug.debug("%s: %w <=> %w", arguments.callee, rA, rB);
+        //       }
+        // Punt to lexical order
+        break;
+      }
+      //  Classes get defined lazily, way after rules are
+      //  parsed, so we have to defer evaluating them
+      var ratn:String = rapi['t'];
+      var rbtn:String = rbpi['t'];
+      if ( ( ratn && rbtn ) && ( ratn != rbtn ) ) {
+        //  Push comes to shove -- the classes had better exist now
+        var rac:Class = lz[ratn];
+        var rbc:Class = lz[rbtn];
+        // Subclass test
+        // TODO: [2008-09-09 ptw] Will this work in JS2?
+        // We really want to test the subclass relationship of rac and rbc
+        if (rac && rbc) {
+          if (rac subclassof rbc) { return -1; }
+          if (rbc subclassof rac) { return 1; }
+        }
+        // The classes are not comparable, keep going
+      }
+    }
+    // Last ditch
+    return lexorder;
+  };
+
+
+  /** @access private */
+  function _printRuleArray (arr) {
+    if ($debug) {
+      for (var i = 0; i < arr.length; i++) {
+        Debug.write(i, arr[i]);
+      }
+    }
+  };
+
+  /**
+   * The optimized applicability test is inlined in
+   * getPropertyValueFor(), make sure they stan in sync
+   * @access private
+   */
+  function _compoundSelectorApplies (parsedsel:Array, startnode:LzNode, deps:LzCSSStyleDependencies):Boolean {
+    // loop through selectors, ensuring each applies to the current node or a parent
+    for (var node:LzNode = startnode, i:Number = parsedsel.length - 1;
+         i >= 0 && node !== canvas;
+         i--, node = node.parent) {
+      // Components of a parsed compound rule are parsed
+      var rp = parsedsel[i];
+      var rptn:String = rp['t'];
+      // Classes get defined lazily, way after rules are parsed, so
+      // we have to look this up each time. But NOTE, in the
+      // optimization below, we only check the class if there is a
+      // TAGNAME.
+      var rpc:Class = rptn ? lz[rptn] : null;
+      var rpi:String = rp['i'];
+      // look up the nodes to see if this selector applies to the
+      // current node or a parent
+      while (node !== canvas) {
+        // Optimized test for applicability: we can ignore type because
+        // if a rule has a class, id, or attrname, they have to apply,
+        // and a 'star' rule has none of those
+        var applies:Boolean = false;
+        if (((! rptn) || (rpc && node is rpc)) &&
+            ((! rpi) || (node['id'] == rpi))) {
+          // NOTE: [2010-08-24 ptw] This entire block is "inlined"
+          // in getRulesCache.  Keep in sync
+          if ((! rp['a']) && (! rp['&'])) {
+            // No attr selector, no conjunction, done
+            applies = true;
+          } else {
+            // attr rules and  conjunctions
+            var tp = rp['a'] ? rp : rp['&'];
+            var tpa:String = tp.a;
+            do {
+              // Reset each time around
+              applies = false;
+              // NOTE: [2010-08-19 ptw] We'd like to ask `tpa in node`
+              // but this does not work for as3, so we approximate.
+              // This is why attributes have to at least be initialized
+              // to `null` in applyArgs
+              if (node[tpa] !== (void 0)) {
+                // `name` is not a dynamic attribute, but if the node
+                // otherwise has the attribute...
+                if (tpa != 'name') {
+                  // ...note the applicability dependency on this node
+                  // and attribute
+                  deps.gather(node, tpa);
+                }
+                // Only add the rule to the cache if it is _currently_
+                // applicable NB: must use `in` here
+                if (! ('v' in tp)) {
+                  // Just looking for presence of attribute
+                  applies = true;
+                } else {
+                  var nav = node[tpa];
+                  // TODO: [2010-04-26 ptw] (LPP-8940) CSS dynamic
+                  // attribute comparison needs to use presentAttribute;
+                  // for now, we just coerce to a String.
+                  nav += '';
+                  var tpv = tp.v;
+                  if (! tp['m']) {
+                    // equality-test is the default
+                    applies = (nav == tpv);
+                  } else {
+                    // Do it the hard way
+                    var tpm:String = tp.m;
+                    if (tpm == "~=") {
+                      // space-anchored search
+                      applies = (nav == tpv) ||
+                        (node.__LZCSSStyleclass && (node.__LZCSSStyleclass.indexOf(' ' + tpv + ' ') >= 0));
+                    } else if (tpm == "|=") {
+                      // hyphen-anchored search
+                      applies = nav.indexOf(tpv + '-') == 0;
+                    } else if ($debug) {
+                      Debug.error("Unknown attribute match %#s", tp.m);
+                    }
+                  }
+                }
+              }
+              if (applies && tp['&']) {
+                // verify the next condition
+                tp = tp['&'];
+                tpa = tp.a;
+              } else {
+                // done
+                tp = null;
+              }
+            } while (tp);
+          }
+          if (applies) {
+            if (i == 0) {
+              // Total match
+              return true;
+            } else {
+              // Match next rule in the compound (next step in outer
+              // for loop)
+              break;
+            }
+          }
+        }
+        // We didn't match on this node
+        if (node === startnode) {
+          // If the selector can't be anchored here, then exit.  If it
+          // applied in a parent, it will have already been examined
+          // and cached
+          return false;
+        }
+        // Go up a node and try to match again
+        // TODO: [2008-09-06 ptw] parent, not immediateparent?
+        node = node.parent;
+      }
+    }
+    // Got to the canvas or end of the rule without a match
+    return false;
+  };
+
+  /** @access private */
+  var _rules:Array;
+
+  /** optimization for selectors which use [&lt;attr&gt;=&lt;value&gt;]
+   * @access private */
+  var _attrRules:Object;
+
+  /** optimization for selectors which use #id
+   * @access private */
+  var _idRules:Object;
+
+  /** optimization for selectors which use tagname
+   * @access private */
+  var _tagRules:Object;
+
+  /** @access private */
+  var _rulenum:Number = 0;
+
+  /** @access private */
+  var _lastSort:Number = -1;
+
+  function _sortRules ():void {
+    function deleteDuplicates (sortedRules:Array):void {
+      for (var i:Number = sortedRules.length - 2; i >= 0; i--) {
+        if (sortedRules[i].equal(sortedRules[i + 1])) {
+          //           if ($debug) {
+          //             Debug.debug("Removing duplicate: %w == %w",
+          //                         sortedRules[i], sortedRules[i + 1]);
+          //           }
+          sortedRules.splice(i + 1, 1);
+        }
+      }
+    }
+
+    if (this._rulenum != this._lastSort) {
+      this._rules.sort(this.__compareSpecificity);
+      deleteDuplicates(this._rules);
+      for (var k:String in this._attrRules) {
+        var ark:Array = this._attrRules[k];
+        ark.sort(this.__compareSpecificity);
+        deleteDuplicates(ark);
+      }
+      for (var k:String in this._idRules) {
+        var irk:Array = this._idRules[k];
+        irk.sort(this.__compareSpecificity);
+        deleteDuplicates(irk);
+      }
+      for (var k:String in this._tagRules) {
+        var trk:Array = this._tagRules[k];
+        trk.sort(this.__compareSpecificity);
+        deleteDuplicates(trk);
+      }
+      this._lastSort = this._rulenum;
+    }
+  };
+
+  /**
+   * do some preprocessing to speed up lookups
+   * @access private */
+  function _addRule ( r:LzCSSStyleRule ):void {
+    // Assign lexical order
+    r._lexorder = this._rulenum++;
+
+    // Get the most-specific selector
+    var lastsel = r.parsed;
+    if (lastsel['length']) {
+      lastsel = lastsel[lastsel.length - 1];
+    }
+
+    // Sort rules into different cohorts to reduce the number of rules
+    // we have to test for applicability in getRulesCache
+    if ('i' in lastsel) {
+      // ID rules have the highest priority, so if we have an id, we
+      // filter on that first
+      var id:String = lastsel.i;
+      var itab:Array = this._idRules[ id ];
+      if ( ! itab) { itab = this._idRules[ id ] = []; }
+      itab.push( r );
+    } else if ('a' in lastsel) {
+      // Since an attr rule is higher specificity than a tag rule, we
+      // put attr+tag rules here and filter on the attr first.
+      var attr:String = lastsel.a;
+      var atab:Array = this._attrRules[ attr ];
+      if ( ! atab ) { atab = this._attrRules[ attr ] = []; }
+      atab.push(r);
+    } else if ('t' in lastsel) {
+      var tag:String = lastsel.t;
+      var ttab:Array = this._tagRules[ tag ];
+      if ( ! ttab ) { ttab = this._tagRules[ tag ] = []; }
+      ttab.push( r );
+    } else {
+      // * rules end up here
+      this._rules.push( r );
+    }
+  };
+};                              // End of LzCSSStyleClass
+
+var LzCSSStyle:LzCSSStyleClass = new LzCSSStyleClass ();
+lz.CSSStyle = LzCSSStyleClass;  // publish
+
+
+
+/** These objects implement
+ * Interface CSSStyleDeclaration (introduced in DOM Level 2) from
+ * http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration
+ */
+final class LzCSSStyleDeclaration {
+
+  function LzCSSStyleDeclaration (){ };
+
+  /** @access private */
+  var _node = null;
+
+  function getPropertyValue ( pname ){
+    return LzCSSStyle.getPropertyValueFor( this._node , pname );
+  };
+
+  function setNode ( node ){
+    this._node = node;
+  };
+
+};                              // End of LzCSSStyleDeclaration
+lz.CSSStyleDeclaration = LzCSSStyleDeclaration; // publish

@@ -1,0 +1,5 @@
+<canvas height="130">
+            <command onselect="Debug.debug('the enter key was pressed');" 
+                        key="['Enter']" />
+            
+            </canvas>

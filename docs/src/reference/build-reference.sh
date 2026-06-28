@@ -43,3 +43,8 @@ JAVA org.openlaszlo.js2doc.Main --libraryid components --reprocess \
 echo "[4/4] render multi-page reference -> docs/reference/ (per-class pages + shared sidebar)"
 xsltproc "$HERE/refguide-multi.xsl" "$HERE/LaszloLibrary.xml" > /tmp/ref-blob.html
 node "$HERE/split-reference.mjs" /tmp/ref-blob.html
+
+echo "[5/5] wire Run/Edit toolbars into runnable <canvas> reference examples"
+# faithful to the original reference (which embedded each canvas example as a running DHTML
+# app); compile-gates every example so non-compiling/unsupported fragments stay static.
+node "$HERE/wire-reference-examples.mjs"

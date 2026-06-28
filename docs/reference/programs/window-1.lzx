@@ -1,0 +1,7 @@
+<canvas height="250">
+    <window x="10" y="10" width="300" height="200"
+        title="my window"
+        resizable="true" closeable="true">
+        <text>Hello</text>
+    </window>
+</canvas>

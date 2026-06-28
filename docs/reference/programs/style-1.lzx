@@ -1,0 +1,6 @@
+<canvas height="60">
+          <greenstyle name="mystyle" isdefault="true"/>
+          <checkbox>Tell me more</checkbox>
+          <button>Submit</button>
+          <simplelayout spacing="10" inset="10"/>
+        </canvas>

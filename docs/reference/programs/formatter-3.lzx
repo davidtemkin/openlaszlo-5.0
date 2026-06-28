@@ -1,0 +1,9 @@
+<canvas layout="axis: y; spacing: 10" height="60" width="100%">
+  
+  <script>
+    var date = {us: "%2$d/%3$d/%1$d", eu: "%1$d-%2$02d-%3$02d"};
+    var now = new Date();
+  </script>
+  <text oninit="this.format(date.us, now.getFullYear(), now.getMonth(), now.getDay())" />
+  <text oninit="this.format(date.eu, now.getFullYear(), now.getMonth(), now.getDay());" />
+</canvas>

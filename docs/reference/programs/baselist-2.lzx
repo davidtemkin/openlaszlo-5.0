@@ -1,0 +1,17 @@
+<canvas height="90">
+             <dataset name="items">
+                <item>one</item>
+                <item>two</item>
+                <item>three</item>
+              </dataset>
+            
+              <class name="myitem" extends="baselistitem"
+                     bgcolor="${selected ? 0xffff00 : 0xffffff}">
+                 <text text="${parent.value}"/>
+              </class>
+            
+              <baselist layout="axis:y; spacing:2">
+                <myitem datapath="items:/item/text()"/>
+              </baselist>
+              <text y="70" >Click on a number to select it.</text>
+             </canvas>

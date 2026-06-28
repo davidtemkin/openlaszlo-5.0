@@ -1,0 +1,20 @@
+/**
+  * Library.lzs
+  *
+  * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @access private
+  */
+
+if ($as2) {
+} else if ($as3) {
+} else if ($js1) {
+} else {
+    Debug.error('helpers/Library.lzs unsupported runtime %s', $runtime);
+}
+
+#include "helpers/LzContextMenu.lzs"
+#include "helpers/LzFont.lzs"
+#include "helpers/LzState.lzs"
+#include "helpers/LzURL.lzs"

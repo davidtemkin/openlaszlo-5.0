@@ -1,0 +1,3 @@
+<canvas height="50">
+   <inputtext width="150" multiline="true">This text is editable.</inputtext>
+ </canvas>

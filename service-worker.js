@@ -26,7 +26,7 @@
 // Module SW (registered {type:"module"}); imports the self-contained compiler bundle.
 
 import { compileInBrowser, BrowserCache, COMPILER_VERSION } from "./compiler/lzc-browser.js";
-import { toSourceUrl, ROOT_FILES } from "./urlmap.mjs";
+import { toSourceUrl, ROOT_FILES } from "./startup/urlmap.mjs";
 
 // COMPILE_MODE — "server" or "browser". index.html registers this worker as
 // `service-worker.js?compile=<mode>`: the live Node server injects window.__OL_COMPILE=
@@ -79,7 +79,7 @@ function rebaseHtml(text) {
 // (b) busts every cached asset. Host-agnostic: works on ANY static host (GitHub Pages,
 // S3, nginx, Cloudflare Pages…) with no build pipeline — just re-run the stamp before you
 // deploy. Left as "dev" when unstamped (local serving).
-const BUILD_ID = "6d025a4e14d3";
+const BUILD_ID = "57a4ae4709e3";
 
 // Per-build cache bucket: a new BUILD_ID -> a new bucket -> the old one is dropped on
 // activate, and compiled output is re-keyed, so a runtime/compiler change recompiles.
@@ -170,8 +170,9 @@ async function canvasAttrs(srcUrl) {
 //                          INDEPENDENT opt-in (the old remote-debug console), NOT implied by ?debug.
 //   ?backtrace / ?lzbacktrace → DEBUG_BACKTRACE build (lzc -g2): per-function call-stack
 //                          frames + per-call-site line notes, byte-for-byte vs the oracle
-//                          (backtrace.lzx). Implies debug (it is a debug add-on); the
-//                          debug runtime (lfc-debug.js) carries the LzBacktrace stack.
+//                          (backtrace.lzx). Implies debug (it is a debug add-on); loads the
+//                          dedicated lfc-backtrace.js runtime (the full LzBacktrace stack +
+//                          frame machinery, not just lfc-debug.js's Debug.backtrace stub).
 // Unsupported on the SOLO static distro (reported, never silently dropped):
 //   ?proxied=true / ?lzproxied=true   (no data-proxy server — distro is SOLO),
 //   ?lzr=swf / ?lzt=swf               (the SWF runtime is retired; DHTML only).
@@ -182,7 +183,11 @@ function parseFlags(sp) {
   const on = (v) => v !== null && v !== "false";
   const backtrace = on(sp.get("backtrace")) || on(sp.get("lzbacktrace"));
   const debug = on(sp.get("debug")) || backtrace;   // backtrace is a debug add-on → forces debug on
-  const flags = { debug, backtrace, lzconsoledebug: on(sp.get("lzconsoledebug")), proxied: false, unsupported: null };
+  // ?profile / ?lzprofile → load the profile runtime (lfc-profile.js): every LFC function
+  // is `$lzprofiler`-metered and the Profiler auto-starts ($profile init block). Independent
+  // of debug ($debug stays false — production folding + the timing meter).
+  const profile = on(sp.get("profile")) || on(sp.get("lzprofile"));
+  const flags = { debug, backtrace, profile, lzconsoledebug: on(sp.get("lzconsoledebug")), proxied: false, unsupported: null };
   const proxiedReq = sp.get("proxied") ?? sp.get("lzproxied");
   const rt = sp.get("lzr") || sp.get("lzt");
   if (proxiedReq === "true")
@@ -199,6 +204,9 @@ function flagQuery(flags) {
   // so the runtime carries it through to the `<name>.lzx.js` compile request (and turns on
   // the runtime `$backtrace` recording). A plain `backtrace` param is dropped by embed.
   if (flags.backtrace) q.push("lzbacktrace=true");
+  // Carry the profile flag to the `<name>.lzx.js` compile request (cache-keyed via
+  // compileProps) so a profile build never collides with the production cache.
+  if (flags.profile) q.push("lzprofile=true");
   if (flags.lzconsoledebug) q.push("lzconsoledebug=true");
   return q.length ? "?" + q.join("&") : "";
 }
@@ -306,7 +314,7 @@ async function navResponse(path, search = "") {
   const { bgcolor, width, height } = await canvasAttrs(self.location.origin + physical(toSourceUrl(path)));
   const html = renderWrapper({
     base, runtimeUrl: RUNTIME_URL, bgcolor, width, height,
-    debug: flags.debug, appQuery: flagQuery(flags),
+    debug: flags.debug, backtrace: flags.backtrace, profile: flags.profile, appQuery: flagQuery(flags),
   });
   return new Response(html, { status: 200, headers: { "Content-Type": "text/html;charset=utf-8" } });
 }
@@ -340,6 +348,7 @@ async function compileResponse(url, request) {
       proxied: false,              // SOLO static distro — no dynamic data proxy
       debug: flags.debug,          // (D) debug build → cache keys on it (compileProps), no prod collision
       backtrace: flags.backtrace,  // (D) DEBUG_BACKTRACE add-on → cache keys on it too
+      profile: flags.profile,      // (D) profile build → cache keys on it; app runs on lfc-profile.js
     });
     if (r.unsupported) {
       return new Response(errStub(`compile UNSUPPORTED: ${r.unsupported}`), jsHeaders());
@@ -498,10 +507,15 @@ function errStub(msg) {
 // parameterized so runtime references resolve against RUNTIME_URL. `serverroot:
 // 'lps/resources/'` kept verbatim; the app loads `lps/components|fonts` via app-relative
 // URLs the SW proxies (handler 1).
-function renderWrapper({ base, runtimeUrl, bgcolor = "#ffffff", width = "100%", height = "100%", debug = false, appQuery = "" }) {
+function renderWrapper({ base, runtimeUrl, bgcolor = "#ffffff", width = "100%", height = "100%", debug = false, backtrace = false, profile = false, appQuery = "" }) {
   const rt = runtimeUrl.replace(/\/$/, "");
   const url = `${base}.lzx.js${appQuery}`;
-  const lfcurl = `${rt}/lfc/${debug ? "lfc-debug.js" : "lfc.js"}`;
+  // LFC variant selection: ?lzbacktrace → lfc-backtrace.js (the full LzBacktrace stack +
+  // per-call-site instrumentation, paired with the backtrace app compile); ?profile →
+  // lfc-profile.js (every LFC function `$lzprofiler`-metered, Profiler auto-started);
+  // ?debug → lfc-debug.js (runtime debugger); else the production lfc.js. backtrace takes
+  // precedence over plain debug (it is a debug superset); profile is independent of debug.
+  const lfcurl = `${rt}/lfc/${backtrace ? "lfc-backtrace.js" : profile ? "lfc-profile.js" : debug ? "lfc-debug.js" : "lfc.js"}`;
   return `<!DOCTYPE html
   PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html><head>

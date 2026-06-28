@@ -1,0 +1,6 @@
+<canvas height="250">
+              <dataset name="weatherdata" request="true"
+              src="http://www.laszlosystems.com/cgi-pub/weather.cgi?zip=10022"/>
+
+              <grid datapath="weatherdata:/weather" contentdatapath="forecast/day"/>
+              </canvas>

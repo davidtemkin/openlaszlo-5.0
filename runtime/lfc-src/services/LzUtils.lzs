@@ -1,0 +1,665 @@
+/**
+  * LzUtils.lzs
+  *
+  * @copyright Copyright 2007-2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @topic Services
+  * @author Max Carlson &lt;max@openlaszlo.org&gt;
+  */
+
+// Global class with static methods for processing colors - required by the compiler for attribute type="color" conversion
+class LzColorUtils {
+    /** @access private
+      * Shared cache of color conversions
+      */
+    static var __cache = {counter:0};
+
+    /** @access public
+      * Converts a string to an a rgb.0a floating point 
+      */
+    static function stringToColor(s:*) {
+        if (typeof s != 'string') return s;
+
+        // look up color names
+        if (s in lz.colors) return lz.colors[s];
+
+        // look in global scope
+        if (s in global) return global[s];
+
+        // look up rgb values
+        if (s.indexOf('rgb') != -1) return LzColorUtils.fromrgb(s);
+
+        // Handle strings in the format '0xffffff' - see lzpix 
+        var n = Number(s);
+
+        if (isNaN(n)) {
+            return s;
+        } else {
+            // this results in too many warnings (ultimately from the compiler):
+            // stringToColor <- hextoint <- convertColor
+            // ...
+            //if ($debug) Debug.warn('LzColorUtils.stringToColor() was passed the string "%s" - please pass a numeric value instead.', s);
+            return n;
+        }
+    }
+
+    /** @access public
+      * Converts a CSS rgba(r,g,b,a) string to a rgb.0a floating point
+      */
+    static function fromrgb(s:String) {
+        if (typeof s != 'string') return s;
+        if (s.indexOf('rgb') == -1) return LzColorUtils.stringToColor(s);
+
+        var parts = s.substring(s.indexOf('(') + 1, s.lastIndexOf(')')).split(',');
+        var color:Number = LzColorUtils.rgbatoint(parts[0], parts[1], parts[2], parts[3]);
+
+        if (! isNaN(color)) {
+            return color;
+        }
+
+        if ($debug) {
+            Debug.warn('invalid color string: ' + s);
+        }
+        return 0;
+    }
+
+    /** @access public
+      * Converts a decimal number to hexadecimal with padding
+      */
+    static function dectohex(n:*, padding:int = 0) {
+        if (typeof n != 'number') return n;
+
+        n = n & 0xffffff;
+        var hex = n.toString(16);
+        var pad = padding - hex.length;
+        while (pad > 0) {
+            hex = '0' + hex;
+            pad--;
+        }
+        return hex;
+    }
+
+    /** @access public
+      * Converts a floating point rgb.0a to a CSS rgba(r,g,b,a) string 
+      */
+    static function torgb(s:*) {
+        if (typeof s == 'string' && s.indexOf('rgb') != -1) return s
+
+        var n = LzColorUtils.inttohex(s); 
+        if (typeof n != 'string') return n;
+
+        // catch cases like 'purple' or 0
+        if (typeof s == 'number' || lz.colors[s] != null) s = n;
+
+        var cache = LzColorUtils.__cache;
+        var key = 'torgb' + n;
+        if (cache[key]) return cache[key];
+        if (++cache.counter > 1000) { cache = {counter: 0}; }
+
+        // expand #036 or #0369
+        if (s.length < 6) {
+            s = '#' + s.charAt(1) + s.charAt(1) + 
+                s.charAt(2) + s.charAt(2) + 
+                s.charAt(3) + s.charAt(3) + 
+                (s.length > 4 ? s.charAt(4) + s.charAt(4) : '');
+        } 
+
+        cache[key] = 
+            // #003366 or #00336699
+            (s.length > 7 ? 'rgba(' : 'rgb(' ) + 
+                parseInt(s.substring(1, 3), 16) + ',' +
+                parseInt(s.substring(3, 5), 16) + ',' +
+                parseInt(s.substring(5, 7), 16) + 
+                // alpha should be between 0 and 1
+                (s.length > 7 ? ',' + (parseInt(s.substring(7), 16)/255) : '') +
+            ')';
+
+        //Debug.warn('cache miss', cache[key], key);
+
+        return cache[key];
+    }
+
+    /** @access public
+     * Converts a 24-bit rgb value to HSV
+     * See http://en.wikipedia.org/wiki/HSL_color_space
+     */
+    static function tohsv(rgb) {
+      var cache = LzColorUtils.__cache;
+      var key = 'tohsv' + rgb;
+      if (cache[key]) return cache[key];
+      if (++cache.counter > 1000) { cache = {counter: 0}; }
+      rgb = LzColorUtils.hextoint(rgb);
+
+      var r = (rgb >> 16 & 0xff)/0xff, g = (rgb >> 8 & 0xff)/0xff, b = (rgb & 0xff)/0xff;
+      var min = Math.min(r, Math.min(g, b)), max = Math.max(r, Math.max(g, b));
+      var v = max;
+      var delta = max - min;
+
+      if( delta == 0 ) {
+        cache[key] = {h: 0, s: 0, v: v};
+      } else {
+        var s = delta / max;
+        if ( r == max ) {
+          // between yellow & magenta
+          var h = ( g - b ) / delta;
+        } else if ( g == max ) {
+          // between cyan & yellow
+          var h = 2 + (( b - r ) / delta);
+        } else {
+          // between magenta & cyan
+          var h = 4 + (( r - g ) / delta);
+        }
+        h *= 60;                  // degrees
+        if( h < 0 ) { h += 360; }
+        cache[key] = {h: h, s: s, v: v};
+      }
+
+      return cache[key];
+    }
+
+    /** @access public
+     * Converts HSV to a 24-bit rbg value
+     * See http://en.wikipedia.org/wiki/HSL_color_space
+     */
+    static function fromhsv(h, s, v) {
+      var cache = LzColorUtils.__cache;
+      var key = 'fromhsv' + h + s + v;
+      if (cache[key]) return cache[key];
+      if (++cache.counter > 1000) { cache = {counter: 0}; }
+
+      var t = h / 60;
+      var ti = t | 0;
+      var hi = ti % 6;
+      var f = t - ti;
+      var p = v * (1 - s);
+      var q = v * (1 - f * s);
+      var t = v * (1 - (1 - f) * s);
+      var r, g, b;
+      switch (hi) {
+        case 0:
+          r = v; g = t; b = p; break;
+        case 1:
+          r = q; g = v; b = p; break;
+        case 2:
+          r = p; g = v; b = t; break;
+        case 3:
+          r = p; g = q; b = v; break;
+        case 4:
+          r = t; g = p; b = v; break;
+        case 5:
+          r = v; g = p; b = q; break;
+      }
+      return (cache[key] = LzColorUtils.rgbatoint(r * 0xff, g * 0xff, b * 0xff));
+    }
+
+    /** @access private
+      * Handles conversion of colors from the compiler
+      */
+    static function convertColor(s:*) {
+        // null values must be returned as-is
+        if (s == 'null' || s == null) return null;
+        return LzColorUtils.hextoint(s);
+    }
+
+    /** @access public
+      * Converts a CSS #RRGGBBAA string to a rgb.0a floating point 
+      */
+    static function hextoint(s:*) {
+        var n = LzColorUtils.stringToColor(s);
+        if (typeof n != 'string') return n;
+
+        var cache = LzColorUtils.__cache;
+        var key = 'hextoint' + s;
+        if (cache[key]) return cache[key];
+        if (++cache.counter > 1000) { cache = {counter: 0}; }
+
+        var hex = s;
+
+        // trim '#'
+        hex = hex.slice(1);
+
+        // chop off alpha component if there
+        var alpha = 0;
+        if (hex.length > 6) {
+            alpha = parseInt(hex.slice(6), 16) / 25500;
+            hex = hex.slice(0,6);
+        }
+
+        // Add padding
+        var n = parseInt(hex, 16);
+        switch (hex.length) {
+            case 3:
+                hex = (((n & 0xf00) << 8 | (n & 0xf0) << 4 | (n & 0xf)) * 17) + alpha;
+                break;
+            case 6:
+                hex = n + alpha;
+                break;
+            default:
+                if ($debug) {
+                    Debug.warn('invalid color string: ' + s);
+                }
+                hex = 0;
+                break;
+        }
+        cache[key] = hex;
+
+        return hex;
+    }
+
+    /** @access public
+      * Converts a floating point rgb.0a to a CSS color name (if
+      * appropriate) or #RRGGBBAA string
+      */
+    static function inttohex(n:*, padding:int = 6) {
+        // default to 6 characters of padding for dectohex
+        var s = LzColorUtils.stringToColor(n);
+        if (typeof s != 'number') return s;
+
+        var cache = LzColorUtils.__cache;
+        var key = 'inttohex' + s;
+        if (cache[key]) return cache[key];
+        if (++cache.counter > 1000) { cache = {counter: 0}; }
+
+        var hex = '#' + LzColorUtils.dectohex(s, padding);
+
+        // add alpha component if present
+        var alpha = LzColorUtils.findalpha(n);
+        if (alpha != null) {
+            var alphastring = alpha.toString(16);
+            if (alphastring.length == 1) {
+                alphastring = '0' + alphastring;
+            }
+            hex += alphastring;
+        }
+
+        cache[key] = hex;
+        //Debug.warn('cache miss', cache[key], key);
+
+        return hex;
+    }
+
+    /** @access private
+      * Converts floating point rgb.0a into objects with separate alpha and color properties
+      * FIXME [anba 20090216] explicit alpha of 0 is ignored for rgb.0a values
+      * maybe null should represent alpha zero/transparent - where there shouldn't be a bg/fg/shadowcolor shown at all.  
+      */
+    static function inttocolorobj(val) {
+        var rgba:Number = LzColorUtils.hextoint(val);
+
+        var cache = LzColorUtils.__cache;
+        var key = 'inttocolorobj' + rgba;
+        if (cache[key]) return cache[key]
+        if (++cache.counter > 1000) { cache = {counter: 0}; }
+
+        var color:uint = (rgba | 0);
+        var alpha = LzColorUtils.findalpha(rgba);
+        if (alpha != null) {
+            // scale to 0-100
+            alpha *= (100/255);
+        }
+
+        cache[key] = {color: color, alpha: alpha};
+        return cache[key];
+    }
+
+    /** @access private
+      * Converts r,g,b,a to an rgb.0a floating point
+      */
+    static function rgbatoint(r:int,g:int,b:int,a = null):Number {
+        // convert to an int
+        var color:Number = ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
+        // add alpha component as decimal
+        if (a != null) {
+            color += a * .01;
+        }
+        return color;
+    }
+
+    /** @access private
+      * Converts a rgb.0a floating point an r,g,b,a array of values between 
+      * 0 and 255
+      */
+    static function inttorgba(rgb:Number):Array {
+        return [
+                //r
+                (rgb >> 16 & 0xff), 
+                //g
+                (rgb >> 8 & 0xff), 
+                //b
+                (rgb & 0xff),
+                //alpha
+                LzColorUtils.findalpha(rgb)
+               ];
+    }
+
+
+    /** @access private
+      * If found, returnsrgb.0a alpha component as a number between 0 and 255, 
+      * otherwise returns null
+      */
+    static function findalpha(rgba) {
+        if (rgba == null) return;
+        rgba = Number(rgba);
+        // handle alpha component, if present
+        var alpha = rgba - (rgba | 0);
+        if (alpha != 0 && (! isNaN(alpha))) {
+            // convert to a number between 0 and 255
+            // NOTE [2010-06 max] must use 25600 for test/lfc/lzunit-lzutils.lzx
+            // to pass
+            return (alpha * 25600) | 0;
+        }
+    }
+
+    /** @access private
+      * Applies a colortransform to a color, returning a new color
+      */
+    static function applyTransform(color, trans) {
+        //if (color == null) return null;
+        var rgb = LzColorUtils.inttorgba(color);
+        var red = rgb[0];
+        var green = rgb[1];
+        var blue = rgb[2];
+        var alpha = rgb[3];
+
+        red = (red * trans['redMultiplier']) + trans['redOffset'];
+        red = Math.min(red, 255);
+
+        green = (green * trans['greenMultiplier']) + trans['greenOffset'];
+        green = Math.min(green, 255);
+
+        blue = (blue * trans['blueMultiplier']) + trans['blueOffset'];
+        blue = Math.min(blue, 255);
+
+        if (alpha != null) {
+            alpha = (alpha * trans['alphaMultiplier']) + trans['alphaOffset'];
+            alpha = Math.min(alpha, 255);
+        }
+
+        //Debug.warn('applyTransform', color, rgb, trans);
+
+        return LzColorUtils.rgbatoint(red, green, blue, alpha);
+    }
+}
+
+// Create alias
+lz.ColorUtils = LzColorUtils;
+
+class LzUtilsClass {
+    /* @access private */
+    var __SimpleExprPattern;
+    /* @access private */
+    var __ElementPattern;
+
+    function LzUtilsClass() {
+        this.__SimpleExprPattern = new RegExp('^\\s*([$_A-Za-z][$\\w]*)((\\s*\\.\\s*[$_A-Za-z][$\\w]*)|(\\s*\\[\\s*\\d+\\s*\\]))*\\s*$');
+        // Now pull out just the element 'selectors', so you can walk down them 
+        this.__ElementPattern = new RegExp('([$_A-Za-z][$\\w]*)|(\\d+)', 'g');
+    }
+    // ***** color *****
+
+    // For back compatibility
+    var color = {
+            // For back compatibility
+        hextoint: function hextoint (value) {
+            if ($debug) Debug.warn('lz.Utils.color.hextoint() is deprecated.  Use LzColorUtils.hextoint() instead.');
+            return LzColorUtils.hextoint(value);
+        }
+
+        ,inttohex: function inttohex (c) {
+            if ($debug) Debug.warn('lz.Utils.color.inttohex() is deprecated.  Use LzColorUtils.inttohex() instead.');
+            return LzColorUtils.inttohex(c);
+        }
+
+        ,torgb: function torgb (s) {
+            if ($debug) Debug.warn('lz.Utils.color.torgb() is deprecated.  Use LzColorUtils.torgb() instead.');
+            return LzColorUtils.torgb(s);
+        }
+    }
+
+    /** @access public
+      * Converts a CSS #RRGGBBAA string to a rgb.0a floating point 
+      * @deprecated  Use LzColorUtils.hextoint() instead
+      */
+    public function hextoint(s:*) {
+        if ($debug) Debug.deprecated(this, arguments.callee, LzColorUtils.hextoint);
+        return LzColorUtils.hextoint(s);
+    }
+
+    /** @access public
+      * Converts a floating point rgb.0a to a CSS #RRGGBBAA string
+      * @deprecated  Use LzColorUtils.inttohex() instead
+      */
+    public function inttohex(n:*, padding:int = 6) {
+        if ($debug) Debug.deprecated(this, arguments.callee, LzColorUtils.inttohex);
+        return LzColorUtils.inttohex(n, padding);
+    }
+
+    /** @access public
+      * Converts a decimal number to hexadecimal with padding
+      */
+    public function dectohex(n:*, padding:int = 0) {
+        return LzColorUtils.dectohex(n, padding);
+    }
+
+    /** @access public
+      * Converts a string to an a rgb.0a floating point 
+      * @deprecated  Use LzColorUtils.stringToColor() instead
+      */
+    public function stringToColor(s:*) {
+        if ($debug) Debug.deprecated(this, arguments.callee, LzColorUtils.stringToColor);
+        return LzColorUtils.stringToColor(s);
+    }
+
+    /** @access public
+      * Converts a floating point rgb.0a to a CSS rgba(r,g,b,a) string 
+      * @deprecated  Use LzColorUtils.torgb() instead
+      */
+    public function torgb(s:*) {
+        if ($debug) Debug.deprecated(this, arguments.callee, LzColorUtils.torgb);
+        return LzColorUtils.torgb(s);
+    }
+
+    /** @access public
+      * Converts a CSS rgba(r,g,b,a) string to a rgb.0a floating point
+      * @deprecated  Use LzColorUtils.fromrgb() instead
+      */
+    public function fromrgb(s:String) {
+        if ($debug) Debug.deprecated(this, arguments.callee, LzColorUtils.fromrgb);
+        return LzColorUtils.fromrgb(s);
+    }
+
+    /** @access public
+      * alias to lz.colors
+      * @deprecated  Use lz.colors instead
+      */
+    var colornames = lz.colors;
+
+    // Unpack a javascript list from a string, giving each item the appropriate type 
+    function __parseArgs(argstr:String, scope = null) {
+        if (argstr == '') return [];
+        if (scope == null) scope = canvas;
+
+        // look for strings, pushing onto a list of args as we go
+        var args = [];
+        var lastquote = null;
+        var currarg = '';
+        for (var i = 0, l = argstr.length; i < l; i++) {
+            var lc = c;
+            var c = argstr.charAt(i);
+            if (c == '"' || c == "'") {
+                if (lastquote == null) {
+                    // a string is beginning
+                    lastquote = c;
+                } else if (lastquote == c) {
+                    // out of the string
+                    lastquote = null;
+                }
+            } else if (c == ',') {
+                if (! lastquote) {
+                    //Debug.info('pushing arg', currarg);
+                    args.push(currarg);
+                    currarg = '';
+                    continue;
+                }
+            } else if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+                if (lastquote == null && (lc == ',' || lc == ' ' || lc == '\t' || lc == '\n' || lc == '\r')) {
+                    // ignore contiguous whitespace outside strings
+                    //Debug.info('ignoring', c);
+                    continue;
+                }
+            }
+            // append char to current arg
+            currarg += c;
+        }
+        // always add the current arg
+        args.push(currarg);
+
+        // cast arguments from string to inferred type
+        for (var i = 0; i < args.length; i++) {
+            var a = args[i];
+
+            // null
+            if (a == '') continue;
+
+            var firstchar = a.charAt(a);
+            var n = parseFloat(a);
+            //Debug.info('checking type of %w',a); 
+            if (! isNaN(n)) {
+                // number
+                args[i] = n;
+                //Debug.write('found number', args[i], a);
+            } else if (firstchar == '"' || firstchar == "'") {
+                // string
+                var e = a.lastIndexOf(firstchar);
+                args[i] = a.substring(1, e);
+                //Debug.write('found string', args[i], a);
+            } else if (a == 'true' || a == 'false'){
+                // boolean
+                args[i] = a == 'true';
+                //Debug.write('found boolean', args[i], a);
+            } else if (scope[a]) {
+                // lookup
+                args[i] = scope[a];
+                //Debug.write('found property', args[i], a);
+            } else {
+                // null/failed lookup
+                args[i] = null;
+                //Debug.write('failed lookup for %w in %w: %w',a, scope, args[i]);
+            }
+        }
+        //Debug.write('__parseArgs', argstr, args);
+        return args;
+    }
+
+    /** @access public
+      * 'eval' a method or property from a javascript string.
+      */
+    function safeEval(js:String) {
+        // 'new' if the string begins with 'new '
+        if (js.indexOf('new ') == 0) return this.safeNew(js);
+
+        //Debug.write('safeEval', js);
+        var s = js.indexOf('(')
+        var argstr = null;
+        if (s != -1) {
+            var e = js.lastIndexOf(')')
+            argstr = (js.substring(s + 1, e))
+            js = js.substring(0, s);
+        }
+
+        // Find the scope for a path expression.  
+        // Simple "path" expressions will only have symbols, `.`, or `[numbers]`
+        var scope = null, val;
+        if (js.match(this.__SimpleExprPattern)) {
+            var parts = js.match(this.__ElementPattern)
+            val = globalValue(parts[0]);
+            for (var i = 1, l = parts.length; i < l; i++) {
+                scope = val;
+                val = val[parts[i]];
+                //Debug.write('found val', val);
+            }
+            //Debug.write('final val', val, scope);
+        }
+
+        if (argstr == null) {
+            //Debug.write('no args, found val', val);
+            return val;
+        }
+
+        var args = lz.Utils.__parseArgs(argstr, scope);
+
+        //Debug.write('found val', val,'in', scope, 'args', args);  
+        // return values don't work for global scopes in swf9, e.g. 'lz.Browser.getVersion()' - see LPP-7008
+        if (val) {
+            var result = val.apply(scope, args);
+            //Debug.write('result', result);
+            return result;
+        }
+    }
+
+    /** @access public
+      * 'new' an object from a javascript string.  Must begin with 'new '.
+      */
+    function safeNew(js:String) {
+        var orig = js;
+
+        // strip 'new '
+        var newpos = js.indexOf('new ');
+        if (newpos == -1) return js;
+        js = js.substring(newpos + 4);
+
+        var s = js.indexOf('(')
+        if (s != -1) {
+            var e = js.indexOf(')')
+            var args = (js.substring(s + 1, e));
+            js = js.substring(0, s);
+        }
+
+        var obj = globalValue(js);
+        if (! obj) return;
+
+        var args = lz.Utils.__parseArgs(args);
+        // nasty... but at least it goes to 11!
+        var size = args.length;
+        if (size == 0) {
+            return new obj();
+        } else if (size == 1) {
+            return new obj(args[0]);
+        } else if (size == 2) {
+            return new obj(args[0], args[1]);
+        } else if (size == 3) {
+            return new obj(args[0], args[1], args[2]);
+        } else if (size == 4) {
+            return new obj(args[0], args[1], args[2], args[3]);
+        } else if (size == 5) {
+            return new obj(args[0], args[1], args[2], args[3], args[4]);
+        } else if (size == 6) {
+            return new obj(args[0], args[1], args[2], args[3], args[4], args[5]);
+        } else if (size == 7) {
+            return new obj(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
+        } else if (size == 8) {
+            return new obj(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
+        } else if (size == 9) {
+            return new obj(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]);
+        } else if (size == 10) {
+            return new obj(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9]);
+        } else if (size == 11) {
+            return new obj(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10]);
+        } else {
+            if ($debug) Debug.warn('Too many arguments', args)
+        }
+    }
+}
+
+/**
+ * @shortdesc Alias for <link linkend="LzUtilsClass">lz.UtilsClass</link>
+ */
+lz.Utils = new LzUtilsClass();
+
+/**
+ * @deprecated
+ * @shortdesc Alias for <link linkend="LzUtilsClass">lz.UtilsClass</link>
+ * Use lz.Utils instead.
+ */
+var LzUtils:LzUtilsClass = lz.Utils;

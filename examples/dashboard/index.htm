@@ -2,14 +2,30 @@
 <html>
 <head>
 <title>Laszlo Dashboard</title>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
+<!-- DHTML embed. The legacy Flash <embed> wrapper (a shockwave-flash object) was
+     replaced; this page now embeds the app as DHTML, mirroring the wrapper the
+     distro's service worker / Node server generate for a `dashboard.lzx` navigation
+     (renderWrapper in service-worker.js). It loads the compiled sibling
+     `dashboard.lzx.js`, which the service worker (browser mode) or Node server
+     (server mode) compiles on request. -->
+<script type="text/javascript" src="../../runtime/embed.js"></script>
+<!--[if lt IE 9]><script type="text/javascript" src="../../runtime/includes/excanvas.js"></script><![endif]-->
+<style type="text/css">
+  html, body { height: 100%; margin: 0; padding: 0; border: 0 none; }
+  body { background-color: #80807E; }
+  img { border: 0 none; }
+</style>
 </head>
-
-<body bgcolor="80807E">
-<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,29,0" width="1000" height="710" align="middle">
-  <param name="movie" value="dashboard.lzx?lzt=swf">
-  <param name="quality" value="high"><param name="BGCOLOR" value="#80807E">
-  <embed src="dashboard.lzx?lzt=swf" width="1000" height="710" align="middle" quality="high" pluginspage="http://www.macromedia.com/go/getflashplayer" type="application/x-shockwave-flash" bgcolor="#80807E"></embed></object>
+<body>
+<div id="appcontainer"></div>
+<script type="text/javascript" defer>
+  lz.embed.resizeWindow('100%', '100%');
+  lz.embed.__serverroot = "../../runtime/includes/";
+  lz.embed.dhtml({url: 'dashboard.lzx.js', lfcurl: '../../runtime/lfc/lfc.js', serverroot: 'lps/resources/', bgcolor: '#80807E', width: '100%', height: '100%', id: 'lzapp', accessible: 'false', cancelmousewheel: false, cancelkeyboardcontrol: false, skipchromeinstall: false, usemastersprite: false, approot: '', appenddivid: 'appcontainer'});
+</script>
+<noscript>Please enable JavaScript in order to use this application.</noscript>
 </body>
 </html>
 <!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************

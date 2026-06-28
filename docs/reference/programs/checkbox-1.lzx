@@ -1,0 +1,11 @@
+<canvas height="160">
+              
+              <checkbox id="checkMe" text="Show Green Square"/>
+              <view visible="${checkMe.value}" bgcolor="green" width="20" height="20"/>
+
+              <button text="Toggle" onclick="checkMe.setAttribute('value', !checkMe.value)"/>
+              <button text="Disable" onclick="checkMe.setAttribute('enabled', false)"/>
+              <button text="Enable" onclick="checkMe.setAttribute('enabled', true)"/>
+              <button text="status" onclick="Debug.debug('value: %w', checkMe.value)"/>
+              <simplelayout axis="y" spacing="4"/>
+              </canvas>

@@ -1,0 +1,47 @@
+<canvas height="100">
+   <simplelayout inset="10" spacing="10"/>
+
+   <checkbox>Lock mouse events
+     <handler name="onvalue">
+       if (this.value){
+         lz.ModeManager.globalLockMouseEvents();
+       }
+     </handler>
+
+     <handler name="onclick" reference="lz.GlobalMouse" args="who">
+       //need to use lz.GlobalMouse, since we don't get clicks if we're
+       //checked. Note: lz.GlobalMouse sends its events before the view
+       //receives the events, so we can just unlock it here, and the
+       //checkbox can do its normal onclick handling.
+       if (this.value &amp;&amp; who == this){
+         lz.ModeManager.globalUnlockMouseEvents();
+       }
+     </handler>
+   </checkbox>
+
+   <button>click me!</button>
+
+   <text resize="true">
+     <method name="showEvent" args="what, who">
+       this.format("%s: %w", what, who);
+     </method>
+
+     <handler name="onmouseover" reference="lz.GlobalMouse" args="who">
+       this.showEvent("mouseover" , who);
+     </handler>
+     <handler name="onmouseout" reference="lz.GlobalMouse" args="who">
+       this.showEvent("mouseout" , who);
+     </handler>
+
+     <handler name="onmousedown" reference="lz.GlobalMouse" args="who">
+       this.showEvent("mousedown" , who);
+     </handler>
+     <handler name="onmouseup" reference="lz.GlobalMouse" args="who">
+       this.showEvent("mouseup" , who);
+     </handler>
+
+     <handler name="onclick" reference="lz.GlobalMouse" args="who">
+       this.showEvent("mouseclick" , who);
+     </handler>
+   </text>
+ </canvas>

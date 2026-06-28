@@ -1,0 +1,16 @@
+<canvas height="250">
+   
+   <handler name="onkeydown" reference="lz.Keys" args="k">
+     Debug.debug("key %w %s", k, "down");
+   </handler>
+   <handler name="onkeyup" reference="lz.Keys" args="k">
+     Debug.debug("key %w %s", k, "up");
+   </handler>
+   <method name="pressA" args="ignore=null">
+     Debug.debug("A pressed");
+   </method>
+   <handler name="oninit">
+     var del = new LzDelegate(this, "pressA");
+     lz.Keys.callOnKeyCombo(del, ["A"]);
+   </handler>
+ </canvas>

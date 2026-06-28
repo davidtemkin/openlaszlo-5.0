@@ -1,0 +1,18 @@
+<canvas height="235">
+               
+               <button text="openMenu below">
+               <menu name="topmenu" attach="bottom">
+               <menuitem text="item 1"/>
+               <menuitem text="item 2">
+               <menu name="submenu">
+               <menuitem text="subitem 1"/>
+               <menuitem text="subitem 2"/>
+               </menu>
+               </menuitem>
+               </menu>
+
+               <handler name="onmousedown">
+               this.topmenu.setOpen(true);
+               </handler>
+               </button>
+               </canvas>

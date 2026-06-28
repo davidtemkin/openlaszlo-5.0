@@ -52,6 +52,10 @@ export interface CompileInBrowserOptions {
   /** DEBUG_BACKTRACE build (`?backtrace`): per-function call-stack frames + per-call
    *  line notes. Implies debug. Byte-for-byte vs the oracle (backtrace.lzx). */
   backtrace?: boolean;
+  /** PROFILE build (`?profile`): pairs with the `lfc-profile.js` runtime variant (every
+   *  LFC function `$lzprofiler`-metered, Profiler auto-started). Independent of debug;
+   *  cache-keyed so a profile build never collides with the production cache. */
+  profile?: boolean;
   /** SOLO build (`__LZproxied:"false"`). */
   proxied?: boolean;
   /** Retry cap for the preload loop (a runaway guard). */
@@ -80,7 +84,7 @@ function decode(bytes: Uint8Array): string {
 /** The compiler properties that gate cache staleness (must match api-node's). */
 function compileProps(o: CompileInBrowserOptions): Record<string, string> {
   return { debug: String(!!o.debug || !!o.backtrace), backtrace: String(!!o.backtrace),
-           proxied: String(o.proxied !== false), sprites: o.sprites ?? "none" };
+           profile: String(!!o.profile), proxied: String(o.proxied !== false), sprites: o.sprites ?? "none" };
 }
 
 /** Compile an LZX app located at `mainUrl` entirely in the browser. Returns the JS,

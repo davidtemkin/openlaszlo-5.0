@@ -1,0 +1,959 @@
+/**
+  *
+  * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @access public
+  * @topic LFC
+  * @subtopic Data
+  */
+
+/**
+  * <p>
+  * When a view's datapath matches more than one data node, one instance
+  * of the view is created for each match. The replicated views are
+  * referred to as <glossterm>clones</glossterm>. When this happens, a
+  * <glossterm>replication manager</glossterm> (or a subclass of
+  * <classname>lz.ReplicationManager</classname>) is created to manage the
+  * clones. Replication managers are never directly instantiated &#x2014;
+  * 
+  * they are created when a datapath makes multiple matches.</p>
+  * 
+  * <p>If the replicated view was named, the clone manager takes over the
+  * named spot in the parent. The example below demonstrates this, and
+  * shows how to reference individual clones.</p>
+  * 
+  * <p>In the example that follows, a view, called
+  * <varname>replView</varname> is bound to a dataset
+  * <varname>somedata</varname>. For each matching node in the dataset, a
+  * new view is created. These views contain the text of the dataset.  In
+  * other words, the single line</p>
+  * 
+  * <pre>
+  * &lt;view name="replView" datapath="somedata:/*"&gt;
+  * 
+  * </pre>
+  * 
+  * <p>causes the creation of five views (because there were five elements
+  * in the dataset that matched the selection criteria). These "cloned"
+  * views are numbered successively, starting with zero. The highlighted
+  * section of the code below shows how to use the
+  * <method>getCloneNumber</method> method to access each replicated
+  * view.</p>
+  * 
+  * <example>
+  * &lt;canvas height="140"&gt;
+  *   &lt;dataset name="somedata"&gt;
+  *     &lt;one/&gt; &lt;two/&gt; &lt;three/&gt; &lt;four/&gt; &lt;five/&gt;
+  * 
+  *   &lt;/dataset&gt;
+  *   &lt;simplelayout/&gt;
+  *   &lt;button onclick="moveClone()"&gt;
+  *     Move clone 
+  *     <em>&lt;method name="moveClone"&gt;&lt;![CDATA[
+  *       var nextClone = replView.getCloneNumber(this.cnum++);
+  *       if (nextClone == null) {
+  *         this.cnum = 0;
+  *         var nextClone = replView.getCloneNumber(this.cnum++);
+  *       }
+  *       nextClone.setAttribute('x', nextClone.x + 10);
+  *     ]]&gt;&lt;/method&gt;</em>
+  *     &lt;attribute name="cnum" value="0"/&gt;
+  * 
+  *   &lt;/button&gt;
+  *   &lt;view name="replView" datapath="somedata:/*"&gt;
+  *     &lt;text datapath="name()"/&gt;
+  *   &lt;/view&gt;
+  * &lt;/canvas&gt;
+  * </example>
+  * 
+  * @shortdesc The controller for views replicated by data.
+  *
+  * @devnote A replication manager controls the replication of views as a result of 
+  * multiple matches to a datapath's xpath. When a datapath matches more than
+  * one node, it immediate halts its own processing and creates a replication 
+  * manager to take over management of that datapath. If the view that contained
+  * the datapath being replicated was named, the replication manager assumes that
+  * name, so that it can be referred to the same way the non-replicated view
+  * would have been. 
+  *
+  * @devnote This class is dynamic because it will acquire methods and
+  * attributes at runtime from the datapath that creates it.
+  */
+dynamic class LzReplicationManager extends LzDatapath {
+  #pragma "warnUndefinedReferences=true"
+
+/** @access private */
+var asyncnew :Boolean = true;
+/** @access private */
+var initialnodes :Array;
+/** @access private */
+var clonePool :Array;
+/** @access private */
+var cloneClass;
+/** @access private */
+var cloneParent :LzNode;
+/** @access private */
+var cloneAttrs :Object;
+/** @access private */
+var cloneChildren :Array;
+/** @access private */
+var hasdata :Boolean;
+/** @access private */
+var orderpath :String;
+/** @access private */
+var comparator :Function;
+
+/** Slot for constraint-method, see LzReplicationManager#construct(..)
+  * @access private 
+  */
+var __LZxpathconstr: Function = null;
+/** Slot for dependency-method, see LzReplicationManager#construct(..)
+  * @access private 
+  */
+var __LZxpathdepend: Function = null;
+
+// var datacontrolsvisibility = false; // Defined in LzDatapath
+/** 
+  * @modifiers override
+  * @access private
+  */ 
+// var __LZtakeDPSlot = false;
+
+/**
+ * Globally controls the visibility of the clones this replication
+ * manager creates.
+ *
+ * @type Boolean
+ * @lzxtype boolean
+ * @lzxdefault true
+ * @keywords final
+ */
+var visible :Boolean = true;
+/** @access private */
+var __LZpreventXPathUpdate :Boolean = false;
+
+/**
+ * The data that this replication manager will map to views
+ * @type [*]
+ */
+var nodes :Array;
+
+/**
+ * The views which this LzReplicationManager has created.
+ * @type [LzNode]
+ */
+var clones :Array;
+
+/** @access private */
+var __LZdataoffset :int = 0;
+/**
+ * Sent when <code>nodes</code> is changed
+ * @lzxtype event
+ */
+var onnodes :LzDeclaredEventClass = LzDeclaredEvent;
+/**
+ * Sent when <code>clones</code> is changed
+ * @lzxtype event
+ */
+var onclones :LzDeclaredEventClass = LzDeclaredEvent;
+/**
+ * Sent when <code>visible</code> is changed
+ * @lzxtype event
+ */
+var onvisible :LzDeclaredEventClass = LzDeclaredEvent;
+
+/**
+  * @access private
+  */
+function LzReplicationManager ( odp , args, children:* = null, instcall:* = null ){
+    //the real parent for this is datapaths view's (immediateparent) parent
+    super(odp, args, children, instcall);
+}
+
+/** @access private */
+protected function getDefaultPooling () :Boolean {
+    return false;
+}
+
+/** @access private */
+override function construct ( odp , args ){
+    this.pooling = this.getDefaultPooling(); // Defined in LzDatapath
+    this.__LZtakeDPSlot = false; // Defined in LzDatapath
+    this.datacontrolsvisibility = false; // Defined in LzDatapath
+
+    //odp: original datapath
+    var view:LzNode = odp.immediateparent;
+    this.classroot = view.classroot; 
+    if (view === canvas) {
+        // Initialize vars to reduce dhtml errors
+        this.nodes = [];
+        this.clones = [];
+        this.clonePool = [];
+        if ($debug) {
+            Debug.error("LzReplicationManager constructed at canvas. A datapath cannot be defined on the canvas");
+        }
+        return;
+    }
+
+    //this is so that when it looks like you're refering to the view in source
+    //you can say view.datapath and you'll get what you want (which is this)
+    this.datapath = this;
+
+    // replace the view with us,
+    // fixing up any name or id
+    var name:String = view.name;
+    if (name != null) {
+      args.name = name;
+      // remove view we replace to avoid warning in LzNode.$lzc$set_name
+      view.immediateparent[name] = null;
+      view.parent[name] = null;
+    }
+    // ditto with global binders
+    var idbinder:Function = view.$lzc$bind_id;
+    if (idbinder != null) {
+      // remove view binding
+      idbinder.call(null, view, false);
+      view.$lzc$bind_id = null;
+      this.$lzc$bind_id = idbinder;
+      idbinder.call(null, this);
+    }
+    var namebinder:Function = view.$lzc$bind_name;
+    if (namebinder != null) {
+      // remove view binding
+      namebinder.call(null, view, false);
+      view.$lzc$bind_name = null;
+      this.$lzc$bind_name = namebinder;
+      namebinder.call(null, this);
+    }
+
+    //don't want to rerunxpath
+    args.xpath = LzNode._ignoreAttribute;
+
+    //copy sortpath and sortorder from odp, if they were set
+    if ( odp.sortpath != null ){
+        args.sortpath = odp.sortpath;
+    }
+
+    if ( odp.sortorder != null || odp.sortorder ){
+        args.sortorder = odp.sortorder;
+    }
+
+    //store nodes for __LZapplyArgs
+    this.initialnodes = odp.storednodes;
+    if ( odp.__LZspecialDotDot ){
+        this.__LZspecialDotDot = true;
+        if ( odp.__LZdotdotCheckDel ){
+            odp.__LZdotdotCheckDel.unregisterAll();
+        }
+        odp.__LZspecialDotDot = false;
+    }
+
+    //the real parent for this is datapaths view's (immediateparent) parent
+    super.construct( view.parent, args);
+
+    if ( args.name != null && view.parent != view.immediateparent ){
+        view.immediateparent[ args.name ] = this;
+    }
+
+    //already have nodes when inited
+    this.xpath = odp.xpath;
+    this.parsedPath = odp.parsedPath;
+
+    this.cloneClass = view.constructor;
+
+    this.cloneParent = view.parent;
+
+    //add clone transformer to original instance attributes
+    {
+      var cloneAttrs:Object = new LzInheritedHash(view._instanceAttrs);
+
+      // Both datapaths _must_ be set.
+      // The _ignoreAttribute marker will remove any existing datapath
+      // inherited from class attributes (see LzNode#mergeAttributes).
+      cloneAttrs.datapath = LzNode._ignoreAttribute;
+      cloneAttrs.$datapath = { 'class'  : lz.datapath };
+      cloneAttrs.$datapath.attrs = { datacontrolsvisibility: odp.datacontrolsvisibility,
+                                     __LZmanager : this };
+
+      delete cloneAttrs.id;
+      delete cloneAttrs.name;
+      delete cloneAttrs.$lzc$bind_id;
+      delete cloneAttrs.$lzc$bind_name;
+      if ($profile) {
+        if (view._profile_name) {
+          cloneAttrs._profile_name = 'clone of ' + view._profile_name;
+        }
+      }
+      this.cloneAttrs = cloneAttrs;
+    }
+
+    //set visible-property
+    if (odp.datacontrolsvisibility) {
+        this.visible = true;
+    } else {
+        if (! view.isinited) {
+            var vis:* = this.__LZgetInstanceAttr(view, "visible");
+            if (typeof(vis) == 'boolean' || vis is Boolean) {
+                this.visible = vis;
+            } else {
+                this.visible = view.visible;
+            }
+        } else {
+            this.visible = view.visible;
+        }
+    }
+
+    if ( args.pooling != null ){
+        this.pooling = args.pooling;
+    }
+
+    var dp:* = this.__LZgetInstanceAttr(view, "datapath");
+    if (dp is LzAlwaysExpr) {
+        // <view datapath="${ ... }"/>
+        // we need to mask this constraint
+
+        // NOTE: [2008-02-07 ptw] Why?  Why can't this just execute as
+        // a constraint on the clone via the normal mechanism?
+        // but, we want the constraint to apply to this object instead
+        var dpCons:LzAlwaysExpr = (dp cast LzAlwaysExpr);
+        this.__LZxpathconstr = view[dpCons.methodName];
+        this.__LZxpathdepend = view[dpCons.dependenciesName];
+        // NOTE: [2008-02-07 ptw] The method had better be available
+        // on the clone (which means we really want a clone class here
+        // to instantiate, rather than an instance to clone).
+        this.__LZpreventXPathUpdate = true;
+        this.applyConstraintExpr(new LzAlwaysExpr("datapath", "string", "__LZxpathconstr", "__LZxpathdepend"));
+        this.__LZpreventXPathUpdate = false;
+
+        if (this.pooling) {
+            //if we're pooling, release constraint from view so it won't run again
+            view.releaseConstraintMethod(dpCons.methodName);
+        }
+    } else {
+        var xp:* = this.__LZgetInstanceAttr(odp, "xpath");
+        if (xp is LzAlwaysExpr) {
+            //<view><datapath xpath="${ ... }"/>
+            //we want the constraint to apply to this object instead
+
+            // we need to have an intermediate node, so relative constraints 
+            // like "xpath='${this.immediateparent.parent.anyproperty}'" 
+            // work for a replication-manager 
+            var refObj:LzRefNode = new LzRefNode(this);
+            // the constraint-method isn't a method on the datapath, but a function
+            // (so we don't need to worry about implicit 'this' in AS3)
+            var xpCons:LzAlwaysExpr = (xp cast LzAlwaysExpr);
+            refObj.__LZxpathconstr = odp[xpCons.methodName];
+            refObj.__LZxpathdepend = odp[xpCons.dependenciesName];
+            // NOTE: [2008-02-07 ptw] The method had better be available
+            // on the clone (which means the compiler really has to move
+            // it from the datapath subnode to the clone class).
+            this.__LZpreventXPathUpdate = true;
+            refObj.applyConstraintExpr(new LzAlwaysExpr("xpath", "string", "__LZxpathconstr", "__LZxpathdepend"));
+            this.__LZpreventXPathUpdate = false;
+
+            if (this.pooling) {
+                //if we're pooling, release constraint from datapath so it won't run again
+                odp.releaseConstraintMethod(xpCons.methodName);
+            }
+        }
+    }
+
+    this.__LZsetCloneAttrs();
+
+    if ( view._instanceChildren ){
+        this.cloneChildren = view._instanceChildren.concat();
+    } else {
+        this.cloneChildren = [];
+    }
+
+    var mycontext:* = odp.context;
+
+    //clone pool is used to store available views   
+    this.clones = [];
+    this.clonePool = [];
+
+    if ( this.pooling ){
+        odp.$lzc$set___LZmanager( this );
+        this.clones.push ( view );
+        // Because we're about to start making siblings to this view, (i.e. out
+        // of lexical order) make sure that the replicated view has been added
+        // to the parent's subview list. Also, it's ok to call this if view was
+        // already added
+        view.immediateparent.addSubview( view );
+    } else {
+        this.destroyClone( view );
+    }
+
+    this.setDataContext(mycontext, mycontext instanceof LzDatapointer);
+}
+
+/**
+  * @access private
+  */
+function __LZgetInstanceAttr (node:LzNode, attr:String) :* {
+    var ia:Object = node._instanceAttrs;
+    if (ia && attr in ia) {
+        // first look up 'real' instance attributes
+        return ia[attr];
+    } else {
+        var ca:Object = node['constructor'].attributes;
+        if (ca && attr in ca) {
+            // then look up class attributes
+            return ca[attr];
+        }
+    }
+    // return undefined if attribute wasn't found
+    return void(0);
+}
+
+/**
+  * @access private
+  */
+// See subclasses for definition
+function __LZsetCloneAttrs () :void {}
+
+/**
+  * @access private
+  */
+override function __LZapplyArgs ( args:Object , constcall){
+    super.__LZapplyArgs(args, constcall);
+    // If a replicator was made, we're deleted, if pooling is off.
+    if (this.__LZdeleted) { return; }
+
+    this.__LZHandleMultiNodes( this.initialnodes );
+    this.initialnodes = null;
+    // TODO [hqm 2008-06-17] why do we need to handle this case
+    // explicitly?  When is this.visible going to be false at
+    // construct time on a replication manager?
+    if ( this.visible == false ){
+        this.$lzc$set_visible( false );
+    }
+}
+
+/**
+  * @access private
+  */
+override function setDataContext (p, implicit:Boolean = false) :void {
+    if (p == null && this.immediateparent != null && this.immediateparent['datapath'] != null){
+        p = this.immediateparent.datapath;
+        implicit = true;
+    }
+    super.setDataContext(p, implicit);
+}
+
+/**
+  * Retuns a pointer to the nth clone controlled by the replication manager
+  * @param Number n: The zero-based offset of the clone to retrieve
+  * @return LzView: A pointer to the nth clone
+  */
+function getCloneNumber ( n:int ) :LzNode {
+    return this.clones[ n ];
+}
+
+/**
+  * @access private
+  */
+override function __LZHandleNoNodes() :void {
+    this.nodes = [];
+    var cls:Array = this.clones;
+    while ( cls.length ){
+        if ( this.pooling ){
+            this.poolClone();
+        } else {
+            var v:LzNode = cls.pop();
+            this.destroyClone( v );
+        }
+    }
+}
+
+/**
+  * @access private
+  */
+override function __LZHandleSingleNode ( n/*:LzDataNodeMixin*/ ) :void { 
+    this.__LZHandleMultiNodes( [n] );
+}
+
+/**
+  * @access private
+  */
+override function __LZHandleMultiNodes ( n:Array ) :LzReplicationManager {
+    var layouts:Array = this.parent && this.parent.layouts ? this.parent.layouts : [];
+    for (var i:int = 0; i < layouts.length; ++i) {
+        layouts[i].lock();
+    }
+    this.hasdata = true;
+    var lastnodes:Array = this.nodes;
+    this.nodes = n;
+    if (this.onnodes.ready) this.onnodes.sendEvent( this.nodes );
+
+    if ( this.__LZspecialDotDot ) this.__LZsetupDotDot( n[ 0 ] );
+
+    if ( this.orderpath != null && this.nodes ){
+        this.nodes = this.mergesort( this.nodes , 0 , this.nodes.length - 1 );
+    }
+
+    this.__LZadjustVisibleClones( lastnodes , true );
+
+    var len:int = this.clones.length;
+    for (var i:int = 0; i < len; i++ ){
+        var cl:LzNode = this.clones[ i ];
+        var iplusoffset:int = i + this.__LZdataoffset; 
+        cl.clonenumber = iplusoffset;
+
+        if (this.nodes) {
+            cl.datapath.setClonePointer( this.nodes[ iplusoffset ] );
+        }
+        if (cl.onclonenumber.ready) cl.onclonenumber.sendEvent( iplusoffset );
+    }
+    if (this.onclones.ready) this.onclones.sendEvent( this.clones );
+
+    for (var i:int = 0; i < layouts.length; ++i) {
+        layouts[i].unlock();
+    }
+
+    return null;
+
+}
+
+/**
+  * @access private
+  */
+function __LZadjustVisibleClones( lastnodes:Array , newnodes:Boolean) :void {
+    var stpt:int = this.__LZdiffArrays( lastnodes , this.nodes);
+
+    if ( ! this.pooling ) {
+        while ( this.clones.length > stpt ){
+            var v:LzNode = this.clones.pop();
+            this.destroyClone( v );
+        }
+    }
+
+    //this makes sure that children created as a result of data replication
+    //init in order
+    lz.Instantiator.enableDataReplicationQueuing(this);
+
+    while ( this.nodes && this.nodes.length > this.clones.length ){
+        var cl:LzNode = this.getNewClone();
+        if (!cl)
+            break;
+        this.clones.push( cl );
+    }
+
+    lz.Instantiator.clearDataReplicationQueue(this);
+
+    while ( this.nodes && this.nodes.length < this.clones.length ){
+        //this condition can only be reached if pooling is turned on
+        this.poolClone();
+    }
+}
+
+/**
+  * @devnote: We are using merge-sort instead of Array#sort(..), because we 
+  * want to have a stable sorting algorithm. 
+  * 
+  * @param [LzDataNodeMixin] arr: Array of LzDataNodeMixin to sort, within range [<code>lo</code>..<code>hi</code>]
+  * @param int lo: lower bound in <code>arr</code> (inclusive)
+  * @param int hi: upper bound in <code>arr</code> (inclusive)
+  * @access private
+  */
+function mergesort ( arr:Array, lo:int, hi:int ) :Array {
+    if ( lo < hi ) {
+        var mid:int = lo + Math.floor ( (hi - lo) / 2 );
+        var a:Array = this.mergesort( arr, lo, mid );
+        var b:Array = this.mergesort( arr, mid + 1, hi );
+    } else if( arr.length == 0 ) {
+        return [];
+    } else {
+        return [ arr[ lo ] ];
+    }
+
+    //now merge
+    var r:Array = [];
+    var ia:int = 0;
+    var ib:int = 0;
+    var al:int = a.length;
+    var bl:int = b.length;
+    while ( ia < al && ib < bl ){
+        if ( this.orderf( b[ ib ] , a[ ia ] ) == 1 ){
+            r.push( b[ ib++ ] );
+        } else {
+            r.push( a[ ia++ ] );
+        }
+    }
+    while ( ia < al ) r.push( a[ ia++ ] );
+    while ( ib < bl ) r.push( b[ ib++ ] );
+
+    return r;
+}
+
+/**
+  * @access private
+  */
+function orderf ( a /*:LzDataNodeMixin*/, b /*:LzDataNodeMixin*/ ) :int {
+    var op:String = this.orderpath;
+
+    this.p = a;
+    var aa:* = this.xpathQuery( op );
+    this.p = b;
+    var bb:* = this.xpathQuery( op );
+    this.p = null;
+
+    //this is lame, but comparison with null and "" doens't work right
+    //so use newline
+    if ( aa == null || aa == "" ) aa = "\n";
+    if ( bb == null || bb == "" ) bb = "\n";
+
+    return this.comparator( aa , bb )
+}
+
+
+/**
+  * @access private
+  */
+function ascDict ( a:String, b:String ) :int {
+    if (a.toLowerCase() < b.toLowerCase()) {
+        return 1;
+    } else {
+        //could also be -1, but we don't care..
+        return 0;
+    }
+}
+
+/**
+  * @access private
+  */
+function descDict ( a:String, b:String ) :int {
+    if (a.toLowerCase() > b.toLowerCase()) {
+        return 1;
+    } else {
+        //could also be -1, but we don't care..
+        return 0;
+    }
+}
+
+
+/**
+  * Orders the replicated nodes based on the value of the path passed in.
+  * @access private
+  * 
+  * @param String xpath: An xpath giving the value to use for comparison.
+  * @param Function|String comparator: See the <code>comparator</code> paramater
+  * of <code>setComparator</code> for details.
+  */
+override function setOrder( xpath:String, comparator:* = null ) :void {
+    //setting orderpath to null, so setComparator() won't run __LZHandleMultiNodes()
+    this.orderpath = null;
+
+    if ( comparator != null ){
+        this.setComparator( comparator );
+    }
+
+    this.orderpath = xpath;
+
+    if ( this.nodes && this.nodes.length ){
+        //reset nodes in order now
+        this.__LZHandleMultiNodes( this.nodes );
+    }
+}
+
+/**
+  * Sets the comparator for the sort used by the replication manager.
+  * @access private
+  *
+  * @param Function|String comparator: "ascending" or "descending" for the
+  * appropriate dictionary sort, or a function to be used for comparison that
+  * takes two arguments and returns 1 if the second argument should follow the
+  * first, -1 if the first argument should follow the second, and 0 if the two
+  * arguments are equivalent
+  */
+override function setComparator( comparator:* ) :void {
+    if ( comparator == "descending" ){
+        comparator = this.descDict;
+    } else if ( comparator == "ascending" ){
+        comparator = this.ascDict;
+    } else if ( comparator is Function ) {
+        // Just use it
+    } else if ($debug) {
+        Debug.error("Invalid comparator: %s", comparator);
+    }
+
+    this.comparator = comparator;
+    if ( this.orderpath != null && this.nodes && this.nodes.length ){
+        //reset nodes in order now
+        this.__LZHandleMultiNodes( this.nodes );
+    }
+}
+
+/**
+  * @access private
+  */
+function getNewClone ( forceNew = null ) :LzNode {
+    if (!this.cloneParent) {
+        return null;
+    }
+    if ( this.clonePool.length ){
+        var v:LzNode = this.reattachClone( this.clonePool.pop() );
+    } else {
+        var v:LzNode = new this.cloneClass( this.cloneParent , this.cloneAttrs ,
+                                     this.cloneChildren, 
+                                     forceNew == null ? this.asyncnew : !forceNew);
+    }
+    if ( this.visible == false ) v.$lzc$set_visible( false );
+    return v;
+}
+
+/**
+  * @access private
+  */
+function poolClone ( ) :void {
+    var v:LzView = this.clones.pop();
+    this.detachClone( v );
+    this.clonePool.push ( v );
+}
+
+/**
+  * TODO: [20080428 anba] do we still need this overhead?
+  * 
+  * @access private
+  */
+function destroyClone (v:LzNode) :void {
+    v.destroy();
+}
+
+/**
+  * This is an alias for the replication manager's setXPath method, but it is
+  * provided for compatibility with the view API, since replication managers take
+  * over the slot that a named replicated view occupied in the parent. (See
+  * comment on the class as a whole, above.)
+  * @param String xp: An xpath.
+  * @deprecated Use setAttribute('datapath', ...) instead.
+  * @access private
+  */
+override function $lzc$set_datapath(xp) /*:void*/ {
+    this.setXPath(xp);
+}
+
+/**
+  * @access private
+  */
+override function setXPath ( xp:String ) :Boolean? {
+    if ( this.__LZpreventXPathUpdate ) return false; // TODO: [20081020 dda] review this return value change from LPP-7031
+    return super.setXPath.apply(this, arguments); 
+}
+
+/**
+  * TODO: [20080428 anba] no reference to this function in the LFC, remove it?
+  * 
+  * @access private
+  */
+function handleDeletedNode ( c:int ) :void {
+    var tclone:LzView = this.clones[ c ];
+    if ( this.pooling ){
+        this.detachClone( tclone );
+        this.clonePool.push ( tclone );
+    } else {
+        this.destroyClone( tclone );
+    }
+    this.nodes.splice( c , 1 );
+    this.clones.splice( c , 1 );
+}
+
+/**
+  * Returns a clone which is mapped to the given data node.
+  * @param LzDataElement p: The data node for which to return the clone.
+  * @return LzView: A clone mapped to the given data.
+  */
+function getCloneForNode ( p:LzDataElement, dontmake:Boolean = false ) :LzNode {
+    var cls:Array = this.clones;
+    var len:int = cls.length; 
+    for ( var i:int = 0; i < len; i++ ){
+        if ( cls[ i ].datapath.p == p ){
+            return cls[ i ];
+        }
+    }
+    return null;
+}
+ 
+/**
+  * @access private
+  */
+override function toString () /*:String*/ {
+    return "ReplicationManager in " + this.immediateparent;
+}
+
+/**
+  * Sets the visibility of all the clones controlled by the replication manager
+  * @param Boolean vis: The value to set the visibility to.
+  * @access private
+  * @devnote TODO: [2008-05-07 ptw] This should probably just be a
+  * setter rather than being handled specially by __LZapplyArgs,
+  * but I didn't want to mess with that now.  In any case, there is no
+  * reason for this to be a public method.
+  * @deprecated Use setAttribute('visible', ...) instead.
+  */
+function setVisible(vis:Boolean) :void { 
+    if ($debug) Debug.deprecated(this, arguments.callee, this.setAttribute);
+    this.$lzc$set_visible(vis);
+}
+
+/** @access private */
+function $lzc$set_visible( vis:Boolean ) :void {
+    this.visible = vis;
+    var cls:Array = this.clones;
+    var len:int = cls.length; 
+    for ( var i:int = 0; i < len; i++ ){
+        cls[ i ].$lzc$set_visible( vis );
+    }
+    if (this.onvisible.ready) this.onvisible.sendEvent( vis );
+}
+
+/**
+  * @access private
+  */
+override function __LZcheckChange (chgpkg:Object) :Boolean {
+    this.p = this.nodes[ 0 ];
+    var didrun:Boolean = super.__LZcheckChange(chgpkg);
+    this.p = null;
+
+    if ( !didrun ){
+        var who /*:LzDataNodeMixin*/ = chgpkg.who;
+        var cls:Array = this.clones;
+        var len:int = cls.length; 
+        for ( var i:int = 0; i < len; i++ ){
+            var cl:LzNode = cls[ i ];
+            var dp:LzDatapath = cl.datapath;
+            if ( dp.__LZneedsOpUpdate( chgpkg ) ){
+                dp.__LZsetData();
+            }
+            if ( who.childOfNode( dp.p , true ) ){
+                if (dp.onDocumentChange.ready) dp.onDocumentChange.sendEvent( chgpkg ) ;
+            }
+        }
+    }
+
+    return false;
+}
+
+
+/** @access private */
+override function __LZneedsOpUpdate (chgpkg:Object? = null) :Boolean {
+    return false;
+}
+
+/**
+  * @access private
+  */
+override function getContext ( chgpkg = null ) :* {
+    return this.nodes[ 0 ];
+}
+
+/**
+  * @access private
+  */
+function detachClone ( cl:LzView ) :void {
+    if ( cl.isdetatchedclone ) return;
+
+    cl.$lzc$set_visible(false);
+    cl.addedToParent = false;
+
+    var svs:Array =  cl.immediateparent.subviews;
+    for( var i:int = svs.length - 1; i >= 0; i-- ){
+        if ( svs[ i ] == cl ){
+            svs.splice( i , 1 );
+            break;
+        }
+    }
+
+    cl.datapath.__LZtrackDel.unregisterAll();
+    var onremsub:LzDeclaredEventClass = cl.immediateparent.onremovesubview;
+    if (onremsub.ready) onremsub.sendEvent( cl );
+    cl.isdetatchedclone = true;
+    cl.datapath.p = null;
+}
+
+/**
+  * @access private
+  */
+function reattachClone ( cl:LzView ) :LzView {
+    if ( !cl.isdetatchedclone ) return cl;
+
+    cl.immediateparent.addSubview( cl );
+    cl.$lzc$set_visible( this.visible );
+    cl.isdetatchedclone = false;
+    return cl;
+}
+
+/**
+  * returns the index at which the arrays differ
+  * @access private
+  */
+function __LZdiffArrays ( a:Array, b:Array ) :int {
+    var i:int = 0;
+
+    var al:int = a ? a.length : 0;
+    var bl:int = b ? b.length : 0;
+
+    while( i < al && i < bl ){
+        if ( a[ i ] != b[ i ] ){
+            return i;
+        }
+        i++;
+    }
+
+    return i;
+
+}
+
+/**
+  * @access private
+  */
+override function updateData () {
+    this.__LZupdateData();
+}
+
+/**
+  * @access private
+  */
+override function __LZupdateData (recursive:Boolean = false) :void {
+    var cls:Array = this.clones;
+    var len:int = cls.length; 
+    for (var i:int = 0; i < len; i++) {
+        cls[ i ].datapath.updateData();
+    }
+}
+
+} // End of LzReplicationManager
+lz.ReplicationManager = LzReplicationManager;  // publish
+
+/** @access private */
+class LzRefNode extends LzNode {
+    /** Slot for constraint-method, see LzReplicationManager#construct(..)
+      * @access private 
+      */
+    var __LZxpathconstr: Function = null;
+    /** Slot for dependency-method, see LzReplicationManager#construct(..)
+      * @access private 
+      */
+    var __LZxpathdepend: Function = null;
+    /** Must also define xpath, otherwise the optimized constraint-function
+      * from LPP-8058 generates errors in swf9 (see LPP-8383)
+      * @access private
+      */
+    var xpath :String = null;
+
+    /**
+      * @access private
+      */
+    function LzRefNode (parent:LzNode, attrs:Object? = null, children:Array? = null, instcall:Boolean = false) {
+        super(parent, attrs, children, instcall);
+    }
+
+    /**
+      * @access private
+      */
+    function $lzc$set_xpath (v) :void {
+        // this.parent is the LzReplicationManager!
+        this.parent.$lzc$set_xpath(v);
+    }
+}

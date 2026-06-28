@@ -1,0 +1,11 @@
+<canvas height="150" width="100%">
+ 
+ <button name="button">
+   <attribute name="visible" value="${canvas['debugwindow'] != null}" />
+   <attribute name="text"
+     value="${canvas['debugwindow']?((canvas.debugwindow.visible?'hide':'show') + ' debugger'):null}" />
+   <handler name="onclick">
+     canvas.debugwindow.setAttribute('visible', (! canvas.debugwindow.visible));
+   </handler>
+ </button>
+</canvas>

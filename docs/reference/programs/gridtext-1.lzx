@@ -1,0 +1,11 @@
+<canvas height="250">
+              <dataset name="contacts" request="true"
+              src="http:resources/contactsdata.xml"/>
+
+              <grid datapath="contacts:/resultset">
+              <gridtext editable="false" datapath="@id" datatype="number">ID
+              </gridtext>
+              <gridtext datapath="@displayname" width="200"> Name
+              </gridtext>
+              </grid>
+              </canvas>

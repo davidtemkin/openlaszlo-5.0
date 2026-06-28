@@ -1,0 +1,652 @@
+/**
+  * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @affects animation lzanimatorgroup
+  * @topic LFC
+  * @subtopic Controllers
+  * @access public
+  */
+
+/**
+ * <p>An <classname>lz.animatorgroup</classname> wraps several
+ * <sgmltag class="element"
+ * role="LzAnimator">&lt;animator&gt;</sgmltag>s or
+ * <tagname>animatorgroup</tagname>s, and runs them in sequence or
+ * simultaneously. As an example, the code below animates a view first
+ * along the x-axis and then the y.</p>
+ *
+ * <example><programlisting class="code" extract="false">
+ * &lt;canvas height="225"&gt;
+ *   &lt;view bgcolor="red" width="100" height="100"&gt;
+ *     &lt;animatorgroup process="sequential"&gt;
+ *       &lt;animator attribute="x" to="100" duration="1000"/&gt;
+ *       &lt;animator attribute="y" to="100" duration="1000"/&gt;
+ *     &lt;/animatorgroup&gt;
+ *   &lt;/view&gt;
+ * &lt;/canvas&gt;
+ * </programlisting></example>
+ *
+ * <p>The attributes <attribute>attribute</attribute>,
+ * <attribute>duration</attribute>, <attribute>from</attribute>,
+ * <attribute>indirect</attribute>, <attribute>motion</attribute>,
+ * <attribute>process</attribute>, <attribute>relative</attribute>,
+ * <attribute>started</attribute>, <attribute>target</attribute>, and
+ * <attribute>to</attribute> are cascaded to enclosed <sgmltag
+ * class="element" role="LzAnimator">&lt;animator&gt;</sgmltag>s and
+ * <tagname>animatorgroup</tagname>s.  Events (such as <event>onstart</event>, <event>onstop</event>,
+ * etc.) and the <attribute>name</attribute> and
+ * <attribute>id</attribute> attributes, however, are not cascaded.</p>
+ *
+ * @lzxname animatorgroup
+ * @shortdesc Coordinates the behavior of several animators.
+ * @see LzAnimator
+ *
+ */
+public dynamic class LzAnimatorGroup extends LzNode {
+
+    /** @access private */
+    public function LzAnimatorGroup (parent:LzNode? = null, attrs:Object? = null, children:Array? = null, instcall:Boolean = false) {
+      // Copy obsolete attr to new one
+      if (attrs && 'start' in attrs) {
+        attrs.started = attrs.start;
+        attrs.start = LzNode._ignoreAttribute;
+      }
+      super(parent, attrs, children, instcall);
+    }
+
+    /** @access private
+      * @modifiers override
+      */
+    static var tagname :String = 'animatorgroup';
+    /** @access private */
+    static var attributes :Object = new LzInheritedHash(LzNode.attributes);
+
+    /** @access private */
+    var updateDel :LzDelegate;
+    /** @access private */
+    var crepeat :Number;
+    /** @access private */
+    var startTime :Number;
+    /** @access private */
+    var __LZpauseTime :Number;
+    /** @access private */
+    var actAnim :Array;
+    /** @access private */
+    var notstarted :Boolean;
+    /** @access private */
+    var needsrestart :Boolean;
+
+    /** The name of the attribute whose value is animated.  This
+      * attribute is required on an animator, unless the animator is
+      * inside an animatorgroup that specifies an attribute.
+      *
+      * @type String
+      * @lzxtype token
+      */
+    var attribute;
+
+    /**
+     * A synonym for the `started` attribute.
+     *
+     * @deprecated Use the `started` attribute instead.
+     *
+     * <note>For historical reasons <attribute>start</attribute> is a
+     * write-only attribute, the ultimate effect of setting it can be
+     * observed through the <attribute>onstart</attribute> and
+     * <attribute>onstop</attribute> events.  See also:
+     * <attribute>paused</attribute>.</note>
+     *
+     * @type Boolean
+     * @lzxtype boolean
+     * @lzxdefault true
+     * @keywords final
+     *
+     * @devnote remove in 5.1
+     *
+     */
+    var start = true;
+
+    /** @access private */
+    function $lzc$set_start (val) {
+      this.start = val;
+      this.$lzc$set_started(val);
+    }
+
+    /** Whether to start the animation immediately (default).
+     * Initialize to false to defer the animation.  The starting and
+     * stopping of the animation can be controlled by setting this
+     * attribute. <note>Setting this attribute to false resets the
+     * animation, such that it will be restarted from its initial
+     * state when this attribute is set to true.  If you just want to
+     * pause the animation and then resume from the paused state, use
+     * the <attribute>paused</attribute> attribute.</note>
+     *
+     * @type Boolean
+     * @lzxtype boolean
+     * @lzxdefault true
+     */
+    var started;
+    LzAnimatorGroup.attributes.started = true;
+
+    /** @access private */
+    var onstarted :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /**
+      * setter for the started attribute
+      * @access private
+      */
+    function $lzc$set_started (val) {
+        this.started = val;
+        if (this.onstarted.ready) this.onstarted.sendEvent(val);
+        if (! this.isinited) {
+            return;
+        }
+
+        if (val) {
+            this.doStart();
+        } else {
+            this.stop();
+        }
+    }
+
+    /**
+     * Sent when the animator starts.
+     *
+     * <note>For historical reasons this event is <i>not</i> sent by
+     * the setting of the <attribute>start</attribute> attribute,
+     * rather it is sent when the animator actually starts
+     * running.</note>
+     *
+     * @lzxtype event
+     */
+    var onstart :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /** Sent when the animator finishes the entire animation
+      * (including any repetitions).
+      * @lzxtype event
+      */
+    var onstop :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /** The start value for the animation.  Defaults to the
+      * targeted attribute's current value.
+      * @devnote must be type * so it can be tested for null !#!# AS3...
+      * @type Number
+      * @lzxtype number
+      */
+    var from:*;
+
+    /** The final value for the targeted attribute.
+      *
+      * @devnote must be type * so it can be tested for null !#!# AS3...
+      * @type Number
+      * @lzxtype number
+      */
+    var to:*;
+
+    /** The duration of the animation, in milliseconds (1000 = 1 second).
+      *
+      * @type Number
+      * @lzxtype number
+      */
+    var duration;
+
+    /** @access private */
+    var onduration :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /** @access private */
+    function $lzc$set_duration (duration) {
+        if (isNaN(duration)) {
+            duration = 0;
+        } else {
+            duration = Number(duration);
+        }
+        this.duration = duration;
+        var sn:Array = this.subnodes;
+        if (sn) {
+            for (var i:int = 0; i < sn.length; ++i) {
+                if (sn[i] is LzAnimatorGroup) {
+                    sn[i].$lzc$set_duration(duration);
+                }
+            }
+        }
+        if (this.onduration.ready) this.onduration.sendEvent(duration);
+    }
+
+    /** Controls the direction of the animation.  A value of
+      * <constant>true</constant> will cause the animation to go in the "other"
+      * direction.
+      *
+      * @type Boolean
+      * @lzxtype boolean
+      * @since 1.1
+      */
+    var indirect = false;
+
+    /** Whether the <attribute>to</attribute> value is relative to the
+      * initial value of the attribute (<constant>true</constant>), or
+      * is an absolute value (<constant>false</constant>).
+      *
+      * @type Boolean
+      * @lzxtype boolean
+      * @lzxdefault false 
+      */
+    var relative = false;
+
+    /** Whether and how the animation accelerates and decelerates
+     *
+      * @type String
+      * @lzxtype linear | easein | easeout | easeboth
+      * @lzxdefault easeboth
+      */
+    var motion = "easeboth";
+
+    /**
+     * The number of times to repeat the animation.  This should be a
+     * positive integer or <constant>Infinity</constant>.  Changes to
+     * the repeat value while the animator is running will only take
+     * effect, after the animation is finished and then restarted.
+     *
+     * <note>For historical reasons, setting this value does not send
+     * the event <attribute>onrepeat</attribute>; see
+     * <attribute>onrepeat</attribute>.</note>
+     *
+     * @type Number
+     * @lzxtype number
+     * @lzxdefault 1
+     * @since 1.1
+     */
+    var repeat = 1;
+
+    /** Event sent when an animator restarts itself because its
+      * <attribute>repeat</attribute> attribute is greater than one.
+      *
+      * <note>This event is not sent by the setting of the
+      * <attribute>repeat</attribute> attribute, but by the animator
+      * repeating itself.  It is only sent on each repeat, not on
+      * the initial animation.</note>
+      *
+      * @lzxtype event
+      */
+    var onrepeat :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /**
+      * Setter for repeat
+      * @access private
+      *
+      * @devnote See note at `onrepeat` which is _not_ sent by setting
+      * the value of `repeat`.
+      */
+    function $lzc$set_repeat (val) {
+        if (val <= 0) {
+            // NOTE: (LPP-7153) for bwcomp we convert values <= 0 to Infinity, 
+            // issue a warning so users can upgrade their code to use the proper form
+            // TODO: [20081011 anba] remove bwcomp-mode after 4.3+
+            if ($debug) {
+                Debug.info("%w.%s: value was <= 0, use Infinity instead", this, arguments.callee);
+            }
+            val = Infinity;
+        }
+        this.repeat = val;
+    }
+
+    /** The paused state of the animator. If true, the animator will pause. When
+      * changed to false, the animator will resume from its current
+      * location.
+      *
+      * @type Boolean
+      * @lzxtype boolean
+      * @lzxdefault false
+      */
+    var paused = false;
+
+    /** @access private */
+    var onpaused :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /**
+      * Setter for paused
+      * @access private
+      */
+    function $lzc$set_paused (val) {
+      if (this.paused && (! val)) {
+        this.__LZaddToStartTime(new Date().getTime() - this.__LZpauseTime);
+      } else if ((! this.paused) && val) {
+        this.__LZpauseTime = new Date().getTime();
+      }
+      this.paused = val;
+      if (this.onpaused.ready) this.onpaused.sendEvent(val);
+    }
+
+    /** The object for which an attribute will be animated (by
+     * default, the immediate parent of the animator node)
+     *
+     * @type LzNode
+     * @lzxtype reference
+     */
+    var target:LzNode;
+
+    /** @access private */
+    var ontarget :LzDeclaredEventClass = LzDeclaredEvent;
+
+    /**
+      * setter for the target attribute
+      * @access private
+      */
+    function $lzc$set_target (new_target) {
+        this.target = new_target;
+        var nodes:Array = this.subnodes;
+        if (nodes) {
+            for (var i:int = 0; i < nodes.length; i++) {
+                if (nodes[i] is LzAnimatorGroup) {
+                    nodes[i].$lzc$set_target(new_target);
+                }
+            }
+        }
+        if (this.ontarget.ready) this.ontarget.sendEvent(new_target);
+    }
+
+    /** In an <tagname>animatorgroup</tagname>, whether to process the
+     * individual <tagname>animator</tagname>s simultaneously or
+     * sequentially.  Has no effect on an individual
+     * <tagname>animator</tagname>.
+     *
+     * @type String
+     * @lzxtype simultaneous | sequential
+     * @lzxdefault sequential
+     */
+    var process = "sequential";
+
+    /**
+     * The active-state of the animator. If true, the animator is
+     * currently processing its animation.
+     *
+     * @deprecated This is an internal property that will be removed.
+     * in a future release
+     *
+     * @type Boolean
+     * @lzxtype boolean
+     * @keywords read-only
+     */
+    var isactive :Boolean = false;
+
+    /** @access private */
+    const animatorProps :Object = { attribute : true, from : true,
+                                    duration : true, to : true,
+                                    relative : true, target : true,
+                                    process: true,
+                                    indirect: true, motion: true};
+
+    /** animators ignore placement by default
+      *
+      * @access private
+      *
+      * @modifiers override
+      */
+    LzAnimatorGroup.attributes.ignoreplacement = true;
+
+    /**
+      * @access private
+      */
+    override function construct (parent, args) {
+        super.construct(parent, args);
+
+        var ip:LzNode = this.immediateparent;
+        if (ip is LzAnimatorGroup) {
+            for (var k:String in this.animatorProps) {
+                if (args[ k ] == null) {
+                    args[ k ] = ip[ k ];
+                }
+            }
+            if (ip.animators == null) {
+                ip.animators = [ this ];
+            } else {
+               ip.animators.push(this);
+            }
+            // Children of a group are controlled by the group
+            args.started = LzNode._ignoreAttribute;
+        } else {
+            // initialize target to immediateparent, may be set later by attribute
+            this.target = ip;
+        }
+
+        if (! this.updateDel) this.updateDel = new LzDelegate(this, "update");
+    }
+
+    /**
+      * @access private
+      */
+    override function init () {
+        if (! this.target) this.target = this.immediateparent;
+        if (this.started) this.doStart();
+        super.init();
+    }
+
+    /**
+      * Start the animator
+      *
+      * @deprecated Use setAttribute('started', true) instead.
+      *
+      * @devnote make private after 5.1
+      */
+    function doStart () {
+        if (this.isactive) return false;
+        this.isactive = true;
+
+        //Debug.info('doStart', start);
+        if (this.onstart.ready) this.onstart.sendEvent(new Date().getTime());
+        //this is a bug -- embedded animators won't send onstart
+
+        this.prepareStart();
+        this.updateDel.register(lz.Idle , "onidle");
+        return true;
+    }
+
+    /**
+      * @access private
+      */
+    function prepareStart () :void {
+        // store a copy of repeat for decrementing after each iteration
+        this.crepeat = this.repeat;
+        for (var i:int = this.animators.length - 1; i >= 0; i--) {
+            this.animators[ i ].notstarted = true;
+            //this.animators[ i ].prepareStart();
+        }
+        this.actAnim = this.animators.concat();
+    }
+
+    /**
+      * @access private
+      */
+    function resetAnimator () :void {
+        this.actAnim = this.animators.concat();
+        // this.prepareStart();
+        for (var i:int = this.animators.length - 1; i >= 0; i--) {
+            this.animators[ i ].needsrestart = true;
+            //this.animators[ i ].resetAnimator();
+        }
+    }
+
+    /**
+      * @devnote in order to repeat an animtorGroup its animators
+      * cannot be deleted from the animator array.
+      *
+      * @access private
+      *
+      * @param time: the time assigned to this iteration of the animator. this time
+      * value (in milliseconds) is set by the animation queue and then passed
+      * onto to every animator to ensure that all animators are synched to the same
+      * value.
+      * @return a boolean indicating if all of the animations within
+      * this group are done.
+      */
+    function update (time:Number) :Boolean {
+        if (this.paused) {
+            return false;    // TODO: [20081020 dda] review this return value change from LPP-7031
+        }
+
+        var animend:int = this.actAnim.length - 1;
+        if (animend > 0 && this.process == "sequential")
+            animend = 0;
+
+        for (var i:int = animend; i >= 0; i--) {
+            var a:LzAnimatorGroup = this.actAnim[i];
+            if (a.notstarted) {
+                a.isactive = true;
+                a.prepareStart();
+                a.notstarted = false;
+            } else if (a.needsrestart) {
+                a.resetAnimator();
+                a.needsrestart = false;
+            }
+
+            if (a.update(time)) {
+                 //a.stop(); //OK?
+                this.actAnim.splice(i, 1);
+            }
+        }
+
+        if (! this.actAnim.length) {
+            return this.checkRepeat();
+        }
+        return false;
+    }
+
+    /**
+      * Temporarily pauses or restarts the animator
+      *
+      * @param Boolean dop: If true, pauses the animator. If false, unpauses the
+      * animator. If null, toggles the paused state of the animator.
+      *
+      * @deprecated Use setAttribute('paused', ...) instead.
+      *
+      * @devnote remove after 5.1
+      */
+    function pause (dop = null) {
+        if (dop == null) {
+            dop = !this.paused;
+        }
+        if ($debug) {
+            Debug.deprecated(this, arguments.callee, this.setAttribute);
+        }
+        this.$lzc$set_paused(dop);
+    }
+
+    /**
+      * @access private
+      */
+    function __LZaddToStartTime (ptime:Number) :void {
+        this.startTime += ptime;
+        if (this.actAnim) {
+            for (var i:int = 0; i < this.actAnim.length; i++) {
+                this.actAnim[ i ].__LZaddToStartTime(ptime);
+            }
+        }
+    }
+
+    /**
+      * Stop the animation
+      *
+      * @deprecated Use setAttribute('started', false) instead.
+      *
+      * @devnote make private after 5.1
+      */
+    function stop () {
+        if (! this.isactive) return;
+        this.isactive = false;
+
+        //need to stop any running animators
+        if (this.actAnim) {
+            var animend:int = this.actAnim.length - 1;
+            if (animend > 0 && this.process == "sequential")
+                animend = 0;
+
+            for (var i:int = animend; i >= 0; i--) {
+                this.actAnim[i].stop();
+            }
+        }
+
+        this.__LZhalt();
+    }
+
+    /** Overridden by LzAnimator
+      * @access private
+      */
+    function __LZfinalizeAnim () :void {
+        this.__LZhalt();
+    }
+
+    /**
+      * @access private
+      */
+    function __LZhalt () :void {
+        this.isactive = false;
+        //unreg for update event
+        this.updateDel.unregisterAll();
+        if (this.onstop.ready) this.onstop.sendEvent(new Date().getTime());
+    }
+
+    /**
+      * @access private
+      */
+    function checkRepeat () :Boolean {
+        if (this.crepeat == 1) {
+            // done
+            this.__LZfinalizeAnim();
+            return true;
+        } else {
+            // repeating
+            this.crepeat--;
+            if (this.onrepeat.ready) this.onrepeat.sendEvent(new Date().getTime());
+            //this.prepareStart();
+            this.resetAnimator();
+            return false;    // TODO: [20081020 dda] review this return value change from LPP-7031
+        }
+    }
+
+    /**
+      * @access private
+      */
+    override function destroy () {
+        this.stop();
+        this.animators = null;
+        this.actAnim = null;
+
+        var ip:LzNode = this.immediateparent;
+        var parAnim:Array = ip.animators;
+        if (parAnim && parAnim.length) {
+            for (var i:int = 0; i < parAnim.length; i++) {
+                if (parAnim[ i ] == this) {
+                    parAnim.splice(i, 1);
+                    break;
+                }
+            }
+
+            if (ip is LzAnimatorGroup) {
+                var activeAnim:Array = (ip cast LzAnimatorGroup).actAnim;
+                if (activeAnim && activeAnim.length) {
+                    for (var i:int = 0; i < activeAnim.length; i++) {
+                        if (activeAnim[ i ] == this) {
+                            activeAnim.splice(i, 1);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        super.destroy();
+    }
+
+    /**
+      * @access private
+      */
+    override function toString () {
+        if (this.animators) {
+            return "Group of " + this.animators.length;
+        }
+        return "Empty group";
+    }
+
+} // End of LzAnimatorGroup
+
+lz[LzAnimatorGroup.tagname] = LzAnimatorGroup;  // publish

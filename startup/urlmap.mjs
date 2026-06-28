@@ -12,8 +12,8 @@
 // Pure string logic, no browser/Node APIs, so it imports cleanly into both.
 
 export const ROOT_FILES = new Set([
-  "/", "/index.html", "/service-worker.js", "/urlmap.mjs", "/favicon.ico",
-  "/manifest.webmanifest", "/version.json",
+  "/", "/index.html", "/service-worker.js", "/startup/urlmap.mjs", "/favicon.ico",
+  "/manifest.webmanifest", "/startup/version.json",
 ]);
 
 export function toSourceUrl(path) {

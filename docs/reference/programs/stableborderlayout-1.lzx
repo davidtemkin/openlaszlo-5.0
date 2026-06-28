@@ -1,0 +1,15 @@
+<canvas height="100">
+  <view bgcolor="yellow" width="200">
+    <view bgcolor="blue" height="30" width="50"/>
+    <view bgcolor="red" height="30" width="50"/>
+    <view bgcolor="blue" height="30" width="50"/>
+    <simplelayout axis="x" spacing="10"/>
+  </view>
+  
+  <view y="40" bgcolor="yellow" width="200">
+    <view bgcolor="blue" height="30" width="50"/>
+    <view bgcolor="red" height="30"/>
+    <view bgcolor="blue" height="30" width="50"/>
+    <stableborderlayout axis="x"/>
+  </view>
+</canvas>

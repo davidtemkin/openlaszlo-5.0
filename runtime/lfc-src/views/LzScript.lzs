@@ -1,0 +1,98 @@
+/**
+ * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+ *            Use is subject to license terms.
+ *
+ * @access public
+ * @affects lzscript
+ * @topic LZX
+ * @subtopic Basics
+ */
+
+/**
+ * <p>The <code>script</code> element contains JavaScript code that is
+ * executed when the application is loaded.  This element must be at the
+ * <code>canvas</code> level; that is, it cannot be contained within any
+ * subordinate tag. If the <attribute>src</attribute> attribute is
+ * present, it names a JavaScript file whose contents are compiled into
+ * the application.</p>
+ *
+ * <p>In the example below, we add a method to the built-in
+ * <code>Array</code> class that will let us find the index of
+ * elements in an array. Note that <code>Array.find</code> uses
+ * <code>===</code> for finding, so that two objects that are similar
+ * will not be confused. This is why looking for <code>{example:
+ * 'sneaky'}</code> finds nothing, whereas looking for
+ * <code>sneaky</code> succeeds.</p>
+ *
+ * <example>
+ * &lt;canvas debug="true" height="200"&gt;
+ *   &lt;debug y="5%" height="90%" /&gt;
+ *   &lt;script&gt;
+ *   &lt;![CDATA[
+ *     // Add a find method to Array
+ *     Array.prototype.find = function ( what ) {
+ *       for (var i = 0; i &lt; this.length; ++i) {
+ *         if (this[i] === what) {
+ *           return i;
+ *         }
+ *       }
+ *     }
+ *
+ *     var sneaky = {example: 'sneaky'};
+ *     var tryit = ['foo', 42, sneaky, Math.PI, false];
+ *
+ *     Debug.format("42 is at: %s\n", tryit.find(42));
+ *     Debug.format("false is at: %s\n", tryit.find(false));
+ *     Debug.format("'bar' is at: %s\n", tryit.find('bar'));
+ *     Debug.format("{example: 'sneaky'} is at: %s\n", tryit.find({example: 'sneaky'}));
+ *     Debug.format("sneaky is at: %s\n", tryit.find(sneaky));
+ *   ]]&gt;
+ *   &lt;/script&gt;
+ * &lt;/canvas&gt;
+ * </example>
+ *
+ * @shortdesc A block of JavaScript.
+ *
+ * @devnote An LzScript is the implementation of the &lt;script&gt; tag.  It ensures that
+ * the script is run in lexical order with surrounding nodes
+ *
+ * @access public
+ * @lzxname script
+ */
+dynamic class LzScript extends LzNode {
+
+  /**
+   * @access private
+   * @modifiers override
+   */
+  static var tagname = 'script';
+  /** @access private */
+  static var attributes = new LzInheritedHash(LzNode.attributes);
+
+  /***
+   * The pathname of a Javascript file. This pathname is resolved
+   * relative to the file that contains the
+   * <code>&lt;script&gt;</code> element.
+   *
+   * @keywords final
+   * @lzxtype string
+   * @access public
+   *
+   * @devnote TODO: [2008-11-21 ptw] This attribute is here only for
+   * documentation purposes.  There really needs to be a way to
+   * document 'special' (schema-only) attributes without creating a
+   * dummy variable
+   *
+   * @devnote TODO: [2008-11-21 ptw] The real schema attribute wants
+   * to be xsd:anyURI, but the schema generator barfs on that.
+   */
+  var src:String;
+
+  /** @access private */
+  public function LzScript ( parent:LzNode? = null , attrs:Object? = null , children:Array? = null, instcall:Boolean  = false) {
+    super(parent,attrs,children,instcall);
+    attrs.script();
+  }
+}; // End of LzScript
+
+lz[LzScript.tagname] = LzScript;  // publish

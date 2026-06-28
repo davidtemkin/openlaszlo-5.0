@@ -1,0 +1,13 @@
+<canvas height="65">
+        <view>
+            <view bgcolor="blue" height="30" width="50"/>
+            <view bgcolor="red" height="30" width="50"
+                onclick="this.animate('width', 100, 500, true)"/>
+            <view bgcolor="blue" height="30" width="50"/>
+            <simplelayout axis="x" spacing="10"/>
+        </view>
+        <view >
+            <text>Click on the red rectangle. Layout is conserved as its size changes.</text>
+        </view>
+        <simplelayout axis="y" spacing="15"/>
+    </canvas>

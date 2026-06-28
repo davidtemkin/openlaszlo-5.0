@@ -14,7 +14,7 @@
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
-import { toSourceUrl } from "../urlmap.mjs";
+import { toSourceUrl } from "../startup/urlmap.mjs";
 import { compileApp, DISTRO } from "./compile.mjs";
 import { attachConnectionServer } from "./connection.mjs";
 import { handleApi } from "./example-data/index.mjs";
@@ -51,9 +51,16 @@ function compileEndpoint(req, res, url) {
   const srcAbs = path.join(DISTRO, toSourceUrl(lzxPath));   // same namespace map as the SW
   if (!fs.existsSync(srcAbs)) return send(res, 200, errStub("404 source: " + lzxPath), JS_HDR);
   const dbg = url.searchParams.get("debug");
-  const debug = dbg !== null && dbg !== "false";
+  // ?backtrace / ?lzbacktrace → DEBUG_BACKTRACE build (implies debug). Mirrors the SW.
+  const bt = url.searchParams.get("backtrace") ?? url.searchParams.get("lzbacktrace");
+  const backtrace = bt !== null && bt !== "false";
+  const debug = backtrace || (dbg !== null && dbg !== "false");
+  // ?profile / ?lzprofile → profile build (cache-keyed); pairs with the lfc-profile.js
+  // runtime the SW's renderWrapper selects. Independent of debug.
+  const pf = url.searchParams.get("profile") ?? url.searchParams.get("lzprofile");
+  const profile = pf !== null && pf !== "false";
   let r;
-  try { r = compileApp(srcAbs, { debug }); }
+  try { r = compileApp(srcAbs, { debug, backtrace, profile }); }
   catch (e) { return send(res, 200, errStub("compile error: " + (e && e.message || e)), JS_HDR); }
   if (r.unsupported) return send(res, 200, errStub("compile UNSUPPORTED: " + r.unsupported), JS_HDR);
   const etag = `"${r.tag}"`;

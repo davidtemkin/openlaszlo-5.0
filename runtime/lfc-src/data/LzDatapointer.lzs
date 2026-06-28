@@ -1,0 +1,1518 @@
+/**
+  *
+  * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @topic LFC
+  * @subtopic Data
+  * @access public
+  */
+
+/**
+  * <p>
+  * A datapointer is an object that represents a pointer to a node in a
+  * <sgmltag class="element" role="LzDataset">lz.dataset</sgmltag>. The datapointer can be repositioned
+  * using either cursor movements calls such as 
+  * <xref linkend="LzDatapointer.prototype.selectNext"/>, or by running an XPath 
+  * request via <xref linkend="LzDatapointer.prototype.setXPath"/>.
+  * </p>
+  * 
+  * <p>
+  * Datapointers support a subset of the <a
+  * href="http://www.w3.org/TR/xpath">XPath specification</a>, which uses
+  * a notation similar to the UNIX file-system to refer to nodes within a
+  * dataset. Once a datapointer is bound to a node in a dataset it will
+  * keep pointing to that node until it is moved. If the dataset is edited,
+  * the behavior of the datapointer will be controlled by its <link linkend="LzDatapointer.__ivars__.rerunxpath">rerunxpath</link> attribute. If this attribute is
+  * true, it will continue pointing to its current
+  * node as long as it is valid.</p>
+  * 
+  * <p>The example below demonstrates the use of some of the
+  * features of datapaths to retrieve data from a dataset.</p>
+  * 
+  * <example title="Using a datapointer to retrieve data from a dataset">
+  * <programlisting>&lt;canvas height="80"&gt;
+  *   &lt;simplelayout spacing="5"/&gt;
+  *   &lt;dataset name="mydata"&gt;
+  *     &lt;record&gt; This is some text 
+  *       &lt;deeper&gt;
+  *         &lt;deeprecord&gt; This is a deeper level &lt;/deeprecord&gt;
+  *         &lt;deeprecord&gt; It's dark down here! &lt;/deeprecord&gt;
+  *         &lt;deeprecord&gt; Last deep record &lt;/deeprecord&gt;
+  *       &lt;/deeper&gt;
+  *     &lt;/record&gt;
+  *     &lt;record&gt; This is more text &lt;/record&gt;
+  *     &lt;record&gt; Exciting no? &lt;/record&gt;
+  *     &lt;record&gt; The final line of text &lt;/record&gt;
+  *   &lt;/dataset&gt;
+  * 
+  *   &lt;view&gt;
+  *     &lt;simplelayout/&gt;
+  *     <em>&lt;datapointer id="mydp" xpath="mydata:/record[1]"/&gt;</em>
+  *     &lt;button&gt; Move forward with select
+  *       &lt;handler name="onclick"&gt;
+  *         if (mydp.selectNext()) var s = <em>mydp.getNodeText();</em>
+  *         else var s = "hit last record; reset with xpath";
+  *         output.setText(s);
+  *       &lt;/handler&gt;
+  *     &lt;/button&gt;
+  *     &lt;button&gt; Set with XPath
+  *       &lt;handler name="onclick"&gt;
+  *           if (mydp.getNodeName() == "record")
+  *             var xp = <em>"mydata:/record[1]/deeper/deeprecord[1]";</em>
+  *           else var xp = <em>"mydata:/record[1]";</em>
+  *           <em>mydp.setXPath( xp );</em> output.setText(<em>mydp.getNodeText()</em>);
+  *       &lt;/handler&gt;
+  *     &lt;/button&gt;
+  *   &lt;/view&gt;
+  * 
+  *   &lt;text name="output" width="200"&gt;Data will appear here.&lt;/text&gt;
+  * &lt;/canvas&gt;</programlisting></example>
+  *
+  * @shortdesc A cursor in a dataset.
+  * @lzxname datapointer
+  * @see LzDataset
+  */
+public dynamic class LzDatapointer extends LzNode {
+  #pragma "warnUndefinedReferences=true"
+  
+/** @access private
+  * @modifiers override 
+  */
+static var tagname :String = 'datapointer';
+// static var attributes = new LzInheritedHash(LzNode.attributes);
+// [2006-07-25 pbr] This clears out what is defined in LzNode. Is this
+// ok?
+/** @access private */
+static var attributes :Object = {ignoreplacement: true};
+
+/** @access private */
+function $lzc$set_xpath (v) :void { 
+    this.setXPath(v); 
+}
+
+/** @access private */
+function $lzc$set_context (v) :void { 
+    this.setDataContext(v); 
+}
+
+/** @access private */
+function $lzc$set_pointer (v) :void {
+    this.setPointer(v); 
+}
+
+/** @access private */
+function $lzc$set_p (v) :void { 
+    this.setPointer(v); 
+}
+
+/** The LzDataNodeMixin that the datapointer is pointing
+  * to. Calling <method>setAttribute</method> on <attribute>p</attribute> calls
+  * <method>LzDatapointer.setPointer</method>.
+  * @type LzDataNodeMixin
+  *
+  * @devnote TODO: [2009-01-19 ptw] Maybe the attribute should be
+  * named `pointer`?  And the use of `p` deprecated?  It looks like
+  * someone may have started to do that, otherwise, what is the point
+  * of $lzc$set_pointer (above)?  If we did that, we wouldn't need the
+  * silly comment that setting `p` calls `setPointer`.
+  *
+  * @devnote FIXME: [2009-01-18 ptw] (LPP-5840) To enforce this type
+  * declaration in the interface, the compiler would need to transform
+  * the var to a getter/setter in the interface, and
+  * getter/setter/(hidden) state in each implementation.
+  */
+var p /*:LzDataNodeMixin*/ = null;//TODO: uncomment after LPP-5840
+
+/** The reference to a clonemanager from a clone.
+  * @devnote context can be one of: 
+  * LzReplicationManager, LzDatapath, LzDataset, AnonDatasetGenerator
+  * @keywords read-only
+  * @type LzReplicationManager
+  */
+var context :* = null;
+
+/** @access private */
+var __LZtracking :Array = null;
+/** @access private */
+var __LZtrackDel :LzDelegate = null;
+/** @type String
+  * @lzxtype string
+  */
+var xpath :String = null;
+/** @access private */
+var parsedPath :LzParsedPath = null;
+/** @access private */
+var __LZlastdotdot :LzDataElementMixin = null;
+/** @access private */
+var __LZspecialDotDot :Boolean = false;
+/** @access private */
+var __LZdotdotCheckDel :LzDelegate = null;
+/** @access private */
+var errorDel :LzDelegate = null;
+/** @access private */
+var timeoutDel :LzDelegate = null;
+
+
+/** This determines the behavior of the
+  * datapointer in response to notification that the dataset the
+  * datapointer is mapped to has changed. If
+  * <attribute>rerunxpath</attribute> is true, the datapointer will
+  * always rerun its remembered XPath (set with the
+  * <attribute>xpath</attribute> property). If it is false, the
+  * datapointer will only verify that the node it is pointing to is
+  * still in the dataset. If it isn't, the datapointer will rerun
+  * its remembered xpath (if it has one) or will print a debug
+  * message if any further attempt is made to use its current node
+  * as the basis for a relative XPath query.
+  * 
+  * @type Boolean
+  */
+var rerunxpath :Boolean = false;
+
+/** @lzxtype event
+    @access private */
+var onp :LzDeclaredEventClass = LzDeclaredEvent;
+/** @lzxtype event
+  * @access private */
+var onDocumentChange :LzDeclaredEventClass = LzDeclaredEvent;
+/** @lzxtype event 
+  * Sent when the data selected by this datapointer's <attribute>xpath</attribute>
+  * changes. For XPaths which select a datanode, this means that the
+  * datapointer is pointing to a new node. For XPaths which select text data,
+  * this means that the datapointer is pointing to a new node, or that the
+  * text selected by the <attribute>xpath</attribute> has changed. Note that a datapointer mapped to
+  * a data node will not receive <event>ondata</event> when the node, say, changes one of
+  * its attributes. */
+// var ondata = LzDeclaredEvent;
+/** Sent when the dataset that the datapointer 
+  * is pointing to generates an error.
+  * @lzxtype event
+  */
+var onerror :LzDeclaredEventClass = LzDeclaredEvent;
+/** Sent when a request by the dataset that 
+  * the datapointer is pointing to times out.
+  * @lzxtype event  
+  */
+var ontimeout :LzDeclaredEventClass = LzDeclaredEvent;
+/** @lzxtype event
+  * @access private */
+var onrerunxpath :LzDeclaredEventClass = LzDeclaredEvent;
+
+/** @access private */
+function LzDatapointer ( parent:* = null , attrs:* = null, children:* = null, instcall:*  = null) {
+    super (parent, attrs, children, instcall);
+}
+
+/**
+  * Called when the datapointer receives an <event>onerror</event> event from
+  * the dataset it's pointing to.
+  * @access private
+  */
+function gotError ( ds:LzDataset ) :void {
+    if (this.onerror.ready) this.onerror.sendEvent( ds );
+}
+
+/**
+  * Called when the datapointer's dataset's request times out...
+  * @access private
+  */
+function gotTimeout ( ds:LzDataset ) :void {
+    if (this.ontimeout.ready) this.ontimeout.sendEvent( ds );
+}
+
+/**
+  * Returns the result of an XPath query without changing the pointer. 
+  * @param Object p: the xpath
+  * @return any: <dl class="compact">
+  * <dt><code>null</code></dt><dd>if the
+  * query is invalid or matches nothing</dd>
+  * <dt>a <code>String</code></dt><dd>the result of an operator such as <code>name</code> or <code>attribute</code></dd>
+  * <dt>an <sgmltag class="element" role="LzDataElement">LzDataElement</sgmltag></dt><dd>if the query resolves to a single node</dd>
+  * <dt>an array of <sgmltag class="element" role="LzDataElement">LzDataElement</sgmltag></dt><dd>if the query resolves to multiple nodes</dd>
+  * </dl>
+  */
+function xpathQuery ( p:Object ) :* { 
+    var pp:LzParsedPath = this.parsePath( p );
+    //LzParsedPath#getContext(LzDatapointer) returns either 
+    //LzDataset or AnonDatasetGenerator -> make interface?
+    var ppcontext:* = pp.getContext( this );
+    var nodes:* = this.__LZgetNodes( pp , ppcontext ? ppcontext : this.p );
+
+    if ( nodes == null ) return null;
+
+    if ( pp.aggOperator != null ){
+        if ( pp.aggOperator == 'last' ){
+            if (nodes is Array) {
+                return nodes.length;
+            } else {
+                if (!ppcontext && nodes === this.p) {
+                    // @devnote: if we supplied the current datanode 'this.p' to __LZgetNodes(..), 
+                    // but __LZgetNodes(..) didn't actually do any processing, the user expects that 
+                    // the xpath will be evaluated against this datanode, but we need to 
+                    // protect against special cases because of replication:
+                    // n datanodes are replicated, this datanode is at x, x=[1..n], 
+                    // "last()" should return n, but "../*[x]/last()" should return 1!
+                    if (pp.selectors && pp.selectors.length > 0) {
+                        var sel:Array = pp.selectors;
+                        var i:int = 0;
+                        while (sel[i] == "." && i < sel.length) { ++i; }
+                        return i != sel.length ? 1 : this.__LZgetLast();
+                    } else {
+                        return this.__LZgetLast();
+                    }
+                } else {
+                    return 1;
+                }
+            }
+        } else if (pp.aggOperator == 'position') {
+            if (nodes is Array) {
+                var rarr:Array = [];
+                for (var i:int = 0; i < nodes.length; i++) {
+                    rarr.push( i + 1 );
+                }
+                return rarr;
+            } else {
+                if (!ppcontext && nodes === this.p) {
+                    // @devnote: see comment for "last()"
+                    if (pp.selectors && pp.selectors.length > 0) {
+                        var sel:Array = pp.selectors;
+                        var i:int = 0;
+                        while (sel[i] == "." && i < sel.length) { ++i; }
+                        return i != sel.length ? 1 : this.__LZgetPosition();
+                    } else {
+                        return this.__LZgetPosition();
+                    }
+                } else {
+                    return 1;
+                }
+            }
+        }
+    } else if ( pp.operator != null  ){
+        if (nodes is Array) {
+            var oarr:Array = [];
+            for (var i:int = 0; i < nodes.length; i++) {
+                oarr.push( this.__LZprocessOperator( nodes[ i ] , pp ) );
+            }
+            return oarr;
+        } else {
+            return this.__LZprocessOperator( nodes, pp );
+        }
+    } else {
+        return nodes;
+    }
+}
+/** @access private */
+function $lzc$xpathQuery_dependencies (who, self, p) :Array {
+    if (this['parsePath']) {
+        var pp:LzParsedPath = this.parsePath( p );
+        return [ pp.hasDotDot ? self.context.getContext().ownerDocument : self , 
+                 "DocumentChange" ];
+    } else {
+        return [  self , "DocumentChange" ];
+    }
+}
+
+/**
+  * Points this datapointer at p.
+  * @param LzDataNodeMixin p: The new target for this datapointer.
+  *
+  * @devnote TODO [2009-01-19 ptw] Shouldn't this be $lzc$set_pointer,
+  * and be final?
+  */
+function setPointer ( p /*:LzDataNodeMixin*/ ) :Boolean {
+    this.setXPath( null );
+    if ( p != null ){
+        this.setDataContext( p.ownerDocument );
+    } else {
+        this.__LZsetTracking( null );
+    }
+
+    var dc:Boolean = this.data != p;
+    var pc:Boolean = this.p != p;
+
+    this.p = p;
+    this.data = p;
+
+    this.__LZsendUpdate ( dc , pc );
+    return p!=null;
+}
+
+/**
+  * Returns a reference to the datapointer's dataset.
+  * @return LzDataset: The datapointer's dataset
+  */
+function getDataset () :LzDataset { 
+    if (this.p == null) {
+        if (this.context === this) {
+            return null;
+        } else {
+            return this.context.getDataset();
+        }
+    } else {
+        return this.p.ownerDocument;
+    }
+}
+
+/**
+  * Sets the <attribute>xpath</attribute> attribute to
+  * <param>param</param>, and sets the current node to the node that it
+  * refers to.
+  * 
+  * If the XPath contains a terminal selector such as
+  * <code>text()</code>, the datapointer's <attribute>data</attribute>
+  * property is set to that value. It is error to set a datapointer to
+  * an XPath that matches multiple nodes.
+  * @param String p: An XPath.
+  * @return Boolean|Undefined: <code>true</code> if the path matches a
+  * single node, <code>false</code> if no or multiple nodes are
+  * matched, <code>undefined</code> if the path is invalid.
+  */
+function setXPath ( p:String ) :Boolean? {
+    if (! p) {
+        this.xpath = null;
+        this.parsedPath = null;
+        // track if there's an ownerDocument
+        if ( this.p ) this.__LZsetTracking( this.p.ownerDocument );
+        return false;
+    }
+
+    this.xpath = p;
+    this.parsedPath = this.parsePath( p );
+    var ppcontext:* = this.parsedPath.getContext(this);
+    
+    if ( this.rerunxpath && 
+         this.parsedPath.hasDotDot && 
+         !ppcontext  ){
+        //ruh roh
+        this.__LZspecialDotDot = true;
+    } else {
+        if ( this.__LZdotdotCheckDel ){
+            this.__LZdotdotCheckDel.unregisterAll();
+        }
+    }
+
+    this.setDataContext( ppcontext );
+
+    return  this.runXPath(  );
+}
+
+/** @access private */
+function runXPath () :Boolean { 
+    if ( !this.parsedPath ) {
+        return false;
+    }
+
+    var newc /*:LzDataNodeMixin*/ = null;
+// [2008-04-03 pbr] Find a simpler way to represent this
+//    if ( this.context && 'getContext' in this.context ){
+    if ( this.context && (this.context is LzDatapointer || this.context is LzDataset || this.context is AnonDatasetGenerator)) {
+        newc = this.context.getContext();
+    }
+
+    if ( newc ) {
+        var n:* = this.__LZgetNodes( this.parsedPath , newc , 0 );
+    } else {
+        var n:* = null;
+    }
+
+    if ( n == null ) {
+        //no node found
+        this.__LZHandleNoNodes();
+        return false;
+    } else if ( n is Array ) {
+        this.__LZHandleMultiNodes( n );
+        return false;
+    } else {
+        this.__LZHandleSingleNode( n );
+        return true;
+    }
+}
+
+/** @access private */
+function __LZsetupDotDot ( p ) :void {
+    if ( this.__LZlastdotdot != p.ownerDocument ){
+        //this requires special processing, since it doesn't only depend
+        //on its context
+        if ( this.__LZdotdotCheckDel == null ){
+            this.__LZdotdotCheckDel = new LzDelegate( this, "__LZcheckDotDot" );
+        } else {
+            this.__LZdotdotCheckDel.unregisterAll();
+        }
+
+        this.__LZlastdotdot = p.ownerDocument; 
+        this.__LZdotdotCheckDel.register( this.__LZlastdotdot cast LzEventable, "onDocumentChange" );
+    }
+}
+
+/** @access private */
+function __LZHandleSingleNode ( n /*:LzDataNodeMixin*/ ) :void { 
+    if ( this.__LZspecialDotDot ) this.__LZsetupDotDot( n );
+
+    this.__LZupdateLocked = true;
+
+    this.__LZpchanged = n != this.p;
+
+    this.p = n;
+
+    this.__LZsetData( );
+
+    this.__LZupdateLocked = false;
+
+    this.__LZsendUpdate();
+}
+
+/** @access private */
+function __LZHandleNoNodes () :void { 
+    var pc:Boolean = this.p != null;
+    var dc:Boolean = this.data != null;
+    this.p = null;
+    this.data = null
+    this.__LZsendUpdate( dc , pc );
+}
+
+
+/** @access private */
+function __LZHandleMultiNodes ( n:Array ) :LzReplicationManager { 
+    if ($debug) {
+        Debug.error("%w matched %d nodes", this, n.length);
+    }
+    this.__LZHandleNoNodes();
+    
+    return null;
+}
+
+/** @access private */
+function __LZsetData () :void { 
+    if ( this.parsedPath && this.parsedPath.aggOperator != null ){
+        if ( this.parsedPath.aggOperator == 'last' ){
+            this.data = this.__LZgetLast();
+            this.__LZsendUpdate( true );
+        } else if ( this.parsedPath.aggOperator == 'position' ){
+            this.data = this.__LZgetPosition();
+            this.__LZsendUpdate( true );
+        }
+    } else if ( this.parsedPath && this.parsedPath.operator != null ){
+        this.__LZsimpleOperatorUpdate ();
+    } else {
+        if ( this.data != this.p ){
+            this.data = this.p;
+            this.__LZsendUpdate( true );
+        }
+    }
+}
+
+/** @access private */
+function __LZgetLast () :int { 
+    var ctx:* = this.context;
+    if (ctx == null || ctx === this || !(ctx is LzDatapointer)) {
+        return 1;
+    } else {
+        return ctx.__LZgetLast() || 1;
+    }
+}
+
+/** @access private */
+function __LZgetPosition () :int { 
+    var ctx:* = this.context;
+    if (ctx == null || ctx === this || !(ctx is LzDatapointer)) {
+        return 1;
+    } else {
+        return ctx.__LZgetPosition() || 1;
+    }
+}
+
+/** @access private */
+var __LZupdateLocked :Boolean = false;
+/** @access private */
+var __LZpchanged :Boolean = false;
+/** @access private */
+var __LZdchanged :Boolean = false;
+
+/** @access private */
+function __LZsendUpdate (upd:Boolean = false, upp:Boolean = false) :Boolean { 
+
+    this.__LZdchanged = upd || this.__LZdchanged;
+    this.__LZpchanged = upp || this.__LZpchanged;
+
+    if ( this.__LZupdateLocked ){
+        return false;
+    }
+
+
+    if ( this.__LZdchanged) {
+        if (this.ondata.ready) this.ondata.sendEvent( this.data );
+        this.__LZdchanged = false;
+    }
+
+    if ( this.__LZpchanged) {
+        if (this.onp.ready) this.onp.sendEvent( this.p );
+        this.__LZpchanged = false;
+        if (this.onDocumentChange.ready) this.onDocumentChange.sendEvent( { who: this.p , 
+                                           type: 2 , 
+                                           what: 'context'});
+    }
+    return true;
+}
+
+/**
+  * Tests whether or not this datapointer is pointing to a valid node.
+  * @return Boolean: True if the current node is valid.
+  */
+function isValid () :Boolean { 
+    return this.p != null;
+}
+
+/** @access private */
+function __LZsimpleOperatorUpdate () :void { 
+    var ndat:* = this.p != null ? this.__LZprocessOperator( this.p, this.parsedPath ) : void(0);
+    //second clause is necessary to process updates for @*
+    var dchanged:Boolean = false;
+    if ( this.data != ndat || this.parsedPath.operator == "attributes" ){
+        this.data = ndat;
+        dchanged = true;
+    }
+    this.__LZsendUpdate( dchanged );
+}
+
+/** @access private */
+static var ppcache :Object = {};
+
+/**
+  * Parses a fully qualified XPath and yields an object with the components
+  * listed below. These are cached.
+  * Canonical xpath: ../nodea/nodeb[2]/@foo
+  * Canonical xpath: nodea/nodeb[2]/@*
+  * Canonical xpath: ./nodea/nodeb[2-]/text()
+  * Canonical xpath: /nodea/nodeb[8]/*
+  * Canonical xpath: dset:/nodea/nodeb[-8]
+  * Canonical xpath: dsrc:dset:/nodea/nodeb[2-8]
+  * @access private
+  */
+function parsePath (pa:*) :LzParsedPath {
+    if (pa is LzDatapath) {
+        var xp:String = (pa cast LzDatapath).xpath;
+    } else {
+        var xp:String = (pa cast String);
+    }
+    
+    var ppc:Object = LzDatapointer.ppcache;
+    var q:LzParsedPath = ppc[ xp ];
+    if (q == null) {
+        q = new LzParsedPath(xp, this);
+        ppc[ xp ] = q;
+    }
+    
+    return q;
+}
+
+/**
+  * Locates a local data context based on the parsed path
+  * @access private
+  */
+function getLocalDataContext(pp:Array) :LzDataset {
+    var n:LzNode = this.parent;
+    if (pp) {
+        var a:Array = pp;
+        for (var i:int = 0; i < a.length && n != null; i++) {
+            n = n[a[i]];
+        }
+        if (n != null && !(n is LzDataset) && n['localdata'] is LzDataset) {
+            n = n['localdata']
+              return (n cast LzDataset);
+        }
+    }
+
+    if (n != null && n is LzDataset) {
+        return (n cast LzDataset);
+    } else {
+        if ($debug) {
+            Debug.warn('local dataset "%w" not found in %w', pp, this.parent);
+        }
+        /* Could register for node creation if datapath is created before dataset
+        */
+        return null;
+    }
+}
+
+//Table of xpath node operator symbols and the functions they call
+/** @access private */
+static const pathSymbols :Object = { '/': 1, '..': 2, '*': 3, '.': 4};
+
+
+/** @access private */
+function __LZgetNodes (pathobj:LzParsedPath, p:*, startpoint:int = 0) :* {
+
+  if ( p == null ){
+      if ( $debug ) {
+          Debug.info("%s: p is null in %s", arguments.callee, this);
+      }
+      return null;
+  }
+
+  if (pathobj.selectors != null) {
+
+    var pathlen:int = pathobj.selectors.length;
+    
+    for ( var i:int = startpoint; i < pathlen; i++ ){
+
+      var cp:* = pathobj.selectors[ i ];
+      var specialop:int = LzDatapointer.pathSymbols[ cp ] || 0;
+      var posnext:* = pathobj.selectors[ i+1 ];
+      if ( posnext && !(posnext is String) && posnext['pred'] == "range" ){
+        //next is range operator
+        //we'll handle that in this pass, so increment counter again
+        var range:Array = (pathobj.selectors[ ++i ] cast Array);
+      } else {
+        var range:Array = null;
+      }
+
+
+      var np:Array = null;
+
+// [2008-04-01 pbr] Make sure cp is an Object (ie. hash)
+      if ( cp is Object && 'pred' in cp && null != cp.pred ){
+        if ( cp.pred == "hasattr" ){
+          p = p.hasAttr( cp.attr ) ? p : null;
+        } else if ( cp.pred == "attrval" ){
+          if (p.attributes != null) {
+            p = p.attributes[ cp.attr ] == cp.val ? p : null;
+          } else {
+            p = null;
+          }
+        }
+      } else if ( specialop == 0 ){
+        //named node
+        np = this.nodeByName( cp , range , p );
+      } else if ( specialop == 1 ){
+        //root
+        p = p.ownerDocument;
+      } else if ( specialop == 2 ){
+        //parent
+        p = p.parentNode;
+      } else if ( specialop == 3 ) {
+        //all children
+        np = [];
+
+        if (p.childNodes) {
+          var cnodes:Array = p.childNodes;
+          var len:int = cnodes.length;
+          var rleft:int = range != null ? range[0] : 0;
+          var rright:int = range != null ? range[1] : len;
+          var cnt:int = 0;
+          for ( var j:int = 0; j < len; j++ ){
+            //remove text nodes
+            var cn /*:LzDataNodeMixin*/ = cnodes[j];
+            if (cn.nodeType == LzDataElement.ELEMENT_NODE) {
+              cnt++;
+              if (cnt >= rleft) {
+                np.push( cn );
+              }
+              if (cnt == rright) {
+                break;
+              }
+            }
+          }
+        }
+
+      } /*else if ( specialop == 4 ) {
+        // . (ignore)
+        }*/
+
+      if ( np != null ){
+        if ( np.length > 1 ){
+
+          if ( i == pathlen - 1 ){
+            return np;
+          } //else
+                    
+          var rval:Array = [];
+          for ( var j:int = 0; j < np.length; j++ ){
+            var r:* = this.__LZgetNodes( pathobj , np[ j ], i+1 );
+            
+            if (r != null) {
+              if (r is Array) {
+                for ( var n:int = 0; n < r.length; n++ ){
+                  rval.push( r[ n ] );
+                }
+              } else {
+                rval.push( r );
+              }
+            }
+          }
+                    
+          if ( rval.length == 0 ) {
+            return null;
+          }else if (rval.length == 1){
+            return rval[ 0 ];
+          } else {
+            return rval;
+          }
+        } else {
+          p = np [ 0 ];//I've finally proven it!
+        }
+      }
+            
+      if (p == null) {
+        return null;
+      }
+    }
+  }
+
+  return p;
+}
+
+/**
+  * This is the shared interface between dataset and datapointer that allows
+  * one datapointer to function as the datacontext for another
+  * @access private
+  */
+function getContext ( chgpkg = null ) :* {
+    return this.p;
+}
+
+/**
+  * Select node by name at the current level.  Returns
+  * <code>null</code>, an offset, or an array of offsets.
+  * @access private
+  * @param name: node name 
+  * @param range: range string
+  * @return: null or an offset
+  */
+function nodeByName (name:String, range:Array, p/*:LzDataNodeMixin*/) :Array {
+    if ( !p ) {
+        p = this.p;
+        if ( ! this.p ) return null;     
+    }
+    
+    var o:Array = [];
+    
+    if (p.childNodes != null) {
+        var cnodes:Array = p.childNodes;
+        var len:int = cnodes.length;
+        var rleft:int = range != null ? range[0] : 0;
+        var rright:int = range != null ? range[1] : len;
+        var cnt:int = 0;
+        for (var i:int = 0; i < len; i++) {
+            var cn /*:LzDataNodeMixin*/ = cnodes[i];
+            if (cn.nodeName == name) {
+                //match
+                cnt++;
+                if (cnt >= rleft) {
+                    o.push( cn );
+                } 
+                if (cnt == rright) {
+                    break;
+                }
+            }
+        }
+    }
+    
+    return o;
+}
+
+/** @access private */
+function $lzc$set_rerunxpath (rrx:Boolean) :void {
+    this.rerunxpath = rrx;
+
+    if (this.onrerunxpath.ready) this.onrerunxpath.sendEvent( rrx );
+}
+
+/**
+  * Return a new datapointer that points to the same node, has a
+  * null <literal>xpath</literal> and a
+  * false <literal>rerunxpath</literal> attribute.
+  * @return LzDatapointer: A new datapointer that points to the same spot as this
+  * one
+  */
+function dupePointer () :LzDatapointer {
+    var dp:LzDatapointer = new LzDatapointer();
+    dp.setFromPointer( this );
+    return dp;
+}
+
+/** @access private */
+function __LZdoSelect (selector:String, amnt:int) :Boolean {
+  var np /*:LzDataNodeMixin*/ = this.p;
+  for (; np != null && amnt > 0; amnt--) {
+    if (np.nodeType == LzDataNode.TEXT_NODE) {
+      if (selector == 'getFirstChild') break;
+    }
+    np = np[selector]();
+  }
+  if (np != null && amnt == 0) {
+    this.setPointer( np );
+    return true;
+  }
+  return false;
+}
+
+
+/**
+  * Selects the next sibling node in the dataset if possible.
+  * @param Number amnt: If given, the number of nodes to advance. If null,
+  * <param>amnt</param> is <code>1</code>.
+  * @return Boolean: True if the pointer was able to move forward <param>amnt</param> nodes.
+  */
+function selectNext (amnt = null) :Boolean {
+  return this.__LZdoSelect('getNextSibling', amnt ? amnt : 1);
+}
+
+/**
+  * Selects the previous sibling node in the dataset if possible.
+  * @param Number amnt: If given, the number of nodes to move back. If
+  * <code>null</code>, <param>amnt</param> is 1.
+  * @return Boolean: True if the pointer was able to move back
+  * <param>amnt</param> nodes.
+  */
+function selectPrev (amnt = null) :Boolean {
+  return this.__LZdoSelect('getPreviousSibling', amnt ? amnt : 1);
+}
+ 
+/**
+  * Moves down the data hierarchy to  the next child node in the dataset if 
+  * possible.
+  * @param Number amnt: If given, the number of nodes to go down. If
+  * <code>null</code>, <param>amnt</param> is <code>1</code>.
+  * @return Boolean: True if the pointer was able to move down <param>amnt</param> nodes.
+  */
+function selectChild (amnt = null) :Boolean {
+  return this.__LZdoSelect('getFirstChild', amnt ? amnt : 1);
+}
+
+/**
+  * Moves up the data hierarchy to the next parent node in the dataset if
+  * possible.  
+  * @param Number amnt: If given, the number of nodes to go up. If
+  * <code>null</code>, <param>amnt</param> is <code>1</code>.  
+  * @return Boolean: A Boolean indicating if the pointer was able to move up
+  * <param>amnt</param> nodes.
+  */
+function selectParent (amnt = null) :Boolean {
+  return this.__LZdoSelect('getParent', amnt ? amnt : 1);
+}
+
+/** @access private */
+function selectNextParent () :Boolean {
+    var op /* :LzDataNodeMixin*/ = this.p;
+    if ( this.selectParent() && this.selectNext() ){
+        return true;
+    } else {
+        this.setPointer( op );
+        return false;
+    }
+}
+
+/**
+  * Returns the number of the node that the datapointer is pointing to.
+  * Note that XPath indices are 1-based.
+  * @return Number: The offset of the node
+  * @deprecated Use <code>position()</code> xpath operator or LzDatapointer.getXPathIndex() instead.
+  */
+function getNodeOffset (){ 
+    if ( $debug ) {
+      Debug.info("%w.%s is deprecated.  Use XPath `position()` operator or LzDatapointer.getXPathIndex() instead.",
+                 this, arguments.callee);
+    }
+    return this.getXPathIndex();
+}
+
+/**
+  * Returns the number of the node that the datapointer is pointing to.
+  * If the datapointer does not point to a valid node, 0 is returned.
+  * Note that XPath indices are 1-based.
+  * @return Number: The offset of the node or 0
+  */
+function getXPathIndex ():Number { 
+    if ( ! this.p ) {
+        if ( $debug ) {
+            Debug.info("%s: p is null in %s", arguments.callee, this);
+        }
+        return 0;
+    }
+    
+    return this.p.getOffset() + 1;
+}
+
+/**
+  * Gets the nodeType of the node that the datapointer is pointing to.
+  * @return Integer: one of LzDataElement.ELEMENT_NODE, LzDataElement.TEXT_NODE, 
+  * LzDataElement.DOCUMENT_NODE or <code>undefined</code> if this datapointer 
+  * does not point to a valid node
+  */
+function getNodeType () /*:Number?*/ :* {
+    if ( ! this.p ) {
+        if ( $debug ) {
+            Debug.info("%s: p is null in %s", arguments.callee, this);
+        }
+        return;
+    }
+    
+    return this.p.nodeType;
+}
+
+/**
+  * Gets the name of the node that the datapointer is pointing to.
+  * @return String: The name of the datapointer's node
+  */
+function getNodeName () :String { 
+    if ( ! this.p ) {
+        if ( $debug ) {
+            Debug.info("%s: p is null in %s", arguments.callee, this);
+        }
+        return null;
+    }
+    return this.p.nodeName;
+}
+
+/**
+  * Sets the name of the current element to the <param>name</param>.
+  * @param String name: The new name for the datapointer's node
+  */
+function setNodeName (name:String) :void {
+    if ( ! this.p ) {
+        if ( $debug ) {
+            Debug.info("%s: p is null in %s", arguments.callee, this);
+        }
+        return;
+    }
+    if (this.p.nodeType != LzDataElement.TEXT_NODE) {
+        this.p.$lzc$set_nodeName( name );
+    }
+}
+
+/**
+  * Returns the attributes of the node pointed to by the datapointer in an
+  * Object whose keys are the attribute names and whose values are the attribute
+  * values
+  * @return Object: An Object which represents the keys and values of the node
+  * attributes
+  */
+function getNodeAttributes () :Object { 
+    if ( ! this.p ) {
+        if ( $debug ) {
+            Debug.info("%s: p is null in %s", arguments.callee, this);
+        }
+        return null;
+    }
+    if (this.p.nodeType != LzDataElement.TEXT_NODE) {
+        return this.p.attributes;
+    }
+    return null;
+}
+
+/**
+  * Returns the value of the current node's <param>name</param> attribute.
+  * @param String name: The attribute to retrieve.
+  * @return String: The value of the attribute.
+  */
+function getNodeAttribute (name:String) :String { 
+    if ( ! this.p ) {
+        if ( $debug ) {
+            Debug.info("%s: p is null in %s", arguments.callee, this);
+        }
+        return null;
+    }
+    if (this.p.nodeType != LzDataElement.TEXT_NODE) {
+        return this.p.attributes[ name ];
+    }
+    return null;
+}
+
+/**
+  * Set the <param>name</param> attribute of the current node to the
+  * <param>val</param>.
+  * @param String name: The name of the attribute to set
+  * @param String val: The value for the attribute
+  */
+function setNodeAttribute (name:String, val:String) :void {    
+    if ( ! this.p ) {
+        if ( $debug ) {
+            Debug.info("%s: p is null in %s", arguments.callee, this);
+        }
+        return;
+    }
+    if (this.p.nodeType != LzDataElement.TEXT_NODE) {
+        this.p.setAttr( name, val );
+    }
+}
+
+/**
+  * Removes the <param>name</param> attribute from the current node.
+  * @param String name: The name of the attribute to delete.
+  */
+function deleteNodeAttribute (name:String) :void {
+    if ( ! this.p ) {
+        if ( $debug ) {
+            Debug.info("%s: p is null in %s", arguments.callee, this);
+        }
+        return;
+    }
+    if (this.p.nodeType != LzDataElement.TEXT_NODE) {
+        this.p.removeAttr( name );
+    }
+}
+
+/**
+  * Returns a string that represents a concatenation of the text nodes
+  * beneath the current element. <method>getNodeText</method> and
+  * <method>getOtherNodeText</method> are the only way to access
+  * non-element data nodes.
+  * @return String: The text in the node pointed to by the datapointer.
+  */
+function getNodeText () :String { 
+    if ( ! this.p ) {
+        if ( $debug ) {
+            Debug.info("%s: p is null in %s", arguments.callee, this);
+        }
+        return null;
+    }
+    if (this.p.nodeType != LzDataElement.TEXT_NODE) {
+        return this.p.__LZgetText();
+    }
+    return null;
+}
+
+/**
+  * Sets the current node's text to <param>value</param>.
+  * When this node is serialized, the text will be
+  * represented as the first child node of this node. If the node
+  * already has one or more text children, the value of the first text
+  * node is set to the <param>val</param>.
+  * 
+  * @param String val: The new string for the node's text
+  */
+function setNodeText (val:String) :void {
+    if ( ! this.p ) {
+        if ( $debug ) {
+            Debug.info("%s: p is null in %s", arguments.callee, this);
+        }
+        return;
+    }
+
+    if (this.p.nodeType != LzDataElement.TEXT_NODE) {
+        // set the first text node you find; otherwise add one
+        var foundit:Boolean = false;
+        var cnodes:Array = this.p.childNodes;
+        for (var i:int = 0; i < cnodes.length; i++) {
+            var cn /*:LzDataNodeMixin*/ = cnodes[i];
+            if (cn.nodeType == LzDataElement.TEXT_NODE) {
+                cn.$lzc$set_data(val); 
+                foundit = true;
+                break;
+            }
+        }
+        if ( !foundit ){
+            //there wasn't a text node previously
+            this.p.appendChild( new LzDataText( val ) );
+        }
+    }
+}
+
+/**
+  * Counts the number of element nodes that are children of the node that the
+  * datapointer is pointing to.
+  * @return Integer: The number of child nodes for the current node
+  */
+function getNodeCount () :int { 
+    if (! this.p || this.p.nodeType == LzDataElement.TEXT_NODE) return 0;
+    return this.p.childNodes.length || 0;
+}
+
+
+//****Adding and removing
+/**
+  * Adds a new child node below the current context
+  * @param String name: The name of the new node.
+  * @param String text: The text of the new node.
+  * @param Dictionary attrs: An object containing the name : value pairs of
+  * attributes for this node.
+  * @return LzDataElement: the new node
+  */
+function addNode (name:String, text:String = null, attrs:Object = null) :LzDataElement {
+    if ( ! this.p ) {
+        if ( $debug ) {
+            Debug.info("%s: p is null in %s", arguments.callee, this);
+        }
+        return null;
+    }
+
+    var nn:LzDataElement = new LzDataElement( name , attrs );
+    if ( text != null ){
+        nn.appendChild( new LzDataText( text ) );
+    }
+
+    if (this.p.nodeType != LzDataElement.TEXT_NODE) {
+        this.p.appendChild( nn );
+    }
+    
+    return nn;
+}
+
+/**
+  * Removes the node pointed to by the datapointer. If
+  * <attribute>rerunxpath</attribute> is true and <attribute>xpath</attribute>
+  * has been set, it will be re-evaluated. Otherwise, if the deleted node
+  * has a following sibling, the pointer is repositioned at that sibling.
+  * Otherwise the pointer is set to <code>null</code>.
+  */
+function deleteNode() /*:LzDataNodeMixin*/ {
+    if ( ! this.p ) {
+        if ( $debug ) {
+            Debug.info("%s: p is null in %s", arguments.callee, this);
+        }
+        return;
+    }
+
+    var op /*:LzDataNodeMixin*/ = this.p
+    if ( !this.rerunxpath ){
+        //move the pointer to a sibling, try first the next sibling, then the previous sibling
+        if (! (this.selectNext() || this.selectPrev())) {
+            this.__LZHandleNoNodes();
+        }
+    } 
+
+    op.parentNode.removeChild( op );
+    return op;
+    //if we want to remember the deleted node, could push it onto this.p.$p.dc
+    //move the pointer if you don't want to rerun xpath 
+
+}
+
+/** @access private */
+function sendDataChange ( chgpkg ) :void {
+    //chgpkg.a(ction): d: delete, m:modify , a:add , null - refreshall
+    //chgpkg.p(ointer))
+    this.getDataset().sendDataChange( chgpkg );
+}
+
+/**
+  * Determines whether this pointer is pointing to the same node as <param>ptr</param>.
+  * @param LzDatapointer ptr: The datapointer to compare to this one.
+  * @return Boolean: True if the datapointers are pointing to the same node.
+  */
+function comparePointer (ptr:LzDatapointer) :Boolean {
+    return this.p == ptr.p;
+}
+
+/**
+  * Duplicates the node that <param>dp</param> is pointing to, and appends it
+  * it to the node pointed to by this datapointer, making the added node the last on the list.
+  * @param LzDatapointer dp: A pointer to the node to add
+  * @return LzDatapointer: A pointer to the new node
+  */
+function addNodeFromPointer (dp:LzDatapointer) :LzDatapointer {
+    if ( ! dp.p ) return null;
+    if ( ! this.p ) {
+        if ( $debug ) {
+            Debug.info("%s: p is null in %s", arguments.callee, this);
+        }
+        return null;
+    }
+
+    var n/*:LzDataNodeMixin*/ = dp.p.cloneNode( true );
+    
+    if (this.p.nodeType != LzDataElement.TEXT_NODE) {
+        this.p.appendChild( n );
+    }
+    
+    return new LzDatapointer( null , { pointer : n } );
+}
+
+/**
+  * Sets this datapointer to the location of the given datapointer
+  * @param LzDatapointer dp: The datapointer which has the desired location for
+  * this datapointer.
+  */
+function setFromPointer ( dp:LzDatapointer ) :void {
+    this.setPointer( dp.p );
+}
+
+
+/** @access private */
+function __LZprocessOperator (p /*:LzDataNodeMixin*/, pp:LzParsedPath) :* {
+    if (p == null) {
+        if ( $debug ) {
+            Debug.info("%s: p is null in %s", arguments.callee, this);
+        }
+        return;
+    }
+
+    var op:String = pp.operator;
+    switch (op) {
+        case "serialize": 
+            //operator: "serialize()"
+            return p.serialize();
+        case "text": 
+            //operator: "text()"
+            return p.nodeType != LzDataElement.TEXT_NODE ? p.__LZgetText() : void(0);
+        case "name":
+            //operator: "name()"
+            return p.nodeName;
+        default:
+            if (pp.hasAttrOper) {
+                //operator: "attributes" or "attributes.xxx"
+                if (p.nodeType != LzDataElement.TEXT_NODE && p['attributes']) {
+                    if (op == "attributes") {
+                        return p.attributes;
+                    } else {
+                        //@dev-note: 11 == length of 'attributes.'
+                        return p.attributes[op.substr(11)];
+                    }
+                } else {
+                    // TODO: [2007-3-16 hqm] I'll do what Ben did, return undefined
+                    return;
+                }
+            } else if ($debug) {
+                Debug.error ("Unknown operator '%s' in '%s'", op, arguments.callee);
+            }
+    }
+}
+
+////////////////////////////////////////////////////////////////
+
+/** @access private */
+function makeRootNode () :LzDataElement {
+    // create the root node
+
+    return new LzDataElement( "root" );
+}
+
+/** @access private */
+function finishRootNode (n) /*:LzDataNodeMixin*/ {
+    // create the root node
+    return n.childNodes[ 0 ];
+}
+
+/** @access private */
+function makeElementNode (attrs, name, par) :LzDataElement {
+    var tn:LzDataElement = new LzDataElement( name, attrs );
+    par.appendChild( tn );
+    return tn;
+}
+
+/** @access private */
+function makeTextNode (text, par) :LzDataText {
+    var tn:LzDataText = new LzDataText( text );
+    par.appendChild( tn );
+    return tn;
+}
+
+
+if ($as2) {
+// FIXME: [2006-03-22 ptw] (LPP-1867) 
+// These are short aliases for routines used by the old data compiler.
+// They are still used by the swf8 runtime, the errorSWF mechanism compiles
+// a block of code to return an error when a proxied media load fails on the server. 
+_root._finishndi  = prototype.finishRootNode;
+_root._rootndi    = prototype.makeRootNode;
+_root._m = prototype.makeElementNode;
+_root._t = prototype.makeTextNode;
+}
+
+
+////////////////////////////////////////////////////////////////
+
+/**
+  * Serialize the current element and its children to an XML string. Note that
+  * even if this datapointer's XPath ends in a terminal selector (such
+  * as <code>@attribute</code> or <code>text()</code>) this method will
+  * return the serialized text of the element that the datapointer
+  * points to.
+  * 
+  * @return String: A string of XML that represents all of the datapointer's
+  * contents.
+  */
+function serialize () :String { 
+    if ( this.p == null) {
+        if ( $debug ) {
+            Debug.info("%s: p is null in %s", arguments.callee, this);
+        }
+        return null;
+    }
+    return this.p.serialize();
+}
+
+
+if ($debug) {
+/** @access private */
+LzDatapointer.prototype._dbg_name = function () :String {
+    if (this.p) {
+        return this.p._dbg_name();
+    }
+    return null;
+}
+}
+
+
+/** @access private */
+// The optional argument is used by LzDatapath
+function setDataContext (dc, ignore:Boolean = false) :void {
+    if ( dc == null ){
+        this.context = this;
+        if (this.p) {
+            this.__LZsetTracking( this.p.ownerDocument );
+        }
+    } else if ( this.context != dc ){
+        this.context = dc;
+
+        // Unregister from old context
+        if ( this.errorDel != null ){
+            this.errorDel.unregisterAll();
+            this.timeoutDel.unregisterAll();
+        }
+        
+        this.__LZsetTracking( dc );
+
+        // When you have an xpath, register on the new context
+        var hasxpath:Boolean = this.xpath != null;
+        if (hasxpath) {
+            if ( this.errorDel == null ){
+                this.errorDel = new LzDelegate( this , "gotError" );
+                this.timeoutDel = new LzDelegate( this , "gotTimeout" );
+            }
+            this.errorDel.register( dc , "onerror" );
+            this.timeoutDel.register( dc , "ontimeout" );
+        }
+    }
+}
+
+/** @access private */
+function __LZcheckChange ( chgpkg:Object ) :Boolean {
+    if ( !this.rerunxpath ){
+        //if no pointer or who changed was the context I point to
+        if ( !this.p || chgpkg.who == this.context ){
+            this.runXPath();
+        } else if ( this.__LZneedsOpUpdate( chgpkg ) ){ 
+            //only update my data if my node changed and I have an operator
+            this.__LZsimpleOperatorUpdate();
+        }
+        return false;
+    } else {
+        //type 2 change means datapointer I depend on moved
+        if (  chgpkg.type == 2  ||
+            ( (chgpkg.type == 0          || 
+               ( chgpkg.type == 1  && this.parsedPath && 
+                 this.parsedPath.hasOpSelector ) ) 
+             && 
+             ( this.parsedPath && this.parsedPath.hasDotDot  ||
+                this.p == null            || 
+                this.p.childOfNode(chgpkg.who)   ) )
+            ){
+            this.runXPath();
+            return true;
+        } else if ( this.__LZneedsOpUpdate( chgpkg ) ){ 
+            this.__LZsimpleOperatorUpdate();
+        }
+        return false;
+    }
+}
+
+/** @access private */
+function __LZneedsOpUpdate ( chgpkg:Object? = null ) :Boolean {
+    var ppath:LzParsedPath = this.parsedPath;
+    if (ppath != null && ppath.operator != null) {
+        var who /*:LzDataNodeMixin*/ = chgpkg.who;
+        var type:int = chgpkg.type;
+        if (ppath.operator != "text") {
+            //case 1 -- normal operator and node changed
+            return (type == 1 && who == this.p);
+        } else {
+            //case 2 -- this node is mapped to text()
+            //  case 2.1 -- a text node changed
+            //  case 2.2 -- a text node was added or removed
+            return (type == 0 && who == this.p) || 
+                    (who.parentNode == this.p && who.nodeType == LzDataElement.TEXT_NODE);
+        }
+    } else {
+        return false;
+    }
+}
+
+/** @access private */
+function __LZcheckDotDot ( chgpkg:Object ) :void {
+    //the case where I need a special update is the one where the 
+    //change is above me, but my parent quelled it
+
+    //second clause checks that the change is above my context --
+    //if it's below my context, then my context will pas it on
+
+    var who /*:LzDataNodeMixin*/ = chgpkg.who;
+    var type:int = chgpkg.type;
+    if ((type == 0 || 
+          (type == 1 && this.parsedPath.hasOpSelector)) 
+        && this.context.getContext().childOfNode( who )) {
+        this.runXPath();
+
+    }
+}
+
+/** @access private */
+override function destroy () {
+    if ( this.__LZdeleted ) return;
+    this.__LZsetTracking( null );
+    this.p = null;
+    this.data = null;
+    this.__LZlastdotdot = null;
+    this.context = null;
+    this.__LZtracking = null;
+
+    super.destroy();
+}
+
+/**
+  * This method registers the datapointer delegate to listen for
+  * onDocumentChange events that are sent by the top of the DOM of which the
+  * datapointer's node is a member.
+  * 
+  * @param who: the node to track
+  * @param Boolean force: (default false) whether to track even if there
+  * is not an xpath
+  * 
+  * @access private
+  */
+function __LZsetTracking (who, force:Boolean = false, needscheck:Boolean = false) :void {
+#pragma 'warnUndefinedReferences=true'
+    var tracking:Array = this.__LZtracking;
+    var trackDel:LzDelegate = this.__LZtrackDel;
+    if ( who ) {
+        // This appears to be an assumption of the previous
+        // implementation.  Check that it is true.
+        if ($debug) {
+            if (tracking != null && tracking.length > 1) {
+                Debug.error('%w.__LZtracking is %w, expecting an array of length 1', this, this.__LZtracking);
+            }
+        }
+        // Are we already tracking this?
+        if (tracking != null && 
+             tracking.length == 1 &&
+             tracking[0] === who ) {
+            return;
+        }
+        if ( trackDel ){
+            // We are only tracking a single, so unregister any previous
+            trackDel.unregisterAll();
+        }
+        var hasxpath:Boolean = force || this.xpath;
+
+        // Only track if there is an xpath
+        if ( hasxpath ) {
+            // Ensure you have a delegate 
+            if (! trackDel) {
+                this.__LZtrackDel = trackDel = new LzDelegate(this , "__LZcheckChange");
+            }
+            // Note that you are tracking;
+            this.__LZtracking = tracking = [ who ];
+            trackDel.register( who , "onDocumentChange" );
+        }
+    } else {
+        this.__LZtracking = [];
+        if ( trackDel ){
+            this.__LZtrackDel.unregisterAll();
+        }
+    }
+}
+
+} // End of LzDatapointer
+
+lz[LzDatapointer.tagname] = LzDatapointer;  // publish

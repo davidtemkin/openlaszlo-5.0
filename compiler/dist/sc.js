@@ -3,7 +3,7 @@
 // pretty-print with the oracle's conventions (compress=true,obfuscate=false:
 // SPACE="", NEWLINE="\n"). Covers a common subset; grows as the corpus demands.
 import { jsString } from "./value.js";
-import { annoFileLine, forceBlankLnum, firstAnnotation, fileLineNumberNeeded, ANNOTATE_MARKER } from "./debug.js";
+import { annoFileLine, forceBlankLnum, firstAnnotation, fileLineNumberNeeded, ANNOTATE_MARKER, assembleDebugProgram, setNoTrackLines } from "./debug.js";
 export class ScUnsupported extends Error {
 }
 const PUNCT = [
@@ -34,12 +34,18 @@ const KEYWORDS = new Set([
  *  single generated function body (e.g. a constraint setter `var $lzc$newvalue =
  *  <srcloc>expr<endsrcloc>; if(…){…}`) carry MIXED per-statement file/line — the
  *  expr at its true .lzx line, the surrounding generated code at file="". */
-function lex(src, baseLine = 1, baseFile) {
+function lex(src, baseLine = 1, baseFile, lexIncludes = false) {
     const toks = [];
     let i = 0;
     let line = baseLine;
     let lineStart = 0; // index of the current line's first char → 1-based column = i - lineStart + 1
     let curFile = baseFile;
+    // The next real token immediately follows a `#file`/`#line` source-location
+    // directive (a fresh-line reset). JJTree's jjtreeOpenNodeScope then gives the
+    // following EXPRESSION-statement node a begin-line of line−1 (the EOL special-token
+    // quirk), so its debug directive renders one line up. Only the pre-compiled `.js`
+    // includes (contextmenu.js) carry an embedded mid-body `#line`, so this is rare.
+    let afterDir = false;
     const n = src.length;
     const countNl = (from, to) => { for (let k = from; k < to; k++)
         if (src[k] === "\n") {
@@ -48,10 +54,15 @@ function lex(src, baseLine = 1, baseFile) {
         } };
     while (i < n) {
         const c = src[i];
+        // The afterDir EOL quirk fires ONLY when the next real token DIRECTLY follows the
+        // directive (the directive consumes its own trailing newline). Any intervening
+        // blank line or comment (debugger/stubs.lzs: `#file…#line 1` then 13 comment lines
+        // then `Debug = …`@14) breaks the chain → clear the flag.
         if (/\s/.test(c)) {
             if (c === "\n") {
                 line++;
                 lineStart = i + 1;
+                afterDir = false;
             }
             i++;
             continue;
@@ -59,6 +70,7 @@ function lex(src, baseLine = 1, baseFile) {
         if (c === "/" && src[i + 1] === "/") {
             while (i < n && src[i] !== "\n")
                 i++;
+            afterDir = false;
             continue;
         }
         if (c === "/" && src[i + 1] === "*") {
@@ -66,6 +78,7 @@ function lex(src, baseLine = 1, baseFile) {
             const end = e < 0 ? n : e + 2;
             countNl(i, end);
             i = end;
+            afterDir = false;
             continue;
         }
         // Embedded compiler directive (generated bodies only — `#` is never valid JS,
@@ -83,16 +96,90 @@ function lex(src, baseLine = 1, baseFile) {
                 if (eol < 0)
                     eol = n;
                 const rest = src.slice(w, eol).trim();
+                const dLine = line, dCol = i - lineStart + 1, dFile = curFile;
                 i = eol < n ? eol + 1 : n; // consume through the trailing newline
                 lineStart = i; // a directive line is whole-line; the next line starts at i
+                // Only `#line N` arms the EOL first-token N−1 quirk (the next token sits on the
+                // line the directive names). A `#file` reset (esp. `#file ` → generated) does
+                // NOT: contextmenu.js `}\n#file\nfunction $ii6lnt2` keeps $ii6lnt2 at its own
+                // line (file=""), while `#line 134\nfunction $ii6lnt8` shifts to 133.
                 if (word === "#file") {
                     curFile = rest;
                     line++;
+                    afterDir = false;
                 } // rest="" → generated code
-                else if (word === "#line")
-                    line = parseInt(rest, 10); // the FOLLOWING line is N
-                else
+                else if (word === "#line") {
+                    line = parseInt(rest, 10);
+                    afterDir = true;
+                } // the FOLLOWING line is N
+                else {
                     line++; // #pragma: skip + count the consumed newline
+                    // `throwsError=true` is the ONLY pragma that changes PRODUCTION output (the
+                    // try/catch error wrapper, JavascriptGenerator THROWS_ERROR). Emit a token
+                    // so the function-body parser can flag it; every other pragma stays invisible
+                    // (the debug path's userFunctionName/withThis handling relies on the skip, and
+                    // the app throws-wrapper is baked into generated source, never a source pragma).
+                    if (/throwsError\s*=\s*true/.test(rest))
+                        toks.push({ t: "pragma", v: "throwsError", line: dLine, col: dCol, file: dFile });
+                    // `userFunctionName=<pretty name>` (handlers/setters) → the function VALUE's
+                    // debug displayName. Carried on a pragma token (elided as an empty statement
+                    // everywhere except functionExpr, which reads it). contextmenu.js: `#pragma
+                    // "userFunctionName=handle oninit"` → displayName "handle oninit".
+                    const ufn = /^["']userFunctionName=([\s\S]*)["']$/.exec(rest);
+                    if (ufn)
+                        toks.push({ t: "pragma", v: "userFunctionName=" + ufn[1], line: dLine, col: dCol, file: dFile });
+                    // `debugBacktrace=false` exempts a function from DEBUG_BACKTRACE
+                    // instrumentation (the backtrace machinery itself — Debug.stackOverflow,
+                    // LzBacktrace ctor, etc. — which manipulate the stack and must not push a
+                    // frame / note their own calls). Only meaningful in the backtrace LFC build.
+                    if (/debugBacktrace\s*=\s*false/.test(rest))
+                        toks.push({ t: "pragma", v: "noBacktrace", line: dLine, col: dCol, file: dFile });
+                    // `#pragma 'profile=false'` / `profile=true`: a SCOPE pragma (LzProfile.lzs,
+                    // kernel/dhtml/LFC.js) that turns the `$lzprofiler` per-function meter off/on
+                    // for the rest of the enclosing `{ }` directive block. Only meaningful in the
+                    // PROFILE LFC build — emit the marker tokens only then so the production/debug/
+                    // backtrace token streams (and their golds) are byte-unchanged.
+                    if (SC_PROFILE) {
+                        if (/profile\s*=\s*false/.test(rest))
+                            toks.push({ t: "pragma", v: "profileOff", line: dLine, col: dCol, file: dFile });
+                        else if (/profile\s*=\s*true/.test(rest))
+                            toks.push({ t: "pragma", v: "profileOn", line: dLine, col: dCol, file: dFile });
+                    }
+                }
+            }
+            else if (lexIncludes && word === "#passthrough") {
+                // `#passthrough [(opts)] { …raw AS3… }#` — verbatim swf/AS3 emitted only
+                // for the Flash runtimes. In the LFC every reachable passthrough sits in a
+                // dead `if($as3)` branch (dhtml folds it away), and its body is AS3 the JS
+                // lexer can't tokenize (`import`, typed decls). Skip the whole block to the
+                // closing `}#` so the surrounding (dead) structure still parses, then folds
+                // out. LFC mode only (lexIncludes).
+                const end = src.indexOf("}#", w);
+                if (end < 0)
+                    throw new ScUnsupported("#passthrough: missing closing }#");
+                countNl(i, end + 2);
+                i = end + 2;
+            }
+            else if (lexIncludes && word === "#include") {
+                // `#include "path"` — a library-root include directive (LFC mode only,
+                // gated by lexIncludes). Emit a dedicated `include` token carrying the
+                // raw path; the parser turns it into an `{s:"include"}` directive node
+                // that the library expander resolves AFTER constant-folding (so includes
+                // in dead `if($as3)`/`if($debug)` branches are never read). Inert for
+                // normal app compiles (lexIncludes=false → `#include` falls through to
+                // the inline-marker case, the long-standing behavior).
+                const incLine = line, incCol = i - lineStart + 1, incFile = curFile;
+                let k = w;
+                while (k < n && (src[k] === " " || src[k] === "\t"))
+                    k++;
+                const q = src[k];
+                if (q !== '"' && q !== "'")
+                    throw new ScUnsupported(`#include: expected string path, got ${JSON.stringify(src.slice(k, k + 12))}`);
+                let j = k + 1, s = "";
+                while (j < n && src[j] !== q)
+                    s += src[j++];
+                toks.push({ t: "include", v: s, line: incLine, col: incCol, file: incFile });
+                i = j + 1; // past the closing quote (trailing newline handled by the ws branch)
             }
             else {
                 i = w; // inline marker (#beginAttribute/#endAttribute): consume just the word
@@ -102,6 +189,8 @@ function lex(src, baseLine = 1, baseFile) {
         const tokLine = line;
         const tokCol = i - lineStart + 1;
         const tokFile = curFile;
+        const tokAfterDir = afterDir;
+        afterDir = false;
         if (c === '"' || c === "'") {
             let j = i + 1, s = "";
             while (j < n && src[j] !== c) {
@@ -117,7 +206,7 @@ function lex(src, baseLine = 1, baseFile) {
                     s += src[j++];
                 }
             }
-            toks.push({ t: "str", v: s, line: tokLine, col: tokCol, file: tokFile });
+            toks.push({ t: "str", v: s, line: tokLine, col: tokCol, file: tokFile, afterDir: tokAfterDir });
             i = j + 1;
             continue;
         }
@@ -135,7 +224,7 @@ function lex(src, baseLine = 1, baseFile) {
                     j++;
                 }
             }
-            toks.push({ t: "num", v: src.slice(i, j), line: tokLine, col: tokCol, file: tokFile });
+            toks.push({ t: "num", v: src.slice(i, j), line: tokLine, col: tokCol, file: tokFile, afterDir: tokAfterDir });
             i = j;
             continue;
         }
@@ -144,7 +233,7 @@ function lex(src, baseLine = 1, baseFile) {
             while (j < n && /[A-Za-z0-9_$]/.test(src[j]))
                 j++;
             const w = src.slice(i, j);
-            toks.push({ t: KEYWORDS.has(w) ? w : "id", v: w, line: tokLine, col: tokCol, file: tokFile });
+            toks.push({ t: KEYWORDS.has(w) ? w : "id", v: w, line: tokLine, col: tokCol, file: tokFile, afterDir: tokAfterDir });
             i = j;
             continue;
         }
@@ -156,7 +245,7 @@ function lex(src, baseLine = 1, baseFile) {
             }
         if (!matched)
             throw new ScUnsupported(`lex: unexpected char ${JSON.stringify(c)}`);
-        toks.push({ t: matched, v: matched, line: tokLine, col: tokCol, file: tokFile });
+        toks.push({ t: matched, v: matched, line: tokLine, col: tokCol, file: tokFile, afterDir: tokAfterDir });
         i += matched.length;
     }
     toks.push({ t: "eof", v: "", line, col: i - lineStart + 1, file: curFile });
@@ -203,6 +292,13 @@ function makeIsExpr(a, b, line) {
         t: { k: "call", c: { k: "member", o: b, p: "$lzsc$isa" }, args: [a], line },
         f: { k: "bin", op: "instanceof", l: a, r: b },
     };
+}
+/** OpenLaszlo `a subclassof b` operator (relational precedence, like `is`):
+ *  expands to `($lzsc$issubclassof(a, b))` (JavascriptGenerator:928). */
+function makeSubclassofExpr(a, b, line) {
+    // Backtrace: the generated `$lzsc$issubclassof(a, b)` CALL is noteCallSite-wrapped at
+    // the operator's source line (like makeIsExpr's `$lzsc$isa` call).
+    return { k: "paren", e: { k: "call", c: { k: "id", name: "$lzsc$issubclassof" }, args: [a, b], line } };
 }
 /** True iff a statement's expression is a `super` method/constructor call —
  *  `super(args)`, `super.X(args)`, or `super.X.call/apply(args)`. These are the
@@ -289,6 +385,12 @@ function predecessorTriggersRuleA(s, endsBrace) {
 class Parser {
     constructor(toks) {
         this.pos = 0;
+        this.lfc = false; // LFC library mode: tolerate AS3-only decls in dead branches (skip as no-ops)
+        // Profile-scope state: a `#pragma 'profile=false'` SCOPE pragma turns metering off
+        // for the rest of the enclosing `{ }` block (block() saves/restores it). A function
+        // parsed while this is true is tagged `noProfile` → exempt from the `$lzprofiler`
+        // meter (LzProfile.lzs / kernel/dhtml/LFC.js helpers don't profile themselves).
+        this.profileOff = false;
         this.toks = toks;
     }
     peek(o = 0) { return this.toks[this.pos + o]; }
@@ -349,11 +451,20 @@ class Parser {
         // the production path ignores `.line`).
         const line = this.peek().line;
         const file = this.peek().file;
+        const afterDir = this.peek().afterDir === true;
         const s = this.statementInner();
         if (s.line === undefined)
             s.line = line;
         if (s.file === undefined && file !== undefined)
             s.file = file;
+        // The statement's first token immediately followed a `#file`/`#line` directive: an
+        // EXPRESSION or VAR statement then gets the EOL first-token N−1 quirk (rendered via
+        // the `#(line−1) #line #(line−1)` three-annotation form in joinStmts). Marked on
+        // expr/var statements (contextmenu.js handler + setter bodies: `this.parent.…` /
+        // `var $b = this.parent.container.width + 9`). Control statements (if/for/return)
+        // lead with a keyword token and do NOT take the quirk.
+        if (afterDir && (s.s === "expr" || s.s === "var"))
+            s.afterDir = true;
         // Record the statement's END source line (the last consumed token — e.g. a
         // block's closing `}`). The debug build uses this to reproduce a JJTree
         // line-assignment quirk: a statement on the line immediately after a brace
@@ -385,6 +496,26 @@ class Parser {
     }
     statementInner() {
         const t = this.peek().t;
+        // LFC `#include "path"` directive (only present when lexed with lexIncludes).
+        if (t === "include") {
+            const tk = this.next();
+            return { s: "include", path: tk.v, line: tk.line, file: tk.file };
+        }
+        // A stray `throwsError` pragma token outside a function-body lead (program/block
+        // scope): the oracle's visitPragmaDirective → ASTEmptyExpression (elided). It is
+        // normally consumed in functionExpr; this is a defensive no-op.
+        if (t === "pragma") {
+            // A scope `profile=false`/`profile=true` pragma toggles metering for the rest of
+            // the enclosing block (restored on block exit, mirroring the oracle's
+            // options-copy-per-directive-block — visitDirective ASTDirectiveBlock).
+            const pv = this.peek().v;
+            this.next();
+            if (pv === "profileOff")
+                this.profileOff = true;
+            else if (pv === "profileOn")
+                this.profileOff = false;
+            return { s: "empty" };
+        }
         // AS3 `class` declarations compile to `Class.make(...)` (see classDecl).
         // Other top-level declarations (interface/import/package) are a separate
         // subsystem — refuse cleanly rather than misparse them as expressions.
@@ -409,9 +540,15 @@ class Parser {
         if (t === "var" || (t === "id" && this.peek().v === "const" && this.peek(1).t === "id"))
             return this.varStmt();
         if (t === "return") {
+            const kwLine = this.peek().line;
             this.next();
             let e = null;
-            if (!this.is(";") && !this.is("}") && !this.is("eof"))
+            // Restricted-production ASI: a newline between `return` and the next token
+            // makes it `return;` (the next line is a separate statement). The TS parser
+            // is otherwise semicolon-driven; gated to LFC mode (this.lfc) so the
+            // app-compile path — every existing gold — is untouched.
+            const asiBreak = this.lfc && this.peek().line > kwLine;
+            if (!asiBreak && !this.is(";") && !this.is("}") && !this.is("eof"))
                 e = this.expression();
             this.semi();
             return { s: "return", e };
@@ -449,6 +586,7 @@ class Parser {
             return { s: "throw", e };
         }
         if (t === "try") {
+            const tryLine = this.peek().line;
             this.next();
             const block = this.block();
             let param = null;
@@ -470,7 +608,7 @@ class Parser {
                 this.next();
                 finalizer = this.block();
             }
-            return { s: "try", block, param, handler, handlerLine, finalizer, finalizerLine };
+            return { s: "try", line: tryLine, block, param, handler, handlerLine, finalizer, finalizerLine };
         }
         if (t === "function") {
             // A `function` at statement start is a function DECLARATION (hoisted by
@@ -503,12 +641,24 @@ class Parser {
     semi() { if (this.is(";"))
         this.next(); }
     block() {
+        const braceLine = this.peek().line;
         this.eat("{");
+        // A `#pragma 'profile=false'` inside this block applies only to the block (the
+        // oracle copies options per directive block and restores on exit).
+        const savedProfileOff = this.profileOff;
         const body = [];
         while (!this.is("}"))
             body.push(this.statement());
         this.eat("}");
-        return { s: "block", body };
+        this.profileOff = savedProfileOff;
+        // The block's effective source line = its FIRST statement's line, not the `{`
+        // brace: a `{ … }` is really the inner StatementList node, whose JJTree beginLine
+        // is its first child. Used in debug line-tracking when the block is NOT spliced
+        // into its parent (a switch-case body keeps its braces — LzFormatter `%w`:
+        // `case 'w': if($debug){ var width … }` folds to a block tracked at the
+        // `var width` line, PROVEN via the oracle dumpLineAnnotations dump).
+        const line = body[0]?.line ?? braceLine;
+        return { s: "block", line, body };
     }
     // AS3 `class Name [extends Super] { ... }`. Members: `[modifiers] var n[:T]
     // [=init];` and `[modifiers] function m(args)[:T] { body }`. Only `static`
@@ -552,8 +702,27 @@ class Parser {
             throw new ScUnsupported("AS3 class implements");
         this.eat("{");
         const members = [];
+        this.classBody(members);
+        this.eat("}");
+        const semi = this.is(";");
+        if (semi)
+            this.next();
+        return { s: "as3class", name, sup, mixins, xtor, members, semi, classLine: classBeginLine };
+    }
+    /** Parse class-body members up to (not eating) the closing `}`, appending to
+     *  `members`. Shared by the class root and (in LFC mode) compile-time
+     *  if-directive branches. */
+    classBody(members) {
         const MODIFIERS = new Set(["public", "private", "protected", "static", "final", "override", "internal", "dynamic"]);
         while (!this.is("}")) {
+            // A `throwsError` pragma token at class scope (visitPragmaDirective → empty,
+            // handled specially by translateClassDirectivesBlock — NOT added to the
+            // initializer stmts). Skip without emitting a member. (Defensive: throwsError
+            // pragmas live inside method bodies, consumed by functionExpr.)
+            if (this.is("pragma")) {
+                this.next();
+                continue;
+            }
             if (this.is(";")) {
                 // A stray `;` at class level is an EMPTY statement (e.g. the `;` after a
                 // `static function f(){};`), NOT just a separator. The oracle
@@ -563,6 +732,15 @@ class Parser {
                 // (function…)(Name) }` block scope even though the init body prints empty.
                 this.next();
                 members.push({ kind: "stmt", stmt: { s: "empty" } });
+                continue;
+            }
+            // LFC class-body compile-time `if` (ASTClassIfDirective): the oracle folds a
+            // magic conditional and inlines the taken branch's MEMBERS into the class
+            // (translateClassDirectivesBlock:751 — e.g. LzFormatter's `if($as2){…}else{
+            // function toNumber…}`). Without this, the whole `if` would parse as a single
+            // stmt directive and its methods would be lost from the property list.
+            if (this.lfc && this.is("if")) {
+                this.classIfDirective(members);
                 continue;
             }
             let isStatic = false;
@@ -600,11 +778,43 @@ class Parser {
                 members.push({ kind: "stmt", stmt: this.statement() });
             }
         }
+    }
+    /** LFC class-body compile-time if-directive: `if (magic) { members } [else
+     *  { members } | else if …]`. Folds the (magic-constant) condition and inlines
+     *  the taken branch's members. Refuses a non-constant condition (no runtime
+     *  class-body conditionals occur in the LFC). */
+    classIfDirective(members) {
+        this.next();
+        this.eat("(");
+        const cond = this.expression();
+        this.eat(")");
+        const thenM = [];
+        this.eat("{");
+        this.classBody(thenM);
         this.eat("}");
-        const semi = this.is(";");
-        if (semi)
+        let elseM = null;
+        if (this.is("else")) {
             this.next();
-        return { s: "as3class", name, sup, mixins, xtor, members, semi, classLine: classBeginLine };
+            if (this.is("if")) {
+                elseM = [];
+                this.classIfDirective(elseM);
+            }
+            else {
+                elseM = [];
+                this.eat("{");
+                this.classBody(elseM);
+                this.eat("}");
+            }
+        }
+        const folded = foldNode(cond);
+        if (folded.k === "lit" && folded.v === "true")
+            members.push(...thenM);
+        else if (folded.k === "lit" && folded.v === "false") {
+            if (elseM)
+                members.push(...elseM);
+        }
+        else
+            throw new ScUnsupported(`non-constant class-body if-directive`);
     }
     varStmt() {
         this.next(); // `var` or `const` (both emit as `var`)
@@ -770,6 +980,17 @@ class Parser {
                 left = makeIsExpr(left, right, isLine);
                 continue;
             }
+            // OpenLaszlo `a subclassof B` (same relational precedence as `is`):
+            // expands to `($lzsc$issubclassof(a, B))`.
+            if (op === "id" && this.peek().v === "subclassof") {
+                if (9 < minPrec)
+                    break;
+                const scLine = this.peek().line;
+                this.next();
+                const right = this.binary(10, noIn);
+                left = makeSubclassofExpr(left, right, scLine);
+                continue;
+            }
             // In a for-init head, `in` must not be consumed as a binary operator so the
             // for-in form can be detected.
             if (noIn && op === "in")
@@ -808,8 +1029,13 @@ class Parser {
     callMember() {
         // The call/new node's source line = the start of the whole call expression (the
         // callee's first token), matching JavaCC's node.beginLine. Used by backtrace's
-        // noteCallSite (`$lzsc$a.lineno = <line>`); inert otherwise.
-        const startLine = this.peek().line;
+        // noteCallSite (`$lzsc$a.lineno = <line>`); inert otherwise. A callee token that
+        // DIRECTLY follows a `#line N` directive sits at N−1 (the afterDir EOL quirk —
+        // contextmenu.lzx's pre-compiled `#line` markers), so the beginLine is N−1. This
+        // is gated to the LFC build: only its pre-compiled `.js` includes carry mid-body
+        // `#line` directives; app constraint fragments do not exhibit it (btshow identical).
+        const startTok = this.peek();
+        const startLine = this.lfc && startTok.afterDir === true ? startTok.line - 1 : startTok.line;
         let e;
         if (this.is("new")) {
             this.next();
@@ -861,6 +1087,14 @@ class Parser {
      *  optional name and return type are erased in compress mode. */
     functionExpr() {
         const ftok = this.peek(); // the `function` keyword: its line/col name the debug displayName
+        // A function DECLARATION whose `function` keyword directly follows a `#line N`
+        // directive takes the same EOL first-token N−1 quirk — its displayName/IIFE wrapper
+        // tracks at N−1 (contextmenu.js `#line 134`\n`function $ii6lnt8` → displayName #133).
+        const fline = ftok.afterDir === true ? ftok.line - 1 : ftok.line;
+        // Metering scope at the function's declaration point: a function declared inside a
+        // `#pragma 'profile=false'` block is exempt from the `$lzprofiler` meter (and so are
+        // its nested functions, since the option persists into nested scopes).
+        const noProfile = this.profileOff;
         this.eat("function");
         let name = null;
         if (this.is("id"))
@@ -868,6 +1102,24 @@ class Parser {
         const { names, defaults, rest } = this.formalParams();
         this.skipTypeAnnotation(); // optional return type
         this.eat("{");
+        // Leading `#pragma "throwsError=true"` (lexed to a `pragma` token) flags the
+        // try/catch error wrapper. The pragma heads the body but sits past the empty-
+        // statement `;` left by SKIPPED sibling pragmas (userFunctionName/warn*, each on
+        // its own line + `;`). Detect it with a NON-consuming peek-scan over the leading
+        // `;`/`pragma` run so token consumption is unchanged (the pragma + `;` tokens flow
+        // through `statement()` as elided empty statements — app path byte-identical).
+        let throwsError = false;
+        let userFunctionName;
+        let noBacktrace = false;
+        for (let k = 0; this.peek(k).t === ";" || this.peek(k).t === "pragma"; k++) {
+            const pv = this.peek(k).t === "pragma" ? this.peek(k).v : "";
+            if (pv === "throwsError")
+                throwsError = true;
+            else if (pv === "noBacktrace")
+                noBacktrace = true;
+            else if (pv.startsWith("userFunctionName="))
+                userFunctionName = pv.slice("userFunctionName=".length);
+        }
         const body = [];
         while (!this.is("}"))
             body.push(this.statement());
@@ -881,10 +1133,22 @@ class Parser {
         if (rest != null) {
             const m = (o, p) => ({ k: "member", o, p });
             const slice = m(m(m({ k: "id", name: "Array" }, "prototype"), "slice"), "call");
-            const init = { k: "call", c: slice, args: [{ k: "id", name: "arguments" }, { k: "num", raw: String(names.length) }] };
-            body.unshift({ s: "var", decls: [{ name: rest, init }] });
+            // Debug line-tracking: the oracle parses the default-param switch + the rest
+            // slice as ONE fragment (Compiler.substituteStmts: `(function () {<optional>
+            // <rest>})()`, line-based at the formal node's line = funcLine). So the rest
+            // slice lands at funcLine when there are NO optional params (the slice is the
+            // first fragment line), else funcLine + numOptional + 2 (the `switch {` header
+            // + one `case` line per optional + the `}` closer precede it). This forward
+            // offset makes the makeTranslationUnits absorb the slice's directive (the body's
+            // first real statement then re-asserts its own line). Inert in production.
+            const numOptional = defaults.filter((d) => d != null).length;
+            const restLine = numOptional === 0 ? ftok.line : ftok.line + numOptional + 2;
+            // Backtrace: the synthetic `Array.prototype.slice.call(arguments, N)` is a CALL,
+            // so under DEBUG_BACKTRACE it is noteCallSite-wrapped at the rest slice's line.
+            const init = { k: "call", c: slice, args: [{ k: "id", name: "arguments" }, { k: "num", raw: String(names.length) }], line: restLine };
+            body.unshift({ s: "var", decls: [{ name: rest, init }], line: restLine });
         }
-        return { k: "func", name, params: names, defaults, body, line: ftok.line, col: ftok.col, file: ftok.file };
+        return { k: "func", name, params: names, defaults, body, line: fline, col: ftok.col, file: ftok.file, ...(throwsError ? { throwsError: true } : {}), ...(noBacktrace ? { noBacktrace: true } : {}), ...(noProfile ? { noProfile: true } : {}), ...(userFunctionName !== undefined ? { userFunctionName } : {}) };
     }
     /** Formal parameter list `(a, b:Type, c=default)` → names + optional defaults. */
     formalParams() {
@@ -1010,7 +1274,7 @@ class Parser {
                 return { k: "object", props };
             }
             default:
-                throw new ScUnsupported(`parse: unexpected ${t.t} '${t.v}'`);
+                throw new ScUnsupported(`parse: unexpected ${t.t} '${t.v}' @${t.file ?? "?"}#${t.line}`);
         }
     }
 }
@@ -1105,6 +1369,57 @@ export function setScDebug(v) { SC_DEBUG = v; }
 // for all normal debug builds (dbg3 etc.) so the non-backtrace flow is untouched.
 let SC_BACKTRACE = false;
 export function setScBacktrace(v) { SC_BACKTRACE = v; }
+// Per-compile profile flag (PROFILE / `--profile`). The PROFILE LFC build wraps EVERY
+// function with the `$lzprofiler` per-function call/return timing meter (Javascript
+// Generator.meterFunctionEvent: prefix `calls` event + suffix `returns` event, forcing
+// a try/finally on every function). PROFILE implies NAME_FUNCTIONS (compress=false,
+// displayName-IIFEs, name_$N registers — like the debug LFC) but $debug=FALSE
+// (production folding: debugger stubs, no makeDebugWindow, no $reportException) and
+// TRACK_LINES OFF (no `/* file */` directives; see debug.ts setNoTrackLines). A scope
+// `#pragma 'profile=false'` (LzProfile.lzs / LFC.js) exempts its block's functions
+// (fn.noProfile). Gated TRUE only inside the LFC profile body (compileLibraryProgram).
+let SC_PROFILE = false;
+export function setScProfile(v) { SC_PROFILE = v; }
+// The three synthetic locals a metered function body declares (the meter prefix/
+// suffix): $lzsc$lzp = global['$lzprofiler'], $lzsc$now = the timestamp, $lzsc$name =
+// the function name. Visited AFTER the body (like BACKTRACE_VARS) → register-numbered
+// after all params + body locals.
+const PROFILE_VARS = ["$lzsc$lzp", "$lzsc$now", "$lzsc$name"];
+/** The in-line `Profiler#event` meter fragment (JavascriptGenerator.meterFunctionEvent),
+ *  rendered compress=false with the three locals already register-renamed. `getname`
+ *  is the metered name expression: `arguments.callee["displayName"]` for a function
+ *  VALUE (meterFunctionName null), or a quoted literal for a named declaration. */
+function meterEvent(lzp, now, name, getname, event) {
+    return ("var " + lzp + ' = global["$lzprofiler"];\n' +
+        "if (" + lzp + ") {\n" +
+        "var " + now + ' = "" + (new Date().getTime() - ' + lzp + ".base);\n" +
+        "var " + name + " = " + getname + ";\n" +
+        "if (" + lzp + ".last == " + now + ") {\n" +
+        lzp + ".events[" + now + '] += ",' + event + ':" + ' + name + "\n" +
+        "} else {\n" +
+        lzp + "." + event + "[" + now + "] = " + name + "\n" +
+        "};\n" +
+        lzp + ".last = " + now + "\n" +
+        "}");
+}
+// During a DEBUG LFC build, the shared gensym counter (the top library printer's
+// `gensym`) so that every per-function debug printer (renderDebugFuncNode /
+// compileFunctionDebug — each builds a fresh Printer) participates in the SAME
+// `setAttribute` inline gensym sequence (the oracle's CommonGenerator.uuidCounter is
+// a single global cell across the whole compile). Non-null only inside the LFC debug
+// body; the per-function printers then enable LFC inlining + thread this counter.
+let SC_LFC_GENSYM = null;
+// The CORRECTED debug LFC (`LFCdhtml-debug.js`, 1179351) is the original's
+// `buildlfcdebug` = `--option nameFunctions -D$debug=true` build: NOT the `--option
+// debug=true` source-LOCATION phantom. nameFunctions gives compress=false + the
+// `/* -*- file -*- */` line tracking + the displayName-IIFE wrappers + `name_$N`
+// registers, but the `debug` compiler option is OFF — so the `$reportException`
+// try/catch body wrapper (JavascriptGenerator:1267 `debugExceptions = DEBUG ||
+// DEBUG_SWF9`) is NEVER emitted: a function body gets a try ONLY for a THROWS_ERROR
+// pragma (catchKind "throws") or backtrace. Gated TRUE only inside the LFC debug body
+// (compileLibraryProgram), so the corpus/explorer debug grinds (which DO use the
+// `$reportException` debug-exception machinery) are untouched.
+let SC_LFC_NAMEFUNCS = false;
 // The compiler's predefined known globals (CommonGenerator.globals, line 101 + the
 // debug `$report*`/`Debug` additions). A free reference to one of these is NOT a
 // "checked" undefined reference, so it is never noteCallSite-wrapped under backtrace.
@@ -1144,6 +1459,10 @@ function foldNode(n) {
         case "id":
             if (n.name === "$debug")
                 return { k: "lit", v: SC_DEBUG ? "true" : "false" };
+            // `$profile` folds TRUE in the profile LFC build (so the `if ($profile)` includes —
+            // profiler/LzProfile.lzs + the early-init hook — survive); false everywhere else.
+            if (n.name === "$profile")
+                return { k: "lit", v: SC_PROFILE ? "true" : "false" };
             if (MAGIC_FALSE.has(n.name))
                 return { k: "lit", v: "false" };
             if (MAGIC_TRUE.has(n.name))
@@ -1196,7 +1515,7 @@ function foldNode(n) {
         }
         case "paren": return { k: "paren", e: foldNode(n.e) };
         case "cast": return { k: "cast", e: foldNode(n.e), type: foldNode(n.type) };
-        case "func": return { k: "func", name: n.name, params: n.params, defaults: n.defaults.map((d) => d ? foldNode(d) : null), body: foldStmts(n.body), line: n.line, col: n.col, file: n.file };
+        case "func": return { k: "func", name: n.name, params: n.params, defaults: n.defaults.map((d) => d ? foldNode(d) : null), body: foldStmts(n.body), line: n.line, col: n.col, file: n.file, ...(n.throwsError ? { throwsError: true } : {}), ...(n.noBacktrace ? { noBacktrace: true } : {}), ...(n.noProfile ? { noProfile: true } : {}), ...(n.userFunctionName !== undefined ? { userFunctionName: n.userFunctionName } : {}) };
         case "bin": return { k: "bin", op: n.op, l: foldNode(n.l), r: foldNode(n.r) };
         case "assign": return { k: "assign", op: n.op, l: foldNode(n.l), r: foldNode(n.r) };
         case "member": return { k: "member", o: foldNode(n.o), p: n.p };
@@ -1240,6 +1559,11 @@ function foldStmt(s) {
         for (const r of out)
             if (r.singleLineBlockIf === undefined)
                 r.singleLineBlockIf = slbi;
+    const aft = s.afterDir;
+    if (aft !== undefined)
+        for (const r of out)
+            if (r.afterDir === undefined)
+                r.afterDir = aft;
     return out;
 }
 function foldStmtInner(s) {
@@ -1261,6 +1585,7 @@ function foldStmtInner(s) {
                 e = null; // an empty else is dropped (ParseTreePrinter)
             return [{ s: "if", c, t: foldOne(s.t), e, elseLine: s.elseLine }];
         }
+        case "include": return [s]; // expanded by compileLibraryProgram after fold (dead-branch includes are gone)
         case "expr": return [{ s: "expr", e: foldNode(s.e) }];
         case "var": return [{ s: "var", decls: s.decls.map((d) => ({ name: d.name, init: d.init ? foldNode(d.init) : null })) }];
         case "return": return [{ s: "return", e: s.e ? foldNode(s.e) : null }];
@@ -1280,7 +1605,18 @@ function foldStmtInner(s) {
         case "forin":
             return [{ s: "forin", varName: s.varName, lhs: s.varName ? s.lhs : foldNode(s.lhs), obj: foldNode(s.obj), body: foldOne(s.body) }];
         case "switch":
-            return [{ s: "switch", disc: foldNode(s.disc), cases: s.cases.map((cl) => ({ test: cl.test ? foldNode(cl.test) : null, body: foldStmts(cl.body), line: cl.line, file: cl.file })) }];
+            return [{ s: "switch", disc: foldNode(s.disc), cases: s.cases.map((cl) => {
+                        const folded = foldStmts(cl.body, /*spliceBlocks*/ false);
+                        // The oracle's visitCaseClause keeps a clause's statement CHILDREN even when
+                        // they fold to empty (visitIfStatement → ASTEmptyExpression, retained as a
+                        // child); its `len>1` test then STILL appends OPTIONAL_SEMI. A clause whose
+                        // sole statement was a dead `if($debug){…}` thus prints `case X:<NL><optSemi>`,
+                        // not bare `case X:<NL>`. Preserve that "had statements" signal with a single
+                        // empty stmt so the printer emits the trailing separator (vs a genuinely empty
+                        // fall-through clause `case X: case Y:` which keeps body=[]).
+                        const body = folded.length === 0 && cl.body.length > 0 ? [{ s: "empty", dead: true }] : folded;
+                        return { test: cl.test ? foldNode(cl.test) : null, body, line: cl.line, file: cl.file };
+                    }) }];
         case "throw": return [{ s: "throw", e: foldNode(s.e) }];
         case "try":
             return [{
@@ -1310,15 +1646,19 @@ function foldOne(s) {
     const r = foldStmt(s);
     return r.length === 1 ? r[0] : r.length === 0 ? { s: "empty" } : { s: "block", body: r };
 }
-function foldStmts(body) {
+function foldStmts(body, spliceBlocks = true) {
     // A StatementList splices its direct-child block statements: the oracle flattens
     // a `{ … }` block — whether user-written or the residue of a constant-folded
-    // `if(true){…}` — into the enclosing list (verified vs the oracle). A block in a
+    // `if(true){…}` — into the enclosing list (ParseTreePrinter.previsit/flatten:
+    // ASTStatementList/Program/DirectiveBlock children get flattened). A block in a
     // branch position (then/else/loop body) is NOT spliced (that goes through foldOne).
+    // `spliceBlocks=false` for a SWITCH-CASE body: the case clause is NOT an
+    // ASTStatementList, so previsit does NOT flatten a block directly under it — a
+    // folded `case X: if($debug){…}` KEEPS its `{ … }` braces (LzFormatter `%w` case).
     const out = [];
     for (const s of body)
         for (const f of foldStmt(s)) {
-            if (f.s === "block")
+            if (f.s === "block" && spliceBlocks)
                 out.push(...f.body);
             else
                 out.push(f);
@@ -1583,6 +1923,75 @@ function collectVariables(body) {
     };
     body.forEach(walkS);
     return order;
+}
+/** Recursively collect funcdecl statements of one function scope (pre-order, through
+ *  control structures but NOT into nested function bodies) for hoisting. JS function
+ *  declarations hoist to the TOP of their enclosing function even when written inside
+ *  an `if`/loop/block (the oracle's VariableAnalyzer.fundefs, a LinkedHashMap whose
+ *  insertion order = the analyzer's depth-first visit order — mirrored here). */
+function collectFuncDecls(body) {
+    const out = [];
+    const wS = (s) => {
+        switch (s.s) {
+            case "funcdecl":
+                out.push(s);
+                break; // does NOT descend into s.fn (own scope)
+            case "block":
+                s.body.forEach(wS);
+                break;
+            case "if":
+                wS(s.t);
+                if (s.e)
+                    wS(s.e);
+                break;
+            case "while":
+            case "dowhile":
+            case "with":
+                wS(s.body);
+                break;
+            case "for":
+                if (s.init && "s" in s.init)
+                    wS(s.init);
+                wS(s.body);
+                break;
+            case "forin":
+                wS(s.body);
+                break;
+            case "switch":
+                s.cases.forEach((cl) => cl.body.forEach(wS));
+                break;
+            case "try":
+                wS(s.block);
+                if (s.handler)
+                    wS(s.handler);
+                if (s.finalizer)
+                    wS(s.finalizer);
+                break;
+        }
+    };
+    body.forEach(wS);
+    return out;
+}
+/** Rebuild a function body with every funcdecl statement removed (recursively through
+ *  control structures, NOT into nested function scopes). The oracle's visitFunction-
+ *  Declaration returns null for an inner funcdecl → an empty statement (elided on
+ *  print); filtering is equivalent. A control body emptied this way renders `{}`. */
+function stripFuncDecls(body) {
+    const sS = (s) => {
+        switch (s.s) {
+            case "block": return { ...s, body: stripFuncDecls(s.body) };
+            case "if": return { ...s, t: sS(s.t), e: s.e ? sS(s.e) : null };
+            case "while":
+            case "dowhile":
+            case "with": return { ...s, body: sS(s.body) };
+            case "for": return { ...s, init: s.init && "s" in s.init ? sS(s.init) : s.init, body: sS(s.body) };
+            case "forin": return { ...s, body: sS(s.body) };
+            case "switch": return { ...s, cases: s.cases.map((cl) => ({ ...cl, body: stripFuncDecls(cl.body) })) };
+            case "try": return { ...s, block: sS(s.block), handler: s.handler ? sS(s.handler) : null, finalizer: s.finalizer ? sS(s.finalizer) : null };
+            default: return s;
+        }
+    };
+    return body.filter((s) => s.s !== "funcdecl").map(sS);
 }
 /** The free variables of a function scope: identifiers used (including via
  *  nested-function captures) that are neither this scope's locals/params nor
@@ -1859,12 +2268,19 @@ function computeDereferenced(body) {
 // oracle visits prelude then prefix AFTER the body, so these append to the
 // `variables` list (register-numbered after all params + body locals).
 const BACKTRACE_VARS = ["$lzsc$d", "$lzsc$s", "$lzsc$a"];
-function analyzeScope(params, body, isMethod, as3, debug = false) {
+function analyzeScope(params, body, isMethod, as3, debug = false, noBacktrace = false, noProfile = false) {
     const variables = collectVariables(body);
     // Backtrace: reserve registers for the three frame locals (appended last so
-    // body-local register numbers are unperturbed). Inert unless SC_BACKTRACE.
-    if (debug && SC_BACKTRACE)
+    // body-local register numbers are unperturbed). Inert unless SC_BACKTRACE; a
+    // `#pragma "debugBacktrace=false"` function (noBacktrace) reserves none.
+    if (debug && SC_BACKTRACE && !noBacktrace)
         for (const v of BACKTRACE_VARS)
+            if (!variables.includes(v))
+                variables.push(v);
+    // Profile: reserve the three meter locals ($lzsc$lzp/$lzsc$now/$lzsc$name) the same
+    // way (appended last). A `#pragma 'profile=false'` function (noProfile) reserves none.
+    if (debug && SC_PROFILE && !noProfile)
+        for (const v of PROFILE_VARS)
             if (!variables.includes(v))
                 variables.push(v);
     const localSet = new Set([...params, ...variables]);
@@ -1882,7 +2298,11 @@ function analyzeScope(params, body, isMethod, as3, debug = false) {
     const withThis = isMethod && possible.size > 0;
     const fullMap = new Map();
     let regno = 0;
-    for (const k of [...params, ...variables]) {
+    // The register-allocation order is the oracle's `known` LinkedHashSet:
+    // parameters first, then locals, DEDUPED — a parameter redeclared as a same-name
+    // `var` (e.g. `function(n){ var n = f(n) }`) is ONE register, not two. Without the
+    // dedup the second occurrence allocates (and overwrites with) a higher register.
+    for (const k of new Set([...params, ...variables])) {
         // Skip renaming closed-over names; but a closed *parameter* under withThis is
         // still renamed (and re-declared inside the with-block).
         const skip = (!withThis && closed.has(k)) ||
@@ -1897,10 +2317,12 @@ function analyzeScope(params, body, isMethod, as3, debug = false) {
         // handled at their generation site, not here.)
         // Synthetic compiler-generated identifiers (the handler's `$lzc$ignore` arg,
         // the constraint setter's `$lzc$newvalue` local, the postincrement-expansion
-        // `$lzsc$tmp` — anything in the reserved `$lzc$`/`$lzsc$` namespaces) have no
-        // source name → render bare `$<reg>` even in debug. (Verified: no gold carries
-        // a `$lzsc$X_$N` debug-named form — these are always renamed to bare registers.)
-        const synthetic = k.startsWith("$lzc$") || k.startsWith("$lzsc$");
+        // `$lzsc$tmp`) have no source name → render bare `$<reg>` even in debug. The
+        // oracle's exact rule (JavascriptGenerator.java:1473) is ANY name starting with
+        // `$` → bare register: `r = ((debug && !k.startsWith("$")) ? k+"_$" : "$") +
+        // reg`. So a source local like `$superclass` (compiler/Class.lzs) → `$8`, not
+        // `$superclass_$8`. (Verified: no gold carries a `$…_$N` debug-named form.)
+        const synthetic = k.startsWith("$");
         do {
             const reg = "$" + regno.toString(36);
             r = (debug && !synthetic) ? k + "_" + reg : reg;
@@ -1914,13 +2336,19 @@ function analyzeScope(params, body, isMethod, as3, debug = false) {
     for (const p of closedParams)
         bodyMap.delete(p);
     const newParams = params.map((p) => fullMap.get(p) ?? p);
-    return { map: bodyMap, newParams, withThis, closedRedecls, free, dereferenced: computeDereferenced(body), locals: localSet };
+    return { map: bodyMap, newParams, withThis, closedRedecls, free, dereferenced: computeDereferenced(body), locals: localSet, closed };
 }
 // ---------- Printer (compress=true,obfuscate=false) ----------
 const NL = "\n";
 const UNARY_WORD = new Set(["typeof", "void", "delete"]);
 class Printer {
+    nextGensym() { return "$lzsc$" + (this.gensym.n++).toString(36); }
     constructor(rename, compress = true) {
+        // LFC library mode: a top-level AS3 class with body statements emits the oracle's
+        // flat statement-list `Class.make(…);(function…)(Name)` (NO outer `{}` block) —
+        // the raw-script (sc.Main, LFCLIB) directive form. The LZX app path keeps the
+        // braced block form (gate-verified). Set by compileLibraryProgram.
+        this.lfc = false;
         // AS3 class descriptors accumulated across a program (built in source order so
         // a class extending an earlier AS3 class can resolve its instance properties).
         this.classDescriptors = new Map();
@@ -1970,6 +2398,12 @@ class Printer {
         // ones not in the rename map). Unioned into a nested function's outer-resolvable
         // set so a free ref to an enclosing closed local (e.g. `dk`) is NOT noted.
         this.dbgLocals = new Set();
+        // PROFILE: whether the function body being rendered is itself lexically inside
+        // another function (the oracle's `context.findFunctionContext().parent.find
+        // FunctionContext() != null`). A nested function VALUE that closes over a variable
+        // gets the " closure" displayName suffix. Set true while rendering a function body so
+        // nested printFunc/renderDebugFuncNode calls see it.
+        this.dbgInsideFunc = false;
         // An inherited `#pragma userFunctionName=…` (CodeGenerator: the option set in a
         // handler/setter/binder prologue persists down the options-copy into every
         // lexically-nested function), so a nested function VALUE's debug displayName is
@@ -2005,6 +2439,13 @@ class Printer {
         // setter/handler/method/binder bodies keep the default (true) so they note bare
         // instance-property refs (e.g. `classroot`) like the oracle. Inert unless btVar.
         this.btWarnUndef = true;
+        // LFC-only gensym counter (CommonGenerator.uuidCounter, starts at 1) for the
+        // `generatePredictableTemps` build. Consumed ONLY by the setAttribute inlining
+        // (visitCallExpression, JavascriptGenerator:765-769) — 5 UUIDs per inline, in
+        // codegen-traversal order. SHARED across every sub-Printer of one LFC compile (a
+        // single mutable cell), so the counter is global/monotonic like the Java field.
+        // `nextGensym` mirrors `Integer.toString(uuidCounter++, 36)`.
+        this.gensym = { n: 1 };
         this.rename = rename;
         this.c = compress;
         this.SP = compress ? "" : " ";
@@ -2336,7 +2777,7 @@ class Printer {
             // plain.
             const childOuter = new Set([...this.dbgOuterVars, ...this.rename.keys(),
                 ...(SC_BACKTRACE ? this.dbgLocals : [])]);
-            const out = renderDebugFuncNode(n, userName, n.name != null, ffile, fl, "report", false, undefined, this.outerUserName, childOuter);
+            const out = renderDebugFuncNode(n, userName, n.name != null, ffile, fl, "report", false, undefined, this.outerUserName, childOuter, undefined, false, this.dbgInsideFunc);
             // Backtrace: generating a function VALUE leaves Token.currentPathname on the
             // real source file (like a super-dispatch), so a noteCallSite whose subtree
             // includes a function — e.g. `choices.sort(function(a,b){…})` — and every
@@ -2349,13 +2790,32 @@ class Printer {
         }
         const scope = analyzeScope(n.params, n.body, false);
         const sub = new Printer(scope.map, this.c);
+        sub.lfc = this.lfc;
+        sub.gensym = this.gensym;
+        // Function declarations in the body are hoisted to the TOP (var-decls then
+        // assignments), BEFORE the default/rest-param prologue — the oracle emits the
+        // fundefs first (JavascriptGenerator:1193-1199,1533-1545), then the stmtList
+        // (which carries the formalArgumentsTransformations prologue). An inner funcdecl
+        // is REMOVED from the body (visitFunctionDeclaration returns null in a function
+        // context) and re-emitted here as `name=function(){…};`. Mirrors printAs3Method.
+        // Funcdecls hoist to the function top from ANY depth (collectFuncDecls walks
+        // through control structures); the originals are stripped from their positions.
+        const funcdecls = collectFuncDecls(n.body);
+        const rest = stripFuncDecls(n.body);
+        const hoist = funcdecls.length
+            ? funcdecls.map((d) => `var ${sub.id(d.name)};`).join("") +
+                funcdecls.map((d) => `${sub.id(d.name)}=${sub.printFunc(d.fn)};`).join("")
+            : "";
         // Parameter-default prologue (same shape as a method): a fall-through
         // `switch(arguments.length){case i:<reg>=<default>;…}`.
         const cases = n.params
             .map((_, i) => (n.defaults[i] != null ? `case ${i}:\n${scope.newParams[i]}=${sub.expr(n.defaults[i])};` : null))
             .filter((c) => c != null);
         const prologue = cases.length > 0 ? `switch(arguments.length){\n${cases.join("\n")}\n\n};` : "";
-        const text = prologue + sub.joinStmts(n.body);
+        const inner = hoist + prologue + sub.joinStmts(rest);
+        // `#pragma "throwsError=true"` wraps the body in the try/catch error wrapper
+        // (a plain function expr is never a method → no with(this) layer here).
+        const text = n.throwsError ? sub.throwsWrap(inner) : inner;
         const block = text === "" ? "{}" : sub.makeBlock(text);
         return `function(${scope.newParams.join(",")})${block}`;
     }
@@ -2368,10 +2828,12 @@ class Printer {
         const body = fn.body;
         const scope = analyzeScope(params, body, isMethod, as3);
         const printer = new Printer(scope.map, this.c);
-        const funcdecls = body.filter((s) => s.s === "funcdecl");
-        const rest = body.filter((s) => s.s !== "funcdecl");
-        if (funcdecls.length && hasNestedFuncDecl(rest))
-            throw new ScUnsupported("nested function declaration");
+        printer.lfc = this.lfc;
+        printer.gensym = this.gensym;
+        // Funcdecls hoist to the function top from ANY depth (collectFuncDecls walks
+        // through control structures); the originals are stripped from their positions.
+        const funcdecls = collectFuncDecls(body);
+        const rest = stripFuncDecls(body);
         const hoist = funcdecls.length
             ? funcdecls.map((d) => `var ${printer.id(d.name)};`).join("") +
                 funcdecls.map((d) => `${printer.id(d.name)}=${printer.printFunc(d.fn)};`).join("")
@@ -2388,14 +2850,24 @@ class Printer {
         })
             .filter((c) => c != null);
         const prologue = cases.length > 0 ? `switch(arguments.length){\n${cases.join("\n")}\n\n};` : "";
-        const bodyText = hoist + printer.joinStmts(rest);
+        // Hoisted function declarations precede the default/rest-param prologue: the
+        // oracle emits fundef var-decls + assignments at the TOP of newBody (Javascript
+        // Generator:1193-1199,1533-1545) BEFORE stmtList, which carries the formal-
+        // arguments prologue prepended by formalArgumentsTransformations. So order is
+        // hoist → switch(prologue) → rest-slice/body, NOT prologue → hoist.
+        const bodyText = printer.joinStmts(rest);
+        // `#pragma "throwsError=true"` wraps the body (closed-param redecls included, but
+        // inside the with) in a try/catch — the oracle adds the redecls + hoist + body to
+        // newBody, try-wraps the whole, THEN with-wraps (JavascriptGenerator:1521,1552,1587).
         let block;
         if (scope.withThis) {
             const redecls = scope.closedRedecls.map(({ name, reg }) => `var ${name}=${reg};`).join("");
-            block = printer.makeBlock("with(this)" + printer.makeBlock(redecls + prologue + bodyText));
+            const withContent = fn.throwsError ? printer.throwsWrap(redecls + hoist + prologue + bodyText) : redecls + hoist + prologue + bodyText;
+            block = printer.makeBlock("with(this)" + printer.makeBlock(withContent));
         }
         else {
-            const combined = prologue + bodyText;
+            const inner = hoist + prologue + bodyText;
+            const combined = fn.throwsError ? printer.throwsWrap(inner) : inner;
             block = combined === "" ? "{}" : printer.makeBlock(combined);
         }
         return `function(${scope.newParams.join(",")})${block}`;
@@ -2481,8 +2953,22 @@ class Printer {
             return make;
         // Class-body statements run in a post-Class.make initializer:
         // `{Class.make(…);(function($0){with($0)with($0.prototype){{<stmts>}}})(Name)}`.
-        const inner = this.makeBlock(this.joinStmts(stmts));
-        const iife = `(function($0)${this.makeBlock("with($0)with($0.prototype)" + this.makeBlock(inner))})(${n.name})`;
+        const stmtsText = this.joinStmts(stmts);
+        // The with-body: stmts sit in a nested double-block `{{<stmts>}}`; when they
+        // render empty (a class whose only body directive is a stray `;`) the oracle's
+        // empty StatementList collapses the inner block away → `with(…)with(…){}` (gold:
+        // LzBootstrapMessage). Mirrors the debug path's empty-collapse. LFC-gated so the
+        // app production path (currently gate-verified with the non-collapsed form) is
+        // untouched.
+        const withBody = this.lfc && unannotateStr(stmtsText).trim() === ""
+            ? "with($0)with($0.prototype){}"
+            : "with($0)with($0.prototype)" + this.makeBlock(this.makeBlock(stmtsText));
+        const iife = `(function($0)${this.makeBlock(withBody)})(${n.name})`;
+        // LFC mode: the oracle's visitClassDefinition returns a flat ASTStatementList
+        // `[Class.make(…), (function…)(Name)]` (CommonGenerator:518) — at directive
+        // level it splices with no outer braces. joinStmts adds the `;` separators.
+        if (this.lfc)
+            return `${make};${iife}`;
         return `{${NL}${make};${iife}${NL}};`;
     }
     /** Debug (compress=false) rendering of a script-level AS3 `class` declaration.
@@ -2543,8 +3029,13 @@ class Printer {
                 target.push(jsString(userName));
                 // Instance methods are isMethod=true with this class's instance-prop
                 // refinement (→ `with(this)` when they reference instance props); static
-                // methods are never `with(this)`.
-                target.push(renderDebugFuncNode(m.fn, userName, /*named*/ true, file, m.fn.line ?? 0, "report", /*isMethod*/ !m.static, m.static ? undefined : as3));
+                // methods are never `with(this)`. The method's displayName/$reportException
+                // file = the function's OWN source-file context (a pre-compiled .js handler
+                // declared after a `#file` reset has file="" — contextmenu.js $ii6lnt2 →
+                // `$reportException("", 13)`); the body statements still carry their own
+                // `.file` (contextmenu.lzx) from the embedded `#file` markers.
+                const methodFile = m.fn.file !== undefined ? m.fn.file : file;
+                target.push(renderDebugFuncNode(m.fn, userName, /*named*/ true, methodFile, m.fn.line ?? 0, "report", /*isMethod*/ !m.static, m.static ? undefined : as3, undefined, undefined, undefined, /*isStatic*/ m.static));
             }
         }
         // Class.make argument assembly (right-to-left null-filling), arrays + args spaced.
@@ -2588,6 +3079,13 @@ class Printer {
         const sub = new Printer(new Map(), /*compress*/ false);
         sub.dbg = true;
         sub.dfile = file;
+        // Backtrace: the class-init body runs inside the frame, so its top-level CALLs /
+        // `new` expressions are noteCallSite-wrapped at the frame array ($3). No bare-id
+        // checked refs are noted (debug option off → btWarnUndef false), same as method bodies.
+        if (SC_BACKTRACE) {
+            sub.btVar = "$3";
+            sub.btWarnUndef = false;
+        }
         const stmtsText = sub.joinStmts(stmts);
         // The `with ($0) with ($0.prototype) { { <stmts> } }` inner double-block: when
         // the statement list is empty (e.g. a class whose only body directive is a
@@ -2597,14 +3095,50 @@ class Printer {
         const withInner = unannotateStr(stmtsText).trim() === ""
             ? `with ($0) with ($0.prototype) {}`
             : `with ($0) with ($0.prototype) {\n${GEN}{\n${elideSemi(stmtsText)}\n}}`;
+        // LFC nameFunctions build: the `debug` option is OFF → no `$reportException`
+        // try/catch around the class initializer; the with-body sits directly in the
+        // function block (gold: `function ($0) {<#cl>with ($0) with ($0.prototype) {…}}`).
         const tryWrap = `try {\n${A(cl)}${withInner}}\n${GEN}catch ($lzsc$e) {\n${debugCatchBody(file, cl)}}`;
-        const funcBlock = `{\n${GEN}${tryWrap}}`;
+        // BACKTRACE: the class initializer `function ($lzsc$c→$0)` gets a full backtrace
+        // frame (`["$lzsc$c", $0]`) + `try {with…} finally {pop}` (no catch — debugExceptions
+        // off). Frame registers continue past the `$0` param: $1=Debug, $2=backtraceStack,
+        // $3=frame array. The frame filename is the LPS-relative user pathname (`lfc/`+file).
+        const bt = SC_BACKTRACE;
+        const utp = bt ? "lfc/" + file : file;
+        // PROFILE: the class initializer `(function ($lzsc$c→$0))` is a function VALUE → it
+        // too gets the `$lzprofiler` meter (prefix `calls` + finally `returns`). Its meter
+        // registers continue past the `$0` param: $lzsc$lzp/$lzsc$now/$lzsc$name = $1/$2/$3.
+        // The metered name expr is `arguments.callee["displayName"]` (useName false). No
+        // catch (debugExceptions off). Mutually exclusive with backtrace.
+        const prof = SC_PROFILE;
+        const mGet = 'arguments.callee["displayName"]';
+        const funcBlock = bt
+            ? `{\n${GEN}${btPrelude("$1", "$2")}\n` +
+                `try {\n${btPrefix("$1", "$2", "$3", ["$lzsc$c"], ["$0"], utp, cl, /*isStatic*/ false)};\n` +
+                `${A(cl)}${withInner}}\n${GEN}finally {\n${btSuffix("$2")}}}`
+            : prof
+                ? `{\n${GEN}try {\n${meterEvent("$1", "$2", "$3", mGet, "calls")};\n` +
+                    `${A(cl)}${withInner}}\n${GEN}finally {\n${meterEvent("$1", "$2", "$3", mGet, "returns")}}}`
+                : SC_LFC_NAMEFUNCS
+                    ? `{\n${A(cl)}${withInner}}`
+                    : `{\n${GEN}${tryWrap}}`;
         const innerFn = `function ($0) ${funcBlock}${FB}`;
         const S1 = `var $lzsc$temp = ${innerFn};`;
         const S2 = `${A(cl)}$lzsc$temp["displayName"] = ${jsString(file + "#" + cl + "/1")};`;
+        const S2bt = bt
+            ? `\n${A(cl)}$lzsc$temp["_dbg_filename"] = ${jsString(utp)};` +
+                `\n${A(cl)}$lzsc$temp["_dbg_lineno"] = ${cl};`
+            : "";
         const S3 = `${A(cl)}return $lzsc$temp`;
-        const iife = `(function () {\n${S1}\n${S2}\n${S3}\n}${FB})()`;
+        const iife = `(function () {\n${S1}\n${S2}${S2bt}\n${S3}\n}${FB})()`;
         const init = this.lnum(cl - 1, `${iife}(${n.name})`);
+        // LFC mode: the oracle's visitClassDefinition returns a FLAT ASTStatementList
+        // `[Class.make(…), (function…)(Name)]` (CommonGenerator:518) spliced at directive
+        // level with NO outer `{}` braces (mirrors printAs3Class's lfc flat form). The
+        // make's leading directive (classLine − 1) is prepended by joinStmts (which uses
+        // the as3class classLine − 1 rule); the init keeps its own classLine − 1 directive.
+        if (this.lfc)
+            return `${make};\n${init}`;
         // The whole class — `Class.make(…)` + post-make initializer — is wrapped in a
         // `{ … }` block scope so the initializer's statements do not interfere with the
         // following top-level statements (CommonGenerator visitClassDefinition:514
@@ -2686,6 +3220,14 @@ class Printer {
             // statement's OWN line directive must resolve against the delta as it stood
             // before its body — the cascade only shifts SUBSEQUENT siblings.
             const deltaBefore = this.dbgLineDelta;
+            // Multi-file (LFC) debug: each top-level statement carries its own source
+            // `.file` (set by the per-include `#file` markers). Thread it into `dfile` so
+            // the statement's INTERNAL annotations (e.g. a class init IIFE's `this.lnum`,
+            // method displayNames) use the right filename. Only at joinDepth 1 (the
+            // program top level); nested statements share their function's file and pass
+            // `(s).file` explicitly to lnum already.
+            if (this.dbg && this.joinDepth === 1 && s.file !== undefined)
+                this.dfile = s.file;
             let text = this.stmt(s);
             if (text === "")
                 continue;
@@ -2694,6 +3236,7 @@ class Printer {
             // in a forceBlankLnum marker), so unannotate before checking for ";".
             let raw = text;
             let ruleAFired = false;
+            let firedNestedAdjSuper = false;
             if (this.dbg) {
                 // JJTree node-open quirk. Rule A: a SUPER-call statement adjacent to (on the
                 // line right after) the previous statement's last token is tracked at that
@@ -2708,6 +3251,22 @@ class Printer {
                 // line (the first statement of a body, e.g. basecomponent init) does NOT
                 // shift its successor, and `if`/`var`/`return` never shift. Adjacency-gated.
                 let line = s.line ?? this.dline;
+                // A top-level AS3 `class` Class.make tracks at the class node's begin line
+                // MINUS ONE (CommonGenerator visitClassDefinition — same quirk as compile-
+                // ProgramDebug). The flat LFC class form (`make;\ninit`) carries no leading
+                // directive of its own, so joinStmts supplies the directive. VERIFIED via the
+                // -SS lineann dump (Lib5/Lib6): the universal Class.make stream is the THREE-
+                // annotation `#(classLine−1) #(classLine) #(classLine−1) Class.` (the `Class`
+                // token at classLine−1, the `make` token at classLine — the same EOL `(`-style
+                // quirk applied to the generated Class.make node's tokens). Emitting all three
+                // (not just `#(classLine−1)`) is load-bearing when the predecessor is a SIMPLE
+                // statement (services/LzUtils.lzs: `lz.ColorUtils = LzColorUtils;`@386 then
+                // class@388 → one blank line); class-after-class is unaffected (its `)()` left
+                // the running state generated). Only the LFC top-level path uses this (the
+                // corpus debug path renders classes via compileProgramDebug, not joinStmts).
+                const as3ClassLine = s.s === "as3class" && s.classLine != null ? s.classLine : null;
+                if (as3ClassLine != null)
+                    line = as3ClassLine - 1;
                 const isSuper = s.s === "expr" && isSuperCallExpr(s.e);
                 // Rule A (adjacent super): tracked at the predecessor's end line (prevEnd+1
                 // == own line → prevEnd). Rule A' (gapped super): a super one BLANK line
@@ -2715,8 +3274,18 @@ class Printer {
                 // @559, blank 560, super @561) tracks at prevEnd+1 (== the blank line, 560)
                 // — its OWN line minus the gap. Both reduce to "super tracks at prevEnd+1"
                 // for an if-block predecessor; the adjacent case's prevEnd+1 is its own line.
-                const ruleA = (ruleActive || nestedFirstSuperActive) && isSuper && prevTriggersQuirk
+                // A super NESTED in a block (joinDepth > 1) that is NOT the first statement
+                // (so not the block-open nestedFirstSuper quirk) but IS adjacent to a quirk-
+                // triggering predecessor also takes Rule A — e.g. views/LzText.lzs
+                // $lzc$set_fontstyle: inside the if-block, `var oldval`@933 then
+                // `super.$lzc$set_fontstyle`@934 → the super tracks at 933 with the universal
+                // `#934 #933 #934` three-annotation stream. Unlike a joinDepth-1 super it does
+                // NOT cascade (the follower `this.tsprite.setFontStyle`@935 keeps its own line).
+                const nestedAdjSuper = this.dbg && this.joinDepth > 1 && !nestedFirstSuperActive
+                    && isSuper && prevTriggersQuirk && line === prevEndLine + 1;
+                const ruleA = (ruleActive || nestedFirstSuperActive || nestedAdjSuper) && isSuper && prevTriggersQuirk
                     && line === prevEndLine + 1;
+                firedNestedAdjSuper = nestedAdjSuper && ruleA;
                 const ruleAGap = ruleActive && isSuper && prevTriggersQuirk
                     && line === prevEndLine + 2 && prevSingleLineBlockIf;
                 // Rule B (cascading): once a super is shifted, `dbgLineDelta` (applied in
@@ -2734,18 +3303,33 @@ class Printer {
                 // Source paren-group / IIFE statement quirk (mirror of super Rule A). A
                 // top-level expression statement whose PRINTED form begins with a `(`
                 // (a `(function(){…})(…)` IIFE, or any parenthesized-group statement) is
-                // line-tracked at N−1: JJTree's jjtreeOpenNodeScope sets the group node's
-                // begin-line from getToken(1).beginLine — the `(` token, which lexes at
-                // N−1 because it immediately follows the EOL special-token (`\n` is a
-                // SPECIAL_TOKEN, not skipped). So the leading source directive sits one
-                // line above the body; the body's own inner directive (the displayName-
-                // IIFE wrapper's S1 at line N) is then SUPPRESSED by the translation-unit
-                // dedup, because the one consumed text line (`(function () {`) makes its
-                // linediff equal the N−1 directive's. Gated to joinDepth-1 statements
-                // (ruleActive) — NOT the generated displayName-IIFE wrappers, which are
-                // function VALUES emitted directly by renderDebugFuncNode (never reach
-                // this statement loop) and already track at N−1 on their own.
-                if (ruleActive && s.s === "expr" && !ruleAFired && raw.startsWith("(function")) {
+                // line-tracked with the universal TWO-annotation stream `#funcLine #(funcLine
+                // −1) (` — VERIFIED in the -SS lineann dump (Lib2/Lib3): the EXPRESSION
+                // STATEMENT carries its own `#funcLine` directive, then the leading `(`
+                // token carries `#(funcLine−1)` (JJTree's jjtreeOpenNodeScope sets the group
+                // node's begin-line from getToken(1).beginLine — the `(` token, which lexes
+                // at N−1 because it immediately follows the EOL special-token `\n`, a
+                // SPECIAL_TOKEN, not skipped). Emitting BOTH (not just the `(` at N−1) is
+                // load-bearing for the BLANK-GAP regime: when the previous statement sits one
+                // blank line above (var lz @223, IIFE @225), the `#funcLine` directive sets a
+                // pending one-blank-line srcloc (offset 1, !lineSame vs prev) that the
+                // following `#(funcLine−1)` does NOT clear (lineSame vs prev → shouldShow
+                // false → no-op), so the blank flushes with the `(` text. For the ADJACENT
+                // regime (var lz @14, IIFE @15) the `#funcLine` is lineSame (no pending) and
+                // the `#(funcLine−1)` shows as `/* -*- file: #N -*- */`. The body's own inner
+                // directive (the displayName-IIFE wrapper's S1 at funcLine) is then SUPPRESSED
+                // by the translation-unit dedup (the consumed `(function () {` output line
+                // already advanced to funcLine). Gated to joinDepth-1 statements (ruleActive)
+                // — NOT the generated displayName-IIFE wrappers, which are function VALUES
+                // emitted directly by renderDebugFuncNode (never reach this statement loop).
+                // The `(`-token N−1 quirk applies at ANY join depth (a top-level IIFE OR one
+                // nested in a block, e.g. LzTimeKernel.js `if (…ie_timer_closure) { (function
+                // (f){…})(…) }` — the IIFE inside the if-block tracks at funcLine−1=17). Gated
+                // only by dbg + expr-statement + a printed `(function` head, not joinDepth.
+                let iifeQuirk = false;
+                const iifeOrigLine = line;
+                if (this.dbg && s.s === "expr" && !ruleAFired && raw.startsWith("(function")) {
+                    iifeQuirk = true;
                     line -= 1;
                 }
                 // Resolve THIS statement's own directive against the pre-body cascade delta
@@ -2786,6 +3370,29 @@ class Printer {
                     text = this.lnum(s.line, text, s.file); // inner #own (body's own line)
                     text = this.lnum(line, text, s.file); // middle #shifted
                     text = this.lnum(s.line, text, s.file); // outer #own
+                }
+                else if (iifeQuirk) {
+                    // Source IIFE / paren-group: oracle stream `#funcLine #(funcLine−1) (`.
+                    // Prepend the `(` token's #(funcLine−1) first, then the statement's
+                    // #funcLine (outer), so the assembled order is `#funcLine #(funcLine−1)`.
+                    text = this.lnum(line, text, s.file); // the `(` token at funcLine−1
+                    text = this.lnum(iifeOrigLine, text, s.file); // the statement directive at funcLine
+                }
+                else if (as3ClassLine != null) {
+                    // Top-level Class.make: stream `#(classLine−1) #(classLine) #(classLine−1)`.
+                    text = this.lnum(as3ClassLine - 1, text, s.file); // `Class` token (inner)
+                    text = this.lnum(as3ClassLine, text, s.file); // `make` token (middle)
+                    text = this.lnum(as3ClassLine - 1, text, s.file); // statement directive (outer)
+                }
+                else if (s.afterDir === true && !ruleAFired && !iifeQuirk) {
+                    // An EXPRESSION statement whose first token immediately follows a `#file`/
+                    // `#line` directive (contextmenu.js handler bodies) takes the same EOL
+                    // first-token N−1 three-annotation form `#(line−1) #line #(line−1)` as a
+                    // Class.make — the body content tracks one line up (registerRedraw #line 10
+                    // → rendered #9). Verified via the -SS lineann dump (Lib7/Lib8/Lib9).
+                    text = this.lnum(line - 1, text, s.file); // first token (inner)
+                    text = this.lnum(line, text, s.file); // statement own line (middle)
+                    text = this.lnum(line - 1, text, s.file); // statement directive (outer)
                 }
                 else {
                     text = this.lnum(line, text, s.file);
@@ -2829,14 +3436,17 @@ class Printer {
             // MISSING inner #own and now double-shifts (it spuriously demoted reverselayout
             // addSubview's `this.update()` from #29 to #28). So the cascade fires ONLY for
             // NESTED supers (joinDepth > 1), where the 3-annotation form does not apply.
-            if (ruleAFired && !firedNestedFirstSuper && this.joinDepth !== 1)
+            if (ruleAFired && !firedNestedFirstSuper && !firedNestedAdjSuper && this.joinDepth !== 1)
                 this.dbgLineDelta -= 1; // cascade to all that follow
             prevTriggersQuirk = s.superQuirkPredecessor === true;
             prevSingleLineBlockIf = s.singleLineBlockIf === true;
             nestedFirstSuperActive = false; // only the FIRST statement gets the block-open quirk
             // A class declaration with a trailing source `;` carries an extra empty
             // statement (`class X{…};` → `Class.make(…);;`), printed as a separate `;`.
-            if (s.s === "as3class" && s.semi) {
+            // LFC mode: a class's trailing source `;` is a top-level empty statement,
+            // which the oracle's program-directive printer renders to nothing (no extra
+            // `;`). The app path keeps the `Class.make(…);;` form (gate-verified).
+            if (s.s === "as3class" && s.semi && !this.lfc) {
                 out += sep + ";";
                 sep = "";
             }
@@ -2852,6 +3462,16 @@ class Printer {
     joinCaseBody(body) {
         let out = "";
         for (const s of body) {
+            // A folded dead-branch case body (a `case X: if($debug){…}` whose sole stmt
+            // eliminated → foldStmtInner's `{s:"empty",dead:true}`) is the oracle's
+            // line-0 ASTEmptyExpression: in debug it prints the GENERATED source directive
+            // `/* -*- file: -*- */` (then the clause-level OPTIONAL_SEMI follows). In
+            // production it prints nothing (text==="" → skipped, optSemi handled by caller).
+            if (s.s === "empty" && s.dead) {
+                if (this.dbg)
+                    out += annoFileLine(null, 0);
+                continue;
+            }
             let text = this.stmt(s);
             if (text === "")
                 continue;
@@ -2871,6 +3491,17 @@ class Printer {
     makeBlock(body) {
         const b = elideSemi(body);
         return "{" + NL + elideSemi(b) + (unannotateStr(b).endsWith("}") ? "" : NL) + "}";
+    }
+    // The `#pragma "throwsError=true"` error wrapper (JavascriptGenerator THROWS_ERROR,
+    // L1280-1311): wrap the (already-rendered) body text in `try{…}catch($lzsc$e){ if
+    // ($lzsc$e is Error){lz.$lzsc$thrownError=$lzsc$e}; throw $lzsc$e }`. Record-and-
+    // rethrow only (no $reportException — that arm is debug-only). The catch body's
+    // `is Error` is the literal $lzsc$isa ternary (compress). Matches the app path's
+    // baked DEPS_INNER wrapper byte-for-byte; production (compress) only.
+    throwsWrap(inner) {
+        const catchBody = 'if(Error["$lzsc$isa"]?Error.$lzsc$isa($lzsc$e):$lzsc$e instanceof Error){' + NL +
+            "lz.$lzsc$thrownError=$lzsc$e" + NL + "};throw $lzsc$e";
+        return "try" + this.makeBlock(inner) + NL + "catch($lzsc$e)" + this.makeBlock(catchBody);
     }
     // Force a block (used for an if-then that has an else, to avoid dangling-else).
     forceBlock(st) {
@@ -2900,11 +3531,119 @@ class Printer {
         this.pendingBlockLine = -1;
         return out;
     }
+    // LFC-only setAttribute inlining (JavascriptGenerator.visitCallExpression:760-812,
+    // gated on FLASH_COMPILER_COMPATABILITY = "compiling the lfc"). A statement-
+    // position (`!isReferenced`) `scope.setAttribute(prop, value)` with a DOT-method
+    // reference and 2 args expands to an inlined setter-dispatch block. The oracle
+    // calls UUID() FIVE times UNCONDITIONALLY (thisvar/propvar/valvar/svar/evtvar) then
+    // overwrites the ones whose arg is simple — so every inline advances the gensym
+    // counter by exactly 5, even when no gensym appears in the output. The fragment is
+    // built as source and re-parsed/printed so the `is` operator, paren-elision and
+    // spacing normalize through the same machinery as the oracle's parseFragment.
+    // Returns the rendered block (an ASTStatementList → makeBlock, no trailing `;`),
+    // or null if `e` is not an inlinable setAttribute. App path inert (lfc=false).
+    tryInlineSetAttribute(e) {
+        if (!this.lfc)
+            return null;
+        if (e.k !== "call" || e.args.length !== 2)
+            return null;
+        const fn = e.c;
+        if (fn.k !== "member" || fn.p !== "setAttribute")
+            return null;
+        const scope = fn.o, property = e.args[0], value = e.args[1];
+        // Five UUIDs, IN ORDER, unconditionally (CommonGenerator.UUID; +5 to the counter).
+        let thisvar = this.nextGensym();
+        let propvar = this.nextGensym();
+        let valvar = this.nextGensym();
+        let svar = this.nextGensym();
+        const evtvar = this.nextGensym();
+        let decls = "";
+        const propIsLiteral = property.k === "str"; // ASTLiteral (quoted property name)
+        // The substituted scope/property/value expressions are spliced as SOURCE TEXT into
+        // `decls + fragment` and re-lexed, so they must be PLAIN JS — never carry a
+        // backtrace noteCallSite (whose annotation control chars would break the re-lex).
+        // Under DEBUG_BACKTRACE the inline's substituted operands are register-renamed
+        // locals (line 0, never checked/notable), so the oracle emits no note for them
+        // either; suppress this printer's btVar while printing them. The sub printer
+        // (below) carries no btVar, so the inline's own generated calls stay un-noted too.
+        const savedBtVar = this.btVar;
+        this.btVar = null;
+        if (scope.k === "id" || scope.k === "this")
+            thisvar = this.expr(scope);
+        else
+            decls += `var ${thisvar} = ${this.expr(scope)};`;
+        if (propIsLiteral || property.k === "id") {
+            propvar = this.expr(property);
+            // svar = "<quote>$lzc$set_<name><quote>" — the literal setter property name.
+            if (propIsLiteral)
+                svar = propvar.charAt(0) + "$lzc$set_" + propvar.slice(1);
+        }
+        else
+            decls += `var ${propvar} = ${this.expr(property)};`;
+        if (value.k === "str" || value.k === "num" || value.k === "lit" || value.k === "id")
+            valvar = this.expr(value);
+        else
+            decls += `var ${valvar} = ${this.expr(value)};`;
+        this.btVar = savedBtVar;
+        const onProp = propIsLiteral ? (propvar.charAt(0) + "on" + propvar.slice(1)) : `"on" + ${propvar}`;
+        const fragment = `if (! (${thisvar}.__LZdeleted )) {` +
+            (propIsLiteral ? "" : `var ${svar} = "$lzc$set_" + ${propvar};`) +
+            `if (${thisvar}[${svar}] is Function) {` +
+            `  ${thisvar}[${svar}](${valvar});` +
+            `} else {` +
+            `  ${thisvar}[ ${propvar} ] = ${valvar};` +
+            `    var ${evtvar} = ${thisvar}[${onProp}];` +
+            `  if (${evtvar} is LzEvent) {` +
+            `    if (${evtvar}.ready) {${evtvar}.sendEvent( ${valvar} ); }` +
+            `  }` +
+            `}` +
+            `}`;
+        const stmts = foldStmts(new Parser(lex(decls + fragment)).parseProgram());
+        // The inline's `var`-declared temps are gensym names (`$lzsc$<n>`). Under backtrace
+        // the gensym counter can reach a name that COLLIDES with a reserved frame variable
+        // (`$lzsc$d`/`$lzsc$s`/`$lzsc$a` = gensyms 13/28/10) — the oracle's register
+        // allocator then renames that temp to the frame's register (e.g. evtvar `$lzsc$a` →
+        // `$d`). Share the outer printer's rename map so a colliding inline temp renders as
+        // its register; non-colliding gensyms (and the already-substituted operand register
+        // names) are absent from the map and pass through unchanged (non-bt build unaffected).
+        const sub = new Printer(this.rename, this.c);
+        sub.lfc = this.lfc;
+        sub.gensym = this.gensym;
+        if (this.dbg) {
+            // DEBUG inline: the substituted fragment is GENERATED code (the oracle's
+            // visitCallExpression builds it with no source location → line 0), rendered
+            // compress=false with the debug `is` ternary. All inline statements carry the
+            // empty-file (generated) context, so no inter-statement `#file` directives
+            // appear; the block is preceded by a single `/* -*- file: -*- */` reset, which
+            // the leading annoFileLine(null,0) supplies (the enclosing joinStmts' source
+            // directive then renders as the file-reset before the block's `{`). Verified vs
+            // the debug gold (core/LzStyleAttrBinder.lzs bind: svar=$lzsc$4, evtvar=$lzsc$5).
+            sub.dbg = true;
+            sub.dfile = "";
+            const blk = annoFileLine(null, 0) + sub.makeBlock(sub.joinStmts(stmts));
+            // Backtrace: the inline is a GENERATED fragment re-lexed with no `#file`, so it
+            // leaves the oracle's Token.currentPathname EMPTY — resetting btSuperSeen so a
+            // following noteCallSite marker is generated (`/* file: -*- */`), even if a prior
+            // super/`is`/nested-func had flipped it to the source file (data/LzLazyReplication-
+            // Manager.lzs: after the setAttribute inline, `updateDel.register` notes reset).
+            this.btSuperSeen = false;
+            return blk;
+        }
+        return sub.makeBlock(sub.joinStmts(stmts));
+    }
     // A statement carries its own terminator: ";" for simple statements; control
     // statements end in "}" with no ";".
     stmt(st) {
         switch (st.s) {
-            case "expr": return this.expr(st.e) + ";";
+            // An unexpanded `#include` reaching codegen is a bug (compileLibraryProgram
+            // expands them all); refuse loudly rather than emit garbage.
+            case "include": throw new ScUnsupported(`unexpanded #include "${st.path}" reached codegen`);
+            case "expr": {
+                const inlined = this.tryInlineSetAttribute(st.e);
+                if (inlined != null)
+                    return inlined;
+                return this.expr(st.e) + ";";
+            }
             case "empty": return "";
             case "var":
                 // A var initializer is at assignment precedence — wrap so a noteCallSite
@@ -2976,6 +3715,8 @@ class Printer {
                     return renderDebugFuncDecl(st.name, st.fn, this.dfile ?? "", st.fn.line ?? this.dline ?? 0);
                 const fscope = analyzeScope(st.fn.params, st.fn.body, false);
                 const fsub = new Printer(fscope.map, this.c);
+                fsub.lfc = this.lfc;
+                fsub.gensym = this.gensym;
                 const fcases = st.fn.params
                     .map((_, i) => (st.fn.defaults[i] != null ? `case ${i}:\n${fscope.newParams[i]}=${fsub.expr(st.fn.defaults[i])};` : null))
                     .filter((c) => c != null);
@@ -3023,7 +3764,12 @@ class Printer {
                     // OPTIONAL_SEMI (ParseTreePrinter:114) = NEWLINE in compress (config.compress
                     // && NEWLINE=="\n"), else SEMI. Here NEWLINE is always "\n" (obfuscate off).
                     const optSemi = this.c ? NL : ";";
-                    let clause = label + NL + (stmts ? stmts + optSemi : "");
+                    // ParseTreePrinter.visitCaseClause: the trailing OPTIONAL_SEMI is appended
+                    // whenever the clause has ≥1 statement CHILD (`len>1`), NOT whether the body
+                    // prints non-empty — a clause whose statements all fold to empty (a dead
+                    // `if($debug){…}`, kept as an empty-stmt marker by foldStmtInner) still gets
+                    // the separator. Key on the (folded) body length, mirroring `len>1`.
+                    let clause = label + NL + (cl.body.length > 0 ? stmts + optSemi : "");
                     if (this.dbg)
                         clause = this.lnum(cl.line ?? null, clause, cl.file);
                     body += clause;
@@ -3041,12 +3787,16 @@ class Printer {
                 // try SPACE BLOCK \n catch (p)BLOCK \n finally SPACE BLOCK (ParseTree-
                 // Printer.visitTryStatement: SPACE after `try`/`finally`, NEWLINE between
                 // clauses, OPENPAREN/CLOSEPAREN around the catch param).
-                let out = "try" + this.SP + this.bodyOf(st.block);
+                // bodyOfAt threads the clause's open-brace line so a super that is the FIRST
+                // statement of the try/catch/finally block tracks at that brace line (nested-
+                // first-super JJTree quirk), same as an if/while/for block — e.g.
+                // LzBootstrapDebugService doEval: `try {`@242, `super.doEval`@243 → #242.
+                let out = "try" + this.SP + this.bodyOfAt(st.block, st.line);
                 if (st.handler) {
                     // The catch clause is a separate ASTCatchClause node, line-tracked at the
                     // `catch` keyword's own source line (ParseTreePrinter:470). (The GENERATED
                     // debug try/catch wrapper's catch is built separately with no real line.)
-                    let cat = "catch" + this.OPENP + this.id(st.param) + this.CLOSEP + this.bodyOf(st.handler);
+                    let cat = "catch" + this.OPENP + this.id(st.param) + this.CLOSEP + this.bodyOfAt(st.handler, st.handlerLine);
                     if (this.dbg && st.handlerLine !== undefined)
                         cat = this.lnum(st.handlerLine, cat, st.file);
                     out += NL + cat;
@@ -3055,7 +3805,7 @@ class Printer {
                     // The `finally` clause is a separate ASTFinallyClause node, line-tracked
                     // at the `finally` keyword's own source line (ParseTreePrinter:473 →
                     // lnum(finallyNode, "finally "+block)). lzunit wrapper: finally @597.
-                    let fin = "finally" + this.SP + this.bodyOf(st.finalizer);
+                    let fin = "finally" + this.SP + this.bodyOfAt(st.finalizer, st.finalizerLine);
                     if (this.dbg && st.finalizerLine !== undefined)
                         fin = this.lnum(st.finalizerLine, fin, st.file);
                     out += NL + fin;
@@ -3282,7 +4032,7 @@ function stripScriptVarsInner(s) {
             return s.varName
                 ? { s: "forin", varName: null, lhs: { k: "id", name: s.varName }, obj: s.obj, body: stripScriptVars(s.body) }
                 : { s: "forin", varName: null, lhs: s.lhs, obj: s.obj, body: stripScriptVars(s.body) };
-        case "block": return { s: "block", body: s.body.map(stripScriptVars) };
+        case "block": return { ...s, body: s.body.map(stripScriptVars) };
         case "if": return { s: "if", c: s.c, t: stripScriptVars(s.t), e: s.e ? stripScriptVars(s.e) : null };
         case "while": return { s: "while", c: s.c, body: stripScriptVars(s.body) };
         case "dowhile": return { s: "dowhile", c: s.c, body: stripScriptVars(s.body) };
@@ -3458,6 +4208,144 @@ export function finalSourceLine(src, baseLine = 1, baseFile) {
 export function compileProgram(source) {
     const ast = foldStmts(new Parser(lex(source)).parseProgram());
     return new Printer(new Map()).joinStmts(ast);
+}
+/** Compile a library ROOT script (the LFC `LaszloLibrary.lzs`) — a bare `.lzs`
+ *  full of `#include "path"` directives, many gated by compile-time `if($as3)` /
+ *  `if($debug)` / `if($profile)` conditionals — to a single production JS string
+ *  (NO magic-constant banner; the caller prepends it).
+ *
+ *  Mirrors the oracle's AST-level include model (JavascriptGenerator.translate-
+ *  Include + visitIfDirective): each file is parsed and constant-FOLDED first, so
+ *  `#include`s in dead branches are eliminated BEFORE they are read — essential,
+ *  because the dead `if($as2)`/`if($as3)` branches reference `.as` files that are
+ *  pruned from the distro (and would be ENOENT if read). Surviving include nodes
+ *  are then resolved + recursively expanded. Path resolution mirrors the oracle's
+ *  lzsc.Resolver: a SINGLE fixed base (the root script's directory) — every
+ *  include, at any nesting depth, is resolved relative to that base, NOT to its
+ *  containing file's directory (verified: `compiler/Library.lzs` includes
+ *  `compiler/LzDebugStub.lzs`, a root-relative path). The caller's
+ *  `resolveInclude(path)` therefore receives the raw, root-relative path. */
+export function compileLibraryProgram(rootSource, rootFile, resolveInclude, debug = false, backtrace = false, profile = false) {
+    const parseFold = (src, file) => {
+        try {
+            const p = new Parser(lex("#file " + file + "\n#line 1\n" + src, 1, undefined, true));
+            p.lfc = true;
+            return foldStmts(p.parseProgram());
+        }
+        catch (e) {
+            if (e instanceof ScUnsupported)
+                throw new ScUnsupported(`${e.message}  [in ${file}]`);
+            throw e;
+        }
+    };
+    const expandInclude = (path, stack) => {
+        if (stack.includes(path))
+            throw new ScUnsupported(`#include cycle: ${[...stack, path].join(" -> ")}`);
+        const src = resolveInclude(path);
+        if (src == null)
+            throw new ScUnsupported(`#include not found: ${path}`);
+        return expandList(parseFold(src, path), [...stack, path]);
+    };
+    const expandBranch = (s, stack) => {
+        if (s.s === "include")
+            return { s: "block", body: expandInclude(s.path, stack) };
+        return expandOne(s, stack);
+    };
+    const expandOne = (s, stack) => {
+        switch (s.s) {
+            case "block": return { ...s, body: expandList(s.body, stack) };
+            case "if": return { ...s, t: expandBranch(s.t, stack), e: s.e ? expandBranch(s.e, stack) : null };
+            case "while":
+            case "dowhile":
+            case "with": return { ...s, body: expandBranch(s.body, stack) };
+            case "for": return { ...s, body: expandBranch(s.body, stack) };
+            case "forin": return { ...s, body: expandBranch(s.body, stack) };
+            case "switch": return { ...s, cases: s.cases.map((cl) => ({ ...cl, body: expandList(cl.body, stack) })) };
+            default: return s;
+        }
+    };
+    const expandList = (stmts, stack) => {
+        const out = [];
+        for (const s of stmts) {
+            if (s.s === "include")
+                out.push(...expandInclude(s.path, stack));
+            else
+                out.push(expandOne(s, stack));
+        }
+        return out;
+    };
+    if (debug || profile) {
+        // DEBUG LFC (compress=false) = the original's `buildlfcdebug` (`--option
+        // nameFunctions -D$debug=true`). `$debug` folds to TRUE here (SC_DEBUG) so the
+        // debugger source branches survive (debugger/Library.lzs → makeDebugWindow,
+        // instead of the LzDebugStub.lzs stubs); SC_LFC_NAMEFUNCS turns ON nameFunctions
+        // (displayName-IIFE wrappers, file markers, compress=false) but OFF the `debug`
+        // compiler option's `$reportException` try/catch body wrapper. Both flags are set
+        // BEFORE the fold (so `$debug` evaluates true while dead-branch eliminating).
+        //
+        // PROFILE LFC (`--profile`) shares all of this machinery EXCEPT: `$debug` folds
+        // FALSE (production folding: debugger stubs, no makeDebugWindow), TRACK_LINES is OFF
+        // (no `/* file */` directives — setNoTrackLines), and SC_PROFILE wraps every
+        // (non-`profile=false`-scope) function with the `$lzprofiler` call/return meter.
+        const savedDebug = SC_DEBUG;
+        const savedNameFuncs = SC_LFC_NAMEFUNCS;
+        const savedBacktrace = SC_BACKTRACE;
+        const savedProfile = SC_PROFILE;
+        SC_DEBUG = !!debug; // profile build keeps $debug=false (production folding)
+        SC_LFC_NAMEFUNCS = true;
+        // BACKTRACE LFC: turn on DEBUG_BACKTRACE so every function body gets the
+        // backtraceStack frame (btPrelude/btPrefix/btSuffix) + per-call-site noteCallSite
+        // `$lzsc$a.lineno=N` instrumentation. analyzeScope reserves the 3 frame registers
+        // (BACKTRACE_VARS) and renderDebugFuncNode/compileFunctionDebug wire the frame
+        // (all already gated on SC_BACKTRACE — the same path the app backtrace uses).
+        if (backtrace)
+            SC_BACKTRACE = true;
+        // PROFILE: set the flag BEFORE the fold (the lexer reads it to emit `profile=`
+        // scope-pragma tokens) and turn off the source-line directives (TRACK_LINES off).
+        if (profile) {
+            SC_PROFILE = true;
+            setNoTrackLines(true);
+        }
+        try {
+            const ast = expandList(parseFold(rootSource, rootFile), []);
+            // The entire library body is rendered as ONE makeTranslationUnits translation
+            // unit (the oracle compiles the whole LFC via a single compileScript). Each
+            // top-level statement carries its own source directive via joinStmts' joinDepth-1
+            // lnum; same-file consecutive statements advance the line state via blank-line
+            // padding (translateAnnotatedUnit), not a re-emitted `#file` directive. The
+            // magic-constant banner is a SEPARATE unit (prepended raw; it re-emits its
+            // directive for the body's first statement).
+            const printer = new Printer(new Map(), /*compress*/ false);
+            printer.dbg = true;
+            printer.lfc = true;
+            for (const v of collectVariables(ast))
+                printer.dbgOuterVars.add(v);
+            // Share this top printer's gensym counter with every per-function debug printer
+            // (renderDebugFuncNode / compileFunctionDebug) so the setAttribute-inline gensym
+            // sequence ($lzsc$N) is a single continuum across the whole LFC, matching the
+            // oracle's global CommonGenerator.uuidCounter.
+            SC_LFC_GENSYM = printer.gensym;
+            try {
+                const body = printer.joinStmts(ast);
+                return assembleDebugProgram([body]);
+            }
+            finally {
+                SC_LFC_GENSYM = null;
+            }
+        }
+        finally {
+            SC_DEBUG = savedDebug;
+            SC_LFC_NAMEFUNCS = savedNameFuncs;
+            SC_BACKTRACE = savedBacktrace;
+            SC_PROFILE = savedProfile;
+            if (profile)
+                setNoTrackLines(false);
+        }
+    }
+    const ast = expandList(parseFold(rootSource, rootFile), []);
+    const printer = new Printer(new Map());
+    printer.lfc = true;
+    return printer.joinStmts(ast);
 }
 /** Debug-build (compress=false) variant of compileProgram: render each top-level
  *  statement of an immediate `<script>` as a SEPARATE annotated translation unit
@@ -3777,6 +4665,11 @@ export function compileFunctionDebug(userName, params, source, defaults, file, m
     const withThis = scope.withThis || (forceWithThis && (scope.dereferenced || scope.free.size > 0 || params.length === 0));
     const printer = new Printer(scope.map, /*compress*/ false);
     printer.dbg = true;
+    // LFC debug build: enable setAttribute inlining + share the global gensym counter.
+    if (SC_LFC_GENSYM) {
+        printer.lfc = true;
+        printer.gensym = SC_LFC_GENSYM;
+    }
     printer.dbgFree = scope.free;
     printer.dbgLocals = scope.locals;
     // The constraint DEPENDENCIES method carries `#pragma warnUndefinedReferences=
@@ -3784,7 +4677,10 @@ export function compileFunctionDebug(userName, params, source, defaults, file, m
     // "throws"). With warnings off, NO bare-id reference is a checked node, so under
     // backtrace its bare refs (e.g. `classroot`) are NOT noteCallSite-wrapped — only
     // its CALLs are. Setter/method/handler bodies keep btWarnUndef=true (default).
-    printer.btWarnUndef = catchKind !== "throws";
+    // LFC nameFunctions build: the `debug` option (WARN_UNDEFINED_REFERENCES) is OFF, so
+    // makeCheckedNode is never applied → NO bare-id checked free ref is ever noted (only
+    // calls/new). So force btWarnUndef false for the whole LFC backtrace build.
+    printer.btWarnUndef = !SC_LFC_NAMEFUNCS && catchKind !== "throws";
     printer.dfile = file;
     printer.dline = methodLine;
     // Pragma-bearing functions (handlers/setters/binders) propagate their pretty
@@ -3799,6 +4695,8 @@ export function compileFunctionDebug(userName, params, source, defaults, file, m
     const avar = bt ? scope.map.get("$lzsc$a") : "";
     if (bt)
         printer.btVar = avar;
+    // LFC backtrace frame "user pathname" (`lfc/` + include path) — see renderDebugFuncNode.
+    const utp = SC_LFC_NAMEFUNCS && bt ? "lfc/" + file : file;
     const A = (n) => annoFileLine(file, n);
     const Agen = annoFileLine(null, 0);
     const FB = forceBlankLnum();
@@ -3850,7 +4748,7 @@ export function compileFunctionDebug(userName, params, source, defaults, file, m
     // A lead ending in `;` (redecls/hoist) needs only a newline before the body; one
     // ending in `}` (the switch prologue) needs `;\n` (statement terminator).
     // Backtrace prefix (frame push) — generated, after redecls, before body/prologue.
-    const prefix = bt ? btPrefix(dvar, svar, avar, params, scope.newParams, file, methodLine, /*isStatic*/ false) : "";
+    const prefix = bt ? btPrefix(dvar, svar, avar, params, scope.newParams, utp, methodLine, /*isStatic*/ false) : "";
     // Backtrace: funcdecl `var` declarations hoist BEFORE the frame prefix; their
     // assignments stay after it. Non-backtrace keeps `hoist` (decl+assign) together.
     const lead = bt
@@ -3862,7 +4760,13 @@ export function compileFunctionDebug(userName, params, source, defaults, file, m
     // `arguments.length` is a property reference → dereferenced. So any method with
     // a default parameter is wrapped, even when the user body itself is not. Backtrace
     // always establishes a try (the finally/suffix).
-    const needTry = bt || scope.dereferenced || scope.free.size > 0 || cases.length > 0;
+    // In the LFC nameFunctions build (SC_LFC_NAMEFUNCS) the `debug` compiler option is
+    // OFF, so `debugExceptions` is false: a method body is wrapped ONLY for a declared
+    // throwsError (catchKind "throws") or backtrace — deref/free/default-params do NOT
+    // force a try (they would only under the `--option debug=true` phantom).
+    const needTry = SC_LFC_NAMEFUNCS
+        ? (bt || catchKind === "throws")
+        : (bt || scope.dereferenced || scope.free.size > 0 || cases.length > 0);
     // Enable the first-statement super quirk only for unwrapped bodies with no lead
     // (the super must directly follow the function's source `{`).
     printer.dbgNoWrapper = !needTry && lead.length === 0;
@@ -3881,12 +4785,17 @@ export function compileFunctionDebug(userName, params, source, defaults, file, m
     const elided = elideSemi(bodyInner);
     let funcBlock;
     if (needTry) {
-        const catchBody = catchKind === "throws" ? debugCatchBodyThrows()
-            : bt ? debugCatchBodyBacktrace(file, avar) : debugCatchBody(file, methodLine);
         const finallyClause = bt
             ? "\n" + Agen + "finally {\n" + btSuffix(svar) + blockNL(btSuffix(svar)) + "}"
             : "";
-        const tryWrap = "try {\n" + elided + blockNL(elided) + "}\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}" + finallyClause;
+        // LFC nameFunctions backtrace: `try {…} finally {pop}`, NO $reportException catch
+        // (debugExceptions off) — only a throwsError body keeps a catch.
+        const noCatch = SC_LFC_NAMEFUNCS && bt && catchKind !== "throws";
+        const catchBody = catchKind === "throws" ? debugCatchBodyThrows()
+            : bt ? debugCatchBodyBacktrace(file, avar) : debugCatchBody(file, methodLine);
+        const catchPart = noCatch ? ""
+            : "\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}";
+        const tryWrap = "try {\n" + elided + blockNL(elided) + "}" + catchPart + finallyClause;
         const preludeStr = bt ? btPrelude(dvar, svar) + "\n" : "";
         funcBlock = withThis ? "{\n" + Agen + "with (this) {\n" + preludeStr + tryWrap + "}}" : "{\n" + Agen + preludeStr + tryWrap + "}";
     }
@@ -3897,7 +4806,7 @@ export function compileFunctionDebug(userName, params, source, defaults, file, m
     const S1 = A(methodLine) + "var $lzsc$temp = " + innerFn + ";";
     const S2 = A(methodLine) + '$lzsc$temp["displayName"] = ' + jsString(userName) + ";";
     const S2bt = bt
-        ? NL + A(methodLine) + '$lzsc$temp["_dbg_filename"] = ' + jsString(file) + ";" +
+        ? NL + A(methodLine) + '$lzsc$temp["_dbg_filename"] = ' + jsString(utp) + ";" +
             NL + A(methodLine) + '$lzsc$temp["_dbg_lineno"] = ' + methodLine + ";"
         : "";
     const S3 = A(methodLine) + "return $lzsc$temp;";
@@ -3939,12 +4848,36 @@ export function compileBinderDebug(userName, bodySource, file, funcLine) {
 function renderDebugFuncDecl(name, fn, file, funcLine) {
     return renderDebugFuncNode(fn, name, /*named*/ true, file, funcLine, "report", false, undefined, undefined, undefined, name);
 }
-function renderDebugFuncNode(fn, userName, named, file, funcLine, catchKind = "report", isMethod = false, as3, propagateName, outerVars, asDecl) {
+function renderDebugFuncNode(fn, userName, named, file, funcLine, catchKind = "report", isMethod = false, as3, propagateName, outerVars, asDecl, isStatic = false, insideFunc = false) {
     const params = fn.params;
     const ast = fn.body;
-    const scope = analyzeScope(params, ast, isMethod, as3, /*debug*/ true);
+    // A `#pragma "throwsError=true"` function value (e.g. LzXMLParser.parseXML) uses the
+    // THROWS_ERROR catch arm (record declared Errors on lz.$lzsc$thrownError + always
+    // rethrow, NO $reportException) and ALWAYS establishes the try/catch wrapper.
+    if (fn.throwsError)
+        catchKind = "throws";
+    // A `#pragma "userFunctionName=…"` (contextmenu.js `handle oninit`) overrides the
+    // debug displayName and propagates the pretty name into nested function values.
+    if (fn.userFunctionName !== undefined) {
+        userName = fn.userFunctionName;
+        propagateName = fn.userFunctionName;
+    }
+    // A `#pragma "debugBacktrace=false"` function (the backtrace machinery itself —
+    // Debug.stackOverflow / LzBacktrace) is EXEMPT from the frame + noteCallSite (it
+    // would recurse). It reserves no frame registers and is rendered like a plain
+    // nameFunctions debug function.
+    const noBt = fn.noBacktrace === true;
+    // Profile: a `#pragma 'profile=false'` scope function reserves no meter registers
+    // and gets no `$lzprofiler` wrapper.
+    const noProf = fn.noProfile === true;
+    const scope = analyzeScope(params, ast, isMethod, as3, /*debug*/ true, noBt, noProf);
     const printer = new Printer(scope.map, /*compress*/ false);
     printer.dbg = true;
+    // LFC debug build: enable setAttribute inlining + share the global gensym counter.
+    if (SC_LFC_GENSYM) {
+        printer.lfc = true;
+        printer.gensym = SC_LFC_GENSYM;
+    }
     printer.dbgFree = scope.free;
     printer.dbgLocals = scope.locals;
     // A free reference that resolves to a name declared in an ENCLOSING scope is not
@@ -3960,20 +4893,50 @@ function renderDebugFuncNode(fn, userName, named, file, funcLine, catchKind = "r
     if (propagateName != null)
         printer.outerUserName = propagateName;
     // Backtrace: this body's frame registers (reserved last in analyzeScope). Setting
-    // btVar turns on noteCallSite for every call/checked-ref printed in this body.
-    const bt = SC_BACKTRACE;
+    // btVar turns on noteCallSite for every call/checked-ref printed in this body. A
+    // `debugBacktrace=false` body is exempt.
+    const bt = SC_BACKTRACE && !noBt;
     const dvar = bt ? scope.map.get("$lzsc$d") : "";
     const svar = bt ? scope.map.get("$lzsc$s") : "";
     const avar = bt ? scope.map.get("$lzsc$a") : "";
     if (bt)
         printer.btVar = avar;
+    // LFC nameFunctions build: WARN_UNDEFINED_REFERENCES is OFF, so no bare-id checked
+    // free ref is ever noteCallSite-wrapped (only calls/new). Apps keep the default true.
+    if (SC_LFC_NAMEFUNCS)
+        printer.btWarnUndef = false;
+    // BACKTRACE frame "user pathname": the frame's `.filename` field + the function's
+    // `_dbg_filename` metadata use the LPS-relative path (the oracle's getUserPathname),
+    // which for the LFC build is `lfc/` + the include path (the LFC sources live under
+    // `$LPS_HOME/lfc/`). The `#file` directives / displayName / $reportException keep the
+    // raw include path. For apps (not SC_LFC_NAMEFUNCS) the file IS already the user path
+    // (btshow byte-identical), so identity.
+    const utp = SC_LFC_NAMEFUNCS && bt ? "lfc/" + file : file;
+    // Profile: this body's three meter registers ($lzsc$lzp/$lzsc$now/$lzsc$name,
+    // reserved last in analyzeScope). The metered name expression is `arguments.callee
+    // ["displayName"]` for a function VALUE (the IIFE / method path, meterFunctionName
+    // null) or the quoted literal name for a top-level declaration (asDecl, useName true).
+    const prof = SC_PROFILE && !noProf;
+    const mlzp = prof ? scope.map.get("$lzsc$lzp") : "";
+    const mnow = prof ? scope.map.get("$lzsc$now") : "";
+    const mname = prof ? scope.map.get("$lzsc$name") : "";
+    const meterGetName = asDecl != null ? jsString(asDecl) : 'arguments.callee["displayName"]';
+    // PROFILE closure naming (JavascriptGenerator:1402): a function that (a) is lexically
+    // nested inside another function, AND (b) closes over a local/param (scope.closed),
+    // gets " closure" appended to its displayName. Only the displayName-IIFE (value) path
+    // uses userName; a named declaration's marker uses the bare name → no suffix.
+    if (SC_PROFILE && insideFunc && asDecl == null && scope.closed.size > 0)
+        userName += " closure";
     const A = (n) => annoFileLine(file, n);
     const Agen = annoFileLine(null, 0);
     const FB = forceBlankLnum();
-    const funcdecls = ast.filter((s) => s.s === "funcdecl");
-    const rest = ast.filter((s) => s.s !== "funcdecl");
-    if (funcdecls.length && hasNestedFuncDecl(rest))
-        throw new ScUnsupported("nested function declaration");
+    // Funcdecls hoist to the function top from ANY nesting depth (collectFuncDecls walks
+    // through control structures, JS function-declaration hoisting — mirrors production
+    // fix #7 / VariableAnalyzer.fundefs). data/LzDataElement.lzs __LZdateToJSON declares
+    // `pad2`/`pad3` inside `if (isFinite…)`; the debug build hoists `var pad2_$1;` to the
+    // try-body top + the assignment `pad2_$1 = (displayName-IIFE)` at the funcdecl line−1.
+    const funcdecls = collectFuncDecls(ast);
+    const rest = stripFuncDecls(ast);
     const cases = params
         .map((_, i) => {
         if (fn.defaults[i] == null)
@@ -3992,12 +4955,17 @@ function renderDebugFuncNode(fn, userName, named, file, funcLine, catchKind = "r
         : "";
     // Nested funcdecl hoist: `var name;` (generated) then `name = <debug-func>;` at
     // THIS function's line (the assignment carries the enclosing line; the inner
-    // displayName-IIFE then re-annotates the nested function's own line).
-    const hoist = funcdecls.length
-        ? funcdecls.map((d) => Agen + "var " + printer.id(d.name) + ";").join("\n") + "\n" +
-            funcdecls.map((d) => A(funcLine) + printer.id(d.name) + " = " +
-                renderDebugFuncNode(d.fn, d.name, /*named*/ true, file, d.line ?? funcLine) + ";").join("\n")
+    // displayName-IIFE then re-annotates the nested function's own line). Under backtrace
+    // the DECLARATIONS hoist BEFORE the frame prefix (they are in `variables`, declared
+    // at the try-body top); the ASSIGNMENTS stay after it (mirrors compileFunctionDebug).
+    const hoistDecls = funcdecls.length
+        ? funcdecls.map((d) => Agen + "var " + printer.id(d.name) + ";").join("\n")
         : "";
+    const hoistAssigns = funcdecls.length
+        ? funcdecls.map((d) => A((d.line ?? funcLine) - 1) + printer.id(d.name) + " = " +
+            renderDebugFuncNode(d.fn, d.name, /*named*/ true, file, d.line ?? funcLine, "report", false, undefined, undefined, undefined, undefined, false, /*insideFunc*/ true) + ";").join("\n")
+        : "";
+    const hoist = hoistDecls && hoistAssigns ? hoistDecls + "\n" + hoistAssigns : hoistDecls + hoistAssigns;
     const prologue = cases.length > 0
         ? A(funcLine) + "switch (arguments.length) {\n" +
             cases.map((c, j) => "case " + c.i + ":\n" + (j === 0 ? A(funcLine + 1) : "") + c.assign).join(";;") +
@@ -4006,11 +4974,35 @@ function renderDebugFuncNode(fn, userName, named, file, funcLine, catchKind = "r
     // Backtrace prefix (the `if ($lzsc$s) {…frame push…}`) — a generated statement
     // that goes after the withThis redecls and before the body / default-param
     // prologue (JavascriptGenerator:1528, prefix added to newBody before fundefs).
-    const prefix = bt ? btPrefix(dvar, svar, avar, params, scope.newParams, file, funcLine, /*isStatic*/ false) : "";
-    const lead = [redecls, prefix, hoist, prologue].filter((s) => s !== "");
-    // Backtrace always establishes a try (the finally/suffix), so force the wrapper.
-    const needTry = bt || scope.dereferenced || scope.free.size > 0 || cases.length > 0;
+    // A STATIC class method has no `this` binding → the backtrace frame omits
+    // `<frame>["this"] = this` (btPrefix isStatic). Function VALUES + instance methods
+    // record `this`.
+    // Backtrace frame-push prefix OR profile `calls` meter prefix (mutually exclusive) —
+    // a generated statement in `prefix` (JavascriptGenerator:1227/1249), added to newBody
+    // after the withThis redecls + fundef var-decls, before the fundef assignments/body.
+    const prefix = bt ? btPrefix(dvar, svar, avar, params, scope.newParams, utp, funcLine, /*isStatic*/ isStatic)
+        : prof ? meterEvent(mlzp, mnow, mname, meterGetName, "calls") : "";
+    // Backtrace/profile: hoist DECLARATIONS go before the frame/meter prefix, ASSIGNMENTS after it.
+    const lead = (bt || prof
+        ? [redecls, hoistDecls, prefix, hoistAssigns, prologue]
+        : [redecls, prefix, hoist, prologue]).filter((s) => s !== "");
+    // Backtrace/profile always establishes a try (the finally/suffix), so force the wrapper.
+    // A throwsError function is ALWAYS wrapped (THROWS_ERROR), regardless of deref/free.
+    const needTry = SC_LFC_NAMEFUNCS
+        ? (bt || prof || catchKind === "throws")
+        : (bt || scope.dereferenced || scope.free.size > 0 || cases.length > 0 || catchKind === "throws");
     printer.dbgNoWrapper = !needTry && lead.length === 0;
+    // Backtrace: a hoisted nested funcdecl's body is re-lexed from source, flipping the
+    // oracle's Token.currentPathname to this body's file for the REST of the function —
+    // so subsequent noteCallSite markers carry `#<dfile>#1` (like a super/`is`). The
+    // hoisted fundef assignment is translated before the rest of the body, so set the
+    // flag here (views/LaszloView.lzs $lzc$set_align: nested `map` → the trailing
+    // releaseConstraintMethod note shows `/* file: #1 */`, not a generated reset).
+    if (bt && funcdecls.length)
+        printer.btSuperSeen = true;
+    // PROFILE: any function VALUE inside THIS body is lexically nested in a function →
+    // eligible for the " closure" displayName suffix (printFunc reads dbgInsideFunc).
+    printer.dbgInsideFunc = true;
     const bodyStmts = printer.joinStmts(rest);
     printer.dbgNoWrapper = false;
     // Join lead items with a `;`-aware separator (the prefix `if(){}` block has no
@@ -4024,12 +5016,23 @@ function renderDebugFuncNode(fn, userName, named, file, funcLine, catchKind = "r
     const elided = elideSemi(bodyInner);
     let funcBlock;
     if (needTry) {
-        const catchBody = catchKind === "throws" ? debugCatchBodyThrows()
-            : bt ? debugCatchBodyBacktrace(file, avar) : debugCatchBody(file, funcLine);
+        // The profile `returns` meter is a `finally` clause (suffix.add(0, returns)); the
+        // backtrace frame-pop is too. Profile and backtrace are mutually exclusive.
+        const profSuffix = prof ? meterEvent(mlzp, mnow, mname, meterGetName, "returns") : "";
         const finallyClause = bt
             ? "\n" + Agen + "finally {\n" + btSuffix(svar) + blockNL(btSuffix(svar)) + "}"
-            : "";
-        const tryWrap = "try {\n" + elided + blockNL(elided) + "}\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}" + finallyClause;
+            : prof
+                ? "\n" + Agen + "finally {\n" + profSuffix + blockNL(profSuffix) + "}"
+                : "";
+        // LFC nameFunctions build: the `debug` compiler option is OFF (debugExceptions
+        // false), so a backtrace/profile body is `try {…} finally {…}` with NO
+        // `$reportException` catch arm (the only catch is the throwsError "throws" arm).
+        const noCatch = SC_LFC_NAMEFUNCS && (bt || prof) && catchKind !== "throws";
+        const catchBody = catchKind === "throws" ? debugCatchBodyThrows()
+            : bt ? debugCatchBodyBacktrace(file, avar) : debugCatchBody(file, funcLine);
+        const catchPart = noCatch ? ""
+            : "\n" + Agen + "catch ($lzsc$e) {\n" + catchBody + blockNL(catchBody) + "}";
+        const tryWrap = "try {\n" + elided + blockNL(elided) + "}" + catchPart + finallyClause;
         const preludeStr = bt ? btPrelude(dvar, svar) + "\n" : "";
         funcBlock = withThis ? "{\n" + Agen + "with (this) {\n" + preludeStr + tryWrap + "}}" : "{\n" + Agen + preludeStr + tryWrap + "}";
     }
@@ -4041,16 +5044,34 @@ function renderDebugFuncNode(fn, userName, named, file, funcLine, catchKind = "r
     // declaration statement is terminated by a trailing newline (printableAnnotation),
     // so the program's `;` unit-separator lands on its own line (gold `}}}\n;`).
     if (asDecl != null) {
-        return A(funcLine) + "function " + asDecl + " (" + scope.newParams.join(", ") + ")" + " " + funcBlock + NL;
+        const decl = A(funcLine) + "function " + asDecl + " (" + scope.newParams.join(", ") + ")" + " " + funcBlock + FB;
+        if (bt) {
+            // Backtrace: a top-level funcdecl has no displayName-IIFE to carry the frame
+            // metadata, so the `_dbg_filename`/`_dbg_lineno` are emitted as trailing GENERATED
+            // statements `<name>["_dbg_filename"]=…;\n<name>["_dbg_lineno"]=…` (no source
+            // directive — the body's finally left the line-state in generated context). The
+            // unit-joiner supplies the final `;`.
+            return decl + ";" + NL +
+                Agen + asDecl + '["_dbg_filename"] = ' + jsString(utp) + ";" + NL +
+                Agen + asDecl + '["_dbg_lineno"] = ' + funcLine;
+        }
+        // Profile: a named DECLARATION (useName=true) carries its displayName as a trailing
+        // generated statement `<name>["displayName"] = "<name>"` (JavascriptGenerator:1631).
+        if (prof)
+            return decl + ";" + NL + Agen + asDecl + '["displayName"] = ' + jsString(asDecl);
+        return decl;
     }
     // Named source function keeps a (now-empty) name slot → `function  (`; anon → `function (`.
-    const innerFn = A(funcLine) + "function" + (named ? "  " : " ") + "(" + scope.newParams.join(", ") + ")" + " " + funcBlock + FB;
+    // The empty-name-slot extra space is a TRACK_LINES artifact (proven via the oracle:
+    // nameFunctions+trackLines → 2-space, +disableTrackLines → 1-space) — the profile
+    // build has TRACK_LINES OFF, so every inner function is 1-space.
+    const innerFn = A(funcLine) + "function" + (named && !SC_PROFILE ? "  " : " ") + "(" + scope.newParams.join(", ") + ")" + " " + funcBlock + FB;
     const S1 = A(funcLine) + "var $lzsc$temp = " + innerFn + ";";
     const S2 = A(funcLine) + '$lzsc$temp["displayName"] = ' + jsString(userName) + ";";
     // Backtrace adds the static frame metadata after displayName (JavascriptGenerator
     // :1648): `_dbg_filename` / `_dbg_lineno`. The repeated annotations dedup to `#N`.
     const S2bt = bt
-        ? NL + A(funcLine) + '$lzsc$temp["_dbg_filename"] = ' + jsString(file) + ";" +
+        ? NL + A(funcLine) + '$lzsc$temp["_dbg_filename"] = ' + jsString(utp) + ";" +
             NL + A(funcLine) + '$lzsc$temp["_dbg_lineno"] = ' + funcLine + ";"
         : "";
     const S3 = A(funcLine) + "return $lzsc$temp;";

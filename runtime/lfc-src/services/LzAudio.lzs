@@ -1,0 +1,152 @@
+/**
+  *
+  * @copyright Copyright 2001-2008, 2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @access public
+  * @topic LFC
+  * @subtopic Services
+  */
+
+/**
+  * <p><code>lz.Audio</code> is the single instance of the class
+  * <code>lz.AudioService</code>.</p>
+  *
+  * <example><![CDATA[
+<canvas height="150">
+  <audio src="resources/poof.mp3" name="poof"/>
+  <button text="Poof"
+          onclick="lz.Audio.playSound('poof');"/>
+</canvas>]]></example>
+  *
+  *
+  * @shortdesc This service manages audio resource playback. Check canvas.capabilities.audio to ensure your runtime supports audio.
+  * @access public
+  *
+  */
+public final class LzAudioService {
+    // TODO [hqm 2008-03] Will asking for LzSprite.prototype.xxx  work in SWF9?
+    if ($as3) {
+        /** @access private */
+        var capabilities :* = LzSprite.capabilities;
+    } else {
+        /** @access private */
+        var capabilities :* = LzSprite.prototype.capabilities;
+    }
+
+    /** The audio service. Also available as the global
+     * <code>lz.Audio</code>.
+     *
+     * @type LzAudioService
+     * @keywords readonly
+     * @devnote this should be a public getter to enforce readonly
+     */
+    public static const LzAudio:LzAudioService;
+
+    /** @access private
+     * @devnote AS3 does not allow private constructors, so we need the
+     * error
+     */
+    function LzAudioService () {
+      super();
+      //    if (LzAudioService.LzAudio) {
+      //      throw new Error("There can be only one LzAudio");
+      //    }
+    }
+
+    // Create the singleton
+    LzAudioService.LzAudio = new LzAudioService();
+
+    /**
+      * Sets the current sound resource and starts playing it.
+      * @param String snd: Name of a sound resource to play
+      */
+    function playSound (snd:String) :void {
+        if (this.capabilities.audio) {
+            LzAudioKernel.playSound(snd);
+        } else if ($debug) {
+            LzView.__warnCapability('lz.Audio.playSound()', 'audio');
+        }
+    }
+
+    /**
+      * Stop playing the current sound
+      * */
+    function stopSound () :void {
+        if (this.capabilities.audio) {
+            LzAudioKernel.stopSound();
+        } else if ($debug) {
+            LzView.__warnCapability('lz.Audio.stopSound()', 'audio');
+        }
+    }
+
+    /**
+      * Start playing the current sound
+      *
+      */
+    function startSound () :void {
+        if (this.capabilities.audio) {
+            LzAudioKernel.startSound();
+        } else if ($debug) {
+            LzView.__warnCapability('lz.Audio.startSound()', 'audio');
+        }
+    }
+
+    /**
+      * Get the global volume
+      * @return Number: volume from 0 to 100 (0 is silent).
+      */
+    function getVolume () :Number {
+        if (this.capabilities.audio) {
+            return LzAudioKernel.getVolume();
+        } else if ($debug) {
+            LzView.__warnCapability('lz.Audio.getVolume()', 'audio');
+        }
+        return NaN;
+    }
+
+    /**
+      * Set the global volume.
+      * @param Number v: linear volume from 0 to 100 (0 is silent).
+      */
+    function setVolume (v:Number) :void {
+        if (this.capabilities.audio) {
+            LzAudioKernel.setVolume(v);
+        } else if ($debug) {
+            LzView.__warnCapability('lz.Audio.setVolume()', 'audio');
+        }
+    }
+
+    /**
+      * Get the global pan.
+      * @return Number: linear pan from -100 to +100 (left to right)
+      */
+    function getPan () :Number {
+        if (this.capabilities.audio) {
+            return LzAudioKernel.getPan();
+        } else if ($debug) {
+            LzView.__warnCapability('lz.Audio.getPan()', 'audio');
+        }
+        return NaN;
+    }
+
+    /**
+      * Set the global pan.
+      * @param Number p: linear pan from -100 to +100 (left to right)
+      */
+    function setPan (p:Number) :void {
+        if (this.capabilities.audio) {
+            LzAudioKernel.setPan(p);
+        } else if ($debug) {
+            LzView.__warnCapability('lz.Audio.setPan()', 'audio');
+        }
+    }
+
+} // End of LzAudioService
+lz.AudioService = LzAudioService;  // publish
+
+/**
+  * lz.Audio is a shortcut for <link linkend="LzAudioService.LzAudio">lz.AudioService.LzAudio</link>
+  * @type LzAudioService
+  */
+lz.Audio = LzAudioService.LzAudio;

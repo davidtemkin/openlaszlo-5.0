@@ -1,0 +1,25 @@
+<canvas height="250">
+   
+  <dataset type="http" name="weatherdata"
+           src="http://www.laszlosystems.com/cgi-pub/weather.cgi"/> 
+  <view>
+     <inputtext width="90" name="t">zip</inputtext>
+     <button>  submit
+       <handler name="onclick"> var d = canvas.datasets.weatherdata;
+         Debug.debug("sending request for weather data.");
+         d.setQueryString({zip : parent.t.getText()});
+         d.doRequest(); 
+       </handler>
+     </button>
+     <datapointer xpath="weatherdata:/weather">
+       <handler name="ondata">
+         var duplicate_pointer = this.dupePointer();
+         duplicate_pointer.selectChild();
+         while (duplicate_pointer.selectNext()){
+           Debug.debug("%w", duplicate_pointer.serialize());
+         }
+       </handler>
+     </datapointer>
+     <simplelayout axis="x"/>
+   </view>
+ </canvas>

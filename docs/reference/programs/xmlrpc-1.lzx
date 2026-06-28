@@ -1,0 +1,35 @@
+<canvas height="400">
+    
+        
+        
+        <xmlrpc name="math" service="http://www.cookcomputing.com/xmlrpcsamples/math.rem">
+            
+            <handler name="onload">
+                Debug.debug('math XML-RPC service loaded');
+                Debug.debug('proxy:');
+                Debug.inspect(this.proxy);
+            </handler>
+            
+            <handler name="ondata" args="data">
+                Debug.debug('got data: %w', data);
+            </handler>
+            
+            <handler name="onerror" args="error">
+                Debug.debug('onerror: %w', error);
+            </handler>
+            
+            <remotecall name="add" funcname="math.Add"/>
+            <remotecall name="subtract" funcname="math.Subtract"/>
+            <remotecall name="multiply" funcname="math.Multiply"/>
+            <remotecall name="divide" funcname="math.Divide"/>
+            
+        </xmlrpc>
+        
+        <button text="100+200" x="10" y="10">
+            <handler name="onclick">
+                Debug.debug('100+200');
+                math.add.invoke([100,200]);
+            </handler>
+        </button>
+    
+    </canvas>

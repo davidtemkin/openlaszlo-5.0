@@ -14,6 +14,13 @@ export interface CompileFileOptions {
   /** LPS_HOME (server root) for resolving components/fonts/autoincludes. */
   lpsHome?: string;
   debug?: boolean;
+  /** DEBUG_BACKTRACE build (`?lzbacktrace`): per-function call-stack frames + per-call
+   *  line notes. Implies debug. Pairs with the `lfc-backtrace.js` runtime variant. */
+  backtrace?: boolean;
+  /** PROFILE build (`?profile`): pairs with the `lfc-profile.js` runtime variant (every
+   *  LFC function `$lzprofiler`-metered, Profiler auto-started). Independent of debug;
+   *  cache-keyed so a profile build never collides with the production cache. */
+  profile?: boolean;
   /** false ⇒ SOLO build (`__LZproxied:"false"`). Default (true) ⇒ proxied. */
   proxied?: boolean;
   /** "none" ⇒ Java-free sprite-sheet-free output (multi-frame resources render
@@ -33,7 +40,8 @@ export interface CompileFileResult {
 
 /** The compiler properties that gate cache staleness (Java's computeKey props). */
 function compileProps(o: CompileFileOptions): Record<string, string> {
-  return { debug: String(!!o.debug), proxied: String(o.proxied !== false), sprites: o.sprites ?? "oracle" };
+  return { debug: String(!!o.debug || !!o.backtrace), backtrace: String(!!o.backtrace),
+           profile: String(!!o.profile), proxied: String(o.proxied !== false), sprites: o.sprites ?? "oracle" };
 }
 
 /** Compile a file on disk, returning the JS + the full dependency closure (every
@@ -45,7 +53,7 @@ export function compileFile(mainPath: string, o: CompileFileOptions = {}): Compi
   tracker.file(abs); // the main source is the first dependency
   const source = readFileSync(abs, "utf8");
   const opts = nodeOptions(abs, o.lpsHome, tracker);
-  const r = compile(source, { ...opts, debug: o.debug, proxied: o.proxied, sprites: o.sprites });
+  const r = compile(source, { ...opts, debug: o.debug, backtrace: o.backtrace, proxied: o.proxied, sprites: o.sprites });
   return { js: r.js, unsupported: r.unsupported, closure: { entries: tracker.entries(), props: compileProps(o) } };
 }
 

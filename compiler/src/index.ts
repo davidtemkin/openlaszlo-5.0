@@ -3,7 +3,7 @@
 // The Node conveniences (fs-backed provider, disk cache, compileFile) live in the
 // "./node" entry so a browser bundle never pulls in `node:fs`.
 
-export { compile } from "./compile.js";
+export { compile, compileLibrary, LFC_BANNER } from "./compile.js";
 export type { CompileOptions, CompileResult, ResourceInfo, FontInfo } from "./compile.js";
 
 // Dependency-closure + cache primitives (env-agnostic — the algorithm is shared by

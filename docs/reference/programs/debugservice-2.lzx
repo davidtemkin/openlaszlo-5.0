@@ -1,0 +1,10 @@
+<canvas height="150">
+   
+   <script>
+     var o = {a: 7, f: function (x) { return x * x;}};
+     Debug.monitor(o, 'a');
+     o.a = 42;
+     Debug.trace(o, 'f');
+     o.f(4);
+   </script>
+ </canvas>

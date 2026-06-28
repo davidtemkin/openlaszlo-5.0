@@ -33,6 +33,19 @@ export const OP_SETPATH = "P";
 // Set per compile by compile.ts (alongside setScBacktrace). Inert for normal debug.
 let DBG_BACKTRACE = false;
 export function setDebugBacktrace(v: boolean): void { DBG_BACKTRACE = v; }
+
+// PROFILE LFC build (`--profile`): nameFunctions is ON (compress=false, displayName-
+// IIFE wrappers, name_$N registers) but TRACK_LINES is OFF — the oracle's option
+// ordering (Compiler.java:317 sets TRACK_LINES from NAME_FUNCTIONS, which is still
+// FALSE there; :321 then sets NAME_FUNCTIONS=true for PROFILE, too late for the
+// TRACK_LINES check). So the profile output carries NO `/* -*- file: X#N -*- */`
+// source directives and NO forceBlankLnum padding. With this flag set, every
+// file/line annotation marker + the per-function blank-line annotation collapse to
+// nothing, so the per-function debug renderers (which always emit the markers) yield
+// clean directive-free compress=false text. Set/reset by compileLibraryProgram's
+// profile branch (the app/debug/backtrace paths never set it → byte-unchanged).
+let NO_TRACK_LINES = false;
+export function setNoTrackLines(v: boolean): void { NO_TRACK_LINES = v; }
 // The constructor's frame prelude/prefix/suffix + the noted super-fallback. Params
 // parent/attrs/children/async are fixed registers $0-$3, so $lzsc$d/$lzsc$s/$lzsc$a
 // are always $4/$5/$6.
@@ -158,6 +171,8 @@ function isActualFile(str: string): boolean {
 /** annotateFileLineNumber: a file/line annotation marker. A non-real filename
  *  (empty or `[...]`) collapses to the generated-code marker `#0`. */
 export function annoFileLine(filename: string | null, line: number, force = false): string {
+  // TRACK_LINES off (profile build): no source-location directives at all.
+  if (NO_TRACK_LINES) return "";
   let f = filename ?? "";
   let n = line;
   if (!isActualFile(f)) { f = ""; n = 0; }
@@ -168,6 +183,8 @@ export function annoFileLine(filename: string | null, line: number, force = fals
 /** forceBlankLnum: a forced blank-line annotation emitted after every function
  *  close `}` (ParseTreePrinter.forceBlankLnum) → renders `/* -*- file: -*- *​/`. */
 export function forceBlankLnum(): string {
+  // TRACK_LINES off (profile build): no per-function blank-line padding.
+  if (NO_TRACK_LINES) return "";
   return "\n" + annoFileLine(null, 0, true);
 }
 

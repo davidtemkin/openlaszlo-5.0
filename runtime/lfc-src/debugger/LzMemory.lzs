@@ -1,0 +1,640 @@
+/* -*- mode: JavaScript; c-basic-offset: 2; -*- */
+
+/**
+  *
+  * @copyright Copyright 2001-2009 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @access private
+  * @topic LZX
+  * @subtopic Debugging
+  *
+  */
+
+// Memory analysis tools for the debugger
+
+// Define some annotations
+Debug.annotation = {
+  marked: '_dbg_marked',
+  why: '_dbg_why',
+  size: '_dbg_smoots',
+  total: '_dbg_weight',
+  leaked: '_dbg_leaked'
+}
+// For making unenumerable
+Debug.allAnnotations = [];
+// N.B. function expression avoids polluting module with temp vars
+(function () {
+  for (var a in Debug.annotation) {
+    Debug.allAnnotations.push(Debug.annotation[a]);
+  }
+})();
+// Generation of this mark
+Debug.markGeneration = 0;
+// Whether to do why annotation
+Debug.noteWhy = false;
+// Whether to find leaks
+Debug.findLeaks = false;
+Debug.leaks = [];
+// For debugging yourself
+Debug.debugTrace = false;
+Debug.loops = 0;
+Debug.loopCount = 0;
+Debug.loopElapsed = 0;
+
+/**
+  * Mark an object
+  *
+  * @param Object o: the object
+  * @return boolean: True unless the object could not be marked
+  * (indicates it is probably a primitive object that we cannot trace
+  * through)
+  *
+  * @access private
+  */
+Debug.mark = function (o) {
+  // We can't trace things that don't support hasOwnProperty
+  if  ((! o) ||
+       // 'movieclip' is for as2
+       (! ((typeof o == 'object') || (typeof o == 'movieclip'))) || 
+      (! (typeof o['hasOwnProperty'] == 'function'))) {
+    if (this.debugTrace) {
+      console.log('Not marking %s\n', o);
+    }
+    return false;
+  }
+  try {
+    var annotation = this.annotation;
+    delete o[annotation.leaked];
+    o[annotation.marked] = this.markGeneration;
+  } catch (e) { return false };
+  return true;
+};
+
+/**
+  * Is an object marked?
+  *
+  * @param Object o: the object
+  * @return null|false|true: If the object has been marked in this
+  * generation, `true`; if the object has been marked, but not in this
+  * generation, `false`; if the object has never been marked, `null`.
+  * The latter distinction is used by the leak detector.
+  *
+  * @note Objects that do not support hasOwnProperty cannot be traced,
+  * so they are always considered marked.
+  *
+  * @access private
+  */
+Debug.isMarked = function (o) {
+  // We can't trace things that don't support hasOwnProperty
+  if ((! o) ||
+      // 'movieclip' is for as2
+      (! ((typeof o == 'object') || (typeof o == 'movieclip'))) ||
+      (! (typeof o['hasOwnProperty'] == 'function'))) {
+    if (this.debugTrace) {
+      console.log('Not tracing %s\n', o);
+    }
+    return true;
+  }
+  var marked = this.annotation.marked;
+  // Be careful calling hasOwnProperty (it could be a method in a
+  // native prototype that will fail when called on the prototype
+  // itself).  If so, pretend the object is marked -- we can't trace
+  // any deeper
+  try {
+    if (! o.hasOwnProperty(marked)) {
+      return null;
+    }
+    return o[marked] == this.markGeneration;
+  } catch (e) {
+    if (this.debugTrace) {
+      console.log('Not tracing %s\n', o);
+    }
+    return true;
+  }
+}
+
+/**
+  * Stack of objects to trace
+  * [ [ name, val, name, val, ...],
+  * [ name, val, ...],
+  * ...]
+  * 
+  * Each element of obstack represents an object's slots, as the slot
+  * name and slot value.  Each element also has two properties, `path`
+  * and `ancestors` which are used to annotate why an object is alive
+  * and the 'cost' or 'weight' of an object, if requested.  When an
+  * object's slot is itself an object, that object will have its slots
+  * enumerated and appended to the obstack.  The stack is processed in
+  * FIFO order (i.e., trace is breadth-first)
+  *
+  * @access private
+  */
+Debug.obstack = [];
+
+/**
+  * Background task for the memory tracer
+  * Very similar in spirit to the krank serializer, but I couldn't see
+  * a way to easily share code.  Actually, this is a significant
+  * improvement on the krank serializer, since it uses ASSetPropFlags
+  * to get to unenumerable properties (rather than having explicit
+  * lists) and hasOwnProperty to restrict to immediate properties
+  * (rather than __proto__ smashing).
+  * 
+  * @access private
+  *
+  * @devnote Limit background processing so player doesn't abort us.
+  * The loop limit no longer seems to be necessary. The setInterval is
+  * 1300ms (because we know scriptRunningSlowly defaults to 1500
+  */
+Debug.traceStep = function (steps=Infinity, milliseconds=1300) {
+  var loopStart = (new Date).getTime();
+  var loopCount = 0;
+  var loopElapsed = 0;
+  var os = this.obstack;
+  var dopath = this.noteWhy || this.debugTrace;
+  var annotation = this.annotation;
+  var marked = annotation.marked;
+  var why = annotation.why;
+  var size = annotation.size;
+  var total = annotation.total;
+  var leaked = annotation.leaked;
+
+  while ((loopCount++ < steps) &&
+         ((loopElapsed = ((new Date).getTime() - loopStart)) < milliseconds)) {
+    // Clear the obstack of any objects we are done with
+    while (os.length > 0 && os[0].length == 0) {
+      // Done with this object
+      os.shift();
+
+      // If it's the last object, we are done
+      if (os.length == 0) {
+        // Stop the idle callback
+        LzTimeKernel.clearInterval(this.backgroundTask)
+        this.loops++;
+        this.loopCount += loopCount;
+        this.loopElapsed += loopElapsed;
+        this.debug("%d loops @ %0.0d iterations, %0.2d milliseconds",
+                    this.loops,
+                    this.loopCount / this.loops,
+                    this.loopElapsed / this.loops)
+        this.format(' \u2026 done!\n');
+        // done
+        return true;
+      }
+    }
+
+    // Get the next object to process
+    // This is a breadth-first search
+    var ose = os[0];
+    var o = ose.pop();
+    var oo = o;
+    var name = ose.pop();
+    var wasMarked = this.isMarked(o);
+    var wasLeaked = (wasMarked === null);
+
+    // Make sure we didn't already get here via another path
+    if (wasMarked) {
+      continue;
+    }
+
+    if ($as2) {
+      var enumerableSlots = [];
+      // Accumulate list of enumerable slots before annotating
+      for (var p in o) {
+        // attached movie clips don't show up as 'hasOwnProperty' (but
+        // hasOwnProperty is more accurate -- consider if an instance
+        // copies a prototype property)
+        if ((! o['__proto__']) ||
+            o.hasOwnProperty(p) ||
+            (o[p] !== o.__proto__[p])) {
+          enumerableSlots.push(p);
+        }
+      }
+    }
+
+    // Annotate why this object is alive
+    // But only if asked to
+    if (dopath) {
+      var path = ose.path.concat(name);
+      try {
+        // More compact than an Array
+        o[why] = path.join("\x01");
+      } catch (e) {};
+    }
+
+    // Shouldn't happen, since we never add an object that
+    // would mutate (see below)
+    if (o !== oo) {
+      Debug.debug("Annotating %s[%s] (%#w) caused allocation of %#w", path, name, oo, o);
+    }
+    // If asked to find leaks, collect new objects
+    if (this.findLeaks && wasLeaked) {
+      this.leaks.push(o);
+    }
+
+    // Mark the object
+    if (! this.mark(o)) {
+      // Don't trace into objects we can't mark
+      continue;
+    }
+
+    if ($as2) {
+      // N.B.: Flash-specific hack to get at otherwise unenumerable
+      // properties.  This makes all properties enumerable.
+      //
+      // The first arg is the object to twiddle.  The second argument is
+      // a list of slots to twiddle on, or null for all slots.
+      // The 3rd arg is a bitmask of flags to set:
+      // 2^2 = unwritable
+      // 2^1 = undeletable
+      // 2^0 = unenumerable
+      // The 4th argument is a bitmask of flags to clear (as above).
+      // [Cf.,
+      // http://pt.withy.org/ptalk/archives/2005/08/fourth_and_bitz.html]
+      //
+      // So, make all the properties of this object enumerable
+      ASSetPropFlags(o, null, 0, 1);
+      // But not the annotations
+      ASSetPropFlags(o, this.allAnnotations, 1, 0);
+    }
+
+    // Rough measure of size
+    var obSize = 0;
+    // Slots to queue for tracing
+    var queuedSlots = [];
+    if (dopath) {
+      queuedSlots.path = path;
+      // Careful: concat is append, except if one of its arguments is
+      // an array!
+      var ancestors = ose.ancestors;
+      queuedSlots.ancestors = ancestors.concat();
+      queuedSlots.ancestors.push(o);
+    }
+    var ownProperties = [];
+    try {
+      this.objectOwnProperties(o, ownProperties, ownProperties, Infinity, true);
+    } catch (e) {};
+    for (var i = ownProperties.length - 1; i >= 0; i--) {
+      var p = ownProperties[i];
+
+      // Very rough estimate of size
+      obSize += 2;            // assume hashes are 50% full
+
+      // Here we ensure that we have an object that we can mark
+      // without mutating it.  If not, we just have to skip it
+      // The order of these tests is important for efficiency
+      try {
+        var v = o[p];
+        // Assume strings can be packed 4 chars/word
+        if (typeof v == 'string') {
+          obSize += Math.ceil(v.length/4);
+        }
+        // Object weight is calculated below.
+
+        if (! (v &&
+               (typeof v == 'object') &&
+               (v['hasOwnProperty'] instanceof Function))) {
+          if (this.debugTrace) {
+            // Debug.debug("%s[%s] (%#w) is untraceable", o, p, v);
+          }
+          v = null;
+        } else if (v !== o[p]) {
+          if (this.debugTrace) {
+            // Debug.debug("Accessing %s[%s] (%#w) caused allocation of %#w", o, p, v, o[p]);
+          }
+          v = null;
+        } else {
+          v[size] = 0;
+          if (v !== o[p]) {
+            if (this.debugTrace) {
+              Debug.debug("Mutating %s[%s] (%#w) caused allocation of %#w", o, p, v, o[p]);
+            }
+            v = null;
+          }
+        }
+      } catch (err) {
+        if (this.debugTrace) {
+          Debug.debug("Mutating %s[%s] (%#w) caused %#w", o, p, v, err);
+        }
+        v = null;
+      }
+
+      if (v &&
+          // Optimization: don't trace objects that have already been marked
+          (! this.isMarked(v))
+         ) {
+        queuedSlots.push(p, v);
+      }
+    }
+
+    // Annotate size
+    o[size] = obSize;
+    // Annotate 'weight'
+    if (dopath) {
+      o[total] = obSize;
+      // Annotate leaked weight
+      if (wasLeaked) {
+        o[leaked] = obSize;
+      }
+      // Annotate weight in ancestors
+      var al = ancestors.length
+      for (var i = al-1; i >=0; i--) {
+        var ai = ancestors[i];
+        // How can an ancestor become undefined?  Because a movieclip
+        // gets GC-ed?
+        if (ai) {
+          ai[total] += obSize;
+          if (wasLeaked) {
+            // Annotate leaked weight in ancestors
+            if (ai.hasOwnProperty(leaked)) {
+              if (this.debugTrace) {
+                if (o[why].indexOf(ai[why]) != 0) {
+                  console.log("%w(%s) +> %w(%s)\n", o, o[why], ai, ai[why]);
+                  console.log("%w[%d]\n", ancestors, i);
+                }
+              }
+              ai[leaked] += obSize;
+            }
+          }
+        }
+      }
+    }
+
+    if ($as2) {
+      // Reset the enumerability
+      // Make everything unenumerable, and then expose your saved list
+      ASSetPropFlags(o, null, 1, 0);
+      ASSetPropFlags(o, enumerableSlots, 0, 1);
+    }
+
+    // Queue the slots
+    if (queuedSlots.length) {
+      os.push(queuedSlots);
+    }
+  }
+
+  this.loops++;
+  this.loopCount += loopCount;
+  this.loopElapsed += loopElapsed;
+  // not done
+  return false;
+}
+
+/**
+  * Initialize data structures for tracing
+  * @param Boolean findLeaks: whether to accumulate new objects,
+  * default false
+  * @param Boolean noteWhy: whether to record reason alive, default
+  * false
+  * @access private
+  */
+Debug.initTrace = function (findLeaks=false, noteWhy=false) {
+  // Start a new generation
+  this.markGeneration++;
+  this.loops = this.loopCount = this.loopElapsed = 0;
+  // Set flags
+  this.findLeaks = findLeaks;
+  if (findLeaks) {
+    this.leaks = [];
+  } else {
+    delete this.leaks;
+  }
+  this.noteWhy = noteWhy;
+  // Don't trace self
+  for (var t = this; t && (t !== Object.prototype); ) {
+    this.mark(t);
+    // Cf, objectOwnProperties
+    // Use typeof == 'object' rather than instanceof Object for native prototypes
+    t = (('__proto__' in t && (typeof t.__proto__ == 'object')) ? t.__proto__ :
+         (('constructor' in t && (typeof t.constructor.prototype == 'object')) ? t.constructor.prototype : null));
+
+  }
+  // Don't go 'up' above global
+  if ('frameElement' in global) {
+    this.mark(global.frameElement);
+  }
+  // Don't trace debugger history
+  if ('_' in Debug.environment) {
+    this.mark(Debug.environment._);
+  }
+  if ('__' in Debug.environment) {
+    this.mark(Debug.environment.__);
+  }
+  if ('___' in Debug.environment) {
+    this.mark(Debug.environment.___);
+  }
+  // If the browser has a console, don't trace it
+  if ('console' in global) {
+    this.mark(global.console);
+  }
+
+  // Create the initial obstack element: global
+  var osel = ["global", global];
+  osel.path = [];
+  osel.ancestors = [];
+  this.obstack[0] = osel;
+
+  // Start the trace background task
+  this.backgroundTask = LzTimeKernel.setInterval(function () { Debug.traceStep(); }, 1400);
+}
+
+/**
+  * Mark all the currently live objects
+  * @access private
+  */
+Debug.markObjects = function () {
+  if ($as2) {
+  } else {
+    Debug.warn("Memory tracing is for experimental use only in this runtime.")
+  }
+  Debug.format('Marking objects \u2026 ');
+  // Output must come before init, so it is not seen as a leak
+  LzTimeKernel.setTimeout(function () { Debug.initTrace(); }, 10);
+}
+
+/**
+  * Find new objects since the last trace
+  * @access private
+  */
+Debug.findNewObjects = function () {
+  if (this.markGeneration > 0) {
+    if ($as2) {
+    } else {
+      Debug.warn("Memory tracing is for experimental use only in this runtime.")
+    }
+    Debug.format('Finding new objects \u2026 ');
+    // Output must come before init, so it is not seen as a leak
+    LzTimeKernel.setTimeout(function () { Debug.initTrace(true, true); }, 10);
+  } else {
+    Debug.error('Call %w first', Debug.markObjects);
+  }
+};
+
+
+/**
+ * A leak descriptor
+ */
+class __LzLeak {
+  var obj = void 0;
+  var path = '';
+  var parent = void 0;
+  var property = '';
+  var leaked = 0;
+
+  function __LzLeak (o) {
+    super();
+    var annotations = Debug.annotation;
+    var why = annotations.why;
+    var leaked = annotations.leaked;
+    this.obj = o;
+    if (o && (why in o) && (leaked in o)) {
+      var path = o[why].split("\x01");
+      this.property = path.pop();
+      // Make pretty
+      this.path = path.join(".");
+      try {
+        var p = eval(path[0]);
+        var pl = path.length;
+        for (var i = 1; i < pl; i++) {
+          p = p[path[i]];
+        }
+        this.parent = p;
+      } catch (e) {};
+      this.leaked = Number(o[leaked]);
+    }
+  }
+
+  /**
+   * Describe an individual leak
+   * @access private
+   */
+  public function toString () {
+    if (this.obj) {
+      return Debug.formatToString("%=s.%s: (\xa3%d) %0.48#w", this['parent'], this.path, this.property, this.leaked, this['obj']);
+    } else {
+      return '' + this.obj;
+    }
+  }
+};
+
+/**
+  * Snapshot of the current leaks
+  * @access private
+  */
+class __LzLeaks /* extends Array */ {
+  // Act like an Array
+  public var length = 0;
+
+  var sort = Array.prototype.sort;
+
+  function __LzLeaks () {
+    super();
+    var l = Debug.leaks;
+    var ll = l.length;
+    var annotations = Debug.annotation;
+    var why = annotations.why;
+    var size = annotations.size;
+    var leaked = '_dbg_check';
+
+    // Sort leaks according to path
+    l.sort(function (a, b) {
+        try {
+          var an = a[why];
+          var bn = b[why];
+          return (an > bn) - (an < bn);
+        } catch (e) {
+          return -1;
+        }
+      });
+
+    // Merge leaks under the same path
+    this.length = 0;
+    for (var i = 0; i < ll; i = j) {
+      var j = i + 1;
+      try {
+        var p = l[i];
+        p[leaked] = p[size];
+        var pn = p[why];
+        if (typeof(pn) != 'undefined') {
+          while (j < ll) {
+            var c = l[j];
+            var cn = c[why];
+            if (typeof(cn) != 'undefined') {
+              if (cn.indexOf(pn) == 0) {
+                // Don't count loops
+                if (c !== p) {
+                  p[leaked] += c[size];
+                } else {
+                  if (Debug.debugTrace) {
+                    console.log('%s is %s\n', pn, cn);
+                  }
+                }
+                j++;
+                continue;
+              }
+            }
+            break;
+          }
+        }
+        this[this.length++] = new __LzLeak(p);
+      } catch (e) {j++};
+    }
+  }
+
+  override function _dbg_name () {
+    var leakage = 0;
+    var n = this.length;
+    for (var i = n - 1; i >=0; i--) {
+      var s = this[i]['leaked'];
+      if (! isNaN(s)) {
+        leakage += s;
+      }
+    }
+    return Debug.formatToString("%d smoots [%d objects @ ~%0.0d smoots each]", leakage, n, leakage / n);
+  }
+}
+
+/**
+  * List new objects and why they are alive
+  *
+  * @param Number top: How many leaks to detail, default is 10
+  * @access private
+  */
+Debug.whyAlive = function (top=10) {
+  if ($as2) {
+  } else {
+    Debug.warn("Memory tracing is for experimental use only in this runtime.")
+  }
+  if (this['leaks']) {
+    var l = new __LzLeaks();
+    var ll = l.length;
+
+    // Sort the largest to the top
+    l.sort(function (a, b) { 
+        var al = a.leaked;
+        var bl = b.leaked;
+        return (al < bl) - (al > bl); });
+
+    // Output the top leaks
+    Debug.format("%w:\n", l);
+    if (top > ll) { top = ll; }
+    for (var i = 0; i < top; i++) {
+      Debug.format("%w\n", l[i].toString());
+    }
+    if (top < ll) {
+      var rest = 0;
+      var n = ll - i;
+      for (; i < ll; i++) {
+        var lil = l[i].leaked;
+        if (! isNaN(lil)) { rest += lil; }
+      }
+      Debug.format("%=s [%d more @ ~%0.0d smoots each]", l, '\u2026', n, rest/n);
+    }
+
+    // Return the data for inspection
+    return l;
+  } else {
+    Debug.error('Call %w first', Debug.findNewObjects);
+  }
+}

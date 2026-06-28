@@ -1,0 +1,14 @@
+<canvas height="100">
+  <view width="200" bgcolor="silver" onmousedown="rs.apply()" onmouseup="rs.remove()">
+    <resizestate name="rs"/>
+    <wrappinglayout axis="x" spacing="10"/>
+    <view bgcolor="blue" height="30" width="50"/>
+    <view bgcolor="red" height="10" width="50"/>
+    <view bgcolor="green" height="40" width="50"/>
+    <view bgcolor="yellow" height="20" width="50"/>
+    <view bgcolor="teal" height="30" width="50"/>
+  </view>
+  <text y="${canvas.height-this.height}">
+    Resize the gray view with your mouse to see dynamic layout.
+  </text>
+</canvas>

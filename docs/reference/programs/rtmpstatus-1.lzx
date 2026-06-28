@@ -1,0 +1,5 @@
+<canvas height="40">
+    <simplelayout spacing="5"/>
+    <text text="The indicator light is red because there is no rtmp connection."/>
+    <rtmpstatus/>
+</canvas>

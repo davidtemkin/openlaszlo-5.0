@@ -1,0 +1,220 @@
+/* -*- mode: c-basic-offset: 2; -*- */
+
+/**
+  * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @access private
+  * @topic LZX
+  * @subtopic Runtime
+  */
+
+/**
+ * Modules
+ * TODO [2006-03-12 ptw] if the LFC is shared this needs to be multiplexed
+ */
+var $modules = {};
+
+/**
+ * Define runtime module
+ */
+if ($as3) {
+$modules.runtime = global;
+} else {
+$modules.runtime = this;
+}
+
+if ($as3) {
+
+} else {
+
+/**
+ * Define LZ module
+ * TODO: [2006-03-21 ptw] Make this an object that inherits from
+ * runtime so that we do not pollute the runtime module
+ */
+$modules.lz = $modules.runtime;
+
+/**
+ * Define USER module
+ * TODO: [2006-03-21 ptw] Make this an object that inherits from
+ * LZ so that we do not pollute the LZ module
+ */
+$modules.user = $modules.lz;
+}
+/**
+ * Define global
+ * TODO [2006-03-12 ptw] if the LFC is shared this needs to be multiplexed
+ */
+if ($as3) {
+  // Shadow table `global`, used to support `globalValue`.  Cf.,
+  // compiler.NodeModel.buildIdBinderBody
+  // TODO: [2008-10-21 ptw] Use flex.utils.Dictionary if you can
+  // figure out the appropriate incantation
+  var global = {};
+} else {
+  var global = $modules.user;
+}
+
+if ($as2) {
+var encodeURIComponent = escape;
+var decodeURIComponent = unescape;
+}
+
+/**
+ * @access private
+ */
+var __ES3Globals = {
+    Array: Array,
+    Boolean: Boolean,
+    Date: Date,
+    Function: Function,
+    Math: Math,
+    Number: Number,
+    Object: Object,
+    RegExp: RegExp,
+    String: String,
+    Error: Error,
+    EvalError: EvalError,
+    RangeError: RangeError,
+    ReferenceError: ReferenceError,
+    SyntaxError: SyntaxError,
+    TypeError: TypeError,
+    URIError: URIError
+};
+
+/*
+ * Map string to global value, since swf9 runtime does not support any
+ * kind of eval()
+ *
+ * N.B. we need to declare the function globalValue() as a 'var', 
+ * because that's the only way right now to get the script compiler to
+ * put it at the top level in the as3 intermediate .as files, outside
+ * of the LFCApplication.
+ */
+var globalValue = function (name:String) {
+  if ($as3) {
+    #passthrough {
+      import flash.utils.getDefinitionByName;
+    }#
+  }
+  // Semi-kludge:  We name our tag classes <tagname>.  Since <> are
+  // not valid symbol constituents, there is no confusion here
+  if (name.charAt(0) == '<' && name.charAt(name.length-1) == '>') {
+    return lz[name.substring(1, name.length-1)];
+  } else if (name in this) {
+    return this[name];
+  } else if (name in global) {
+    return global[name];
+  } else if (name in __ES3Globals) {
+    return __ES3Globals[name];
+  } else if ($as3) {
+    try {
+      return getDefinitionByName(name);
+    } catch (e:ReferenceError) {
+    }
+  }
+  return void 0;
+};
+
+
+// TODO [2010-07-21 ptw] (LPP-8961) We don't use this yet, so I have
+// commented it out to avoid uneccesary global pollution; but it
+// should be compatible with any sensible definition of Function/bind.
+//
+// /**
+//  * Support bound methods in js1 and currying in general
+//  *
+//  * NOTE [2010-07-21 ptw] (LPP-8961) This is the equivalent of
+//  * Prototype's Function/bind, but in our (LZS) syntax, and annotated
+//  * for our debugger (when in debug mode).
+//  *
+//  * @access private
+//  */
+// Function.prototype.bind = function (object, ...schonfinkel) {
+//     var method = this;
+//     var bound = function (...args) {
+//         return method.apply(object, schonfinkel.concat(args));
+//     };
+//     if ($debug) {
+//         bound[Debug.FUNCTION_NAME] =
+//             Debug.formatToString("%w.%=s", object, bound, Debug.methodName(object, method));
+//         // TODO [2020-07-20 ptw] Add any curried args to the _dbg_name
+//     }
+//     return bound;
+// }
+
+// Runtime support for `subclassof`
+var $lzsc$issubclassof = function (one:Class, other:Class) {
+  if ($as3) {
+    #passthrough {
+      import flash.utils.describeType;
+      import flash.utils.getQualifiedClassName;
+    }#
+    if (one === other) return true;
+    if ((other is Class) && (one['prototype'] instanceof other)) return true;
+    if ((one is Class) && (other['prototype'] instanceof one)) return false;
+    // The hard way (only works in debug mode?)
+    var factory:XML = describeType(one).elements('factory')[0];
+    var qname:String = getQualifiedClassName(other);
+    // Look at superclasses and interfaces
+    var elements = ['extendsClass', 'implementsInterface'];
+    for (var i in elements) {
+      var superclassnames:XMLList = factory.elements(elements[i]).attribute('type');
+      for (var j in superclassnames) {
+        if (superclassnames[j] == qname) return true;
+      }
+    }
+    return false;
+  } else {
+    return (one === other) || (one.prototype is other);
+  }
+}
+
+// Runtime support for debugging reference dependencies (only called
+// in debug mode
+if ($debug) {
+  var $lzc$validateReferenceDependencies = function (dependencies:Array, referenceNames:Array) {
+    for (var i = 0, l = referenceNames.length; i < l; i++) {
+      var j = i + i;
+      var dc = dependencies[j];
+      var dp = dependencies[j + 1];
+      if (! (dc is LzEventable)) {
+        // We return an invalid dependency that applyConstraintMethod
+        // will convert to a more useful warning.
+        dependencies[j] = new Error("Invalid dependency context");
+        dependencies[j + 1] = Debug.formatToString("Unable to create dependency on %=s.%s", dc, referenceNames[i], dp);
+      }
+    }
+    return dependencies;
+  }
+}
+
+// Runtime support for computing function dependencies
+var $lzc$getFunctionDependencies = function (fnnm:String, self, context, args:Array, ctnm:String=null):Array {
+  var deps = [], depfn = null;
+  try {
+    depfn = context["$lzc$" + fnnm + "_dependencies"];
+  } catch (e) {}
+  if (! (depfn is Function)) {
+    // This is a missing dependency.  If debugging, we contrive to get
+    // a useful message back to the user, otherwise, for backwards
+    // compatibility, we ignore it and keep going.
+    if ($debug) {
+      // We return an invalid dependency that applyConstraintMethod
+      // will convert to a more useful warning.
+      return [new Error("Invalid dependency method"),  Debug.formatToString("Unable to create dependency on %=s.%s", context, ctnm, fnnm)];
+    }
+  } else {
+    try {
+      deps = depfn.apply(context, [self, context].concat(args));
+    } catch (e) {
+      // This is just plain an error.  Warn about it, but for
+      // backwards compatibility, ignore it and keep going.
+      if ($debug) {
+        Debug.warn("Error: %w computing dependencies of %.64w.%s", e, context, fnnm);
+      }
+    }
+  }
+  return deps;
+}

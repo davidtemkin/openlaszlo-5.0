@@ -1,0 +1,8 @@
+<canvas height="100">
+              <baselist layout="axis:y;spacing:2">
+                <baselistitem height="15" width="25" bgcolor="${selected ? 0xffff00 : 0x0000ff}"/>
+                <baselistitem height="15" width="50" bgcolor="${selected ? 0xffff00 : 0x0000ff}"/>
+                <baselistitem height="15" width="100" bgcolor="${selected ? 0xffff00 : 0x0000ff}"/>
+              </baselist>
+              <text y="70">Click bar to select it.</text>
+            </canvas>

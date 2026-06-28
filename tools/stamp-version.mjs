@@ -54,5 +54,5 @@ if (current === build) {
   process.exit(0);
 }
 writeFileSync(SW, swText.replace(BUILD_RE, `const BUILD_ID = "${build}";`));
-writeFileSync(join(ROOT, "version.json"), JSON.stringify({ build }, null, 2) + "\n");
+writeFileSync(join(ROOT, "startup/version.json"), JSON.stringify({ build }, null, 2) + "\n");
 console.log("stamp-version: BUILD_ID", current || "(none)", "->", build);

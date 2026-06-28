@@ -1,0 +1,8 @@
+<canvas height="100" >
+            <view bgcolor="red" >
+                <view width="80" height="80" bgcolor="teal"/>       
+                <view width="60" height="60" bgcolor="silver"/> 
+                <view width="40" height="40" bgcolor="green"/>           
+                <constantlayout axis="y" value="10"/>
+            </view >
+        </canvas>

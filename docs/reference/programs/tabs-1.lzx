@@ -1,0 +1,10 @@
+<canvas height="100">
+              <tabs>
+              <tabpane text="one">
+              <button>press one</button>
+              </tabpane>
+              <tabpane text="two">
+              <button>press two</button>
+              </tabpane>
+              </tabs>
+              </canvas>

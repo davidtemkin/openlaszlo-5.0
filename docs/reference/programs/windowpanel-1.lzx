@@ -1,0 +1,6 @@
+<canvas height="150">
+              <windowpanel x="10" y="10" width="200" height="100"
+              title="windowpanel" closeable="true">
+              <text>Hello</text>
+              </windowpanel>
+              </canvas>

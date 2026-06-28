@@ -1,0 +1,987 @@
+/**
+  *
+  * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @affects lzcanvas
+  * @access public
+  */
+ 
+
+/**
+  * <p>The canvas is the container for all views within an application.</p>
+  *
+  * <p>The <classname>lz.canvas</classname> class represents the viewable
+  * area of the application.  There is one instance of
+  * <classname>lz.canvas</classname>, named <varname>canvas</varname>.  The
+  * canvas contains all views within an application.</p>
+  * 
+  * <p>The <tagname>canvas</tagname> tag is the document root of an LZX
+  * application file.  It contains class, resource, and font definitions,
+  * library includes, and view and other instances.</p>
+  * 
+  * <p>See the <a
+  * href="${dguide}program-structure.html#program-structure.canvas-tag">Guide</a>
+  * for a complete discussion of the <tagname>canvas</tagname> tag.</p>
+  *
+  * @see LzView
+  * @lzxname canvas
+  * @shortdesc The top-most view in a Laszlo application.
+  * @topic LFC
+  * @subtopic Views
+  * @access public
+  * @initarg Boolean accessible: Specifies if this application is intended to be accessible
+  * @initarg Boolean history: Specifies if this application is intended to use history
+  * @initarg Boolean debug: If true, the application is compiled with debugging enabled.
+  * @initarg Number width: Specifies the width of the canvas
+  * @initarg Number height: Specifies the height of the canvas
+  * @initarg Boolean allowfullscreen: Specifies if this application can switch to to full screen mode (in SWF8, SWF9 or SWF10 runtime)
+  * See the <a href="${dguide}debugging.html">Debugging</a> chapter of
+  * the Guide for more information about debugging.
+  */
+dynamic class LzCanvas extends LzView {
+
+  static var tagname = 'canvas';
+
+
+/**
+  * @access private
+  * @modifiers override
+  */
+/** @access private */
+  static var attributes = new LzInheritedHash(LzView.attributes);
+
+/** @access private */
+    attributes.bgcolor = new LzStyleConstraintExpr("bgcolor","color","background-color",0xffffff,false);
+/** @access private */
+    attributes.font = new LzStyleConstraintExpr("font","string","font-family","Verdana,Vera,sans-serif",false);
+/** @access private */
+    attributes.fontsize = new LzStyleConstraintExpr("fontsize","number","font-size",11,false);
+/** @access private */
+    attributes.fontstyle = new LzStyleConstraintExpr("fontstyle","string","font-style","plain",false);
+/** @access private */
+    attributes.fgcolor = new LzStyleConstraintExpr("fgcolor","color","font-color",0,false);
+/** @access private */
+    attributes.width = new LzStyleConstraintExpr("width","string","width","100%",false);
+/** @access private */
+    attributes.height = new LzStyleConstraintExpr("height","string","height","100%",false);
+
+    /**
+      * @access private
+      */
+    var updatePercentCreatedEnabled:Boolean = true;
+
+    /**
+      * @access private
+      */
+    var _lzinitialsubviews:Array = [];
+    /**
+      * @access private
+      */
+    var totalnodes:*;
+    /** The framerate that should be used for this application
+      * @type Number
+      * @lzxtype number
+      * @lzxdefault "30"
+      * @keywords final
+      */
+    var framerate:Number = 30;
+    /** Sent whenever the framerate changes
+      * @access public
+      * @lzxtype event
+      */
+    var onframerate = LzDeclaredEvent;
+    /**
+      * @access private
+      */
+    var creatednodes:*;
+
+    /* These are passed in by the compiler as attributes */
+    /**
+      * Compiled in proxied value
+      * @access private
+      */
+    var __LZproxied;
+    /** Whether to embed fonts in the compiled application.
+      * @type Boolean
+      * @keywords final
+      */
+    var embedfonts;
+    /** A String specifying the LPS build revision and the build directory: e.g. "4075 /Users/maxcarlson/openlaszlo/legals"
+      * @type String
+      * @keywords readonly
+      */
+    public var lpsbuild;
+    /** A String specifying the date and time of the LPS build. "2007-03-05T15:33:42-0800"
+      * @type String
+      * @keywords readonly
+      */
+    public var lpsbuilddate;
+    /** A String specifying the date and time of the application build. "2008-09-12T14:15:12Z"
+      * @type String
+      * @keywords readonly
+      */
+    public var appbuilddate;
+    /** A String describing the target runtime. "dhtml" | "swf8" | "swf9" | "swf10" are currently supported. Others are in development.
+      * @type String
+      * @keywords readonly
+      */
+    public var runtime;
+    /** Whether fullscreen display state is supported for the SWFx runtimes.
+      * @type Boolean
+      * @keywords final
+      */
+    var allowfullscreen;
+    /** Used to switch into fullscreen display mode or back to normal display.
+     * @type Boolean
+     */    
+    public var fullscreen;
+    /** Sent whenever the application switches to full screen mode.
+      * @access public
+      * @lzxtype event
+      */
+    var onfullscreen = LzDeclaredEvent;
+    /**
+      * For onmouseup event
+      * @access private
+      */
+    var __LZmouseupDel:LzDelegate;
+    /**
+      * For onmousedown event
+      * @access private
+      */
+    var __LZmousedownDel:LzDelegate;
+    /**
+      * For onmousemove event
+      * @access private
+      */
+    var __LZmousemoveDel:LzDelegate;    
+
+    /** @access private */
+    var __LZDefaultCanvasMenu :LzContextMenu;
+
+    /**
+     * <p>
+     * <varname>httpdataprovider</varname> is bound to the system default HTTP DataProvider.   
+     * </p>  
+     * This will be an instance of <classname>LzHTTPDataProvider</classname>, which implements HTTP request
+     * transport. The default  value of the <varname>canvas.defaultdataprovider</varname> is initially set to point
+     * to this same object. 
+     * @access public
+     * @type LzDataProvider
+     */
+    var httpdataprovider = null;
+
+
+    /**
+     * <p>
+     * <varname>defaultdataprovider</varname> is bound to the system default DataProvider.
+     * </p>  
+     * By default, this will be an instance of <classname>LzHTTPDataProvider</classname>, which will also be pointed to by
+     * the <varname>canvas.httpdataprovider</varname>.
+     * @access public
+     * @type LzDataProvider
+     */
+    var defaultdataprovider = null;
+
+    /**
+      * @access private
+      * LzCanvas 
+      * 
+      * @param Object args: a hash of arguments specifying the way the
+      * canvas was compiled, e.g. {__LZproxied:"true",appbuilddate:"2010-03-25T18:25:50Z",bgcolor:16777215,embedfonts:true,font:"Verdana,Vera,sans-serif",fontsize:11,fontstyle:"plain",height:"100%",lpsbuild:"15945 /Users/maxcarlson/openlaszlo/trunk-clean",lpsbuilddate:"2010-03-25T04:30:43Z",lpsrelease:"Latest",lpsversion:"5.0.x",runtime:"dhtml",width:"100%"}
+      *
+      * @devnote The parameter pattern has to match LzNode, since we
+      * claim to be a subclass of LzNode.
+      */
+    function LzCanvas ( parent = null, args = null, children = null, async = null) {
+      // process timeouts
+      if (! args['medialoadtimeout']) args.medialoadtimeout = this.medialoadtimeout;
+      if (! args['mediaerrortimeout']) args.mediaerrortimeout = this.mediaerrortimeout;
+      // Use defaults from by compiler as fallback values on CSS styles 
+      if (args['fontsize'] != null) {
+        this.fontsize = LzCanvas.attributes.fontsize.fallback = args.fontsize; 
+        delete args.fontsize;
+      }
+      if (args['fontstyle'] != null) {
+        this.fontstyle = LzCanvas.attributes.fontstyle.fallback = args.fontstyle; 
+        delete args.fontstyle;
+      }
+      if (args['font'] != null) {
+        this.font = LzCanvas.attributes.font.fallback = args.font; 
+        delete args.font;
+      }
+      if (args['bgcolor'] != null) {
+        LzCanvas.attributes.bgcolor.fallback = args.bgcolor; 
+        delete args.bgcolor;
+      }
+      if (args['width'] != null) {
+        LzCanvas.attributes.width.fallback = args.width; 
+        delete args.width;
+      }
+      if (args['height'] != null) {
+        LzCanvas.attributes.height.fallback = args.height; 
+        delete args.height;
+      }
+      super(parent, args, children, async);
+
+      // Set to sensible values so text style cascading will work
+      if (this.fgcolor == null) this.fgcolor = 0;
+      // Must be set to a number for swf9/10
+      if (this.fontsize == null) this.fontsize = 11;
+
+      this.datasets = {};
+      // Override values defined in LzView
+      this.__LZcheckwidth = null;
+      this.__LZcheckheight = null;
+      this.hassetwidth  = true;
+      this.hassetheight = true;
+    }
+
+    /**
+      * @access private
+      * LzCanvas 
+      * @param LzView parent: Parent view to attach to
+      * @param Object args: Initialization args
+      */
+    override function construct (parent , args) {
+        this.__makeSprite(null);
+        var capabilities = this.sprite.capabilities;
+        this.capabilities = capabilities;
+
+        // TODO: [2006-05-19 ptw] The original did not do this, should we?
+        // super(null, args);
+        // No, we can't.  But you have to be aware that if you futz with
+        // LzNode or LzView, you have to consider whether you will have to
+        // change the canvas constructor too, since it _pretends_ to be a
+        // view!
+    
+        // Note canvas start
+        if ($profile) {
+            Profiler.event('start: #canvas');
+        }
+        this.immediateparent = this;
+        this.datapath = new LzDatapath(this);
+
+        this.mask = null;
+
+        function getQueryArg (name:String, initname:String) :* {
+            var arg:* = args[name];
+            // don't handle again in __LZapplyArgs()
+            delete args[name];
+            if (arg != null) {
+                return (!! arg); // coerce to boolean
+            } else if (initname != null) {
+                var initarg:* = lz.Browser.getInitArg(initname);
+                if (initarg != null) {
+                    return (initarg == "true"); // convert string to boolean
+                }
+            }
+            return (void 0);
+        }
+
+        // TODO: [20090824 anba] 'accessible' must be set at compile-time?
+        // It's not possible to change it with a query arg?
+        this.accessible = getQueryArg('accessible', null);
+        if (capabilities.accessibility == true) {
+            // set accessible flags to true/false
+            this.sprite.setAccessible(this.accessible);
+            if (this.accessible) {
+                this.sprite.setAAActive(true);
+                this.sprite.setAASilent(false);
+            }
+        } else if (this.accessible) {
+            if ($debug) Debug.warn("This runtime doesn't support accessibility.");
+            this.accessible = false;
+        }
+
+        this.history = getQueryArg('history', 'history');
+        if (this.history && capabilities.history != true) {
+            if ($debug) {
+                Debug.warn("This runtime doesn't support history.");
+            }
+            this.history = false;
+        }
+
+        this.allowfullscreen = getQueryArg('allowfullscreen', 'allowfullscreen');
+        if (this.allowfullscreen && capabilities.allowfullscreen != true) {
+            if ($debug) {
+                Debug.warn("This runtime doesn't support full screen mode.");
+            }
+            this.allowfullscreen = false;
+        }
+        this.fullscreen = false;
+
+        this.viewLevel = 0;
+
+        // percentcreated support
+        this.totalnodes = 0;
+        this.creatednodes = 0;
+        this.percentcreated = 0;
+
+        if (! args.framerate) {
+            args.framerate = 30;
+        }
+
+        // Override with the lzproxied query arg supplied at runtime, if present.
+        this.proxied = getQueryArg('proxied', 'lzproxied');
+        if (this.proxied == null) {
+            // Default to the 'baked in' value set by the compiler
+            this.proxied = (args.__LZproxied == "true");
+        }
+
+        // If no explicit proxyurl defined, set the default proxyurl to our app baseurl
+        if (typeof(args.proxyurl) == "undefined") {
+            this.proxyurl = lz.Browser.getBaseURL( ).toString();
+        }
+
+        if (args.focustrap != null) {
+            if (capabilities.globalfocustrap != true) {
+                // ignore for runtimes that don't support global focus trap
+                delete args.focustrap;
+            }
+        }
+
+        // Register for window resize events -- this is how the canvas
+        // will learn its actual width and height from the root
+        // sprite (the canvas dimensions are passed directly to the
+        // root sprite by lz.embed, so the app container can be sized
+        // correctly before the app is actually loaded).
+        LzScreenKernel.setCallback(this, '__windowResize');
+        delete args.width;
+        delete args.height;
+
+        if (capabilities.allowfullscreen == true) {
+            LzScreenKernel.setFullscreenCallback(this, '__fullscreenEventCallback', '__fullscreenErrorCallback');
+        }
+
+        this.lpsversion = args.lpsversion + "." + this.__LZlfcversion;
+        delete args.lpsversion;
+
+        if (!this.version){
+            this.version = this.lpsversion;
+        }
+
+        this.isinited = false;
+        this._lzinitialsubviews = [];
+
+        this.datasets = {};
+        global.canvas = this;
+        this.parent = this;
+        this.makeMasked();
+
+        this.__LZmouseupDel = new LzDelegate( this , "__LZmouseup", lz.GlobalMouse, 'onmouseup');// called on global mouseup
+        this.__LZmousedownDel = new LzDelegate( this , "__LZmousedown", lz.GlobalMouse, 'onmousedown');// called on global mousedown
+        this.__LZmousemoveDel = new LzDelegate( this , "__LZmousemove", lz.GlobalMouse, 'onmousemove');// called on global mousemove
+
+        // Create the default dataprovider
+        this.defaultdataprovider = this.httpdataprovider = new LzHTTPDataProvider();
+
+        this.id = lz.Browser.getAppID();
+    }
+
+/**
+  * Sends onmouseup event
+  * @access private
+  */
+function __LZmouseup(e) {
+    if (this.onmouseup.ready) this.onmouseup.sendEvent()
+}
+
+/**
+  * Sends onmousemove event
+  * @access private
+  */
+function __LZmousemove(e) {
+    if (this.onmousemove.ready) this.onmousemove.sendEvent()
+}
+
+/**
+  * Sends onmousedown event
+  * @access private
+  */
+function __LZmousedown(e) {
+    if (this.onmousedown.ready) this.onmousedown.sendEvent()
+}
+
+/**
+  * Overridden to pass true for "isroot" to LzSprite constructor
+  * @access private
+  */
+override function __makeSprite(args) {
+    this.sprite = new LzSprite(this, true);
+}
+
+/** Sent whenever the mouse is moved off the canvas
+  * @access public
+  * @lzxtype event
+  */
+var onmouseleave = LzDeclaredEvent;
+
+/** Sent whenever the mouse is moved over the canvas
+  * @access public
+  * @lzxtype event
+  */
+var onmouseenter = LzDeclaredEvent;
+
+/** Sent whenever the number of created nodes changes 
+  * @lzxtype event
+  */
+var onpercentcreated = LzDeclaredEvent;
+/** Sent whenever the mouse moves 
+  * @lzxtype event */
+var onmousemove = LzDeclaredEvent;
+/** Sent after oninit
+  * @lzxtype event */
+var onafterinit = LzDeclaredEvent;
+
+/** version number of the LPS that generated this application (for .lzo files,
+  * this is the version number of the server that generated the optimized file, not the one 
+  * that served it).
+  * @type String
+  * @keywords final
+  */
+var lpsversion;
+
+/** release of the LPS that generated this application (for .lzo files,
+  * this is the release of the server that generated the optimized file, not the one that 
+  * served it).
+  * @type String
+  * @keywords final
+  */
+var lpsrelease;
+
+/**
+  * The lpsversion of this lzx application.
+  * @type Number
+  * @lzxtype string
+  * @keywords readonly
+  * @deprecated Use lpsversion
+  */
+var version = null;
+
+  /**
+   * A CSS declaration of <replaceable>property:</replaceable>
+   * <replaceable>value</replaceable> pairs used to advise the
+   * underlying runtime of desired <varname>recursion</varname> and
+   * <varname>timeout</varname> limits.  Not all runtimes respect this
+   * advice.  The default value is runtime dependent, but typically
+   * recursion is at least 100 and timeout at least 10 (seconds).
+   * Example: <code>scriptlimits="recursion: 256, timeout: 15"</code>
+   *
+   * @type Object
+   * @lzxtype css
+   * @keywords final
+   */
+  var scriptlimits;
+
+/** @access private */
+var __LZlfcversion = "0";
+
+/** If true, requests for data and media are proxied through LPS server.
+  * if false, requests are made directly to target URLs. 
+  * if inherit, inherit from lzproxied query arg.
+  *
+  * @lzxtype booleanLiteral | "inherit"
+  * @lzxdefault "inherit"
+  */
+var proxied = true;
+
+/** If present, specifies the default timeout in milliseconds for data load requests
+  * @type Number
+  * @lzxtype numberExpression
+  */
+var dataloadtimeout = 30000;
+
+/** If present, specifies the default timeout in milliseconds for media load requests
+  * @type Number
+  * @lzxtype numberExpression
+  */
+var medialoadtimeout = 30000;
+
+/**
+  * @access private
+  */
+function $lzc$set_medialoadtimeout( ms ) {
+    if (this.capabilities['medialoading']) {
+        LzSprite.setMediaLoadTimeout(ms);
+    }
+}
+/** If present, specifies the default timeout in milliseconds for media errors.  An error occurs when no bytes have been received.  This is used in Flash to detect media loads that have failed due to the security policy.
+  * @type Number
+  * @lzxtype numberExpression
+  */
+var mediaerrortimeout = 4500;
+
+/**
+  * @access private
+  */
+function $lzc$set_mediaerrortimeout( ms ) {
+    if (this.capabilities['medialoading']) {
+        LzSprite.setMediaErrorTimeout(ms);
+    }
+}
+
+/** A number from 0-1 that represents the
+  * percentage of the app that has been instantiated.
+  * @type Number
+  */
+var percentcreated;
+
+/** Dictionary of all named datasets.
+  * @type Object
+  */
+var datasets = null;
+
+/**
+  * Compares two version strings.
+  * @access private
+  * @param ver: A version string
+  * @param over: Another version string. If omitted, defaults to the version of
+  * of the app.
+  * @return: -1, 0 , 1 to indicate whether the ver parameter preceeds, matches,
+  * or succeeds the second parameter (respectively)
+  */
+function compareVersion ( ver , over = null ){ 
+
+    if ( over ==null ){
+        over = this.lpsversion;
+    }
+
+    if ( ver == over ) return 0; 
+
+    var ver1 = ver.split( '.' );
+    var ver2 = over.split( '.' );
+
+    var i = 0; 
+    while( i < ver1.length || i < ver2.length ){
+        var my = Number( ver1[ i ] )|| 0; 
+        var oth = Number( ver2[ i++ ] )|| 0; 
+        if ( my < oth ) {
+            return -1;
+        }else if ( my > oth ) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/**
+  * The canvas setResource function is redefined to throw an error when
+  * called.
+  * @access private
+  */
+override function $lzc$set_resource( v ) {
+    if ($debug) {
+        Debug.error( "You cannot set a resource on the canvas." );
+    }
+}
+
+/**
+  * @access private
+  */
+function $lzc$set_focustrap(istrapped:Boolean) {
+    lz.Keys.setGlobalFocusTrap(istrapped);
+}
+
+/**
+  * @access private
+  */
+override function toString (){
+    return "This is the canvas";
+}
+
+/** Sets the canvas framerate
+  * @access private
+  */
+function $lzc$set_framerate( fps:Number ) {
+    fps *= 1;
+    if (fps < 1) {
+        fps = 1;
+    } else if (fps > 1000) {
+        fps = 1000;
+    }
+    this.framerate = fps;
+    lz.Idle.setFrameRate(fps);
+    if (this.onframerate.ready) this.onframerate.sendEvent(fps);
+}
+
+
+  /** Switches to full screen mode in SWFx runtime
+   * @access private
+   */
+ function $lzc$set_fullscreen(fullscreen=true) {
+     if (this.capabilities.allowfullscreen == true) {
+        LzScreenKernel.showFullScreen(fullscreen);
+     } else if ($debug) {
+        LzView.__warnCapability("canvas.setAttribute('fullscreen', " + fullscreen + ")"); 
+     }
+     // Call of this.onfullscreen.sendEvent not done here, as the event
+     // handling is runtime specific (AS2/AS3). The OpenLaszlo events
+     // are triggered by making a callback to __fullscreenEventCallback
+ }
+ 
+ /**
+  * @access private
+  * only called from LzScreenKernel.as#showFullScreen
+  */
+function __fullscreenEventCallback (result:Boolean, isFullscreen) : void {
+    // Set canvas.displaystate to current value of stage.displayState
+    this.fullscreen = isFullscreen;
+    if (this.onfullscreen.ready) this.onfullscreen.sendEvent(result);
+}
+
+ /**
+  * @access private
+  * only called from LzScreenKernel.as#showFullScreen
+  */
+function __fullscreenErrorCallback(errorMessage) : void {
+    if ($debug) {
+        if (this.allowfullscreen == false) {
+            Debug.error("Please set <canvas allowfullscreen=\"true\" /> for fullscreen support");
+        } else {
+            var message = "Usage of fullscreen feature is supported starting with Flash Player 9.0.28 (Windows & OS X) and 9.0.115.0 (Linux).\n" +
+                        "You are currently using Flash Player " + lz.Browser.getVersion();
+            // Only SWF9+ will provide an error message
+            if (errorMessage != null) {
+                message = "Flash Player Security Error " + errorMessage + "\n" + message;
+            }
+            Debug.error(message);
+            // Show hints to what might have gone wrong
+            Debug.error('Check your SWF embed code for missing param tag ' +
+                    '<param name="allowFullScreen" value="true" /> inside the <object> tag,\n or ' +
+                    'missing attribute allowFullScreen="true" in <embed> tag.\n' +
+                    'canvas.setAttribute("fullscreen", true) can be called only in response to a mouse click or keypress.\n');
+        }
+    }
+}
+ 
+
+/** Sets the allowfullscreen attribute
+  * @access private
+  */
+function $lzc$set_allowfullscreen( fs:Boolean ) {
+  this.allowfullscreen = fs;
+}
+
+/**
+  * @access private
+  * only called from the snippet loader or from the generated app object code
+  */
+function initDone (){
+    //reorder initial subviews so preloaded stuff is first
+    var sva:Array = [];
+    var svb:Array = [];
+
+    var isv:Array = this._lzinitialsubviews;
+    for (var i:int = 0, len:int = isv.length; i < len; ++i) {
+        var isi = isv[i];
+        if (isi['attrs'] && isi.attrs['initimmediate']) {
+            sva.push( isi );
+        } else {
+            svb.push( isi );
+        }
+    }
+    sva.push.apply(sva, svb);
+
+    // Done with that
+    this._lzinitialsubviews = [];
+
+    lz.Instantiator.requestInstantiation( this, sva );
+}
+
+
+/**
+  * @access private
+  */
+override function init (){
+    // Canvas-only: This is so the canvas sprite knows when to show its children 
+    this.sprite.init(true);
+
+    // start up history
+    if (this.history == true) {
+        // Tell lz.History we're ready to send events
+        lz.History.__start(this.id); 
+    }
+
+    if (this.contextmenu == null) {
+        this.buildDefaultMenu();
+    }
+}
+
+/**
+  * @access private
+  */
+var deferInit = true;
+
+/**
+  * @access private
+  */
+override function __LZinstantiationDone () : void {
+    this.__LZinstantiated = true;
+
+    if (this.deferInit) {
+        this.deferInit = false;
+        return;
+    }
+
+    this.percentcreated = 1;
+    this.updatePercentCreatedEnabled = false;
+    if (this.onpercentcreated.ready) this.onpercentcreated.sendEvent( this.percentcreated ); 
+    lz.Instantiator.resume();
+    this.__LZcallInit();
+}
+
+/**
+  * @access private
+  */
+function updatePercentCreated (){
+    this.percentcreated = Math.max( this.percentcreated ,
+                                    this.creatednodes / this.totalnodes );
+    this.percentcreated = Math.min( .99 , this.percentcreated );
+    if (this.onpercentcreated.ready) this.onpercentcreated.sendEvent( this.percentcreated );
+}
+
+/**
+  * @access private
+  */
+function initiatorAddNode ( e , n ){
+    this.totalnodes += n;
+    this._lzinitialsubviews.push( e );
+}
+
+/**
+  * @access private
+  * @devnote NOTE: !@#$ replaces LzNode.__LZcallInit, so must be kept
+  * in sync with that $#@!
+  */
+override function __LZcallInit ( an = null ){
+    //trace("lzcancas __LZcallinit isinited", this.isinited);
+    // Canvas-only:  Don't bother with preventSubInit
+    if (this.isinited) return;
+
+    //do this now, so that others know that they're too late
+    this.isinited = true;
+
+    if (this.__LZresolveDict != null) this.__LZresolveReferences();
+
+    // Install computed initializations
+    var sl = this.subnodes;
+    if (sl) {
+        // @devnote don't store 'sl.length', subnodes array may change (LPP-8386)
+        for (var i = 0; i < sl.length;) {
+            var s = sl[ i++ ];
+            //remember next one too
+            var t = sl[ i ];
+            if ( s.isinited || (! s.__LZinstantiated) ) continue;
+            s.__LZcallInit( );
+            //if the next one is not where it was, back up till we find it or to
+            //the beginning of the array
+            if ( t != sl[ i ] ){
+                // When does this ever happen?
+                // [20090812 anba] it may happen when subnodes are destroyed as a
+                // side-effect of calling __LZcallInit()
+                // Debug.warn('subnodes array changed after %w -> sl[%d]: %w', t, i, sl[i]);
+                while ( i > 0 ){
+                    if ( t == sl[ --i ] ) break;
+                }
+            }
+        }
+    }
+
+    // Register in the source locator table, if debugging
+    if ($debug) {
+        if (this.__LZsourceLocation) {
+            LzNode.sourceLocatorTable[this.__LZsourceLocation] = this;
+        }
+    }
+
+    this.init();
+
+    if (this.oninit.ready) this.oninit.sendEvent( this );
+    if (this.onafterinit.ready) this.onafterinit.sendEvent( this );
+    if (this.datapath && this.datapath.__LZApplyDataOnInit) {
+        this.datapath.__LZApplyDataOnInit();
+    }
+
+    // set the user-visible flag now
+    this.inited = true;
+    // in-lined setAttribute
+    if (this.oninited.ready) { this.oninited.sendEvent( true ); }
+
+    // Canvas-only: Note _canvas_ end, stop startup profiler
+    if ($profile) {
+        Profiler.event('done: #canvas');
+        // Default is to start the Profiler ASAP, and stop it in
+        // canvas.init, so you can profile startup time.  If that is
+        // not what you want, you can start/stop/pause/resume in your
+        // app around things you want to profile.
+        Profiler.stop();
+    }
+}
+
+/**
+  * @access private
+  */
+function isProxied ( ){
+    return this.proxied;
+}
+
+/**
+ * The canvas fills the root container.  To resize the canvas, we
+ * resize the root container.
+ *
+ * @access private
+ */
+override function $lzc$set_width(v) {
+  LzSprite.setRootWidth(v);
+}
+
+/**
+ * The canvas fills the root container.  To resize the canvas, we
+ * resize the root container.
+ *
+ * @access private
+ */
+override function $lzc$set_x(v) {
+  LzSprite.setRootX(v);
+}
+
+/**
+ * The canvas fills the root container.  To resize the canvas, we
+ * resize the root container.
+ *
+ * @access private
+ */
+override function $lzc$set_height(v) {
+  LzSprite.setRootHeight(v);
+}
+
+/**
+ * The canvas fills the root container.  To resize the canvas, we
+ * resize the root container.
+ *
+ * @access private
+ */
+override function $lzc$set_y(v) {
+  LzSprite.setRootY(v);
+}
+
+/**
+  * Install default menu items for the right-mouse-button 
+  * @param LzContextMenu cmenu: LzContextMenu to install on this view
+  */
+function setDefaultContextMenu ( cmenu ){
+    this.$lzc$set_contextmenu( cmenu );
+    this.sprite.setDefaultContextMenu( cmenu );
+}
+
+/**
+  * Build the default righ-click menu object
+  * @access private
+  */
+function buildDefaultMenu () {
+    if (! this.capabilities.customcontextmenu) return;
+
+    this.__LZDefaultCanvasMenu = new LzContextMenu();
+    this.__LZDefaultCanvasMenu.hideBuiltInItems();
+    
+    var defaultMenuItem:LzContextMenuItem = new LzContextMenuItem("About OpenLaszlo...",
+                                                new LzDelegate(this, '__LZdefaultMenuItemHandler'));
+    this.__LZDefaultCanvasMenu.addItem(defaultMenuItem);
+    
+    if (this.proxied) {
+        var viewSourceMenuItem:LzContextMenuItem = new LzContextMenuItem("View Source",
+                                                    new LzDelegate(this, '__LZviewSourceMenuItemHandler'));
+        this.__LZDefaultCanvasMenu.addItem(viewSourceMenuItem);
+    }
+    
+    // Install the default menu onto MovieClip, so it shows up everywhere by default
+    this.setDefaultContextMenu(this.__LZDefaultCanvasMenu);
+}
+
+/**
+  * @access private
+  */
+function __LZdefaultMenuItemHandler (item:LzContextMenuItem) {
+    // load a url 
+    lz.Browser.loadURL("http://www.openlaszlo.org", "lz_about");
+}
+
+/**
+  * @access private
+  */
+function __LZviewSourceMenuItemHandler (item:LzContextMenuItem) {
+    // view source for this app
+    // /examples/components/edittext_example.lzx
+    var url = lz.Browser.getBaseURL() + "?lzt=source";
+    lz.Browser.loadURL(url, "lz_source");
+}
+
+/**
+  * Compute version info as a string
+  * @access public
+  */
+static function versionInfoString () :String {
+  return (
+    'URL: ' + lz.Browser.getLoadURL() + '\n' +
+    'LPS\n' +
+    '  Version: ' + canvas.lpsversion + '\n' +
+    '  Release: ' + canvas.lpsrelease + '\n' +
+    '  Build: ' + canvas.lpsbuild + '\n' +
+    '  Date: ' + canvas.lpsbuilddate + '\n' +
+    'Application\n' +
+    '  Date: ' + canvas.appbuilddate + '\n' +
+    'Target: ' + canvas.runtime + '\n' +
+    'Runtime: ' + lz.Browser.getVersion() + '\n' +
+    'OS: ' + lz.Browser.getOS() + '\n');
+}
+
+/**
+  * Callback for LzScreenKernel window resize events.  When the canvas
+  * container changes size (whether by being tied to the browser
+  * screen size, or because the LZX app has requested a size change),
+  * we call back here to update the sprite size.
+  *
+  * TODO: [2009-08-25 ptw] Should we track x/y too?
+  *
+  * @access private
+  */
+function __windowResize(size) {
+  this.width = size.width;
+  if (this.onwidth.ready) this.onwidth.sendEvent(this.width);
+  this.sprite.setWidth(this.width);
+
+  this.height = size.height;
+  if (this.onheight.ready) this.onheight.sendEvent(this.height);
+  this.sprite.setHeight(this.height);
+}
+
+
+/**
+  * Utility functions used by the instantiator process
+  * @access private
+  */
+public function LzInstantiateView(e, tn = 1) {
+    canvas.initiatorAddNode( e , tn );
+}
+
+/** @access private */
+public function lzAddLocalData(name, d, trimwhitespace, nsprefix = false) {
+    return new LzDataset(canvas, {name: name, initialdata: d, trimwhitespace: trimwhitespace, nsprefix: nsprefix });
+}
+
+/**
+  * Load callback 
+  * @access private
+  */
+public function __LzLibraryLoaded(libname) {
+    canvas.initiatorAddNode({attrs: {libname: libname}, "class": LzLibraryCleanup}, 1);
+    // Run the queue to instantiate all pending LzInstantiateView calls.
+    canvas.initDone();
+}
+
+} // End of LzCanvas
+lz[LzCanvas.tagname] = LzCanvas;  // publish
+
+var canvas:LzCanvas;

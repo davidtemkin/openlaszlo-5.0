@@ -1,0 +1,78 @@
+/**
+  * UserClass.lzs 
+  *
+  * 
+  * @copyright Copyright 2001-2008 Laszlo Systems, Inc.  All Rights Reserved.
+  *            Use is subject to license terms.
+  *
+  * @topic LZX
+  * @subtopic Basics
+  * @access public
+  */
+  
+/**
+  * An LzUserClass is the implementation of the <tagname>class</tagname> tag.  It ensures that 
+  * the class is instantiated in lexical order with surrounding nodes
+  *
+  * <p>The <tagname>class</tagname> tag defines a new tag, which be used
+  * anywhere in the source file where a built-in tag such as
+  * <tagname>view</tagname> or <tagname>layout</tagname> can be used.</p>
+  * <p>
+  *   Defines a new XML tag name, that can be used in the remainder of
+  *    the application source.  An element whose name is this tag name
+  *    will inherit the attributes and content of this definition.
+  *   </p>
+  * <p>
+  * For example, </p>
+  * 
+  * <example executable="false"><programlisting>
+  * &lt;class name="mywindow" extends="window" layout="y" title="My Class"&gt;
+  *   &lt;text&gt;my class&lt;/text&gt;
+  * &lt;/class&gt;
+  * </programlisting></example>
+  * 
+  * <p>
+  * defines a new tag named <code>mywindow</code>.  This tag can be used anywhere that <code>window</code> is used. 
+  * </p>
+  * 
+  * <example executable="false"><programlisting>
+  * &lt;mywindow x="10"&gt;
+  *   &lt;button&gt;Click&lt;/button&gt;
+  * &lt;/mywindow&gt;
+  * </programlisting></example>
+  * 
+  * <p>
+  *  is equivalent to 
+  * </p>
+  * 
+  * <example executable="false"><programlisting>
+  * &lt;window layout="y" title="My Class"&gt;
+  *   &lt;text&gt;my class&lt;/text&gt;
+  *   &lt;button&gt;Click&lt;/button&gt;
+  * &lt;/window&gt;
+  * </programlisting></example>
+  * 
+  * <p>
+  *    Class definitions must precede view definitions that use the name
+  *    of the class.  An application can use a tag that is defined in a
+  *    library, if the library is included before the point where
+  *    the tag is used.
+  * </p>
+  * 
+  * <p>
+  * For an introduction to classes in LZX, see the <a href="${tutorials}classes-tutorial.html">Classes</a> tutorial.  For a concise
+  * explanation of classes in LZX, see the <a href="${dguide}introductory-classes.html">Classes</a> chapter in the Guide.  For advanced topics
+  * see the  <a href="${dguide}class-inheritance.html">Extending Classes</a> chapter.</p>
+  *
+  * @shortdesc Defining your own tags.
+  * @lzxname class
+  */
+
+/** @devnote Userclasses are now compiled by the tag compiler
+ * directly into a JS2 class declaration.  This file exists for
+ * documentation, and the support class below:
+ */
+
+
+
+

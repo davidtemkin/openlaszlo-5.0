@@ -1,0 +1,211 @@
+/**
+ * @copyright Copyright 2001-2010 Laszlo Systems, Inc.  All Rights Reserved.
+ *            Use is subject to license terms.
+ *
+ * @topic LFC
+ * @subtopic Events
+ * @access public
+ */
+
+/**
+ * <p><code>lz.Eventable</code> is the base class for any class that wishes to send
+ * and receive events.  It defines the setAttribute protocol that
+ * creates implicit events for every attribute that is modified using
+ * setAttribute.</p>
+ *
+ * <p>See <xref linkend="LzEvent"/> and <xref
+ * linkend="LzDelegate"/>.</p>
+ *
+ * @shortdesc Base class for all LZX classes that wish to send or
+ * receive events.
+ *
+ * @devnote Eventually we should be able to simplify the
+ * implementation of events and delegates by recording them here
+ * _en_masse_, rather than allocating them as individual objects,
+ * which should improve both time and space efficiency.
+ */
+class LzEventable {
+
+  /** @access private */
+  function LzEventable () {
+  }
+
+  /**
+   * Flag to record if we have been destroyed.  Events will not be
+   * sent to destroyed instances (so they are not resurrected).
+   * @access private
+   */
+  var __LZdeleted:Boolean = false;
+
+  /**
+   * All the events this instance generates.  Used to clear any
+   * delegates registered for events on this instance when it is
+   * destroyed.
+   *
+   * @access private
+   */
+  var _events:Array = null;
+
+  /**
+   * All the delegates this instance is captured by.  Used to clean up 
+   * references to this instance when it is destroyed.
+   *
+   * @access private
+   */
+  var __delegates:Array = null;
+
+  /**
+   * Sent just before an instance is destroyed
+   *
+   * @lzxtype event
+   */
+  var ondestroy = LzDeclaredEvent;
+
+  /**
+   * Marks an instance as no longer eligible to participate in the
+   * event system.  If it is registered to receive events, events will
+   * no longer be sent to it (to prevent it from being resurrected).
+   *
+   * @devnote Eventually we should be able to use the accounting
+   * structures here to automatically remove the instance from all
+   * events it is listening to, instead of having to make sendEvent
+   * look for the __LZdeleted flag.
+   */
+  function destroy () {
+    // Must be sent _before_ we mark ourself as deleted, or no
+    // delegates will be executed.  This is our last and final act
+    // before we actually will be destroyed.
+    if (this.ondestroy.ready) this.ondestroy.sendEvent( this );
+
+    // To keep delegates from resurrecting us.  See LzDelegate#execute
+    this.__LZdeleted = true;
+    // If we get destroyed while deferring events, just pretend those
+    // events were never sent (This happens if implicit replication
+    // replaces a node with a replication manager.  Sad but true.)
+    this.__LZdelegatesQueue = null;
+    this.__LZdeferDelegates = false;
+
+    //remove events
+    if (this._events != null) {
+        for (var i = this._events.length-1; i >=0; i--){
+            this._events[i].clearDelegates();
+        }
+        this._events = null;
+    }
+    if (this.__delegates != null) this.removeDelegates();
+  }
+
+  /**
+   * Removes all delegates registered for this context.  Also called by 
+   * LaszloLayout.releaseLayout()...
+   * @access private
+   */
+  function removeDelegates() {
+    if (this.__delegates != null) {
+      for (var i = this.__delegates.length-1; i >=0; i--){
+        var del = this.__delegates[i];
+        if (del.__LZdeleted != true) {
+          del.destroy();
+        }
+      }
+      this.__delegates = null;
+    }
+  }
+  
+
+  /**
+   * Private protocol with LzNode to cause events to delegates to be
+   * queued while a node is being constructed.  See LzEvent.
+   * @access private
+   */
+  var __LZdeferDelegates:Boolean = false;
+  /** @access private */
+  var __LZdelegatesQueue:Array = null;
+
+  /** @access private */
+  function childOf ( node, ignore=null ) { return false;}
+
+  /**
+   * An Object of attribute names.  If a property is true, setAttribute() skips 
+   * calling the setter.
+   * @access private
+   */
+  protected var customSetters:Object = {};
+
+  /**
+   * If customSetters[prop] is true, this method will be called by 
+   * setAttribute() instead of the setter/property being updated.
+   * @access private
+   */
+  protected function __invokeCustomSetter(prop:String, val):Boolean {
+    return false;
+  }
+
+  /**
+   * Sets the named attribute to the given value. If there is a setter
+   * for the property, the setter is called, otherwise, this[ prop ]
+   * is set to the value, and the event this [ "on"+prop ] is sent.
+   *
+   * @param String prop: A string naming the key of attribute to set
+   * @param any val: The value for that attribute
+   *
+   * @devnote Note: this is inlined by the script compiler, so that
+   * must be updated if you change this function
+   */
+  final function setAttribute(prop:String, val, ifchanged = null):void {
+    // TODO: [2009-01-19 ptw] Remove after 4.2
+    if ($debug) {
+      if (ifchanged !== null) {
+        Debug.info("%w.setAttribute(%w, %w, %w):  The third parameter (ifchanged) is deprecated.  Use `if (this.%2$s !== %3$w) this.setAttribute(%2$w, %3$w)` instead",
+                   this, prop, val, ifchanged);
+      }
+    }
+    if (this.__LZdeleted) { return; }
+
+    // If this property has skipsetter set
+    if (this.customSetters[prop]) {
+      if (this.__invokeCustomSetter(prop, val) == true) {
+        // Return early to skip setter
+        return;
+      }
+    }
+
+    // Must agree with NodeModel in tag compiler
+    var s = ('$lzc$set_' + prop);
+    // Cannot optimize this[s] to a var in JS1, you will lose the
+    // scope of the call
+    if (this[s] is Function) {
+      this[s](val);
+    } else {
+      this[ prop ] = val;
+      var evt = this["on" + prop];
+      if (evt is LzEvent) {
+        if (evt.ready) evt.sendEvent( val );
+      }
+    }
+  }
+
+  if ($debug) {
+    // In debug mode, the compiler fills these in
+    LzEventable.prototype[Debug.FUNCTION_FILENAME] = null;
+    LzEventable.prototype[Debug.FUNCTION_LINENO] = null;
+    // Subclasses can define these to be either strings or functions
+    LzEventable.prototype._dbg_typename = null;
+    LzEventable.prototype[Debug.FUNCTION_NAME] = null;
+  }
+
+  // TODO: [2008-05-08 ptw] (LPP-5934) When toString is declared
+  // public, remove this.  For now, this acts to trampoline `String(...)`
+  // and `'' + ...` to our private toString methods
+  if ($as3) {
+      /** @access private */
+      prototype.toString = function () {
+          if (arguments.callee !== this.toString) {
+              return this.toString();
+          } else {
+              return Object.prototype.toString.call(this);
+          }
+      }
+  }
+} // End of LzEventable
+lz.Eventable = LzEventable;  // publish

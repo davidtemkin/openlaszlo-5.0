@@ -1,0 +1,10 @@
+<canvas height="100">
+              <radiogroup height="60" layout="class:wrappinglayout; axis:y">
+                <radiobutton value="1" text="one"/>
+                <radiobutton value="2" text="two"/>
+                <radiobutton value="3" text="three"/>
+                <radiobutton value="4" text="four"/>
+                <radiobutton value="5" text="five"/>
+                <radiobutton value="6" text="six"/>
+              </radiogroup>
+            </canvas>
