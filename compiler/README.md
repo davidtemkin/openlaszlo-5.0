@@ -1,9 +1,25 @@
 # lzc-ts — TypeScript port of the OpenLaszlo 4.9 LZX→DHTML compiler
 
 Goal: **byte-for-byte identical** DHTML JS vs the original Java 4.9.0 compiler
-(the "oracle"), differential-tested against the 454-golden corpus. Designed to
-run both in Node (for oracle diffing) and eventually in the browser (compile LZX
-at load time; see the project memory `openlaszlo-compiler-plan`).
+(the "oracle"). Runs in Node (CLI + programmatic) **and in the browser** (the
+Service Worker compiles LZX at load time).
+
+> ## Current status — complete
+>
+> The compiler reaches **byte-for-byte parity with the Java 4.9 oracle** across, in **all
+> four build modes** (production, debug, `backtrace`, profile):
+> - the **documentation corpus** (production 346/0/0, debug 78/0/0, profile 263/0/0),
+> - the **Laszlo Explorer** programs and complete apps (Calendar, Dashboard),
+> - and the **entire DHTML runtime (LFC)** itself — all four LFC variants build
+>   byte-identical from `runtime/lfc-src/`.
+>
+> Reproduce it with the self-contained oracle harness in
+> [`compiler-verify/`](compiler-verify/) (needs a JDK — see its README).
+>
+> **The long, dated, session-by-session notes below are a historical development log**
+> kept for provenance. Their interim "Status / unsupported / remaining" figures (e.g.
+> "263 ok / 83 unsup", "debug refused") describe waypoints, **not** the current state
+> above — debug, backtrace, and profile are all done and verified.
 
 ## Run
 
