@@ -31,7 +31,10 @@ compiler-verify/                         (~400 KB committed; no golds/JDK/jar)
     solo-config/        # config overlay with compiler.proxied=false (SOLO builds)
     patch/              # the 3 debug-only oracle source-location fixes (see patch/README.md)
   harness/
-    verify.mjs          # the differential driver (all modes — see below)
+    verify.mjs          # the oracle differential driver (all byte-parity modes — see below)
+    closure-test.mjs    # dependency-closure capture + cache hit/invalidation (no oracle)
+    cache-validate.mjs  # full DiskCache validator/ETag behavior (no oracle)
+    browser-equiv.mjs   # in-browser compile  ==  Node compile, byte-identical (needs servlet)
     fixtures/dbg3.lzx   # tiny synthetic debug program for the `dbg3` RAW byte probe
   .goldcache*/          # regenerated golds (gitignored; NEVER committed)
 ```
@@ -228,6 +231,44 @@ documented overlay verified by the distro's own runtime, not the oracle.
 
 ---
 
+## 6. Beyond the oracle — browser-compile + cache verification
+
+Everything above is **one axis**: the TS compiler's output `===` the **Java 4.9 oracle's**
+output, byte-for-byte. Three further scripts (`harness/{closure-test,cache-validate,browser-equiv}.mjs`,
+ported from the canonical `modern-build/compiler/harness/`) verify **two other axes that do
+NOT involve the oracle** — the TS compiler agreeing with *itself*:
+
+| script | proves | needs the oracle/JDK? |
+|---|---|---|
+| `closure-test.mjs`   | the dependency closure captures every input (libs / components / resources / fonts) and the `DiskCache` invalidates when a tracked dep changes | **no** |
+| `cache-validate.mjs` | full cache semantics — hit/miss + timing, per-category invalidation (main / lib / resource), prop-gated entries (debug vs not), ETag 304/200, the mtime-vs-content tradeoff | **no** |
+| `browser-equiv.mjs`  | the **in-browser** compiler (`dist/browser.js`, the fetch→sync bridge) emits output **byte-identical** to the **Node** path, with a matching closure + cache | **yes** (LPS only) |
+
+```
+cd openlaszlo-5.0/compiler && npm run build      # build the TS compiler → dist/ (prereq §1c)
+cd compiler-verify
+node harness/closure-test.mjs      # 11 checks — self-contained (uses ../../runtime + examples/dashboard)
+node harness/cache-validate.mjs    # 16 checks — self-contained
+OL_ORACLE_JAR=/path/to/ol-4.9.0-servlet  node harness/browser-equiv.mjs   # hello + calendar + dashboard
+```
+
+Notes on inputs and isolation:
+
+* These are **TS-vs-TS** checks (cache correctness; in-browser-vs-Node equivalence), not
+  oracle byte-parity — so they are unaffected by which programs a distro modified or whether a
+  program existed in OL4. `examples/dashboard` is used only as a **convenient large multi-file
+  app** to stress the closure/cache/browser paths; the cache tests compile a **/tmp copy** of
+  it, so their mtime-invalidation probes never mutate `examples/` (the single runtime resource
+  they must touch is mtime-restored). `runtime/` and `examples/` stay read-only.
+* `browser-equiv` feeds BOTH the Node and browser compilers the **same nested servlet LPS**
+  (`$OL_ORACLE_JAR`, the same dep §1b obtains) so both emit matching `lps/components/…`
+  serverroot paths and byte-identity isolates the in-browser compiler's *logic*. (Against the
+  flat `runtime/` the two emit different serverroot *prefixes* by design — a config difference,
+  not a logic one — so this proof requires a single shared layout.) The two cache tests need no
+  LPS servlet; they run against the distro's own flat `runtime/`.
+
+---
+
 ## Notes / scope
 
 * SOLO mode (`compiler.proxied=false`, the one-byte `__LZproxied` delta) is reached via
@@ -244,5 +285,8 @@ documented overlay verified by the distro's own runtime, not the oracle.
 * **Not ported** (development-internal, not part of the distro verification story): the
   `modern-build` `fixtures` gate (a dev-scratch fixture suite with committed `.sprite.png`
   goldens, redundant with the larger distro `check` corpus) and the full-corpus `build-ol`
-  / `check-ol` sweep (the same programs `check` already covers from distro sources).
-```
+  / `check-ol` sweep (the same programs `check` already covers from distro sources). Also left
+  behind, as dev scratch rather than reusable tooling: `modern-build/swf2png/` (ad-hoc
+  puppeteer screenshot/probe scripts) and `modern-build/swf-canon/` (a finished one-time
+  proving-ground that established the demos are SWF-free with byte-clean compiler output — its
+  result is already realized in the SWF-free distro).
