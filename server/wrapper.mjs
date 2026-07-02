@@ -47,8 +47,12 @@ export function parseFlags(sp) {
   const backtrace = on(sp.get("backtrace")) || on(sp.get("lzbacktrace"));
   const debug = on(sp.get("debug")) || backtrace;
   const profile = on(sp.get("profile")) || on(sp.get("lzprofile"));
-  const flags = { debug, backtrace, profile, lzconsoledebug: on(sp.get("lzconsoledebug")), unsupported: null };
   const rt = sp.get("lzr") || sp.get("lzt");
+  // ?lzr=canvas → the own-pixels canvas kernel (LFCcanvas.js). DHTML-family: the app
+  // compiles byte-identically to dhtml; only the LFC the wrapper loads (and the $canvas
+  // compile-time constant) differ. `lzr=swf*` is still retired.
+  const canvas = rt != null && /canvas/i.test(rt);
+  const flags = { debug, backtrace, profile, canvas, lzconsoledebug: on(sp.get("lzconsoledebug")), unsupported: null };
   if (rt && /swf/i.test(rt))
     flags.unsupported = "the SWF runtime is retired; only the DHTML runtime is available.";
   return flags;
@@ -60,16 +64,24 @@ export function flagQuery(flags) {
   if (flags.debug) q.push("debug=true");
   if (flags.backtrace) q.push("lzbacktrace=true");   // the embed-preserved spelling
   if (flags.profile) q.push("lzprofile=true");
+  // Carry the canvas target to the `<name>.lzx.js` compile request so it compiles with
+  // $canvas set (and cache-keys separately from the dhtml build via compileProps).
+  if (flags.canvas) q.push("lzr=canvas");
   if (flags.lzconsoledebug) q.push("lzconsoledebug=true");
   return q.length ? "?" + q.join("&") : "";
 }
 
 /** The wrapper HTML (post-rewrite oracle page shape), parameterized so runtime references
  *  resolve against RUNTIME_URL and the app loads its SIBLING `<name>.lzx.js`. */
-export function renderWrapper({ base, runtimeUrl = RUNTIME_URL, bgcolor = "#ffffff", width = "100%", height = "100%", debug = false, backtrace = false, profile = false, appQuery = "" }) {
+export function renderWrapper({ base, runtimeUrl = RUNTIME_URL, bgcolor = "#ffffff", width = "100%", height = "100%", debug = false, backtrace = false, profile = false, canvas = false, appQuery = "" }) {
   const rt = runtimeUrl.replace(/\/$/, "");
   const url = `${base}.lzx.js${appQuery}`;
-  const lfcurl = `${rt}/lfc/${backtrace ? "lfc-backtrace.js" : profile ? "lfc-profile.js" : debug ? "lfc-debug.js" : "lfc.js"}`;
+  // CANVAS target loads the own-pixels canvas kernel (LFCcanvas.js) instead of the
+  // managed-DOM lfc.js; it runs the SAME compiled `<name>.lzx.js`. (Canvas takes
+  // precedence over the debug/profile lfc variants — a canvas debug LFC is future work.)
+  const lfcurl = canvas
+    ? `${rt}/lfc/kernel/canvas/LFCcanvas.js`
+    : `${rt}/lfc/${backtrace ? "lfc-backtrace.js" : profile ? "lfc-profile.js" : debug ? "lfc-debug.js" : "lfc.js"}`;
   return `<!DOCTYPE html
   PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html><head>
@@ -99,7 +111,7 @@ export function wrapperFor(lzxRel, srcAbs, searchParams) {
   return {
     html: renderWrapper({
       base, bgcolor, width, height,
-      debug: flags.debug, backtrace: flags.backtrace, profile: flags.profile, appQuery: flagQuery(flags),
+      debug: flags.debug, backtrace: flags.backtrace, profile: flags.profile, canvas: flags.canvas, appQuery: flagQuery(flags),
     }),
   };
 }

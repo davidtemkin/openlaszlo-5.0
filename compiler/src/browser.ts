@@ -58,6 +58,10 @@ export interface CompileInBrowserOptions {
   profile?: boolean;
   /** SOLO build (`__LZproxied:"false"`). */
   proxied?: boolean;
+  /** CANVAS runtime target (`lzr=canvas`): pairs with the `LFCcanvas.js` own-pixels
+   *  kernel the wrapper loads. Dhtml-family — the emitted JS is byte-identical to a
+   *  dhtml build (only `$canvas` flips); cache-keyed so it never collides with dhtml. */
+  canvas?: boolean;
   /** Retry cap for the preload loop (a runaway guard). */
   maxRetries?: number;
 }
@@ -84,7 +88,8 @@ function decode(bytes: Uint8Array): string {
 /** The compiler properties that gate cache staleness (must match api-node's). */
 function compileProps(o: CompileInBrowserOptions): Record<string, string> {
   return { debug: String(!!o.debug || !!o.backtrace), backtrace: String(!!o.backtrace),
-           profile: String(!!o.profile), proxied: String(o.proxied !== false), sprites: o.sprites ?? "none" };
+           profile: String(!!o.profile), proxied: String(o.proxied !== false), sprites: o.sprites ?? "none",
+           canvas: String(!!o.canvas) };
 }
 
 /** Compile an LZX app located at `mainUrl` entirely in the browser. Returns the JS,
@@ -169,7 +174,7 @@ export async function compileInBrowser(
     tracker.record(mainUrl, validators.get(mainUrl) ?? { missing: true });
     const opts = browserOptions({ baseUrl: mainUrl, lpsUrl: o.lpsUrl, state, sprites });
     const r = compile(state.map.get(mainUrl)!.text, {
-      ...opts, debug: o.debug, backtrace: o.backtrace, profile: o.profile, proxied: o.proxied, sprites,
+      ...opts, debug: o.debug, backtrace: o.backtrace, profile: o.profile, proxied: o.proxied, sprites, canvas: o.canvas,
     });
     passes++;
     result = { js: r.js, unsupported: r.unsupported };

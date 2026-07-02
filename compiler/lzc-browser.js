@@ -6143,12 +6143,16 @@ var COMPILE_CONSTANTS = {
   $js1: true,
   $debug: false,
   $profile: false,
-  $backtrace: false
+  $backtrace: false,
+  // $canvas is a PER-BUILD constant (like $debug): the static value here is the
+  // dhtml/default (false); evalSwitchCondition overrides it with COMPILE_CANVAS for a
+  // `lzr=canvas` build. Canvas stays dhtml-family, so $runtime/$dhtml are unchanged.
+  $canvas: false
 };
 function evalSwitchCondition(el) {
   const propname = el.attrs["property"];
   if (propname != null) {
-    const prop = propname === "$debug" ? COMPILE_DEBUG : COMPILE_CONSTANTS[propname];
+    const prop = propname === "$debug" ? COMPILE_DEBUG : propname === "$canvas" ? COMPILE_CANVAS : COMPILE_CONSTANTS[propname];
     if (prop === void 0)
       return false;
     if (typeof prop === "boolean")
@@ -6156,8 +6160,11 @@ function evalSwitchCondition(el) {
     const value = el.attrs["value"];
     return value != null ? prop === value : false;
   }
-  if (el.attrs["runtime"] != null)
+  if (el.attrs["runtime"] != null) {
+    if (el.attrs["runtime"] === "canvas")
+      return COMPILE_CANVAS;
     return COMPILE_CONSTANTS.$runtime === el.attrs["runtime"];
+  }
   throw new Unsupported(`<${el.name}> requires a property or runtime attribute`);
 }
 function evaluateSwitch(el) {
@@ -6352,6 +6359,7 @@ function compile(source, opts = {}) {
     COMPILE_DEBUG = routeDebug;
     COMPILE_BACKTRACE = backtrace;
     COMPILE_PROFILE = profile;
+    COMPILE_CANVAS = opts.canvas === true;
     DEBUG_FILE = opts.debugFileName ?? ((id) => id);
     DEBUG_SOURCE_ID = opts.sourceId ?? "";
     SCRIPT_SRC = opts.resolveScriptSrc ?? null;
@@ -6367,6 +6375,7 @@ function compile(source, opts = {}) {
     COMPILE_DEBUG = false;
     COMPILE_BACKTRACE = false;
     COMPILE_PROFILE = false;
+    COMPILE_CANVAS = false;
     DEBUG_FILE = (id) => id;
     DEBUG_STMTS = null;
     SCRIPT_SRC = null;
@@ -6455,6 +6464,7 @@ function debugCatchBody2(file, line) {
 var COMPILE_DEBUG = false;
 var COMPILE_BACKTRACE = false;
 var COMPILE_PROFILE = false;
+var COMPILE_CANVAS = false;
 var DEBUG_STMTS = null;
 function pushDebug(stmt) {
   if (DEBUG_STMTS)
@@ -7377,6 +7387,9 @@ function maxCommonPrefix(a, b) {
   let i = 0;
   while (i < a.length && i < b.length && a[i] === b[i])
     i++;
+  const clean = i === 0 || a[i - 1] === "/" || i === a.length && (i === b.length || b[i] === "/") || i === b.length && a[i] === "/";
+  if (!clean)
+    i = a.lastIndexOf("/", i - 1) + 1;
   return i > 1 && a[i - 1] === "/" ? a.slice(0, i - 1) : a.slice(0, i);
 }
 function splitJ(s) {
@@ -7867,7 +7880,8 @@ function compileProps(o) {
     backtrace: String(!!o.backtrace),
     profile: String(!!o.profile),
     proxied: String(o.proxied !== false),
-    sprites: o.sprites ?? "none"
+    sprites: o.sprites ?? "none",
+    canvas: String(!!o.canvas)
   };
 }
 async function compileInBrowser(mainUrl, o = {}) {
@@ -7927,7 +7941,8 @@ async function compileInBrowser(mainUrl, o = {}) {
       backtrace: o.backtrace,
       profile: o.profile,
       proxied: o.proxied,
-      sprites
+      sprites,
+      canvas: o.canvas
     });
     passes++;
     result = { js: r.js, unsupported: r.unsupported };

@@ -34,14 +34,16 @@ function compilerVersion() {
 }
 const cache = new DiskCache(CACHE_DIR, compilerVersion());
 
-export function compileApp(srcAbs, { debug = false, backtrace = false, profile = false } = {}) {
+export function compileApp(srcAbs, { debug = false, backtrace = false, profile = false, canvas = false } = {}) {
   // backtrace (?lzbacktrace) implies debug; it adds the DEBUG_BACKTRACE per-function
   // call-stack frame instrumentation and pairs with the lfc-backtrace.js runtime.
   // profile (?profile) is independent of debug; it cache-keys the build and pairs with
   // the lfc-profile.js runtime (every LFC function $lzprofiler-metered, auto-started).
+  // canvas (?lzr=canvas) is dhtml-family: byte-identical app JS (only $canvas flips), it
+  // cache-keys separately and the wrapper pairs it with the LFCcanvas.js kernel.
   return compileFileCached(
     srcAbs,
-    { lpsHome: RUNTIME, sprites: "none", proxied: false, debug: debug || backtrace, backtrace, profile },
+    { lpsHome: RUNTIME, sprites: "none", proxied: false, debug: debug || backtrace, backtrace, profile, canvas },
     cache,
   );
 }

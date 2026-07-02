@@ -10,7 +10,8 @@ import { DiskTracker } from "./cache-disk.js";
 /** The compiler properties that gate cache staleness (Java's computeKey props). */
 function compileProps(o) {
     return { debug: String(!!o.debug || !!o.backtrace), backtrace: String(!!o.backtrace),
-        profile: String(!!o.profile), proxied: String(o.proxied !== false), sprites: o.sprites ?? "oracle" };
+        profile: String(!!o.profile), proxied: String(o.proxied !== false), sprites: o.sprites ?? "oracle",
+        canvas: String(!!o.canvas) };
 }
 /** Compile a file on disk, returning the JS + the full dependency closure (every
  *  include / imported library / autoincluded component / resource / dataset / font /
@@ -21,7 +22,7 @@ export function compileFile(mainPath, o = {}) {
     tracker.file(abs); // the main source is the first dependency
     const source = readFileSync(abs, "utf8");
     const opts = nodeOptions(abs, o.lpsHome, tracker);
-    const r = compile(source, { ...opts, debug: o.debug, backtrace: o.backtrace, profile: o.profile, proxied: o.proxied, sprites: o.sprites });
+    const r = compile(source, { ...opts, debug: o.debug, backtrace: o.backtrace, profile: o.profile, proxied: o.proxied, sprites: o.sprites, canvas: o.canvas });
     return { js: r.js, unsupported: r.unsupported, closure: { entries: tracker.entries(), props: compileProps(o) } };
 }
 /** Compile with a disk cache: serve a fresh cached blob when every tracked

@@ -15,10 +15,18 @@
 // No node imports — this is part of the browser bundle.
 import { imageDim } from "./imagedim.js";
 // --- pure path arithmetic, mirrored from node-io.ts (operates on URL pathnames) ---
+// See node-io.ts's maxCommonPrefix for why the char-run divergence is rewound
+// to the last complete separator boundary (mid-segment divergence, e.g. sibling
+// trees whose names share a prefix, must not truncate a path segment).
 function maxCommonPrefix(a, b) {
     let i = 0;
     while (i < a.length && i < b.length && a[i] === b[i])
         i++;
+    const clean = i === 0 || a[i - 1] === "/" ||
+        (i === a.length && (i === b.length || b[i] === "/")) ||
+        (i === b.length && a[i] === "/");
+    if (!clean)
+        i = a.lastIndexOf("/", i - 1) + 1;
     return i > 1 && a[i - 1] === "/" ? a.slice(0, i - 1) : a.slice(0, i);
 }
 function splitJ(s) {

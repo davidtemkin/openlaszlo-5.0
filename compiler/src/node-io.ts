@@ -10,10 +10,21 @@ import type { CompileOptions, ResourceInfo, FontInfo } from "./compile.js";
 import type { Tracker } from "./closure.js";
 
 /** Longest common path prefix as a string, truncated at the last `/`
- *  (FileUtils.findMaxCommonPrefix). */
+ *  (FileUtils.findMaxCommonPrefix). The oracle's Java version only trims a
+ *  trailing slash when the char-run divergence happens to land right after
+ *  one — it assumes `appDir`/`LPS_HOME` are always full-segment ancestors of
+ *  the compared path, true in a webapp deploy where the app lives inside
+ *  LPS_HOME. A detached CLI layout can put them on sibling trees (e.g.
+ *  `.../openlaszlo-neo/…` vs `.../openlaszlo-5.0`), so the char-run can
+ *  diverge MID-segment; rewind to the last complete separator boundary so
+ *  the returned prefix is always a whole path, never a truncated segment. */
 function maxCommonPrefix(a: string, b: string): string {
   let i = 0;
   while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  const clean = i === 0 || a[i - 1] === "/" ||
+    (i === a.length && (i === b.length || b[i] === "/")) ||
+    (i === b.length && a[i] === "/");
+  if (!clean) i = a.lastIndexOf("/", i - 1) + 1;
   return i > 1 && a[i - 1] === "/" ? a.slice(0, i - 1) : a.slice(0, i);
 }
 function canon(p: string): string {

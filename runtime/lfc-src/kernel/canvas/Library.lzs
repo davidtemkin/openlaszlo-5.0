@@ -1,0 +1,48 @@
+/**
+  * Library.lzs  (CANVAS kernel)
+  *
+  * The canvas backend = the SAME LFC core/views/services (all gated on $dhtml, which
+  * stays true — canvas is a browser/DHTML-family runtime) with ONLY the sprite kernel
+  * swapped. Platform-agnostic kernel files are reused VERBATIM from kernel/dhtml/ (paths
+  * resolve relative to the LFC root dir, lfc-src/); canvas-specific files replace the
+  * DOM-coupled sprite + text + font pieces.
+  *
+  * @access private
+  */
+
+// --- reused verbatim from the dhtml kernel (no DOM-sprite coupling) ---
+#include "kernel/dhtml/LFC.js"
+#include "kernel/dhtml/LzBrowserUtils.js"
+#include "kernel/dhtml/LzPool.js"
+#include "kernel/dhtml/LzKeyboardKernel.js"
+#include "kernel/dhtml/LzMouseKernel.js"
+#include "kernel/dhtml/LzBrowserKernel.lzs"
+
+// --- canvas-specific: own-pixels sprite kernel ---
+// LzSprite.js = the CORE (ctor + view-facing contract); the heavy concerns are split
+// into sibling modules that extend the SAME LzSprite (must follow the core). See each
+// file's header + the MODULE MAP in runtime/lfc/kernel/canvas/PROGRESS.md.
+#include "kernel/canvas/LzSprite.js"
+#include "kernel/canvas/LzCanvasPainter.js"
+#include "kernel/canvas/LzCanvasColorTransform.js"
+#include "kernel/canvas/LzCanvasHitTest.js"
+#include "kernel/canvas/LzCanvasInput.js"
+#include "kernel/canvas/LzCanvasResource.js"
+#include "kernel/canvas/LzDrawContext.js"
+
+#include "kernel/dhtml/LzLibrary.js"
+
+// --- canvas-specific: text + font (M1 box-only stubs; text deferred) ---
+#include "kernel/canvas/LzTextSprite.js"
+#include "kernel/canvas/LzInputTextSprite.js"
+
+// --- reused verbatim (XML / HTTP / timers / screen / contextmenu) ---
+#include "kernel/dhtml/LzXMLParser.js"
+#include "kernel/dhtml/LzXMLTranslator.js"
+#include "kernel/dhtml/LzHTTPLoader.js"
+#include "kernel/dhtml/LzScreenKernel.js"
+#include "kernel/dhtml/LzContextMenuKernel.lzs"
+#include "kernel/dhtml/LzTimeKernel.js"
+
+// --- canvas-specific: font manager (M1 measurement stub) ---
+#include "kernel/canvas/LzFontManager.js"

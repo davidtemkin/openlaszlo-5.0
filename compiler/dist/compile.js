@@ -1980,6 +1980,10 @@ const COMPILE_CONSTANTS = {
     $swf7: false, $swf8: false, $as2: false, $swf9: false, $swf10: false,
     $as3: false, $dhtml: true, $j2me: false, $svg: false, $js1: true,
     $debug: false, $profile: false, $backtrace: false,
+    // $canvas is a PER-BUILD constant (like $debug): the static value here is the
+    // dhtml/default (false); evalSwitchCondition overrides it with COMPILE_CANVAS for a
+    // `lzr=canvas` build. Canvas stays dhtml-family, so $runtime/$dhtml are unchanged.
+    $canvas: false,
 };
 /** Evaluate a `<when>`/`<unless>` condition (Parser.evaluateConditions): a
  *  `property=` resolves a compile-time constant (Boolean → its value; String →
@@ -1987,7 +1991,12 @@ const COMPILE_CONSTANTS = {
 function evalSwitchCondition(el) {
     const propname = el.attrs["property"];
     if (propname != null) {
-        const prop = propname === "$debug" ? COMPILE_DEBUG : COMPILE_CONSTANTS[propname];
+        // Per-build compile-time constants win over the static map: $debug (debug build)
+        // and $canvas (the `lzr=canvas` own-pixels-kernel target). Canvas is dhtml-family,
+        // so ONLY $canvas flips — $dhtml stays true, $swf*/$as3 stay false.
+        const prop = propname === "$debug" ? COMPILE_DEBUG
+            : propname === "$canvas" ? COMPILE_CANVAS
+                : COMPILE_CONSTANTS[propname];
         if (prop === undefined)
             return false;
         if (typeof prop === "boolean")
@@ -1995,8 +2004,14 @@ function evalSwitchCondition(el) {
         const value = el.attrs["value"];
         return value != null ? prop === value : false;
     }
-    if (el.attrs["runtime"] != null)
+    if (el.attrs["runtime"] != null) {
+        // `<when runtime="canvas">` selects a canvas build. $runtime itself stays "dhtml"
+        // (canvas runs the dhtml LFC on identical app bytes), so `runtime="dhtml"` still
+        // matches a canvas build too — order a canvas-specific arm first if you need it.
+        if (el.attrs["runtime"] === "canvas")
+            return COMPILE_CANVAS;
         return COMPILE_CONSTANTS.$runtime === el.attrs["runtime"];
+    }
     throw new Unsupported(`<${el.name}> requires a property or runtime attribute`);
 }
 /** Evaluate a `<switch>` (Parser.evaluateSwitchStatement) → the selected arm's
@@ -2378,6 +2393,7 @@ export function compile(source, opts = {}) {
         COMPILE_DEBUG = routeDebug;
         COMPILE_BACKTRACE = backtrace;
         COMPILE_PROFILE = profile;
+        COMPILE_CANVAS = opts.canvas === true;
         DEBUG_FILE = opts.debugFileName ?? ((id) => id);
         DEBUG_SOURCE_ID = opts.sourceId ?? "";
         SCRIPT_SRC = opts.resolveScriptSrc ?? null;
@@ -2394,6 +2410,7 @@ export function compile(source, opts = {}) {
         COMPILE_DEBUG = false;
         COMPILE_BACKTRACE = false;
         COMPILE_PROFILE = false;
+        COMPILE_CANVAS = false;
         DEBUG_FILE = (id) => id;
         DEBUG_STMTS = null;
         SCRIPT_SRC = null;
@@ -2501,6 +2518,11 @@ let COMPILE_BACKTRACE = false;
 // uses the readable backend (COMPILE_DEBUG=true) but is otherwise production
 // ($debug=false): it must NOT splice the debugger library nor emit makeDebugWindow.
 let COMPILE_PROFILE = false;
+// Per-compile canvas flag (compile.ts side): the `lzr=canvas` own-pixels-kernel target.
+// Dhtml-family, so it changes NO emitted bytes — it only makes evalSwitchCondition fold
+// `$canvas`/`runtime="canvas"` true for `<switch>` deep in include expansion. Set in
+// compile()'s try, reset in its finally — never leaks into a following (dhtml) compile.
+let COMPILE_CANVAS = false;
 // Debug-build top-level-statement sink: in a debug build, each emitted top-level
 // statement (class `Class.make(…)` block, instance/LzInstantiateView, colors,
 // registration) is collected here in emission order, then assembled (each its own

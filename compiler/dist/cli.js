@@ -1,5 +1,7 @@
 // CLI: compile an LZX file to DHTML JS on stdout.
-//   lzc-ts <file.lzx> [--solo | --proxied=false] [--debug] [--backtrace]
+//   lzc-ts <file.lzx> [--solo | --proxied=false] [--debug] [--backtrace] [--canvas]
+// --canvas (or --runtime=canvas / LZC_CANVAS=1) targets the own-pixels canvas kernel
+// (LFCcanvas.js); dhtml-family, so the app JS is byte-identical — it only sets $canvas.
 // SOLO build flag (or env LZC_SOLO=1) flips the single `__LZproxied` byte to
 // "false" — the oracle's SOLO mode. Default is the proxied (normal) build.
 // --debug / --backtrace (or LZC_DEBUG_FORCE=1 / LZC_BACKTRACE=1) select the debug
@@ -63,6 +65,15 @@ if (process.env.LZC_BACKTRACE === "1" || flags.includes("--backtrace"))
 // folding). Instruments the APP's OWN functions. Byte-for-byte vs the oracle --profile.
 if (process.env.LZC_PROFILE === "1" || flags.includes("--profile"))
     opts.profile = true;
+// CANVAS runtime target (`lzr=canvas`): compile for the own-pixels canvas kernel
+// (LFCcanvas.js) instead of the managed-DOM lfc.js. Canvas is DHTML-family — the app
+// bytes are byte-identical to a dhtml build; this ONLY sets the `$canvas` compile-time
+// constant true (for `<switch><when property="$canvas">` / `<when runtime="canvas">`).
+// Selecting the LFCcanvas.js kernel + loader wrapper is the deployer's job (server /
+// Service Worker); the compiler emits the same app JS. `--runtime=canvas` mirrors the
+// oracle's `--runtime=dhtml` spelling.
+if (process.env.LZC_CANVAS === "1" || flags.includes("--canvas") || flags.includes("--runtime=canvas"))
+    opts.canvas = true;
 // SOLO build: emit __LZproxied="false" (the one-byte oracle SOLO delta).
 if (process.env.LZC_SOLO === "1" || flags.includes("--solo") || flags.includes("--proxied=false"))
     opts.proxied = false;

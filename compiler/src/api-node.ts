@@ -26,6 +26,11 @@ export interface CompileFileOptions {
   /** "none" ⇒ Java-free sprite-sheet-free output (multi-frame resources render
    *  from individual frame PNGs). Default "oracle" ⇒ byte-parity sheet refs. */
   sprites?: "oracle" | "none";
+  /** CANVAS runtime target (`lzr=canvas`): pairs with the `LFCcanvas.js` own-pixels
+   *  kernel. Dhtml-family — the emitted JS is byte-identical to a dhtml build (only the
+   *  `$canvas` compile-time constant flips). Cache-keyed so a canvas build never collides
+   *  with a dhtml build of the same app. */
+  canvas?: boolean;
 }
 
 export interface CompileFileResult {
@@ -41,7 +46,8 @@ export interface CompileFileResult {
 /** The compiler properties that gate cache staleness (Java's computeKey props). */
 function compileProps(o: CompileFileOptions): Record<string, string> {
   return { debug: String(!!o.debug || !!o.backtrace), backtrace: String(!!o.backtrace),
-           profile: String(!!o.profile), proxied: String(o.proxied !== false), sprites: o.sprites ?? "oracle" };
+           profile: String(!!o.profile), proxied: String(o.proxied !== false), sprites: o.sprites ?? "oracle",
+           canvas: String(!!o.canvas) };
 }
 
 /** Compile a file on disk, returning the JS + the full dependency closure (every
@@ -53,7 +59,7 @@ export function compileFile(mainPath: string, o: CompileFileOptions = {}): Compi
   tracker.file(abs); // the main source is the first dependency
   const source = readFileSync(abs, "utf8");
   const opts = nodeOptions(abs, o.lpsHome, tracker);
-  const r = compile(source, { ...opts, debug: o.debug, backtrace: o.backtrace, profile: o.profile, proxied: o.proxied, sprites: o.sprites });
+  const r = compile(source, { ...opts, debug: o.debug, backtrace: o.backtrace, profile: o.profile, proxied: o.proxied, sprites: o.sprites, canvas: o.canvas });
   return { js: r.js, unsupported: r.unsupported, closure: { entries: tracker.entries(), props: compileProps(o) } };
 }
 

@@ -81,7 +81,7 @@ function rebaseHtml(text) {
 // (b) busts every cached asset. Host-agnostic: works on ANY static host (GitHub Pages,
 // S3, nginx, Cloudflare Pages…) with no build pipeline — just re-run the stamp before you
 // deploy. Left as "dev" when unstamped (local serving).
-const BUILD_ID = "358194df2b6a";
+const BUILD_ID = "b49bcfe977c4";
 
 // Per-build cache bucket: a new BUILD_ID -> a new bucket -> the old one is dropped on
 // activate, and compiled output is re-keyed, so a runtime/compiler change recompiles.
@@ -189,9 +189,13 @@ function parseFlags(sp) {
   // is `$lzprofiler`-metered and the Profiler auto-starts ($profile init block). Independent
   // of debug ($debug stays false — production folding + the timing meter).
   const profile = on(sp.get("profile")) || on(sp.get("lzprofile"));
-  const flags = { debug, backtrace, profile, lzconsoledebug: on(sp.get("lzconsoledebug")), proxied: false, unsupported: null };
-  const proxiedReq = sp.get("proxied") ?? sp.get("lzproxied");
   const rt = sp.get("lzr") || sp.get("lzt");
+  // ?lzr=canvas → the own-pixels canvas kernel (LFCcanvas.js). DHTML-family: the app
+  // compiles byte-identically; only the LFC the wrapper loads (and the $canvas compile-
+  // time constant) differ. `lzr=swf*` stays retired (handled below).
+  const canvas = rt != null && /canvas/i.test(rt);
+  const flags = { debug, backtrace, profile, canvas, lzconsoledebug: on(sp.get("lzconsoledebug")), proxied: false, unsupported: null };
+  const proxiedReq = sp.get("proxied") ?? sp.get("lzproxied");
   if (proxiedReq === "true")
     flags.unsupported = "proxied=true needs a data-proxy server; the static distro is SOLO (proxied=false).";
   else if (rt && /swf/i.test(rt))
@@ -209,6 +213,9 @@ function flagQuery(flags) {
   // Carry the profile flag to the `<name>.lzx.js` compile request (cache-keyed via
   // compileProps) so a profile build never collides with the production cache.
   if (flags.profile) q.push("lzprofile=true");
+  // Carry the canvas target to the `<name>.lzx.js` compile request so compileResponse
+  // (handler 3) compiles with $canvas set + cache-keys it separately from the dhtml build.
+  if (flags.canvas) q.push("lzr=canvas");
   if (flags.lzconsoledebug) q.push("lzconsoledebug=true");
   return q.length ? "?" + q.join("&") : "";
 }
@@ -316,7 +323,7 @@ async function navResponse(path, search = "") {
   const { bgcolor, width, height } = await canvasAttrs(self.location.origin + physical(toSourceUrl(path)));
   const html = renderWrapper({
     base, runtimeUrl: RUNTIME_URL, bgcolor, width, height,
-    debug: flags.debug, backtrace: flags.backtrace, profile: flags.profile, appQuery: flagQuery(flags),
+    debug: flags.debug, backtrace: flags.backtrace, profile: flags.profile, canvas: flags.canvas, appQuery: flagQuery(flags),
   });
   return new Response(html, { status: 200, headers: { "Content-Type": "text/html;charset=utf-8" } });
 }
@@ -351,6 +358,7 @@ async function compileResponse(url, request) {
       debug: flags.debug,          // (D) debug build → cache keys on it (compileProps), no prod collision
       backtrace: flags.backtrace,  // (D) DEBUG_BACKTRACE add-on → cache keys on it too
       profile: flags.profile,      // (D) profile build → cache keys on it; app runs on lfc-profile.js
+      canvas: flags.canvas,        // (D) canvas target → $canvas set + cache-keyed; app runs on LFCcanvas.js
     });
     if (r.unsupported) {
       return new Response(errStub(`compile UNSUPPORTED: ${r.unsupported}`), jsHeaders());
@@ -466,15 +474,19 @@ function errStub(msg) {
 // parameterized so runtime references resolve against RUNTIME_URL. `serverroot:
 // 'lps/resources/'` kept verbatim; the app loads `lps/components|fonts` via app-relative
 // URLs the SW proxies (handler 1).
-function renderWrapper({ base, runtimeUrl, bgcolor = "#ffffff", width = "100%", height = "100%", debug = false, backtrace = false, profile = false, appQuery = "" }) {
+function renderWrapper({ base, runtimeUrl, bgcolor = "#ffffff", width = "100%", height = "100%", debug = false, backtrace = false, profile = false, canvas = false, appQuery = "" }) {
   const rt = runtimeUrl.replace(/\/$/, "");
   const url = `${base}.lzx.js${appQuery}`;
-  // LFC variant selection: ?lzbacktrace → lfc-backtrace.js (the full LzBacktrace stack +
-  // per-call-site instrumentation, paired with the backtrace app compile); ?profile →
-  // lfc-profile.js (every LFC function `$lzprofiler`-metered, Profiler auto-started);
-  // ?debug → lfc-debug.js (runtime debugger); else the production lfc.js. backtrace takes
-  // precedence over plain debug (it is a debug superset); profile is independent of debug.
-  const lfcurl = `${rt}/lfc/${backtrace ? "lfc-backtrace.js" : profile ? "lfc-profile.js" : debug ? "lfc-debug.js" : "lfc.js"}`;
+  // LFC variant selection: ?lzr=canvas → the own-pixels canvas kernel (LFCcanvas.js),
+  // which runs the SAME compiled app; else ?lzbacktrace → lfc-backtrace.js (the full
+  // LzBacktrace stack + per-call-site instrumentation, paired with the backtrace app
+  // compile); ?profile → lfc-profile.js (every LFC function `$lzprofiler`-metered, Profiler
+  // auto-started); ?debug → lfc-debug.js (runtime debugger); else the production lfc.js.
+  // backtrace takes precedence over plain debug (it is a debug superset); profile is
+  // independent of debug. Canvas takes precedence (a canvas debug/profile LFC is future work).
+  const lfcurl = canvas
+    ? `${rt}/lfc/kernel/canvas/LFCcanvas.js`
+    : `${rt}/lfc/${backtrace ? "lfc-backtrace.js" : profile ? "lfc-profile.js" : debug ? "lfc-debug.js" : "lfc.js"}`;
   return `<!DOCTYPE html
   PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html><head>

@@ -1,0 +1,79 @@
+/* -*- mode: JavaScript; c-basic-offset: 2; -*- */
+
+/**
+  * CANVAS LFC root — builds LFCcanvas.js via `lzc --lfc LaszloLibrary-canvas.lzs`.
+  *
+  * Identical to LaszloLibrary.lzs except it includes kernel/Library-canvas.lzs (which
+  * selects the own-pixels canvas sprite kernel) instead of kernel/Library.lzs. All the
+  * rest of the LFC — compiler runtime, debugger, core, events, views, animators,
+  * helpers, data, services — is the SAME source ($dhtml stays true: canvas is a
+  * browser/DHTML-family runtime). See runtime/lfc/kernel/canvas/PROGRESS.md.
+  *
+  * @access private
+  */
+
+/** @access private */
+var _Copyright = "Portions of this file are copyright (c) 2001-2010 by Laszlo Systems, Inc.  All rights reserved.";
+
+// If profiling, we need to define this early, because the class
+// runtime will attempt to use it
+if ($profile) {
+  if ($as3) {
+  } else {
+#include "profiler/LzProfile.lzs"
+  }
+}
+
+// Compiler runtime support first
+#include "compiler/Library.lzs"
+
+if ($debug) {
+  #include "debugger/Library.lzs"
+} else if ($dhtml) {
+  #include "debugger/stubs.lzs"
+} else if ($as3) {
+  //Debugger placeholder
+  #include "debugger/swf9stubs.lzs"
+}
+
+if ($profile) {
+  if ($as3) {
+  } else {
+  // Default is to start the Profiler ASAP, and stop it in
+  // canvas.init, so you can profile startup time.  If that is not
+  // what you want, you can start/stop/pause/resume in your app around
+  // things you want to profile.
+  Profiler.start();
+  }
+}
+
+#include "core/Library.lzs"
+
+#include "events/Library.lzs"
+
+#include "kernel/Library-canvas.lzs"
+#include "views/Library.lzs"
+#include "animators/Library.lzs"
+
+#include "helpers/Library.lzs"
+#include "data/Library.lzs"
+#include "services/Library.lzs"
+
+if ($as3) {
+    // Initialize the DojoExternalInterface class
+    var DojoExternalInterface = new DojoExternalInterfaceClass( LzBrowserKernel.getInitArg('id') );
+} else {
+  if ($as2) {
+    // Initialize the DojoExternalInterface class
+    var DojoExternalInterface = new DojoExternalInterfaceClass( LzBrowserKernel.getInitArg('id') );
+  }
+  if ($debug) {
+    // Must be loaded last -- tells the core debugger loading is done
+#include "debugger/LzInit.lzs"
+  }
+}
+
+if ($dhtml) {
+  // include late to ensure rest of LFC is defined
+  #include "contextmenu.js"
+}

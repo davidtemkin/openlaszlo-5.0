@@ -63,8 +63,12 @@ function compileEndpoint(req, res, url) {
   // runtime the SW's renderWrapper selects. Independent of debug.
   const pf = url.searchParams.get("profile") ?? url.searchParams.get("lzprofile");
   const profile = pf !== null && pf !== "false";
+  // ?lzr=canvas → compile for the own-pixels canvas kernel (dhtml-family: byte-identical
+  // app JS, only $canvas flips + cache-keyed separately). The wrapper loads LFCcanvas.js.
+  const rt = url.searchParams.get("lzr") ?? url.searchParams.get("lzt");
+  const canvas = rt !== null && /canvas/i.test(rt);
   let r;
-  try { r = compileApp(srcAbs, { debug, backtrace, profile }); }
+  try { r = compileApp(srcAbs, { debug, backtrace, profile, canvas }); }
   catch (e) { return send(res, 200, errStub("compile error: " + (e && e.message || e)), JS_HDR); }
   if (r.unsupported) return send(res, 200, errStub("compile UNSUPPORTED: " + r.unsupported), JS_HDR);
   const etag = `"${r.tag}"`;

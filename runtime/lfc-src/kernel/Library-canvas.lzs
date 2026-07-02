@@ -1,0 +1,33 @@
+/**
+  * Library-canvas.lzs  — kernel selector for the CANVAS LFC build.
+  *
+  * A copy of kernel/Library.lzs whose $dhtml branch selects the canvas kernel instead
+  * of the dhtml kernel. Used ONLY by LaszloLibrary-canvas.lzs (the canvas LFC root);
+  * the pristine kernel/Library.lzs is untouched so the dhtml byte-parity build is
+  * unaffected. See runtime/lfc/kernel/canvas/PROGRESS.md (ARCHITECTURE FORK) — the
+  * long-term seam may instead be a `$canvas` magic constant editing kernel/Library.lzs
+  * in place.
+  *
+  * @access private
+  */
+
+// Resource library
+// contains {ptype, class(as3), frames: [], width, height}
+// ptype is one of "ar" (app relative) or "sr" (system relative)
+var LzResourceLibrary:Object = {};
+
+#include "kernel/LzKernelUtils.lzs"
+
+#include "kernel/LzIdleKernel.lzs"
+
+#include "kernel/LzLibraryCleanup.lzs"
+
+if ($as3) {
+    #include "kernel/swf9/Library.lzs"
+} else if ($dhtml) {
+    #include "kernel/canvas/Library.lzs"
+} else if ($as2) {
+    #include "kernel/swf/Library.lzs"
+} else if ($debug) {
+    Debug.error('kernel/Library-canvas.lzs unsupported runtime %s', $runtime);
+}
