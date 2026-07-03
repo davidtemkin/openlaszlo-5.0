@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Weather - San Francisco, CA</title>
+    <description>Weather for San Francisco, CA</description>
+    <language>en-us</language>
+    <location city="San Francisco" region="CA" country="United States" />
+    <units temperature="F" distance="mi" pressure="in" speed="mph" />
+    <wind chill="60" direction="220" speed="11" />
+    <atmosphere humidity="72" visibility="10" pressure="30.1" rising="0" />
+    <astronomy sunrise="6:14 am" sunset="8:31 pm" />
+    <item>
+      <title>Conditions for San Francisco, CA</title>
+      <condition text="Partly Cloudy" code="30" temp="62" date="Sun, 22 Jun 2026 12:00 pm" />
+      <forecast day="Mon" date="Mon, 22 Jun 2026" low="55" high="66" text="Partly Cloudy" code="30" />
+      <forecast day="Tue" date="Tue, 23 Jun 2026" low="55" high="68" text="Sunny" code="32" />
+      <forecast day="Wed" date="Wed, 24 Jun 2026" low="56" high="70" text="Sunny" code="32" />
+      <forecast day="Thu" date="Thu, 25 Jun 2026" low="54" high="65" text="Mostly Cloudy" code="28" />
+      <forecast day="Fri" date="Fri, 26 Jun 2026" low="53" high="63" text="AM Clouds" code="28" />
+    </item>
+  </channel>
+</rss>
