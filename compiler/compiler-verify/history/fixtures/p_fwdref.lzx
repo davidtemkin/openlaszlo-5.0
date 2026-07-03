@@ -1,0 +1,19 @@
+<canvas>
+  <!-- Forward-reference class compilation order (ClassModel.compile DFS):
+       aa is defined first but instantiates bb (defined later), which instantiates
+       cc (defined later still). The oracle compiles a class's instantiated-child
+       classes on demand during its emit pass, so the emission/gensym order is the
+       DFS cc, bb, aa — NOT document order. Each class carries a constraint so it
+       allocates $m, exercising the build-pass (method names) / emit-pass (anon
+       class names) interleaving across the dependency graph. -->
+  <class name="aa" extends="view" width="${10+1}">
+    <bb/>
+  </class>
+  <class name="bb" extends="view" height="${20+2}">
+    <cc/>
+  </class>
+  <class name="cc" extends="view">
+    <attribute name="z" type="number" value="${30+3}"/>
+  </class>
+  <aa/>
+</canvas>

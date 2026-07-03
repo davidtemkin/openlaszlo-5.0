@@ -1,0 +1,10 @@
+<canvas>
+  <view>
+    <method name="go" args="o">
+      var r = 0;
+      for (var k in o) { r = r + o[k]; }
+      for (k in o) r++;
+      return r;
+    </method>
+  </view>
+</canvas>

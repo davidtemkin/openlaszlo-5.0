@@ -1,0 +1,7 @@
+<canvas>
+  <resource name="montageres">
+    <frame src="logo.gif"/>
+    <frame src="sky.jpg"/>
+  </resource>
+  <view resource="montageres"/>
+</canvas>

@@ -1,0 +1,9 @@
+<canvas>
+    <class name="thing" extends="view" width="40">
+        <attribute name="other" value="5" type="number"/>
+        <handler name="onwidth" reference="this">
+            this.setAttribute('other', this.width);
+        </handler>
+    </class>
+    <thing/>
+</canvas>

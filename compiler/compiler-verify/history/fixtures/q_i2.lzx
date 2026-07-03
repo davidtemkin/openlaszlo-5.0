@@ -1,0 +1,3 @@
+<canvas>
+    <view width="10" onmouseover="this.setAttribute('x',2)" height="${this.width}"/>
+</canvas>

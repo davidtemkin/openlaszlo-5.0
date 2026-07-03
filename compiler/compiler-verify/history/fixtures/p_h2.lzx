@@ -1,0 +1,8 @@
+<canvas>
+    <class name="thing" extends="view" width="40">
+        <handler name="onmousedown" args="x, y">
+            this.setAttribute('width', x + y);
+        </handler>
+    </class>
+    <thing/>
+</canvas>

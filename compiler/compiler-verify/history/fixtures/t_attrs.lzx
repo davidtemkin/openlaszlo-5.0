@@ -1,0 +1,5 @@
+<canvas height="100" width="300" bgcolor="0xCCCCCC">
+    <view x="10" bgcolor="0xFF0000" width="50" height="50" visible="false"/>
+    <view x="70" bgcolor="red" clickable="true" opacity="0.5"/>
+    <text fgcolor="0x0000FF" fontsize="14" multiline="true">Hello</text>
+</canvas>

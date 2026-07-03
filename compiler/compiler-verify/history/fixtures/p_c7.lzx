@@ -1,0 +1,6 @@
+<canvas>
+    <class name="box" extends="view">
+        <attribute name="w2" value="${this.width * 2}" type="number"/>
+    </class>
+    <box/>
+</canvas>

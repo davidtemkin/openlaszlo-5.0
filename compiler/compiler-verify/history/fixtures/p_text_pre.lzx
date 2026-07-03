@@ -1,0 +1,10 @@
+<canvas height="80" width="100%">
+  <text multiline="true" height="300">
+    This text field contains some preformatted text
+    <pre>
+    This is a line of text.
+
+    here was a blank line before this line.
+    </pre>
+   </text>
+</canvas>

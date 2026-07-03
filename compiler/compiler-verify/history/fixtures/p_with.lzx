@@ -1,0 +1,9 @@
+<canvas>
+  <view>
+    <handler name="oninit">
+      with (this.parent) {
+        setAttribute("x", 5);
+      }
+    </handler>
+  </view>
+</canvas>

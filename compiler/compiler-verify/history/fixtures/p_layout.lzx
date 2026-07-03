@@ -1,0 +1,7 @@
+<canvas height="200">
+  <wrappinglayout xinset="10"/>
+  <vbox spacing="5">
+    <text>one</text>
+    <text>two</text>
+  </vbox>
+</canvas>

@@ -1,0 +1,3 @@
+<canvas>
+    <view width="50" x="$once{this.width + 1}"/>
+</canvas>

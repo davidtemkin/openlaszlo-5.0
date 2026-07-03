@@ -1,0 +1,10 @@
+<canvas>
+  <class name="myreg" extends="view">
+    <attribute name="Labels" allocation="class" value="{a:'X', b:'Y'}"/>
+    <attribute name="count" value="3" type="number"/>
+    <method name="lookup" args="k">
+      return myreg.Labels[k];
+    </method>
+  </class>
+  <myreg/>
+</canvas>

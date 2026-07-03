@@ -11,10 +11,10 @@ HERE="$(cd "$(dirname "$0")" && pwd)"                 # openlaszlo/docs/src/refe
 DOCS="$(cd "$HERE/../.." && pwd)"                      # openlaszlo/docs
 REPO="$(cd "$HERE/../../../.." && pwd)"               # repo root (…/OpenLaszlo)
 JH=/opt/homebrew/opt/openjdk@17
-WEBAPP="$REPO/downloads/ol-4.9.0-servlet"             # the oracle webapp (jars)
-LPSSRC="$REPO/lps-4.9.0-src/lps-4.9.0"               # LFC .lzs source (LPS_HOME)
+LPSSRC="$REPO/openlaszlo-4.9.0-src/lps-4.9.0"         # LFC .lzs source (LPS_HOME) + the 78 dependency jars
+PREBUILT="$(cd "$HERE/../../../compiler/compiler-verify/oracle/prebuilt" && pwd)"  # lps-4.9.0.jar + classes (see its README)
 COMP="$REPO/openlaszlo/runtime/components"            # component .lzx source
-CP="$(ls "$WEBAPP"/WEB-INF/lib/*.jar | tr '\n' ':')"
+CP="$PREBUILT/lps-4.9.0.jar:$PREBUILT/classes:$(ls "$LPSSRC"/WEB-INF/lib/*.jar | tr '\n' ':')"
 export XML_CATALOG_FILES=/opt/homebrew/etc/xml/catalog
 JAVA() { "$JH/bin/java" -cp "$CP" -DLPS_HOME="$LPSSRC" -DJS2DOC_LIBROOT="$LPSSRC" "$@"; }
 

@@ -1,0 +1,7 @@
+<canvas>
+    <script>
+        var g = 5;
+        Debug.write(g);
+    </script>
+    <view x="1"/>
+</canvas>

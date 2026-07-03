@@ -1,0 +1,9 @@
+<canvas>
+    <class name="thing" extends="view" width="40">
+        <attribute name="n" value="3" type="number"/>
+        <method name="bump" args="d">
+            this.setAttribute('n', this.n + d);
+        </method>
+    </class>
+    <thing x="10"/>
+</canvas>

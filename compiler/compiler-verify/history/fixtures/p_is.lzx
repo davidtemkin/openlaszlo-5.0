@@ -1,0 +1,11 @@
+<canvas>
+  <view>
+    <method name="go" args="p">
+      if (p is Array) return 1;
+      if (! (p is Array)) return 2;
+      if ((p.datapath is LzDatapath) &amp;&amp; p.q) return 3;
+      var x = p is String;
+      return 0;
+    </method>
+  </view>
+</canvas>

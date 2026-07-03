@@ -1,0 +1,10 @@
+<canvas>
+  <view>
+    <method name="coerce" args="v">
+      var a = !!v;
+      var b = - -v;
+      var c = !(v &amp;&amp; v);
+      return [a, b, c];
+    </method>
+  </view>
+</canvas>

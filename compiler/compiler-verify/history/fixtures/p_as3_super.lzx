@@ -1,0 +1,14 @@
+<canvas>
+  <script when="immediate"><![CDATA[
+    class Widget extends LzView {
+      var label = "w";
+      function setup (parent, args) {
+        super.setup.apply(this, arguments);
+        super.setup.call(this, parent, args);
+        Debug.write("ok");
+      }
+      function plain () { return super.plain(); }
+    }
+    Widget.dependencies = function (who, self) { return [self, "label"]; };
+  ]]></script>
+</canvas>

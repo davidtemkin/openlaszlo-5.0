@@ -1,0 +1,8 @@
+<canvas>
+  <interface name="myiface">
+    <attribute name="foo" type="number"/>
+  </interface>
+  <view>
+    <myiface foo="3"/>
+  </view>
+</canvas>

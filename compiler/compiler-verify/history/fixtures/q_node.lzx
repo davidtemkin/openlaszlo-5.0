@@ -1,0 +1,4 @@
+<canvas>
+    <node name="mynode"/>
+    <view x="1"/>
+</canvas>

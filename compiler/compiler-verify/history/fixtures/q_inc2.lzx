@@ -1,0 +1,4 @@
+<canvas>
+    <include href="inc_child2.lzx"/>
+    <usedw x="1"/>
+</canvas>

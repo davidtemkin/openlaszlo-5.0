@@ -1,0 +1,5 @@
+<canvas>
+    <view width="50" x="${this.width}">
+        <view y="${parent.x}"/>
+    </view>
+</canvas>

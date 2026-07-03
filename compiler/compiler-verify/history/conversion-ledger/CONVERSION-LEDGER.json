@@ -1,0 +1,836 @@
+[
+ {
+  "prog": "examples/amazon/amazon.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/amazon-soap/amazon.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/animation/animation.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/animation/simpletest.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "OTHER"
+ },
+ {
+  "prog": "examples/audio.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/hello.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/local.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/modeexample.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/paging.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/path-attribute.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/sessionwindow.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/systemprop.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/tag-definition.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/calendar/calendar.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/calendar/test-data.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/chat/chat.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/chatws/chatws.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/button_example.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/checkbox_example.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/combobox_example.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/component_sampler.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/datacombobox_example.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/datepicker_example.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/edittext_example.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/floatinglist_example.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/form_example.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/grid_example.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/list_example.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/menu_example.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/radiogroup_example.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/scrollbar_example.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/slider_example.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/tabs_example.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/tabslider_example.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/tree_example.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/components/window_example.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/contactlist/contactlist.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/css/test-berry.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/css/test-chocolate.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/css/test-haze.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/css/test.lzx",
+  "okA": false,
+  "okB": false,
+  "dev": "-"
+ },
+ {
+  "prog": "examples/dashboard/dashboard.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/extensions/drawing.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/extensions/html-callmethod.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/extensions/html.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/extensions/rte.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/image-loading/dataimage.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/image-loading/dataimage2.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/javarpc/accentedtext.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/javarpc/returnjavabean.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/javarpc/returnperson.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/javarpc/returnpojo.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/lzpix/app.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/lzpix/test-button.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/lzpix/test-details.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/lzpix/test-linkbutton.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/lzpix/classes/test/test-dataman.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/lzpix/tests/pivoylayout-test.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/lzpix/tests/test-auth.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/lzpixmobile/main.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "?"
+ },
+ {
+  "prog": "examples/lzpixmobile/test/main.lzx",
+  "okA": false,
+  "okB": false,
+  "dev": "-"
+ },
+ {
+  "prog": "examples/lzproject/lzx/lzproject/LZProject.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/lzproject/lzx/lzproject/modules/ApplicationVisualizer.lzx",
+  "okA": false,
+  "okB": false,
+  "dev": "-"
+ },
+ {
+  "prog": "examples/lzproject/lzx/lzproject/modules/BackendService.lzx",
+  "okA": false,
+  "okB": false,
+  "dev": "-"
+ },
+ {
+  "prog": "examples/lzproject/lzx/lzproject/modules/BorderedBox.lzx",
+  "okA": false,
+  "okB": false,
+  "dev": "-"
+ },
+ {
+  "prog": "examples/lzproject/lzx/lzproject/modules/DynamicApplicationSizer.lzx",
+  "okA": false,
+  "okB": false,
+  "dev": "-"
+ },
+ {
+  "prog": "examples/lzproject/lzx/lzproject/modules/I18NFlag.lzx",
+  "okA": false,
+  "okB": false,
+  "dev": "-"
+ },
+ {
+  "prog": "examples/lzproject/lzx/lzproject/modules/LoginScreen.lzx",
+  "okA": false,
+  "okB": false,
+  "dev": "-"
+ },
+ {
+  "prog": "examples/lzproject/lzx/lzproject/modules/NewProjectWindow.lzx",
+  "okA": false,
+  "okB": false,
+  "dev": "-"
+ },
+ {
+  "prog": "examples/lzproject/lzx/lzproject/modules/People.lzx",
+  "okA": false,
+  "okB": false,
+  "dev": "-"
+ },
+ {
+  "prog": "examples/lzproject/lzx/lzproject/modules/ServiceConnector.lzx",
+  "okA": false,
+  "okB": false,
+  "dev": "-"
+ },
+ {
+  "prog": "examples/lzproject/lzx/lzproject/modules/Task.lzx",
+  "okA": false,
+  "okB": false,
+  "dev": "-"
+ },
+ {
+  "prog": "examples/lzproject/lzx/lzproject/modules/TaskCreateEditForm.lzx",
+  "okA": false,
+  "okB": false,
+  "dev": "-"
+ },
+ {
+  "prog": "examples/mobile/clock/clock-test.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/mobile/contactlist/contactlist.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/mobile/loadmedia.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/mobile/status.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/mobile/weather/results_test.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/mobile/weather/test.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/mobile/weather/yahoo.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/music/music.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/musicdhtml/audiokernel.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/musicdhtml/main.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/noughts/noughts.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "OTHER"
+ },
+ {
+  "prog": "examples/vacation-survey/vacation-survey.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/videolib/videolib.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/videolibrary/videolibrary.lzx",
+  "okA": false,
+  "okB": false,
+  "dev": "-"
+ },
+ {
+  "prog": "examples/videotest/videotest.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/weather/weather.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/weatherblox/wrapper.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "OTHER"
+ },
+ {
+  "prog": "examples/xmldata/xmldata.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "examples/youtube/youtube.lzx",
+  "okA": false,
+  "okB": false,
+  "dev": "-"
+ },
+ {
+  "prog": "explorer/animation/animation.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/animation/animatorgroup.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/animation/motion.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/basics/constraints.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/basics/drag-and-drop.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "OTHER"
+ },
+ {
+  "prog": "explorer/basics/empty.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/basics/extensibility.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/basics/fonts.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/basics/form.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/basics/hello.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/basics/hellobutton.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/basics/hellowindow.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/basics/layout.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/basics/layouts.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/basics/mediaaudio.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/basics/mediaimg.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/basics/mediavideo.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/basics/scripting.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/basics/scrolling.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/basics/states.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/basics/view.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/classes/attributes.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/classes/events.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/classes/inheritance.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/classes/methods.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/classes/withclasses.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/classes/withoutclasses.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/components/components.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "OTHER"
+ },
+ {
+  "prog": "explorer/constraints/basics.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/constraints/constraints.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/constraints/css.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/constraints/dragdrop.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/constraints/proportions.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/constraints/splitpanel.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/coverpages/header/header.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/coverpages/welcome/rclock/clock-test.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/coverpages/welcome/welcome.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/data/database.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/data/databinding.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/data/datalocal.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/data/dataremote.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/data/datarepeated.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/explore-nav.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/scripting/audioplayer.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/scripting/debugger.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/scripting/events.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ },
+ {
+  "prog": "explorer/scripting/methods.lzx",
+  "okA": true,
+  "okB": true,
+  "dev": "CLEAN"
+ }
+]

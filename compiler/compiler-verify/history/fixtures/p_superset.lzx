@@ -1,0 +1,12 @@
+<canvas>
+  <class name="myview" extends="view">
+    <setter name="frame" args="frame">
+      if (this.resourceviewcount > 0) {
+        this.subviews[0].setAttribute("frame", frame);
+      } else {
+        super.setAttribute('frame', frame);
+      }
+    </setter>
+  </class>
+  <myview/>
+</canvas>

@@ -1,0 +1,6 @@
+<canvas>
+  <class name="cbox" extends="view">
+    <attribute name="pick" value="${a ? b : (c == 0 ? 1 : 2)}" type="number"/>
+  </class>
+  <cbox/>
+</canvas>

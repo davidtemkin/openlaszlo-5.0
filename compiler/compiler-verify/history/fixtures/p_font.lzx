@@ -1,0 +1,4 @@
+<canvas height="70" width="100%">
+  <font name="helmet" src="helmetr.ttf"/>
+  <text font="helmet" fontsize="20">Hello Helmet</text>
+</canvas>

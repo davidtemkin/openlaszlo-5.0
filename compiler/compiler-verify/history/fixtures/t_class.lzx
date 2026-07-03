@@ -1,0 +1,5 @@
+<canvas height="100">
+    <class name="box" extends="view" width="40" height="40" bgcolor="0x00FF00"/>
+    <box x="10"/>
+    <box x="60" bgcolor="red"/>
+</canvas>

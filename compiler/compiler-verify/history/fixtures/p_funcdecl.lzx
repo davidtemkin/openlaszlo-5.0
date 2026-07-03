@@ -1,0 +1,11 @@
+<canvas>
+  <view>
+    <method name="transform" args="items">
+      function dbl(x) { return x * 2; }
+      function add(a, b) { return a + b; }
+      var out = [];
+      for (var i = 0; i &lt; items.length; ++i) { out[i] = dbl(items[i]); }
+      return add(out[0], out[1]);
+    </method>
+  </view>
+</canvas>

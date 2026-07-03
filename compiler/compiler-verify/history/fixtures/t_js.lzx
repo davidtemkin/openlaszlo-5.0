@@ -1,0 +1,13 @@
+<canvas>
+    <class name="t" extends="view">
+        <method name="m" args="a, b">
+            var x = a + b * 2 - 1;
+            var s = "he's \"ok\"";
+            var o = { foo: 1, 'bar baz': 2 };
+            var arr = [1, 2, 3];
+            if (x > 10 &amp;&amp; b != null) { x = x % 3; } else { x = -x; }
+            for (var i = 0; i &lt; arr.length; i++) { x += arr[i]; }
+            return x > 0 ? a : b;
+        </method>
+    </class>
+</canvas>

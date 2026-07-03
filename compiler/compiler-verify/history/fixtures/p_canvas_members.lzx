@@ -1,0 +1,11 @@
+<canvas height="100" width="100%">
+  <view width="40"/>
+  <attribute name="counter" value="3"/>
+  <method name="bump" args="n">
+    this.counter = this.counter + n;
+    foo.setAttribute("x", this.counter);
+  </method>
+  <method name="reset">
+    this.counter = 0;
+  </method>
+</canvas>

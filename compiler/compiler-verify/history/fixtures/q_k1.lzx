@@ -1,0 +1,7 @@
+<canvas>
+    <class name="box" extends="view" width="10">
+        <view x="1"/>
+        <text>hi</text>
+    </class>
+    <box/>
+</canvas>

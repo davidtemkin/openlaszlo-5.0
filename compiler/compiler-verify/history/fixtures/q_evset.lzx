@@ -1,0 +1,8 @@
+<canvas>
+    <class name="thing" extends="view">
+        <event name="onfoo"/>
+        <attribute name="bar" value="1"/>
+        <setter name="bar" args="v">this.bar = v + 1;</setter>
+    </class>
+    <thing/>
+</canvas>

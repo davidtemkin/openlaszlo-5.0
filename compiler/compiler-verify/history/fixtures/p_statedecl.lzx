@@ -1,0 +1,8 @@
+<canvas>
+  <view width="100" height="80">
+    <state name="hc">
+      <attribute name="height" value="${parent.width - 10}"/>
+    </state>
+    <view name="body" width="40" height="40" bgcolor="blue"/>
+  </view>
+</canvas>

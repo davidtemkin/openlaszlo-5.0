@@ -1,0 +1,13 @@
+<canvas height="100" width="100%">
+  <simplelayout axis="y"/>
+  <text><b>Default bold</b></text>
+  <text fontstyle="bold"><i>Default bold italic</i></text>
+  <text multiline="true" width="400">
+    Lorem ipsum dolor sit amet.<br/> Cras
+    nibh. Quisque justo. <br/>Donec porta.
+  </text>
+  <text>
+    <b>bold</b> text with
+    <a href="http://www.openlaszlo.org"><i>anchor</i></a>
+  </text>
+</canvas>

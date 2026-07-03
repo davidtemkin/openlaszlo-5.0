@@ -1,0 +1,7 @@
+<canvas>
+    <view width="50" x="${this.width}">
+        <view height="${parent.x}" onclick="this.setAttribute('y',1)">
+            <view y="${parent.height + 2}"/>
+        </view>
+    </view>
+</canvas>

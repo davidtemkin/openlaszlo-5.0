@@ -1,0 +1,8 @@
+<canvas>
+  <class name="foo">
+    <method name="go">
+      var f = function(id, name, value=null, cb=null){ return id+name+value+cb; };
+      return f(1);
+    </method>
+  </class>
+</canvas>

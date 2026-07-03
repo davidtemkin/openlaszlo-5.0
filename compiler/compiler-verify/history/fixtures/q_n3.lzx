@@ -1,0 +1,6 @@
+<canvas>
+    <class name="box" extends="view" width="7"/>
+    <box x="${this.width}">
+        <box y="${parent.x}"/>
+    </box>
+</canvas>

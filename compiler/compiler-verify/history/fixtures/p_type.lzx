@@ -1,0 +1,11 @@
+<canvas>
+  <class name="foo">
+    <method name="go" args="o:LzView, n:int">
+      var x:Number = n * 2;
+      var arr:Array = [];
+      var d:* = o.data cast LzView;
+      for (var i:int = 0; i &lt; x; i++) { arr.push(i); }
+      return arr;
+    </method>
+  </class>
+</canvas>

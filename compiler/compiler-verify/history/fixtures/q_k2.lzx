@@ -1,0 +1,6 @@
+<canvas>
+    <view width="5">
+        <method name="foo">return 1;</method>
+        <view x="2"/>
+    </view>
+</canvas>

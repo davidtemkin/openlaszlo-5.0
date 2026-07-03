@@ -1,0 +1,9 @@
+<canvas>
+  <class name="foo">
+    <method name="go" args="a">
+      var arr=[];
+      arr.sort(function(b,c){return a+b-c});
+      return arr;
+    </method>
+  </class>
+</canvas>

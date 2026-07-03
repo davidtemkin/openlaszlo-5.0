@@ -1,0 +1,6 @@
+<canvas>
+    <class name="thing" extends="view">
+        <method name="m" args="v">return (v cast LzView).x;</method>
+    </class>
+    <thing/>
+</canvas>

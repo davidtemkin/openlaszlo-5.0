@@ -1,0 +1,3 @@
+<canvas>
+    <view x="${parent.width}"/>
+</canvas>

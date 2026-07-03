@@ -57,18 +57,25 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 (Any JDK 17 works; just point `$JAVA_HOME` at it.)
 
 ### b. The prebuilt OpenLaszlo 4.9.0 compiler classpath — `$OL_ORACLE_JAR`
-The Java compiler is **not** bundled (license + size). Obtain the OpenLaszlo 4.9.0
-**servlet** distribution (`openlaszlo-4.9.0.servlet.tar.gz` / `.zip` from the
-OpenLaszlo archives) and unpack it. Then point `$OL_ORACLE_JAR` at it. It accepts:
-
-* the unpacked **servlet webapp root** (the dir containing `WEB-INF/lib/*.jar`),
-  e.g. `export OL_ORACLE_JAR=/path/to/ol-4.9.0-servlet` — **recommended**; or
-* a single `lps.jar`; or
-* an already-assembled colon-separated classpath.
+The compiler jar itself IS bundled: **`oracle/prebuilt/`** carries `lps-4.9.0.jar`
+(+ `WEB-INF/classes`) — the one artifact of the 4.9.0 servlet distribution that
+cannot be rebuilt from the 4.9 source drop (see `oracle/prebuilt/README.md`).
+Its 78 **dependency** jars are not duplicated here; they live, byte-identical to
+the servlet's (verified 2026-07-02), in the 4.9 source tree's `WEB-INF/lib`.
+Compose the classpath from the two:
 
 ```
-export OL_ORACLE_JAR=/path/to/ol-4.9.0-servlet
+PRE=/path/to/openlaszlo-5.0/compiler/compiler-verify/oracle/prebuilt
+SRC=/path/to/openlaszlo-4.9.0-src/lps-4.9.0
+export OL_ORACLE_JAR="$PRE/lps-4.9.0.jar:$PRE/classes:$(ls "$SRC"/WEB-INF/lib/*.jar | tr '\n' ':')"
 ```
+
+`$OL_ORACLE_JAR` also still accepts the classic forms: an unpacked **servlet
+webapp root** (the dir containing `WEB-INF/lib/*.jar`, from
+`openlaszlo-4.9.0.servlet.tar.gz`/`.zip` in the OpenLaszlo archives), a single
+`lps.jar`, or any pre-assembled colon-separated classpath. (Gate on record: the
+composed form and the full servlet produce byte-identical output modulo the
+`appbuilddate` timestamp.)
 
 ### c. The TS compiler must be built
 ```

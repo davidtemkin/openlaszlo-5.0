@@ -1,0 +1,4 @@
+<canvas>
+    <class name="box" extends="view" width="30"/>
+    <box x="${this.width + 1}"/>
+</canvas>

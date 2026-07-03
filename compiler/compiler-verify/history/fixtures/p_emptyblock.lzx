@@ -1,0 +1,9 @@
+<canvas>
+  <class name="ebox" extends="view">
+    <method name="check" args="x">
+      if (x == 0) { } else { this.setAttribute('visible', false); }
+      if (x) {}
+    </method>
+  </class>
+  <ebox/>
+</canvas>

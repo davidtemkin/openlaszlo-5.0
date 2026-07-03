@@ -1,0 +1,18 @@
+<canvas height="40" width="100%">
+  <switch>
+    <when property="$dhtml">
+      <text>DHTML branch</text>
+    </when>
+    <otherwise>
+      <text>Other branch</text>
+    </otherwise>
+  </switch>
+  <switch>
+    <unless property="$swf8">
+      <view height="10" width="10"/>
+    </unless>
+    <otherwise>
+      <view height="20" width="20"/>
+    </otherwise>
+  </switch>
+</canvas>

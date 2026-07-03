@@ -1,0 +1,10 @@
+<canvas height="200">
+  <class extends="dragstate" name="myDrag" pooling="true">
+    <handler name="onapply">parent.setAttribute('opacity', .5)</handler>
+    <view name="shadow" x="10" y="${parent.body.height}" bgcolor="black"/>
+  </class>
+  <view onmousedown="d.apply()" onmouseup="d.remove()">
+    <myDrag name="d"/>
+    <view name="body" width="40" height="40" bgcolor="blue"/>
+  </view>
+</canvas>

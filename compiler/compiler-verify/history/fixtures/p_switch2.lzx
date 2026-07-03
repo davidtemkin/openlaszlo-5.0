@@ -1,0 +1,18 @@
+<canvas>
+  <view>
+    <method name="go" args="n">
+      var x = 0;
+      switch (n) {
+      default:
+        x = 9;
+        break;
+      case 1:
+        x = 1;
+      case 2:
+        x = x + 2;
+        break;
+      }
+      return x;
+    </method>
+  </view>
+</canvas>

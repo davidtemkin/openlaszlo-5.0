@@ -1,0 +1,4 @@
+<canvas>
+  <view width="50" height="50"/>
+  <text text="$immediately{'value: ' + (1 + 2)}"/>
+</canvas>

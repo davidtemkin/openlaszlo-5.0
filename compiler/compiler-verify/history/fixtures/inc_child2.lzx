@@ -1,0 +1,4 @@
+<library>
+    <class name="usedw" extends="view" width="11"/>
+    <class name="unusedw" extends="view" width="22"/>
+</library>

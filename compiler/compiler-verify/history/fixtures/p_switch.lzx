@@ -1,0 +1,15 @@
+<canvas>
+  <view>
+    <method name="go" args="n">
+      switch (n) {
+      case 1:
+        return "a";
+      case 2:
+      case 3:
+        return "bc";
+      default:
+        return "d";
+      }
+    </method>
+  </view>
+</canvas>

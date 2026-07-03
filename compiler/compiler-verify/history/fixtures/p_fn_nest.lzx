@@ -1,0 +1,7 @@
+<canvas>
+  <class name="foo">
+    <method name="go" args="a,b">
+      return function(c){ return function(d){ return a+b+c+d; }; };
+    </method>
+  </class>
+</canvas>

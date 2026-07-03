@@ -1,0 +1,8 @@
+<canvas>
+  <class name="panel" bgcolor="gray90">
+    <view bgcolor="iceblue4"/>
+  </class>
+  <view bgcolor="offwhite"/>
+  <view bgcolor="green"/>
+  <panel/>
+</canvas>

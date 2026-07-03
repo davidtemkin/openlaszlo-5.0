@@ -1,0 +1,9 @@
+<canvas>
+  <view>
+    <method name="countup"><![CDATA[
+      var i = 0;
+      do { i++; } while (i < 10);
+      return i;
+    ]]></method>
+  </view>
+</canvas>

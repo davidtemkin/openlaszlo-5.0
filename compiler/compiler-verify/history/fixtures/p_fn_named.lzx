@@ -1,0 +1,8 @@
+<canvas>
+  <class name="foo">
+    <method name="go" args="a">
+      var h = function named(m){ return named(m-1) + a; };
+      return h(a);
+    </method>
+  </class>
+</canvas>

@@ -1,0 +1,6 @@
+<canvas>
+    <view id="outer">
+        <view id="inner" name="nestedname"/>
+    </view>
+    <view name="topname"/>
+</canvas>

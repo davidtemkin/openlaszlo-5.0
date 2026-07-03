@@ -1,0 +1,7 @@
+<canvas>
+    <script when="immediate">
+        var k = 7;
+        lz.foo = k;
+    </script>
+    <view x="1"/>
+</canvas>

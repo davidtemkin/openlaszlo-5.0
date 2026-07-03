@@ -1,0 +1,9 @@
+<canvas>
+  <view>
+    <method name="go" args="v">
+      if ($as2) { return Selection.foo(v); }
+      if ($js1) { return v + 1; }
+      return v;
+    </method>
+  </view>
+</canvas>

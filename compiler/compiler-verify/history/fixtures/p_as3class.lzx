@@ -1,0 +1,38 @@
+<canvas>
+  <script when="immediate"><![CDATA[
+    class Point {
+      var x:Number = 0;
+      var y:Number;
+      var label:String = "p";
+      function Point (x:Number=0, y:Number=0) {
+        this.x = x;
+        this.y = y;
+      }
+      function dist () {
+        return Math.sqrt(this.x*this.x + this.y*this.y);
+      }
+      function move (dx, dy) {
+        var nx = this.x + dx;
+        this.x = nx;
+        this.y = this.y + dy;
+      }
+    };
+    class Counter extends LzEventable {
+      static var total = 0;
+      var count:Number = 0;
+      function bump (n=1) {
+        with (this) {
+          for (var k in lz.things) { this.count = this.count + 1; }
+        }
+        this.count = this.count + n;
+      }
+    };
+  ]]></script>
+  <script><![CDATA[
+    var g = 3;
+    function helper (a) { var b = a * 2; return b; }
+    for (var i = 0; i < g; i++) {}
+    var p = new Point(1, 2);
+    p.move(g, helper(g));
+  ]]></script>
+</canvas>

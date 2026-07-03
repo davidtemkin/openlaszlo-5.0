@@ -1,0 +1,10 @@
+<canvas>
+    <class name="a" extends="view">
+        <handler name="onclick">this.x=1;</handler>
+    </class>
+    <class name="b" extends="view">
+        <handler name="onmouseover">this.y=2;</handler>
+    </class>
+    <a/>
+    <b/>
+</canvas>

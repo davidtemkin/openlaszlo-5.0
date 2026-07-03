@@ -1,0 +1,3 @@
+<library>
+    <class name="widget" extends="view" width="33"/>
+</library>

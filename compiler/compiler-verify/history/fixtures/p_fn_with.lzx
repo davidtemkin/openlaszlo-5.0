@@ -1,0 +1,9 @@
+<canvas>
+  <class name="foo">
+    <method name="go" args="x,y">
+      var f = function(p){ var q = p*2; return q + x; };
+      var g = function(p){ return p + y + z; };
+      return f(y) + g(x);
+    </method>
+  </class>
+</canvas>

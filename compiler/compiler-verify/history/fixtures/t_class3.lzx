@@ -1,0 +1,10 @@
+<canvas>
+    <class name="base" extends="view" bgcolor="0x111111"/>
+    <class name="derived" extends="base" width="20"/>
+    <class name="plain"/>
+    <derived x="1"/>
+    <plain>
+        <view x="2"/>
+        <text>hi</text>
+    </plain>
+</canvas>

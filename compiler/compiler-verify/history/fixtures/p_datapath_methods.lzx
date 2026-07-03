@@ -1,0 +1,19 @@
+<canvas>
+  <dataset name="ppl"><people><person n="a"/><person n="b"/></people></dataset>
+  <view>
+    <text>
+      <datapath xpath="ppl:/people/person/@n">
+        <handler name="onclones">
+          var last = this.clones[this.clones.length - 1];
+          this.del = new lz.Delegate(this, "done");
+          this.del.register(last, "oninit");
+        </handler>
+        <method name="done" args="ignore=null">
+          status.setAttribute("text", "done");
+        </method>
+      </datapath>
+    </text>
+    <simplelayout axis="y"/>
+  </view>
+  <text id="status"/>
+</canvas>

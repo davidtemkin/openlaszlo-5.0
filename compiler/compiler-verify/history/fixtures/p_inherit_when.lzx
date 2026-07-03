@@ -1,0 +1,7 @@
+<canvas>
+  <class name="basestyle" extends="view">
+    <attribute name="tone" value="null" when="once" setter="setTone(tone)" type="color"/>
+  </class>
+  <class name="redstyle" extends="basestyle" tone="red"/>
+  <redstyle/>
+</canvas>

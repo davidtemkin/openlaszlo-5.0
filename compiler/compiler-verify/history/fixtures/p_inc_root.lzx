@@ -1,0 +1,6 @@
+<canvas>
+  <view layout="axis: y">
+    <include href="p_inc_inner.lzx"/>
+    <include href="p_inc_inner.lzx"/>
+  </view>
+</canvas>

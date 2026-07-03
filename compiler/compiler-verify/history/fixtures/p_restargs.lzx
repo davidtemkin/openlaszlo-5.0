@@ -1,0 +1,11 @@
+<canvas>
+  <class name="rbox" extends="view">
+    <method name="shut" args="...ignore">
+      this.setAttribute('visible', false);
+    </method>
+    <method name="grab" args="a, ...rest">
+      return rest.length + a;
+    </method>
+  </class>
+  <rbox/>
+</canvas>

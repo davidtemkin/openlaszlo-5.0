@@ -1,0 +1,10 @@
+<canvas height="120" width="100%">
+  <stylesheet>
+    #gView {
+      height: 100;
+      width: 100;
+      bgcolor: #663399;
+    }
+  </stylesheet>
+  <view id="gView" height="$style{'height'}" width="$style{'width'}" bgcolor="$style{'bgcolor'}"/>
+</canvas>

@@ -1,0 +1,5 @@
+<canvas>
+    <view width="10">
+        <handler name="onclick">this.setAttribute('x',1);</handler>
+    </view>
+</canvas>

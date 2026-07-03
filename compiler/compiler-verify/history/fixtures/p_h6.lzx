@@ -1,0 +1,8 @@
+<canvas>
+    <class name="c" extends="view">
+        <method name="foo" args="q">return q;</method>
+        <handler name="onclick">this.foo(3);</handler>
+        <method name="bar">return 9;</method>
+    </class>
+    <c/>
+</canvas>

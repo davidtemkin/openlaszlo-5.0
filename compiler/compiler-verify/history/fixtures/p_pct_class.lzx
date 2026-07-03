@@ -1,0 +1,4 @@
+<canvas>
+  <class name="pbar" extends="view" width="100%" height="${parent.height-2}" bgcolor="0x333333"/>
+  <pbar/>
+</canvas>
