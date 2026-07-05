@@ -81,9 +81,9 @@ DOM-authored apps.
 | `domSource.ts` | `compiler/src/` (new) | Walk a DOM subtree → emit `XmlElem` tree identical in structure to `parseXml` output |
 | `compileFromDom(rootElement, opts)` | `compiler/src/` (new entry) | TS-transpile carriers, run the DOM adapter, stamp adopt-ids when `domAdopt: true`, call `compileFromXml` |
 | `compileFromXml(root, opts)` | `compiler/src/compile.ts` (extracted) | The existing `compile()` body minus the `parseXml` call; `compile()` becomes `parseXml` + `compileFromXml` |
-| `compileInBrowser` rootXml option | `compiler/src/browser.ts` | Accept a pre-built root `XmlElem` instead of fetched text, reusing include/resource fetch plumbing. Compile-cache keyed on a content hash of the serialized `XmlElem` tree (inline DOM has no `mainUrl` content to key on) |
-| `LzSprite` adopt path | `runtime/lfc-src/kernel/dhtml/LzSprite.js` | Use the authored element as `__LZdiv` instead of `createElement('div')` |
-| `LzView.__makeSprite` | `runtime/lfc-src/views/LaszloView.lzs` | Consume the adopt-id from instance args (via `LzNode._ignoreAttribute`, like `stretches`/`resource`) and forward it to the sprite constructor |
+| `compileInBrowser` rootXml option | `compiler/src/browser.ts` | Accept a pre-built root `XmlElem` instead of fetched text, reusing include/resource fetch plumbing. The compile cache is **skipped** for the rootXml path in Slice 1 (the `BrowserCache` revalidates closures over HTTP; an inline DOM root has no fetchable validator — content-hash caching is a follow-up) |
+| `lz-adopt-patch.js` | `startup/` (new, runtime patch module) | Adopt authored elements as sprite `__LZdiv`s — see Seam 2 |
+| `lz-ts.js` | `startup/` (new, built bundle) | Lazy-loaded TS transpile bundle (`ts.transpileModule`, ES5 target) the bootstrap injects as `transpileTs` |
 | `laszlo-dom.js` | `startup/` (new) | Bootstrap: gather source DOM (inline or fetched file), transpile carriers, compile, run, adopt, reveal |
 | `lzx-check` | `compiler/` (new CLI, Slice 2) | App-aware TypeScript type checking (see "TypeScript integration") |
 | Demo page | `examples/dom-authoring/` (new) | App authored entirely in DOM tags proving the full slice |
@@ -266,34 +266,45 @@ read by the compiler — compile.ts sets it but nothing consumes it).
 
 ## Seam 2 — runtime element adoption
 
+**Constraint discovered during planning: `runtime/lfc-src` cannot be edited.**
+The LFC itself builds byte-for-byte against the 4.9 oracle golds in all four
+modes (README; enforced by `compiler-verify`) — that guarantee is the
+project's identity, and any edit to `LzSprite.js` or `LaszloView.lzs` would
+break it. Adoption is therefore implemented as a **runtime patch module**
+(`startup/lz-adopt-patch.js`) that the bootstrap prepends to the compiled app
+JS (the embed sequence loads the LFC script first, then the app script — so
+the patch runs after the LFC exists and before any view is constructed). The
+LFC on disk stays byte-identical; existing apps never load the patch.
+
 - **Threading (confirmed by review, low-risk):** the compiler does not reject
   unknown attributes (`attrType` defaults to `"string"`, schema.ts:42-48), so
   `lzdomadopt` flows into the compiled instance args unchallenged, and
-  `LzView.__makeSprite(args)` (LaszloView.lzs:495) already receives the args
-  before attribute application. `__makeSprite` consumes the attribute via
-  `LzNode._ignoreAttribute` (exactly how `stretches`/`resource` are handled,
-  LaszloView.lzs:459-469) so it is never applied as a normal attribute (no
-  spurious event, no `?debug` unknown-attribute warning), and passes it to
-  `new LzSprite(this, false, adoptId)`.
-- **`LzSprite` constructor:** when an adopt-id is supplied and the bootstrap's
-  adoption registry holds a live element for it, that element becomes
-  `this.__LZdiv`, gets `className = 'lzdiv'` (the default styles are
-  class-selector CSS — LzSprite.js:503-532 — so they apply to non-div
-  elements too; `position:absolute` forces block layout on inline custom
-  elements). Otherwise `createElement('div')` exactly as today
-  (LzSprite.js:289-291).
-- **Registry semantics:** consume-once. The first sprite to claim an id wins;
-  later claims (shouldn't happen given stamping scope, but defensively) and
-  missing elements fall back to a created div with a console warning. The app
-  always runs; adoption is best-effort per node.
-- **`addChildSprite`** (LzSprite.js:1185-1213): when the child sprite's
-  `__LZdiv` is already a DOM descendant of the parent's `__LZdiv` (true for
-  adopted, already-nested authored nodes), **skip the `appendChild`** — a
-  re-append would reorder siblings. Z-order is explicit (`__setZ`), not
-  DOM-order, so this is safe. Click/container-div trees
-  (`__LZclickcontainerdiv` etc.) are managed exactly as today — note
-  `fix_clickable` defaults to true, so the parallel anonymous click-div tree
-  still exists for clickable views; adoption covers the *content* element.
+  `LzView.__makeSprite(args)` (LaszloView.lzs:495) receives the args before
+  attribute application.
+- **The patch:** wraps `LzView.prototype.__makeSprite`. After the original
+  runs (sprite exists, `__LZdiv` is a fresh unattached div), if
+  `args.lzdomadopt` is present: set `args.lzdomadopt = LzNode._ignoreAttribute`
+  (the sentinel used for `stretches`/`resource`, LaszloView.lzs:459-468 — so
+  it is never applied as a normal attribute, no spurious event, no `?debug`
+  warning), look up the authored element in the registry, copy the created
+  div's `className` (`lzdiv` — default styles are class-selector CSS,
+  LzSprite.js:503-532, so they apply to non-div elements; `position:absolute`
+  forces block layout on inline custom elements) and any inline `cssText`
+  onto it, set its `owner` back-reference, and swap it in as
+  `sprite.__LZdiv`. Subclasses (`LzText` etc.) override `__makeSprite`
+  entirely, so the wrapper never fires for them — matching the stamping
+  exclusion.
+- **Registry semantics:** consume-once (`Map` delete on claim). Missing or
+  already-consumed ids fall back to the created div with a console warning.
+  The app always runs; adoption is best-effort per node.
+- **`addChildSprite` needs no patch:** views are constructed in document
+  order, and `appendChild` of an already-nested authored element re-appends
+  it in that same order, so sibling order is preserved (and z-order is
+  explicit via `__setZ`, not DOM-order). Verified by a sibling-order test.
+  Click/container-div trees (`__LZclickcontainerdiv` etc.) are untouched —
+  note `fix_clickable` defaults to true, so the parallel anonymous click-div
+  tree still exists for clickable views; adoption covers the *content*
+  element.
 - **Root reparenting (documented reality):** the root sprite builds its
   `lzcanvasdiv` inside `lz.embed`'s appenddiv (LzSprite.js:27-116;
   `LaszloCanvas.__makeSprite` takes null args, LaszloCanvas.lzs:248).
@@ -359,8 +370,8 @@ bundle (`compiler/lzc-browser.js`) directly.
    rootXml option (content-hash cache key)
 3. TS transpile step for carriers (strip + ES5 downlevel; `text/lzs`
    pass-through)
-4. `LzSprite`/`__makeSprite` adopt path (consume-once registry, skip-append,
-   `_ignoreAttribute` consumption)
+4. `lz-adopt-patch.js` runtime patch module (consume-once registry,
+   `_ignoreAttribute` consumption, sibling-order test; zero lfc-src edits)
 5. `laszlo-dom.js` bootstrap (inline + file)
 6. Demo page in `examples/dom-authoring/`: several views, one layout, a
    `<handler>` in TS (via typed carrier), a `${…}` constraint — with the
