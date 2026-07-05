@@ -37,7 +37,8 @@
 | `startup/lz-adopt-patch.js` | create | runtime adoption patch (Seam 2), prepended to app JS |
 | `startup/laszlo-dom.js` | create | bootstrap: gather DOM → compile → boot → adopt → reveal |
 | `startup/lz-ts.js` | generated | esbuild bundle of `ts-carrier` (committed like `lzc-browser.js`) |
-| `examples/dom-authoring/index.html` | create | Slice-1 demo app |
+| `examples/dom-authoring/index.html` | create | Slice-1 demo app (inline dialect) |
+| `examples/dom-authoring/file-demo.html` + `counter-app.html` | create | file-dialect (`src=`) demo |
 | `examples/dom-authoring/equivalence.html` | create | in-browser DOM/text equivalence corpus (real HTML parser) |
 | `examples/dom-authoring/README.md` | create | authoring-dialect quick reference |
 
@@ -66,11 +67,12 @@ In `compiler/package.json`, change the `scripts` block to:
     "bundle:browser": "npx esbuild dist/browser.js --bundle --format=esm --platform=browser --outfile=lzc-browser.js",
     "dist": "npm run build && npm run bundle:browser && npm run bundle:lzts",
     "bundle:lzts": "npx esbuild dist/ts-carrier.js --bundle --format=esm --platform=browser --minify --outfile=../startup/lz-ts.js",
-    "test": "npm run build && node --test test/"
+    "test": "npm run build && node --test test/*.test.mjs"
   },
 ```
 
-(`bundle:lzts` will fail until Task 7 creates `ts-carrier.ts` — that's fine; only `npm test` is used before then. Do NOT run `npm run dist` until Task 7.)
+(The `*.test.mjs` glob matters: a bare `node --test test/` would also execute
+`test/helpers/fakedom.mjs` as a test file. `bundle:lzts` will fail until Task 7 creates `ts-carrier.ts` — that's fine; only `npm test` is used before then. Do NOT run `npm run dist` until Task 7.)
 
 - [ ] **Step 2: Write the fake DOM helper**
 
@@ -123,7 +125,7 @@ test("harness: dist import + fakedom shape", () => {
 - [ ] **Step 4: Run the tests**
 
 Run: `cd compiler && npm test`
-Expected: build clean, `1 passing` (node --test reporter: `# pass 1`).
+Expected: build clean, `# pass 1`, `# fail 0`.
 
 - [ ] **Step 5: Commit**
 
@@ -312,11 +314,16 @@ function textContentOf(el: DomElementLike): string {
   return s;
 }
 
-function transpile(ctx: Ctx, code: string): string {
+function transpile(ctx: Ctx, code: string, owner: string): string {
   if (!ctx.opts.transpileTs)
     throw new DomDialectError(
       "TypeScript code present but no transpileTs was provided (text/lzs carriers pass through)");
-  return ctx.opts.transpileTs(code);
+  try {
+    return ctx.opts.transpileTs(code);
+  } catch (e) {
+    // Spec Error handling: transpile errors name the owning element.
+    throw new DomDialectError(`in <${owner}>: ${(e as Error).message}`);
+  }
 }
 
 /** A <script> child of `parentName`. Returns the node(s) grafted into the parent. */
@@ -328,7 +335,7 @@ function scriptNodes(el: DomElementLike, parentName: string, ctx: Ctx): XmlNode[
     return [parseXml(textContentOf(el).trim())]; // single-root XML grafted verbatim
   }
   let body: string;
-  if (type === "text/typescript") body = transpile(ctx, textContentOf(el));
+  if (type === "text/typescript") body = transpile(ctx, textContentOf(el), parentName);
   else if (type === "text/lzs") body = textContentOf(el);
   else
     throw new DomDialectError(
@@ -336,7 +343,16 @@ function scriptNodes(el: DomElementLike, parentName: string, ctx: Ctx): XmlNode[
       'use <script type="text/typescript"> or <script type="text/lzs">');
   const textNode: XmlText = { type: "text", value: body, cdata: false };
   if (CODE_PARENTS.has(parentName)) return [textNode]; // body carrier: wrapper elided
-  return [{ type: "elem", name: "script", attrs: {}, attrOrder: [], children: [textNode] }];
+  // Standalone script element: only the carrier `type` is elided; other
+  // authored attributes pass through (spec: "the type attribute elided").
+  const attrs: Record<string, string> = {};
+  const attrOrder: string[] = [];
+  for (let i = 0; i < el.attributes.length; i++) {
+    const a = el.attributes[i];
+    if (a.name === "type" || a.name === "data-lz-adopt") continue;
+    if (!(a.name in attrs)) { attrOrder.push(a.name); attrs[a.name] = normAttr(a.value); }
+  }
+  return [{ type: "elem", name: "script", attrs, attrOrder, children: [textNode] }];
 }
 
 function walkElem(el: DomElementLike, ctx: Ctx, isRoot: boolean): XmlElem {
@@ -354,6 +370,15 @@ function walkElem(el: DomElementLike, ctx: Ctx, isRoot: boolean): XmlElem {
   const childCtx: Ctx = ctx.inTemplate || !NO_STAMP_SUBTREE.has(name)
     ? { ...ctx, inTemplate: ctx.inTemplate }
     : { ...ctx, inTemplate: true };
+
+  // Adopt-id stamping (spec Seam 1) — allocated BEFORE the child walk so ids
+  // run in DOCUMENT order (parent before children; the contract Tasks 5 and 8
+  // pin). Root (canvas) is never adopted.
+  let adoptId: string | null = null;
+  if (ctx.opts.domAdopt && !isRoot && !ctx.inTemplate && !NO_STAMP_TAGS.has(name)) {
+    adoptId = String(ctx.counter.n++);
+    el.setAttribute("data-lz-adopt", adoptId);
+  }
 
   const children: XmlNode[] = [];
   const isCodeParent = CODE_PARENTS.has(name);
@@ -387,18 +412,14 @@ function walkElem(el: DomElementLike, ctx: Ctx, isRoot: boolean): XmlElem {
       const joined = children.map((k) => (k as XmlText).value).join("");
       if (joined.trim() !== "") {
         children.length = 0;
-        children.push({ type: "text", value: transpile(childCtx, joined), cdata: false });
+        children.push({ type: "text", value: transpile(childCtx, joined, name), cdata: false });
       }
     }
   }
 
   const elem: XmlElem = { type: "elem", name, attrs, attrOrder, children };
-
-  // Adopt-id stamping (spec Seam 1). Root (canvas) is never adopted.
-  if (ctx.opts.domAdopt && !isRoot && !ctx.inTemplate && !NO_STAMP_TAGS.has(name)) {
-    const id = String(ctx.counter.n++);
-    el.setAttribute("data-lz-adopt", id);
-    elem.attrs["lzdomadopt"] = id;
+  if (adoptId !== null) {
+    elem.attrs["lzdomadopt"] = adoptId;
     elem.attrOrder.push("lzdomadopt");
   }
   return elem;
@@ -455,7 +476,7 @@ test("carrier: text/typescript inside <method> becomes the method body, wrapper 
 
 test("carrier: text/lzs passes through untranspiled", () => {
   const dom = el("laszlo-app", {},
-    el("handler", { event: "onclick" },
+    el("handler", { name: "onclick" },  // LZX handlers use name=, not event=
       el("script", { type: "text/lzs" }, text("if (this is LzView) x();"))));
   const out = domToXmlElem(dom, { transpileTs: T });
   const h = out.children.find((c) => c.type === "elem");
@@ -551,7 +572,9 @@ Expected: four non-trivial outputs (each tens-to-hundreds of KB). If any is empt
 awk 'NR>=2461 && NR<=3200' src/compile.ts | grep -n "\bsource\b" | grep -v "sourceId\|resolveScriptSrc\|debugFileName" | head
 ```
 
-Expected: no hits that reference the `source` PARAMETER inside the function body (comments are fine). If the parameter IS used beyond `parseXml(source)`, STOP — report it; the extraction then needs a `sourceText` thread-through and the plan must be amended.
+Expected: the ONLY code hit is the `const root = parseXml(source);` line itself (the line being replaced); every other hit is inside a comment (the function body 2461–2602 mentions the word "source" in several comments — those are fine). If the parameter IS used in any other code line, STOP — report it; the extraction then needs a `sourceText` thread-through and the plan must be amended.
+
+(Verified during planning: the parameter is unused beyond the parse. Optional stronger guard if you have a JDK + the oracle set up: run the `compiler-verify` harness per `compiler/compiler-verify/README.md` — it is the project's own byte-parity gate.)
 
 - [ ] **Step 3: Perform the extraction**
 
@@ -715,7 +738,11 @@ test("rootXml path: compiles a pre-built root; mainUrl is never fetched; no cach
   const r = await compileInBrowser("http://example.test/page.html", { rootXml, fetchFn, maxRetries: 5 });
   assert.ok(!fetched.includes("http://example.test/page.html"), "mainUrl must not be fetched");
   assert.equal(r.unsupported, undefined);
-  assert.ok(r.js.length > 1000, "expected real compiled output, got " + r.js.length + " bytes");
+  // A bare canvas+view compiles to a SMALL but complete program (~468 bytes) —
+  // assert content, not size.
+  assert.match(r.js, /^canvas=new LzCanvas\(/);
+  assert.ok(r.js.includes("LzInstantiateView"));
+  assert.ok(r.js.includes("initDone"));
 });
 
 test("rootXml path: the passed tree is not mutated across passes", async () => {
@@ -805,7 +832,7 @@ export { compileFromXml } from "./compile.js";
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `cd compiler && npm test`
-Expected: PASS. (The rootXml compile converges against an all-404 fetch because misses are definitive `state.missing` entries — pass 2 is stable.) If the first test's `js.length` assertion fails because the bare app legitimately compiles to `unsupported`, inspect `r.unsupported` — a real message means missing plumbing, not a test problem.
+Expected: PASS. (The rootXml compile converges against an all-404 fetch because misses are definitive `state.missing` entries.) If `r.unsupported` is set, inspect its message — it means missing plumbing, not a test problem.
 
 - [ ] **Step 5: Rebuild the browser bundle and commit**
 
@@ -991,7 +1018,8 @@ Create `startup/lz-adopt-patch.js`:
     // (LzTextSprite etc.) never reach this wrapper (they override __makeSprite),
     // and stamping already excludes them — this is defense in depth.
     if (!created || created.tagName !== "DIV" || created.parentNode) return;
-    el.className = created.className;             // 'lzdiv' → class-selector styles apply
+    // Append (don't clobber) so an author-written class="…" survives adoption.
+    el.className = (el.className ? el.className + " " : "") + created.className; // + 'lzdiv'
     if (created.style.cssText) el.style.cssText = created.style.cssText;
     el.owner = sprite;                            // the back-reference the LFC sets on __LZdiv
     sprite.__LZdiv = el;
@@ -1018,6 +1046,8 @@ git commit -m "startup: lz-adopt-patch.js — element-adoption runtime patch (ze
 **Files:**
 - Create: `startup/laszlo-dom.js`
 - Create: `examples/dom-authoring/index.html`
+- Create: `examples/dom-authoring/file-demo.html`
+- Create: `examples/dom-authoring/counter-app.html`
 - Create: `examples/dom-authoring/README.md`
 
 **Interfaces:**
@@ -1067,6 +1097,19 @@ function loadScript(src) {
   });
 }
 
+// Collapse the compiler's `lps/`-structured input paths onto the distro's flat
+// runtime/ layout — EXACTLY the service worker's distroFetch (service-worker.js,
+// section B). Without this, the autoincludes properties and component includes
+// 404 and the compile fails with e.g. "unknown tag <simplelayout>".
+function distroFetch(url, init) {
+  const u = String(url)
+    .replace("/lps/components/", "/components/")
+    .replace("/lps/fonts/", "/fonts/")
+    .replace("/lps/lfc/", "/lfc/")
+    .replace("/WEB-INF/lps/misc/lzx-autoincludes.properties", "/lzx-autoincludes.properties");
+  return fetch(u, init);
+}
+
 /** Drop source-only elements from the live tree, keeping stamped views (and any
  *  ancestors of stamped views). Adopted elements are re-attached under the app's
  *  lzcanvasdiv by the LFC's own addChildSprite appendChilds, in document order. */
@@ -1076,8 +1119,6 @@ function cleanup(el) {
     else c.remove();
   }
 }
-
-let appSeq = 0;
 
 async function boot(host) {
   // FILE path: fetch + DOMParser (parsed scripts never execute), inline the subtree
@@ -1113,9 +1154,9 @@ async function boot(host) {
   cleanup(host);
 
   // Compile in-browser. The page URL is the base for relative refs; the runtime
-  // root is the same lpsUrl the service worker uses (see service-worker.js).
+  // root + distroFetch mirror the service worker's compile setup.
   const r = await compileInBrowser(document.baseURI, {
-    rootXml, lpsUrl: RUNTIME, sprites: "none", proxied: false,
+    rootXml, lpsUrl: RUNTIME, sprites: "none", proxied: false, fetchFn: distroFetch,
   });
   if (r.unsupported) throw new Error("compile: " + r.unsupported);
 
@@ -1127,11 +1168,18 @@ async function boot(host) {
   if (typeof window.lz === "undefined" || !window.lz.embed) {
     await loadScript(RUNTIME + "/embed.js");
   }
-  const containerId = "lzappcontainer" + appSeq;
-  const appId = "lzapp" + appSeq;
-  appSeq++;
+
+  // embed.js unconditionally appends "?"+query to the app URL, and a blob: URL
+  // with a trailing "?" FAILS to load (the blob-URL-store lookup includes the
+  // query) — the app would silently never start. Wrap the loader to strip it.
+  // runtime/embed.js itself stays untouched.
+  const origLoad = window.lz.embed.loadJSLib;
+  window.lz.embed.loadJSLib = function (url, cb) {
+    return origLoad.call(this, /^blob:/.test(url) ? url.replace(/\?$/, "") : url, cb);
+  };
+
   const container = document.createElement("div");
-  container.id = containerId;
+  container.id = "lzappcontainer";
   host.appendChild(container);
 
   window.lz.embed.__serverroot = RUNTIME + "/includes/";
@@ -1142,29 +1190,32 @@ async function boot(host) {
     bgcolor: host.getAttribute("bgcolor") || "#ffffff",
     width: host.getAttribute("width") || "100%",
     height: host.getAttribute("height") || "100%",
-    id: appId,
+    id: "lzapp",
     accessible: "false",
     cancelmousewheel: false,
     cancelkeyboardcontrol: false,
     skipchromeinstall: false,
     usemastersprite: false,
     approot: "",
-    appenddivid: containerId,
+    appenddivid: "lzappcontainer",
   });
-  window.lz.embed.applications[appId].onload = function () {
+  window.lz.embed.applications.lzapp.onload = function () {
     host.style.visibility = "visible";
   };
 }
 
-for (const host of document.querySelectorAll("laszlo-app")) {
-  boot(host).catch((e) => fail(host, e));
-}
+// embed.js hard-caps ONE DHTML app per window (dhtmlapploaded guard), so boot
+// only the first <laszlo-app>; surface the limit on any others.
+const hosts = [...document.querySelectorAll("laszlo-app")];
+if (hosts.length) boot(hosts[0]).catch((e) => fail(hosts[0], e));
+for (const extra of hosts.slice(1))
+  fail(extra, new Error("only one <laszlo-app> per page (lz.embed loads a single DHTML app per window)"));
 ```
 
 - [ ] **Step 2: Syntax-check**
 
-Run: `node --check startup/laszlo-dom.js`
-Expected: clean. (It's a browser module; Node only parses it.)
+Run: `cd compiler && npx esbuild ../startup/laszlo-dom.js --bundle --outfile=/dev/null 2>&1 | tail -3 && cd ..` (esbuild is compiler's devDep)
+Expected: a bundle-size line, no errors. (Plain `node --check` fails here: the file is ESM in a `.js` extension with no root package.json, so Node parses it as CJS. esbuild parses it as a module and also validates the `../compiler/lzc-browser.js` import resolves.)
 
 - [ ] **Step 3: Write the demo page**
 
@@ -1176,6 +1227,8 @@ Create `examples/dom-authoring/index.html`:
 <head>
   <meta charset="utf-8">
   <title>OpenLaszlo — DOM-authored demo</title>
+  <!-- Closes the pre-module-load flash window; laszlo-dom.js re-adds it anyway. -->
+  <style>laszlo-app{visibility:hidden;display:block;position:relative}</style>
   <script type="module" src="../../startup/laszlo-dom.js"></script>
 </head>
 <body style="font:14px sans-serif;margin:16px">
@@ -1188,7 +1241,7 @@ Create `examples/dom-authoring/index.html`:
     <view name="panel" x="20" y="20" width="400" height="260" bgcolor="#ffffff">
       <attribute name="grow" type="boolean" value="false"></attribute>
       <view name="bar" x="10" y="10" width="${parent.width - 20}" height="28" bgcolor="#4a6fb0">
-        <handler event="onclick">
+        <handler name="onclick">
           <script type="text/typescript">
             const p = this.parent as any;
             p.setAttribute('height', p.grow ? 260 : 320);
@@ -1208,7 +1261,43 @@ Create `examples/dom-authoring/index.html`:
 </html>
 ```
 
-- [ ] **Step 4: Write the dialect quick reference**
+- [ ] **Step 4: Write the file-dialect fixture (the `src=` path)**
+
+Create `examples/dom-authoring/file-demo.html`:
+
+```html
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>OpenLaszlo — DOM-authored (file dialect)</title>
+  <style>laszlo-app{visibility:hidden;display:block;position:relative}</style>
+  <script type="module" src="../../startup/laszlo-dom.js"></script>
+</head>
+<body style="font:14px sans-serif;margin:16px">
+  <h2>File-dialect app (fetched + DOMParser)</h2>
+  <laszlo-app src="counter-app.html"></laszlo-app>
+</body>
+</html>
+```
+
+Create `examples/dom-authoring/counter-app.html` (a bare app document — only the `<laszlo-app>` element matters to the loader):
+
+```html
+<laszlo-app width="400" height="200" bgcolor="#f7f2ee">
+  <view name="counterbox" x="20" y="20" width="200" height="60" bgcolor="#d08040">
+    <attribute name="count" type="number" value="0"></attribute>
+    <handler name="onclick">
+      <script type="text/typescript">
+        this.setAttribute('count', (this as any).count + 1);
+        this.setAttribute('width', 200 + (this as any).count * 20);
+      </script>
+    </handler>
+  </view>
+</laszlo-app>
+```
+
+- [ ] **Step 5: Write the dialect quick reference**
 
 Create `examples/dom-authoring/README.md`:
 
@@ -1243,11 +1332,11 @@ Author LZX as native HTML inside `<laszlo-app>` (or a separate file via
 - Production build only (no `?debug` source-line mapping for DOM-authored apps).
 ```
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add startup/laszlo-dom.js examples/dom-authoring/index.html examples/dom-authoring/README.md
-git commit -m "startup: laszlo-dom.js bootstrap + DOM-authored demo app"
+git add startup/laszlo-dom.js examples/dom-authoring/
+git commit -m "startup: laszlo-dom.js bootstrap + DOM-authored demo apps (inline + file dialect)"
 ```
 
 ---
@@ -1396,12 +1485,22 @@ Load `http://localhost:8087/examples/dom-authoring/index.html`. Verify, in order
 
 Any failure: debug at the failing seam (bootstrap → compile output → patch), fix, re-verify. Do NOT weaken the checks.
 
-- [ ] **Step 4: Regression-check the text path end-to-end**
+- [ ] **Step 4: Verify the file dialect (`src=`) end-to-end**
+
+Load `http://localhost:8087/examples/dom-authoring/file-demo.html`. Verify:
+
+1. The orange counter box renders (the fetched `counter-app.html` subtree was
+   inlined into the host — inspect: the `<view name="counterbox">` element is
+   live inside `<laszlo-app>` and `el.owner.__LZdiv === el` for it).
+2. Clicking it widens the box by 20px per click (the TS handler works through
+   the file path).
+
+- [ ] **Step 5: Regression-check the text path end-to-end**
 
 Load `http://localhost:8087/` (the Explorer, compiled by the service worker).
 Expected: loads and runs exactly as before (spot-check one example app). This confirms the bundle changes didn't disturb the text path.
 
-- [ ] **Step 5: Full test suite + final commit**
+- [ ] **Step 6: Full test suite + final commit**
 
 ```bash
 cd compiler && npm test

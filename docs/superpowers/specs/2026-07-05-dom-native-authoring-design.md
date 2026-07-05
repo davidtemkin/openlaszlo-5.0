@@ -79,7 +79,7 @@ DOM-authored apps.
 | Unit | Location | Purpose |
 | --- | --- | --- |
 | `domSource.ts` | `compiler/src/` (new) | Walk a DOM subtree → emit `XmlElem` tree identical in structure to `parseXml` output |
-| `compileFromDom(rootElement, opts)` | `compiler/src/` (new entry) | TS-transpile carriers, run the DOM adapter, stamp adopt-ids when `domAdopt: true`, call `compileFromXml` |
+| DOM compile path | composition, not a wrapper | The "compileFromDom" behavior is the composition `domToXmlElem(root, {domAdopt, transpileTs})` + `compileInBrowser(pageUrl, {rootXml})` (browser) or + `compileFromXml(rootXml)` (sync/tests) — no separate named entry point |
 | `compileFromXml(root, opts)` | `compiler/src/compile.ts` (extracted) | The existing `compile()` body minus the `parseXml` call; `compile()` becomes `parseXml` + `compileFromXml` |
 | `compileInBrowser` rootXml option | `compiler/src/browser.ts` | Accept a pre-built root `XmlElem` instead of fetched text, reusing include/resource fetch plumbing. The compile cache is **skipped** for the rootXml path in Slice 1 (the `BrowserCache` revalidates closures over HTTP; an inline DOM root has no fetchable validator — content-hash caching is a follow-up) |
 | `lz-adopt-patch.js` | `startup/` (new, runtime patch module) | Adopt authored elements as sprite `__LZdiv`s — see Seam 2 |
@@ -198,7 +198,7 @@ in this repo.
 
 - Carrier bodies → **TS transpile** (type-strip + ES5 downlevel via
   `ts.transpileModule` or esbuild; no type checking; runs in the bootstrap /
-  `compileFromDom`) → output within the ES3-era grammar `sc.ts` accepts →
+  the bootstrap's compile step) → output within the ES3-era grammar `sc.ts` accepts →
   existing compiler, unchanged.
 - Modern syntax (arrows, `let`/`const`, template literals, destructuring)
   downlevels cleanly — the authoring language is modern TS, not typed ES3.
@@ -333,7 +333,8 @@ Two source paths, one pipeline:
 - **Inline:** the page contains `<laszlo-app>…app tags…</laszlo-app>`. The
   bootstrap hides the subtree (pre-upgrade flash prevention), stamps
   adopt-ids / builds the adoption registry, calls
-  `compileFromDom(root, {domAdopt:true})` (which transpiles carriers), runs
+  `domToXmlElem(host, {domAdopt:true, transpileTs})` then
+  `compileInBrowser(pageUrl, {rootXml})`, runs
   the emitted JS, the runtime adopts the nodes, then reveals.
 - **File:** `<laszlo-app src="app.html">`. The bootstrap fetches the file,
   parses it with `DOMParser` (`text/html` — this is what makes the dialect
@@ -366,7 +367,7 @@ bundle (`compiler/lzc-browser.js`) directly.
 **Slice 1 — authoring runs end-to-end (blocking):**
 
 1. `domSource.ts` adapter (dialect rules, stamping scope) + equivalence tests
-2. `compileFromXml` extraction; `compileFromDom` entry; `compileInBrowser`
+2. `compileFromXml` extraction; `compileInBrowser`
    rootXml option (content-hash cache key)
 3. TS transpile step for carriers (strip + ES5 downlevel; `text/lzs`
    pass-through)
