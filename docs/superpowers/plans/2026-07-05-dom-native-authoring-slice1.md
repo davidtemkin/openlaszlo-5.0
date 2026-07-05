@@ -27,6 +27,7 @@
 | --- | --- | --- |
 | `compiler/package.json` | modify | add `test`, `bundle:lzts` scripts |
 | `compiler/test/helpers/fakedom.mjs` | create | minimal structural DOM factory for Node unit tests |
+| `compiler/test/harness.test.mjs` | create | harness smoke test (dist import + fakedom shape) |
 | `compiler/test/domsource.test.mjs` | create | adapter unit tests (dialect rules, carriers, stamping) |
 | `compiler/test/ts-carrier.test.mjs` | create | transpile unit tests |
 | `compiler/test/browser-rootxml.test.mjs` | create | `compileInBrowser` rootXml-path test |
@@ -335,7 +336,9 @@ function scriptNodes(el: DomElementLike, parentName: string, ctx: Ctx): XmlNode[
     return [parseXml(textContentOf(el).trim())]; // single-root XML grafted verbatim
   }
   let body: string;
-  if (type === "text/typescript") body = transpile(ctx, textContentOf(el), parentName);
+  if (type === "text/typescript")
+    // Error context: name the code-bearing element (a standalone script IS the element).
+    body = transpile(ctx, textContentOf(el), CODE_PARENTS.has(parentName) ? parentName : "script");
   else if (type === "text/lzs") body = textContentOf(el);
   else
     throw new DomDialectError(
@@ -572,7 +575,7 @@ Expected: four non-trivial outputs (each tens-to-hundreds of KB). If any is empt
 awk 'NR>=2461 && NR<=3200' src/compile.ts | grep -n "\bsource\b" | grep -v "sourceId\|resolveScriptSrc\|debugFileName" | head
 ```
 
-Expected: the ONLY code hit is the `const root = parseXml(source);` line itself (the line being replaced); every other hit is inside a comment (the function body 2461–2602 mentions the word "source" in several comments — those are fine). If the parameter IS used in any other code line, STOP — report it; the extraction then needs a `sourceText` thread-through and the plan must be amended.
+Expected: exactly TWO code hits — the `export function compile(source: string, …)` signature and the `const root = parseXml(source);` line (both are the code being replaced); every other hit is inside a comment (the function body 2461–2602 mentions the word "source" in several comments — those are fine). If the parameter IS used in any other code line, STOP — report it; the extraction then needs a `sourceText` thread-through and the plan must be amended.
 
 (Verified during planning: the parameter is unused beyond the parse. Optional stronger guard if you have a JDK + the oracle set up: run the `compiler-verify` harness per `compiler/compiler-verify/README.md` — it is the project's own byte-parity gate.)
 
@@ -1186,6 +1189,9 @@ async function boot(host) {
   window.lz.embed.dhtml({
     url: appUrl,
     lfcurl: RUNTIME + "/lfc/lfc.js",
+    // NOTE: page-relative without the SW's proxyRuntime; fine for Slice 1
+    // (no component skin resources in the demos). Component-using DOM apps
+    // are a follow-up alongside text/inputtext adoption.
     serverroot: "lps/resources/",
     bgcolor: host.getAttribute("bgcolor") || "#ffffff",
     width: host.getAttribute("width") || "100%",
