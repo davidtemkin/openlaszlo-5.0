@@ -63,3 +63,66 @@ export function generateConstraintChecks(model) {
     });
     return { source: lines.join("\n"), spans };
 }
+// ── Realtime bus (spec 2026-07-06-realtime-bus-design.md): server typing ────
+/** The server-body program's ambient base. Kept SEPARATE from lfc.d.ts —
+ *  ambient globals are program-wide, so Node globals must never share a
+ *  program with client bodies (and canvas/LzView must not leak here). */
+export const SRVNODE_DTS = `declare class SrvNode {
+  setAttribute<K extends keyof this & string>(name: K, value: this[K]): void;
+}
+declare function setInterval(cb: (...a: any[]) => void, ms?: number, ...args: any[]): any;
+declare function clearInterval(t: any): void;
+declare function setTimeout(cb: (...a: any[]) => void, ms?: number, ...args: any[]): any;
+declare function clearTimeout(t: any): void;
+declare const console: any;
+declare function fetch(input: any, init?: any): Promise<any>;
+`;
+/** Client-side proxy types + server-side class types from the <server> model. */
+export function generateServerDts(model) {
+    const client = [];
+    const server = [];
+    for (const t of model.serverTags) {
+        client.push(`declare class ${t.tsName}_client extends LzEventable {`);
+        server.push(`declare class ${t.tsName} extends SrvNode {`);
+        for (const a of t.attrs) {
+            client.push(`  ${a.name}: ${a.tsType};`);
+            server.push(`  ${a.name}: ${a.tsType};`);
+        }
+        for (const m of t.methods)
+            client.push(`  ${m.name}(...args: any[]): Promise<any>;`);
+        client.push(`  setAttribute<K extends keyof this & string>(name: K, value: this[K]): void;`);
+        client.push("}", "");
+        server.push("}", "");
+    }
+    if (model.serverTags.length) {
+        client.push("declare const server: {");
+        for (const t of model.serverTags)
+            client.push(`  ${t.name}: ${t.tsName}_client;`);
+        client.push("};", "");
+    }
+    return { clientDts: client.join("\n"), serverDts: server.join("\n") };
+}
+/** One function per server method/handler, this-typed; same span anchoring
+ *  as generateBodies. Payloads for on<attr> handlers use the declared attr. */
+export function generateServerBodies(model) {
+    const lines = ["// AUTO-GENERATED server-body harness (lzx-check). Do not edit.", ""];
+    const spans = [];
+    let idx = 0;
+    for (const t of model.serverTags) {
+        for (const b of [...t.methods, ...t.handlers]) {
+            const attr = b.name.startsWith("on") ? b.name.slice(2) : "";
+            const payload = t.attrs.find((a) => a.name === attr)?.tsType ?? "any";
+            const params = ["this: " + t.tsName,
+                ...b.args.map((a, i) => `${a}: ${b.name.startsWith("on") && i === 0 ? payload : "any"}`)];
+            lines.push(`// <${b.name}> on server tag <${t.name}>`);
+            const genStartLine = lines.length + 1;
+            lines.push(`function __lz_srv_${++idx}(${params.join(", ")}): any {`);
+            const spanSrcLine = b.code.startsWith("\n") ? b.srcLine : b.srcLine - 1;
+            spans.push({ genStartLine, srcLine: spanSrcLine, label: `<${b.name}> on server tag <${t.name}>` });
+            for (const l of b.code.replace(/^\n/, "").split("\n"))
+                lines.push(l);
+            lines.push("}", "");
+        }
+    }
+    return { source: lines.join("\n"), spans };
+}

@@ -75,7 +75,7 @@ const textOf = (el) => {
 };
 export function extractApp(root, opts = {}) {
     const model = { classes: [], instances: [], bodies: [], constraints: [],
-        skippedLzs: 0, nameIssues: [], staticIssues: [] };
+        skippedLzs: 0, nameIssues: [], staticIssues: [], serverTags: [] };
     const seenIds = new Set();
     const userClasses = new Map();
     let instSeq = 0;
@@ -190,6 +190,45 @@ export function extractApp(root, opts = {}) {
             // bodies/constraints are a documented follow-up (out of Slice-2 scope).
         }
     }
+    // The <server> section (realtime bus): tags -> typed model with RAW TS
+    // bodies (the bus transpiles; the checker's SERVER program checks them).
+    function walkServer(serverEl) {
+        const seen = new Set();
+        for (const tagEl of elemChildren(serverEl)) {
+            const name = tagEl.getAttribute("name") ?? "";
+            if (!checkName("server tag name", name, tagEl.line))
+                continue;
+            if (seen.has(name)) {
+                model.staticIssues.push({ message: `duplicate server tag name "${name}"`, line: tagEl.line });
+                continue;
+            }
+            seen.add(name);
+            const tag = { name, tsName: "LzSrv_" + name, attrs: [], methods: [], handlers: [] };
+            const rawBody = (el) => {
+                const carrier = elemChildren(el).find((c) => c.tagName === "SCRIPT");
+                return textOf(carrier ?? el);
+            };
+            for (const c of elemChildren(tagEl)) {
+                const t = c.tagName.toLowerCase();
+                const cn = c.getAttribute("name") ?? "";
+                const args = (c.getAttribute("args") ?? "").split(/[\s,]+/).filter(Boolean);
+                if (t === "attribute") {
+                    if (checkName("attribute", cn, c.line))
+                        tag.attrs.push(declAttr(cn, c.getAttribute("type")));
+                }
+                else if (t === "method") {
+                    const { code, line } = rawBody(c);
+                    if (checkName("method", cn, c.line))
+                        tag.methods.push({ name: cn, args, code, srcLine: line });
+                }
+                else if (t === "handler") {
+                    const { code, line } = rawBody(c);
+                    tag.handlers.push({ name: cn, args, code, srcLine: line });
+                }
+            }
+            model.serverTags.push(tag);
+        }
+    }
     function walkInstance(el, parent, siblingNames) {
         const tag = tagOf(el);
         const user = userClasses.get(tag);
@@ -200,7 +239,11 @@ export function extractApp(root, opts = {}) {
         };
         model.instances.push(inst);
         const id = el.getAttribute("id");
-        if (id && seenIds.has(id)) {
+        if (id === "server") {
+            model.staticIssues.push({ message: `id "server" is reserved (the bus proxy root)`, line: el.line });
+            // NOT registered: no seenIds.add, no inst.id
+        }
+        else if (id && seenIds.has(id)) {
             model.staticIssues.push({ message: `duplicate id "${id}"`, line: el.line });
             // do NOT set inst.id — a second `declare const` would add TS2451 noise
         }
@@ -210,7 +253,11 @@ export function extractApp(root, opts = {}) {
                 inst.id = id;
         }
         const nm = el.getAttribute("name");
-        if (nm && parent) {
+        if (nm === "server" && parent && parent.baseTsName === "LzCanvas") {
+            model.staticIssues.push({ message: `name "server" is reserved at canvas level (binds globally)`, line: el.line });
+            // NOT pushed into parent.namedChildren
+        }
+        else if (nm && parent) {
             if (siblingNames.has(nm))
                 model.staticIssues.push({ message: `duplicate sibling name "${nm}"`, line: el.line });
             siblingNames.add(nm);
@@ -224,6 +271,10 @@ export function extractApp(root, opts = {}) {
         for (const c of elemChildren(el))
             if (c.tagName.toLowerCase() === "attribute") {
                 const an = c.getAttribute("name") ?? "";
+                if (an === "server") {
+                    model.staticIssues.push({ message: `attribute name "server" is reserved`, line: c.line });
+                    continue;
+                }
                 if (checkName("attribute", an, c.line))
                     inst.attrs.push(declAttr(an, c.getAttribute("type")));
             }
@@ -264,6 +315,11 @@ export function extractApp(root, opts = {}) {
             const t = c.tagName.toLowerCase();
             if (t === "attribute")
                 continue;
+            if (t === "server") {
+                if (parent === null)
+                    walkServer(c); // root child only (realtime bus); elsewhere client-invalid: skip
+                continue;
+            }
             if (t === "class" || t === "interface" || t === "mixin") {
                 walkClass(c);
                 continue;
