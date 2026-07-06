@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>JSON databinding — live sensors (/api/data)</title>
+  <script type="module" src="../../startup/laszlo-dom.js"></script>
+</head>
+<body>
+<!-- Serve via: node server/index.mjs   then run: node examples/dom-authoring/sensor-feeder.mjs -->
+<laszlo-app height="200" bgcolor="#f7f7f7">
+  <dataset name="sensors" type="json" src="ws://localhost:8090/api/data">
+    <script type="application/lz-shape">{ temp: number, readings: number[] }</script>
+  </dataset>
+  <lz-view x="10" y="10" height="24" datapath="$sensors">
+    <lz-text text="${'temp: ' + parent.data.temp}"></lz-text>
+  </lz-view>
+  <lz-view x="10" y="40">
+    <simplelayout axis="y" spacing="2"></simplelayout>
+    <lz-view datapath="$sensors/readings[*]" height="16">
+      <lz-text text="${'reading ' + parent.clonenumber + ': ' + parent.data}"></lz-text>
+    </lz-view>
+  </lz-view>
+</laszlo-app>
+</body>
+</html>

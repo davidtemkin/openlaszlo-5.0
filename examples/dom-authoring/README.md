@@ -63,3 +63,51 @@ State is server-authoritative and shared (one singleton per app).
 `lzx-check` types both sides — server bodies run in Node (so `setInterval`
 is legal there and flagged in client code). Static hosting: the section is
 inert (console warning, defaults hold).
+
+## JSON databinding (Slice 4)
+
+Native JSON datasets with dreem's JSONPath slash dialect. A `<dataset
+type="json">` holds inline JSON (`<script type="application/json">`), fetches
+it (`src="./bikes.json"`), or subscribes live over WebSocket
+(`src="ws://host/api/data"`). A `datapath` starting with `$` replicates the
+view per match; the datum lands on the bound view's `data` attribute and
+binds through ordinary `${}` constraints:
+
+    <dataset name="bikeshop" type="json">
+      <script type="application/json">
+        { "bicycle": [ { "color": "red", "price": 19.95 } ] }
+      </script>
+    </dataset>
+    <lz-view datapath="$bikeshop/bicycle[*]">
+      <lz-text text="${parent.data.color + ' — $' + parent.data.price}"/>
+    </lz-view>
+
+Mutate with `lz.jsondata.get('bikeshop').updateData('/bicycle/0/price', 9.99)`
+— bound views reconcile automatically. Selectors: `[*]`, `[2]`, `[0,4,2]`
+(start,end,step), terminal `[@]` (calls `filterfunction(obj, accum)` on the
+parent view); `sortfield`/`sortasc` sort matches. Relative paths
+(`datapath="/sub[*]"`) nest inside replicated views. `lzx-check` infers a
+type from inline JSON (or a `<script type="application/lz-shape">` TS literal)
+and validates paths and `${parent.data.*}` members statically.
+
+**Demos:** `bikeshop-demo.html` (inline + updateData button);
+`sensors-demo.html` + `sensor-feeder.mjs` (live over the wire):
+
+    node server/index.mjs 8090
+    node examples/dom-authoring/sensor-feeder.mjs
+    open http://localhost:8090/examples/dom-authoring/sensors-demo.html
+
+**Wire protocol** (JSON over WebSocket text frames, `/api/data` relay): a
+conforming peer needs only a socket and a JSON encoder — a micropython
+device can BE the data source:
+
+    client → server   {"lz":1, "subscribe":"sensors"}
+    server → client   {"dataset":"sensors", "data":{...}}            (snapshot; null if none retained)
+    either direction  {"dataset":"sensors", "update":{"path":"/temp", "value":22.4}}
+    server → client   {"dataset":"sensors", "error":"..."}
+
+    # micropython sketch
+    ws.send(ujson.dumps({"dataset":"sensors",
+                         "update":{"path":"/temp","value":read_temp()}}))
+
+Spec: `docs/superpowers/specs/2026-07-06-json-databinding-design.md`.
