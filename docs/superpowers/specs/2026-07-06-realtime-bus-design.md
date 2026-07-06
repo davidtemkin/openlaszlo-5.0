@@ -59,7 +59,7 @@ This is dreem2's composition idea (`<screen>` + server device tags synced via
 | server model extraction | `compiler/src/app-model.ts` | server tags → typed model (reusing `declKind` machinery); skipped by the client instance walk |
 | `SrvNode` | `server/srvnode.mjs` (new, pure) | the server tag runtime: `setAttribute` + `on<attr>` handler dispatch + broadcast hook |
 | `bus.mjs` | `server/` (new) | WebSocket endpoint `/api/bus`, per-app `BusApp` lifecycle, protocol, RPC dispatch |
-| frame codec export | `server/connection.mjs` (small refactor) | export `encodeText`/`decodeFrames`/`acceptKey` for reuse by `bus.mjs` and tests |
+| frame codec export + upgrade dispatch | `server/connection.mjs` + `server/index.mjs` (small refactor) | export `encodeText`/`decodeFrames`/`acceptKey`; **replace the path-guarded `upgrade` listener with a shared dispatcher** — connection.mjs:99 currently `socket.destroy()`s every non-`/api/connection` upgrade, which would kill `/api/bus` deterministically. One dispatcher owns `upgrade`; handlers register by path; unclaimed paths destroyed exactly once |
 | `lz-bus.js` | `startup/` (new) | client bus: proxy construction prelude, WebSocket client, reconnect, RPC promises |
 | bootstrap hook | `startup/laszlo-dom.js` | detect `<server>`, extract declarations, prepend the proxy prelude, hand the section to `lz-bus` |
 | checker integration | `compiler/src/app-model.ts`, `app-dts.ts`, `lzx-check.ts` | `LzSrv_<name>` types, typed `server` const, server-body checking |
@@ -69,8 +69,15 @@ This is dreem2's composition idea (`<screen>` + server device tags synced via
 
 - **`<server>`** is a dialect element allowed only as a **direct child of
   `<laszlo-app>`** (anywhere else: dialect error). At most one per app
-  (a second is a dialect error). Its subtree is stripped from the client
-  compile, never adopt-stamped, and skipped by the client model walk.
+  (a second is a dialect error). Its subtree is **skipped before adopt-id
+  stamping and before the child walk** in `domToXmlElem` — this ordering is
+  load-bearing: an unstamped subtree is removed from the live page by the
+  bootstrap's EXISTING `cleanup()` (no new client removal code), whereas a
+  stamped one would be kept.
+- **`server` is a reserved identifier**: `id="server"`, a canvas-level
+  `name="server"`, and attributes named `server` are checker findings (a
+  compiled `var server=null;` id-binder would clobber the proxy root — the
+  binder executes AFTER the prelude).
 - Inside `<server>`, **any tag name declares a generic server object** — no
   special vocabulary. The `name` attribute is its bus identity (required,
   must be a TS identifier, unique within `<server>`; violations are checker
@@ -140,6 +147,13 @@ Example:
 | C→S | `{op:"call", tag, method, args, uid}` | declared methods only; `uid` client-generated |
 | S→C | `{op:"result", uid, value}` / `{op:"error", uid?, message}` | RPC completion; `error` without `uid` = protocol-level |
 
+Ordering guarantee: a socket joins the broadcast set only AFTER its snapshot
+frame is written — no delta ever precedes its snapshot. Client-side guard:
+`set`/`call` arguments are JSON-serializability-checked at the CALL SITE
+(throw, dreem2's `isJsonSafe` semantics). A server `<method>` returning a
+Promise settles the client's `result` with the resolved value (rejection →
+`error`), matching dreem2's `handleCall`.
+
 Reserved for later (protocol room, not built): `scope:"session"` tags,
 presence/`clients`, delta versioning.
 
@@ -147,14 +161,23 @@ presence/`clients`, delta versioning.
 
 - The bootstrap (`laszlo-dom.js`) already holds the parsed DOM. When a
   `<server>` section exists it extracts the declarations
-  (names/attrs/defaults/methods) BEFORE `domToXmlElem` strips the section,
-  and prepends a **proxy prelude** to the app JS blob (the `lz-adopt-patch`
-  mechanism): after the LFC loads, `server.<name>` is created as a **real LFC
-  node instance** — attributes initialized to declared defaults, `on<attr>`
-  events pre-declared as real `LzDeclaredEvent`s. Compiled constraints
-  (`${server.clock.seconds}`) therefore bind with zero compiler changes: the
-  compiler's static dependency analysis registered on `server.clock.onseconds`,
-  which the bus fires on each delta.
+  (names/attrs/defaults/methods) BEFORE the existing `cleanup()` removes the
+  live section, and prepends a **proxy prelude** to the app JS blob (the
+  `lz-adopt-patch` mechanism): after the LFC loads, `server.<name>` is
+  created as an **`LzEventable` instance** (a tiny subclass), attributes
+  initialized to declared defaults, `setAttribute` shadowed per-instance.
+  **The mechanism is pinned by the LFC's actual gate**: `applyConstraintExpr`
+  (LzNode.lzs:1673-1733) silently NULLS any constraint dependency whose
+  source fails `instanceof LzEventable` (empty catch — no error in release
+  builds), so plain objects are forbidden; conversely, `on<attr>` events need
+  NOT be pre-declared — `LzDelegate.register` auto-creates `LzEvent`s on
+  demand (LaszloEvents.lzs:259-271). Compiled constraints
+  (`${server.clock.seconds}`) therefore bind with zero compiler changes.
+  A test MUST assert a compiled `${server.x.y}` constraint re-fires on a
+  proxy delta (the failure mode is silent).
+- Proxy objects are **permanent singletons mutated in place** — compiled
+  dependency functions captured `server.clock` by reference at bind time;
+  reconnects re-apply state through the same objects, never replace them.
 - **Proxy semantics:** `setAttribute` is overridden to SEND `{op:"set"}` (no
   local echo — principle 3); deltas apply through the original setter → events
   fire → constraints update. Declared methods are Promise-returning stubs
@@ -171,10 +194,14 @@ presence/`clients`, delta versioning.
 - `app-model` walks `<server>`: each tag → `LzSrv_<name>` with attrs via the
   existing `declKind` machinery and method signatures; the client model gets
   `declare const server: { clock: LzSrv_clock; … }`.
-- **Server bodies** check with `this: LzSrv_<name>` extending a small curated
-  `SrvNode` base (strict generic `setAttribute`, and Node timer/global
-  declarations — `setInterval`/`clearInterval`/`console`/`fetch` — since
-  server bodies run outside the LFC).
+- **Server bodies check in a SECOND `ts.createProgram`** whose virtual file
+  set is {`srvnode.d.ts` (strict generic `setAttribute` base), curated Node
+  globals (`setInterval`/`clearInterval`/`console`/`fetch` — `setInterval`
+  returns `any`, Node's Timeout isn't a number), `__lzsrvbodies.ts`} — **no
+  `lfc.d.ts`**. Ambient globals are program-wide, so a separate FILE in the
+  client program would leak `setInterval` into client bodies and
+  `canvas`/`LzView` into server bodies; a separate PROGRAM (reusing the same
+  span-mapping machinery) is the isolation boundary.
 - **Client side**: method stubs type as `(…args) => Promise<any>`; client
   bodies and `${…}` constraints referencing `server.*` typecheck against the
   same declarations. Client-side `server.x.setAttribute` is the strict
@@ -204,16 +231,20 @@ state.
 
 **Testing:**
 1. **Unit** — `<server>` extraction + client-compile strip (domsource,
-   app-model); `SrvNode` semantics (defaults/coercion, handler dispatch order,
-   delta hook, JSON guard); checker typing (`LzSrv_*`, `server` const, a
-   wrong-typed `server.*.setAttribute` finding).
+   app-model; strip precedes stamping); `SrvNode` semantics (defaults/coercion,
+   handler dispatch order, delta hook, JSON guard, Promise-returning methods);
+   checker typing (`LzSrv_*`, `server` const, a wrong-typed
+   `server.*.setAttribute` finding, `id="server"` reserved-name finding,
+   server-body `setInterval` legal / client-body `setInterval` NOT legal).
 2. **Integration** — `node --test` starts the real server on an ephemeral
    port with a fixture app; a minimal dependency-free WS test client (reusing
    the exported frame codec) asserts: snapshot on connect, delta broadcast to
    a second client, `set` round-trip, `call` result and error, undeclared-`set`
    error, reconnect snapshot.
 3. **E2E** — two Playwright tabs on the demo: click in tab A, assert tab B's
-   counter; chat message crosses tabs.
+   counter; chat message crosses tabs; **the constraint-refire canary** —
+   a compiled `${server.x.y}` constraint updates on a delta (guards the
+   silent `instanceof LzEventable` dependency-null failure mode).
 
 ## Non-goals (v1)
 
