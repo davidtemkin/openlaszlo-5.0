@@ -60,8 +60,9 @@ ${supa ? `    if (d.table) {
       // Table-backed (3c): rows/insert exist at BIND TIME (constraints need
       // them); inserts ride the ONE shared queue with the call machinery.
       o.rows = [];
+      o.rowsText = "";
       o.setAttribute = function (n, v) {
-        if (n === "rows") { if (window.console) console.warn('lz-bus: "rows" is read-only (table-backed)'); return; }
+        if (n === "rows" || n === "rowsText") { if (window.console) console.warn('lz-bus: "' + n + '" is read-only (table-backed)'); return; }
         window.__lzBusSend({ op: "set", tag: d.tag, attr: n, value: v });
       };
       o.insert = function (record) {

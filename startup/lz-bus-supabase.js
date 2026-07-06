@@ -58,9 +58,36 @@ export function connectSupabase(decls, appPath) {
       const o = P[tag];
       if (o) LzEventable.prototype.setAttribute.call(o, attr, value);
     };
-    const applyState = (tag, attr, value) => { fresh = false; apply(tag, attr, value); };
-    const localState = {}; // our presence meta mirror
+    const localState = {}; // our presence meta mirror (the CONVERGED ephemeral state)
     const joinedAt = Date.now();
+    // applyState = an ephemeral tag change (own echo, peer delta, or adoption).
+    // Every such change mirrors into our presence meta and re-tracks, so EVERY
+    // client (not just the originator) carries the converged state and can seed
+    // a joiner — and clears `fresh` so we never adopt over locally-applied state.
+    const applyState = (tag, attr, value) => {
+      fresh = false;
+      apply(tag, attr, value);
+      (localState[tag] = localState[tag] || {})[attr] = value;
+      chan.track({ state: localState, joined_at: joinedAt });
+    };
+    // Table rows: also maintain the derived rowsText (escaped — LzText renders
+    // via innerHTML and rows are UNTRUSTED; centralizing the escape here beats
+    // per-app constraint code, which couldn't run it anyway: the LZX constraint
+    // dependency analyzer refuses computed calls).
+    const esc = (x) => String(x).split("&").join("&amp;").split("<").join("&lt;");
+    const applyRows = (tag, rows) => {
+      apply(tag, "rows", rows); // raw: table state never blocks adoption
+      apply(tag, "rowsText", rows.map((r) => esc(r.body != null ? r.body : JSON.stringify(r))).join("\n"));
+    };
+
+    // supabase-js fires CHANNEL_ERROR/TIMED_OUT on transient reconnects and
+    // auto-rejoins. Only warn when a channel NEVER comes up (the genuine
+    // "Allow public access" diagnostic) — defer + recheck the subscribed flag.
+    const warnIfDown = (getSubscribed, msg) => (status) => {
+      if (status === "SUBSCRIBED") return;
+      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT")
+        setTimeout(() => { if (!getSubscribed()) console.warn(msg); }, 5000);
+    };
 
     // ── 3b: the app channel (broadcast + presence) ──
     const chan = client.channel("lzbus:" + path, { config: { broadcast: { self: true } } });
@@ -79,11 +106,11 @@ export function connectSupabase(decls, appPath) {
       }
     });
 
-    // sender path: set -> broadcast (self-echo applies) + presence meta
+    // sender path: broadcast only. `self: true` delivers the echo back to the
+    // broadcast handler → applyState, which applies it AND mirrors it into our
+    // presence meta + re-tracks (so we don't double-apply here).
     const doSet = (m) => {
-      (localState[m.tag] = localState[m.tag] || {})[m.attr] = m.value;
       chan.send({ type: "broadcast", event: "lzbus", payload: { op: "delta", tag: m.tag, attr: m.attr, value: m.value } });
-      chan.track({ state: localState, joined_at: joinedAt });
     };
 
     // ── 3c: per table tag ──
@@ -101,34 +128,38 @@ export function connectSupabase(decls, appPath) {
     };
     for (const t of tableTags) {
       // SUBSCRIBE FIRST, then select, dedupe by id (spec race rule).
+      let tableSub = false;
       client.channel("lzbus-table:" + path + ":" + t.tag)
         .on("postgres_changes", { event: "INSERT", schema: "public", table: t.table, filter: "app=eq." + path }, (msg) => {
           const next = dedupeAppend(P[t.tag].rows, msg.new);
-          if (next) apply(t.tag, "rows", next); // raw: table state never blocks adoption
+          if (next) applyRows(t.tag, next);
         })
         .subscribe((status) => {
-          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT")
-            console.warn("lz-bus: table channel " + status + " for " + t.tag);
+          if (status === "SUBSCRIBED") tableSub = true;
+          warnIfDown(() => tableSub, "lz-bus: table channel never subscribed for " + t.tag)(status);
         });
       client.from(t.table).select("*").eq("app", path).order("id").then(({ data, error }) => {
         if (error) return console.warn("lz-bus: table select failed:", error.message);
         let rows = P[t.tag].rows;
         for (const r of data || []) { const next = dedupeAppend(rows, r); if (next) rows = next; }
-        apply(t.tag, "rows", rows); // raw: table state never blocks adoption
+        applyRows(t.tag, rows);
       });
     }
 
+    let mainSub = false;
     chan.subscribe((status) => {
       if (status === "SUBSCRIBED") {
-        const q = window.__lzBusQueue.splice(0);
-        const route = (m) => m.op === "insert" ? doInsert(m)
-          : m.op === "set" ? doSet(m)
-          : console.warn("lz-bus: unsupported op in supabase mode:", m.op);
-        window.__lzBusSend = (m) => { JSON.stringify(m); route(m); };
-        q.forEach(route);
+        if (!mainSub) {
+          mainSub = true;
+          const route = (m) => m.op === "insert" ? doInsert(m)
+            : m.op === "set" ? doSet(m)
+            : console.warn("lz-bus: unsupported op in supabase mode:", m.op);
+          window.__lzBusSend = (m) => { JSON.stringify(m); route(m); };
+          window.__lzBusQueue.splice(0).forEach(route);
+        }
         chan.track({ state: localState, joined_at: joinedAt });
-      } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-        console.warn("lz-bus: supabase channel " + status + " — check the project's Realtime 'Allow public access' setting");
+      } else {
+        warnIfDown(() => mainSub, "lz-bus: supabase channel never subscribed — check the project's Realtime 'Allow public access' setting")(status);
       }
     });
     } catch (e) {

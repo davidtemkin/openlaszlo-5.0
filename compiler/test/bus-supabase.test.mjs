@@ -7,7 +7,7 @@ import { checkApp } from "../dist/lzx-check.js";
 const parse = (html) => findLaszloApp(parseHtmlDialect(html));
 const SUPA = `<laszlo-app>
 <view width="\${server.state.count}" x="\${server.presence.count}"></view>
-<text text="\${(function(rs){var s='';for(var i=0;i<rs.length;i++)s+=rs[i].body;return s})(server.chat.rows)}"></text>
+<text text="\${server.chat.rowsText}"></text>
 <server transport="supabase" supabase-url="https://x.supabase.co" supabase-key="sb_publishable_x">
   <counter name="state"><attribute name="count" type="number" value="0"></attribute></counter>
   <chat name="chat" table="bus_messages"></chat>
@@ -98,9 +98,10 @@ test("busPrelude: supabase mode adds presence proxy + table rows/insert stubs", 
     elS("chat", { name: "chat", table: "bus_messages" }))));
   assert.ok(out.includes("window.server.presence"));
   assert.ok(out.includes("o.rows = []"));
+  assert.ok(out.includes('o.rowsText = ""'));
   assert.ok(out.includes('op: "insert"'));
   assert.ok(!out.includes('op: "call"'));       // no declared methods here -> no call machinery
-  assert.ok(out.includes('"rows" is read-only'));
+  assert.ok(out.includes('is read-only (table-backed)'));
 });
 
 // ── Task 4: bridge pure helpers ──────────────────────────────────────────────

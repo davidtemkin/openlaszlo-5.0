@@ -94,10 +94,14 @@ export function generateServerDts(model: AppModel): { clientDts: string; serverD
     for (const a of t.attrs) { client.push(`  ${a.name}: ${a.tsType};`); if (!supa) server.push(`  ${a.name}: ${a.tsType};`); }
     if (supa && t.table) {
       client.push(`  rows: any[];`);
+      // rowsText: bridge-maintained escaped newline-joined text — constraints
+      // can't run computed calls (the LZX dependency analyzer refuses IIFEs),
+      // so array->text derivation lives in the bridge, not in constraints.
+      client.push(`  rowsText: string;`);
       client.push(`  insert(record: any): Promise<any>;`);
-      // rows is read-only: tsc-verified — Exclude removes it from the setter
-      // union while the property declaration keeps constraint typing alive.
-      client.push(`  setAttribute<K extends Exclude<keyof this & string, "rows">>(name: K, value: this[K]): void;`);
+      // rows/rowsText are read-only: Exclude removes them from the setter
+      // union while the property declarations keep constraint typing alive.
+      client.push(`  setAttribute<K extends Exclude<keyof this & string, "rows" | "rowsText">>(name: K, value: this[K]): void;`);
     } else {
       for (const m of t.methods) client.push(`  ${m.name}(...args: any[]): Promise<any>;`);
       client.push(`  setAttribute<K extends keyof this & string>(name: K, value: this[K]): void;`);
