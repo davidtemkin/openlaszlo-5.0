@@ -15,6 +15,14 @@ export interface BodyInfo { label: string; ownerType: string; params: BodyParam[
 export interface AppClassModel { tsName: string; extTsName: string; attrs: AppAttr[]; methodSigs: string[] }
 export interface AppInstanceModel { tsName: string; baseTsName: string; attrs: AppAttr[]; namedChildren: { name: string; tsName: string }[]; id?: string }
 export interface NameIssue { message: string; line: number }
+export interface ServerBody { name: string; args: string[]; code: string; srcLine: number } // RAW TS (untranspiled)
+export interface ServerTagModel {
+  name: string;             // bus identity (the name= attribute)
+  tsName: string;           // "LzSrv_" + name
+  attrs: AppAttr[];         // via declAttr (tsType + declKind)
+  methods: ServerBody[];
+  handlers: ServerBody[];   // includes oninit and on<attr> handlers
+}
 export interface ConstraintInfo {
   expr: string;           // the inner expression of ${…} / $once{…} / …
   line: number;           // the attribute's source line
@@ -30,6 +38,7 @@ export interface AppModel {
   skippedLzs: number;      // non-TS bodies not checked (text/lzs carriers; ALL bodies in .lzx mode)
   nameIssues: NameIssue[]; // invalid TS identifiers — excluded from emission, reported as findings
   staticIssues: NameIssue[]; // markup-literal + cross-reference findings
+  serverTags: ServerTagModel[]; // the <server> section (realtime bus)
 }
 export interface ExtractOptions {
   es4Bodies?: boolean;      // .lzx mode: skip every body (ES4, not TS)
@@ -104,7 +113,7 @@ const textOf = (el: HtmlElem): { code: string; line: number } => {
 
 export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel {
   const model: AppModel = { classes: [], instances: [], bodies: [], constraints: [],
-    skippedLzs: 0, nameIssues: [], staticIssues: [] };
+    skippedLzs: 0, nameIssues: [], staticIssues: [], serverTags: [] };
   const seenIds = new Set<string>();
   const userClasses = new Map<string, AppClassModel>();
   let instSeq = 0;
@@ -208,6 +217,41 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
     }
   }
 
+  // The <server> section (realtime bus): tags -> typed model with RAW TS
+  // bodies (the bus transpiles; the checker's SERVER program checks them).
+  function walkServer(serverEl: HtmlElem): void {
+    const seen = new Set<string>();
+    for (const tagEl of elemChildren(serverEl)) {
+      const name = tagEl.getAttribute("name") ?? "";
+      if (!checkName("server tag name", name, tagEl.line)) continue;
+      if (seen.has(name)) {
+        model.staticIssues.push({ message: `duplicate server tag name "${name}"`, line: tagEl.line });
+        continue;
+      }
+      seen.add(name);
+      const tag: ServerTagModel = { name, tsName: "LzSrv_" + name, attrs: [], methods: [], handlers: [] };
+      const rawBody = (el: HtmlElem): { code: string; line: number } => {
+        const carrier = elemChildren(el).find((c) => c.tagName === "SCRIPT");
+        return textOf(carrier ?? el);
+      };
+      for (const c of elemChildren(tagEl)) {
+        const t = c.tagName.toLowerCase();
+        const cn = c.getAttribute("name") ?? "";
+        const args = (c.getAttribute("args") ?? "").split(/[\s,]+/).filter(Boolean);
+        if (t === "attribute") {
+          if (checkName("attribute", cn, c.line)) tag.attrs.push(declAttr(cn, c.getAttribute("type")));
+        } else if (t === "method") {
+          const { code, line } = rawBody(c);
+          if (checkName("method", cn, c.line)) tag.methods.push({ name: cn, args, code, srcLine: line });
+        } else if (t === "handler") {
+          const { code, line } = rawBody(c);
+          tag.handlers.push({ name: cn, args, code, srcLine: line });
+        }
+      }
+      model.serverTags.push(tag);
+    }
+  }
+
   function walkInstance(el: HtmlElem, parent: AppInstanceModel | null, siblingNames: Set<string>): void {
     const tag = tagOf(el);
     const user = userClasses.get(tag);
@@ -218,7 +262,10 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
     };
     model.instances.push(inst);
     const id = el.getAttribute("id");
-    if (id && seenIds.has(id)) {
+    if (id === "server") {
+      model.staticIssues.push({ message: `id "server" is reserved (the bus proxy root)`, line: el.line });
+      // NOT registered: no seenIds.add, no inst.id
+    } else if (id && seenIds.has(id)) {
       model.staticIssues.push({ message: `duplicate id "${id}"`, line: el.line });
       // do NOT set inst.id — a second `declare const` would add TS2451 noise
     } else if (id) {
@@ -226,7 +273,10 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
       if (checkName("id", id, el.line)) inst.id = id;
     }
     const nm = el.getAttribute("name");
-    if (nm && parent) {
+    if (nm === "server" && parent && parent.baseTsName === "LzCanvas") {
+      model.staticIssues.push({ message: `name "server" is reserved at canvas level (binds globally)`, line: el.line });
+      // NOT pushed into parent.namedChildren
+    } else if (nm && parent) {
       if (siblingNames.has(nm))
         model.staticIssues.push({ message: `duplicate sibling name "${nm}"`, line: el.line });
       siblingNames.add(nm);
@@ -241,6 +291,7 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
     for (const c of elemChildren(el))
       if (c.tagName.toLowerCase() === "attribute") {
         const an = c.getAttribute("name") ?? "";
+        if (an === "server") { model.staticIssues.push({ message: `attribute name "server" is reserved`, line: c.line }); continue; }
         if (checkName("attribute", an, c.line)) inst.attrs.push(declAttr(an, c.getAttribute("type")));
       }
 
@@ -278,6 +329,10 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
     for (const c of elemChildren(el)) {
       const t = c.tagName.toLowerCase();
       if (t === "attribute") continue;
+      if (t === "server") {
+        if (parent === null) walkServer(c);   // root child only (realtime bus); elsewhere client-invalid: skip
+        continue;
+      }
       if (t === "class" || t === "interface" || t === "mixin") { walkClass(c); continue; }
       if (t === "dataset") continue; // data, not code
       if (t === "method") {

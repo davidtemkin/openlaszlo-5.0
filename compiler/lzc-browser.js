@@ -8014,6 +8014,7 @@ function walkElem(el, ctx, isRoot) {
   const children = [];
   const isCodeParent = CODE_PARENTS.has(name);
   let sawCarrier = false;
+  let sawServer = false;
   for (let i = 0; i < el.childNodes.length; i++) {
     const c = el.childNodes[i];
     if (c.nodeType === COMMENT)
@@ -8025,6 +8026,14 @@ function walkElem(el, ctx, isRoot) {
     if (c.nodeType !== ELEMENT)
       continue;
     const ce = c;
+    if (localName(ce) === "server") {
+      if (!isRoot)
+        throw new DomDialectError("<server> must be a direct child of <laszlo-app>");
+      if (sawServer)
+        throw new DomDialectError("at most one <server> section per app");
+      sawServer = true;
+      continue;
+    }
     if (localName(ce) === "script") {
       children.push(...scriptNodes(ce, name, childCtx));
       if (isCodeParent)
