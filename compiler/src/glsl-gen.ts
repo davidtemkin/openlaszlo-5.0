@@ -57,7 +57,7 @@ function pickOverload(ols: Overload[], args: ShaderType[]): Overload | null {
   return ols.find((o) => o.params.length === args.length && o.params.every((p, i) => p === args[i])) ?? null;
 }
 
-export function generateShader(input: GenInput): GenResult {
+function createCore(input: GenInput) {
   const findings: GenFinding[] = [];
   const usedUniforms = new Map<string, "float" | "vec3">();
   const usedBuiltins = new Set<string>();
@@ -357,6 +357,33 @@ export function generateShader(input: GenInput): GenResult {
     const glslRet = ret === "float" ? "float" : ret;
     return `${glslRet} ${name}(${params.map((p) => `${p.type} ${p.name}`).join(", ")}) {\n${out.join("\n")}\n}`;
   }
+
+  return { findings, usedUniforms, usedBuiltins, usedLib, usedHelpers, genFunction };
+}
+
+/** Transpile ONE shaderlib function (ns-qualified calls resolved via `signatures`).
+ *  Used by shaderlib-port; emits the mangled `ns_name` GLSL function + its lib deps. */
+export function generateLibFunction(
+  ns: string, name: string,
+  params: { name: string; type: string }[], ret: string,
+  code: string, srcLine: number,
+  signatures: Record<string, { params: string[]; ret: string }>,
+): { glsl: string; deps: string[]; findings: GenFinding[] } {
+  const core = createCore({
+    color: { code: "", srcLine: 1 }, helpers: [], uniforms: [],
+    shaderlib: { signatures, glslFor: () => "" },
+  });
+  const glsl = core.genFunction(
+    `${ns}_${name}`,
+    params.map((p) => ({ name: p.name, type: (p.type === "number" ? "float" : p.type === "boolean" ? "bool" : p.type) as ShaderType })),
+    (ret === "number" ? "float" : ret === "boolean" ? "bool" : ret) as ShaderType,
+    code, srcLine,
+  );
+  return { glsl, deps: [...core.usedLib], findings: core.findings };
+}
+
+export function generateShader(input: GenInput): GenResult {
+  const { findings, usedUniforms, usedBuiltins, usedLib, usedHelpers, genFunction } = createCore(input);
 
   // color() first (drives usage collection), then reachable helpers.
   const colorFn = genFunction("color", [], "vec4", input.color.code, input.color.srcLine);
