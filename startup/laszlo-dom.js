@@ -87,13 +87,16 @@ async function boot(host) {
   }
 
   // TS transpile, lazy-loaded only when the app has code to transpile.
-  let transpileTs;
+  // <shader> tags additionally need the GLSL generator (same bundle).
+  let transpileTs, glslGen;
   if (host.querySelector("method,handler,setter,script")) {
-    transpileTs = (await import(new URL("lz-ts.js", HERE).href)).transpileTsBody;
+    const lzts = await import(new URL("lz-ts.js", HERE).href);
+    transpileTs = lzts.transpileTsBody;
+    if (host.querySelector("shader")) glslGen = lzts.glslGen;
   }
 
   // DOM → XmlElem. Stamps data-lz-adopt on live plain-view elements.
-  const rootXml = domToXmlElem(host, { domAdopt: true, transpileTs });
+  const rootXml = domToXmlElem(host, { domAdopt: true, transpileTs, glslGen });
 
   // Adoption registry (consume-once; read by lz-adopt-patch.js).
   const reg = new Map();

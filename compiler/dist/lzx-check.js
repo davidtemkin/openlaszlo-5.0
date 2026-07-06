@@ -19,6 +19,9 @@ import { xmlToHtml } from "./xml-adapter.js";
 import { extractApp } from "./app-model.js";
 import { generateAppDts, generateBodies, generateConstraintChecks, generateServerDts, generateServerBodies, SRVNODE_DTS } from "./app-dts.js";
 import { generateLfcDts } from "./lfc-dts.js";
+import { generateShader, rewriteOperators } from "./glsl-gen.js";
+import { loadShaderlib } from "./shaderlib-port.js";
+import { genShaderDts, tsNameOf } from "./shader-table.js";
 import { loadLfcReflection } from "./lfc-reflect.js";
 const COMPILER_OPTS = {
     noEmit: true, strict: false, types: [], lib: ["lib.es2020.d.ts"],
@@ -170,7 +173,80 @@ export function checkApp(source, fileName) {
             });
         }
     }
-    return { findings, skippedLzs: model.skippedLzs, bodiesChecked: model.bodies.length, constraintsChecked: model.constraints.length, serverBodiesChecked };
+    // Shader bodies: the THIRD program (same isolation rationale as the server one).
+    // Two layers per the spec: (1) generateShader's own lattice findings (dialect rules
+    // TS can't see), (2) a TS program over OPERATOR-REWRITTEN bodies — arithmetic becomes
+    // __mul()/__add() calls with table-generated overloads, so inferred types stay REAL
+    // vecs downstream (suppressing operator diagnostics would leave `number` poisoning
+    // every later property/call check).
+    let shaderBodiesChecked = 0;
+    if (model.shaderPrograms.length) {
+        const lib = loadShaderlib();
+        // shaderlib namespace declarations, TS-space
+        const nsDecl = lib.namespaces.map((ns) => {
+            const fns = Object.entries(lib.signatures).filter(([k]) => k.startsWith(ns + "."));
+            return `declare const ${ns}: {\n` + fns.map(([k, sig]) => `  ${k.slice(ns.length + 1)}(${sig.params.map((pt, i) => `a${i}: ${tsNameOf(pt)}`).join(", ")}): ${tsNameOf(sig.ret)};`).join("\n") + "\n};";
+        }).join("\n");
+        const bodyLines = [];
+        const shSpans = [];
+        for (let i = 0; i < model.shaderPrograms.length; i++) {
+            const sp = model.shaderPrograms[i];
+            // layer 1: the generator's own findings (also what emission would say)
+            const gen = generateShader({
+                color: sp.color ?? { code: "return vec4(0.0, 0.0, 0.0, 1.0);", srcLine: sp.line },
+                helpers: sp.helpers, uniforms: sp.uniforms, shaderlib: lib,
+            });
+            if (!gen.ok)
+                for (const f of gen.findings)
+                    findings.push({ line: f.line, col: 1, code: 0, message: f.message, element: sp.label + " (shader)" });
+            // layer 2: TS program over rewritten bodies
+            const thisTy = `{ ${sp.uniforms.map((u) => `${u.name}: ${u.lzType === "color" ? "vec3" : "number"}`).join("; ")} }`;
+            const addBody = (label, code, srcLine, params, ret) => {
+                shaderBodiesChecked++;
+                const rewritten = rewriteOperators(code).code;
+                shSpans.push({ genStartLine: bodyLines.length + 2, srcLine, label });
+                bodyLines.push(`(function(this: ${thisTy}${params ? ", " + params : ""}): ${ret} {`);
+                bodyLines.push(...rewritten.split("\n"));
+                bodyLines.push("});");
+            };
+            if (sp.color)
+                addBody(`<method name="color"> in ${sp.label}`, sp.color.code, sp.color.srcLine, "", "vec4");
+            for (const h of sp.helpers)
+                addBody(`<method name="${h.name}"> in ${sp.label}`, h.code, h.srcLine, h.params.map((pp) => `${pp.name}: ${tsNameOf(pp.type)}`).join(", "), tsNameOf(h.ret));
+        }
+        const shVirtual = new Map([
+            ["shader.d.ts", genShaderDts("", nsDecl)],
+            ["__lzshaderbodies.ts", bodyLines.join("\n")],
+        ]);
+        const shHost = ts.createCompilerHost(COMPILER_OPTS);
+        const hGet = shHost.getSourceFile.bind(shHost);
+        shHost.getSourceFile = (name, langVer) => shVirtual.has(name) ? ts.createSourceFile(name, shVirtual.get(name), langVer, true) : hGet(name, langVer);
+        const hExists = shHost.fileExists.bind(shHost);
+        shHost.fileExists = (name) => shVirtual.has(name) || hExists(name);
+        const hRead = shHost.readFile.bind(shHost);
+        shHost.readFile = (name) => shVirtual.get(name) ?? hRead(name);
+        const shProg = ts.createProgram([...shVirtual.keys()], COMPILER_OPTS, shHost);
+        const shSf = shProg.getSourceFile("__lzshaderbodies.ts");
+        for (const d of [...shProg.getSyntacticDiagnostics(shSf), ...shProg.getSemanticDiagnostics(shSf)]) {
+            if (d.file?.fileName !== "__lzshaderbodies.ts" || d.start == null)
+                continue;
+            const pos = d.file.getLineAndCharacterOfPosition(d.start);
+            const genLine = pos.line + 1;
+            let span;
+            for (const sp of shSpans)
+                if (sp.genStartLine <= genLine)
+                    span = sp;
+                else
+                    break;
+            const line = span ? span.srcLine + (genLine - span.genStartLine) : genLine;
+            findings.push({
+                line, col: pos.character + 1, code: d.code,
+                message: ts.flattenDiagnosticMessageText(d.messageText, " "),
+                element: span?.label ?? "(shader body)",
+            });
+        }
+    }
+    return { findings, skippedLzs: model.skippedLzs, bodiesChecked: model.bodies.length, constraintsChecked: model.constraints.length, serverBodiesChecked, shaderBodiesChecked };
 }
 // ── CLI ─────────────────────────────────────────────────────────────────────
 // realpath resolves the npm .bin symlink (whose basename has no .js extension —
