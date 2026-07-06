@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>OpenLaszlo — DOM-authored demo</title>
+  <!-- Closes the pre-module-load flash window; laszlo-dom.js re-adds it anyway. -->
+  <style>laszlo-app{visibility:hidden;display:block;position:relative}</style>
+  <script type="module" src="../../startup/laszlo-dom.js"></script>
+</head>
+<body style="font:14px sans-serif;margin:16px">
+  <h2>DOM-authored LZX (Slice 1 demo)</h2>
+  <p>The colored boxes below are the <em>authored elements</em> — inspect them:
+     the <code>&lt;view&gt;</code> tags you see in this file's source are the
+     live nodes of the running app.</p>
+
+  <laszlo-app width="640" height="420" bgcolor="#eef2f7">
+    <view name="panel" x="20" y="20" width="400" height="260" bgcolor="#ffffff">
+      <attribute name="grow" type="boolean" value="false"></attribute>
+      <view name="bar" x="10" y="10" width="${parent.width - 20}" height="28" bgcolor="#4a6fb0">
+        <handler name="onclick">
+          <script type="text/typescript">
+            const p = this.parent as any;
+            p.setAttribute('height', p.grow ? 260 : 320);
+            p.setAttribute('grow', !p.grow);
+          </script>
+        </handler>
+      </view>
+      <view name="stack" x="10" y="48" width="120" height="180">
+        <view width="120" height="36" bgcolor="#c0504d"></view>
+        <view width="120" height="36" bgcolor="#9bbb59"></view>
+        <view width="120" height="36" bgcolor="#8064a2"></view>
+        <simplelayout axis="y" spacing="8"></simplelayout>
+      </view>
+    </view>
+  </laszlo-app>
+</body>
+</html>
