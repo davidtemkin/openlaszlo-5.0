@@ -299,6 +299,7 @@ test("extractServerDecls: object shape; node default; supabase attrs + table", (
 });
 
 test("busPrelude: NODE output is byte-identical to Slice 3 (FULL-STRING golden)", () => {
+  // GOLDEN is defined at the top of this file — captured in Step 1b.
   const out = busPrelude(extractServerDecls(NODE_DECLS_INPUT));
   // GOLDEN is captured from the PRE-CHANGE Slice-3 busPrelude (see the
   // capture step below) and pasted here verbatim. assert.equal → byte parity.
@@ -318,9 +319,22 @@ test("busPrelude: supabase mode adds presence proxy + table rows/insert stubs", 
 });
 ```
 
+- [ ] **Step 1a: Make startup/ Node-importable (REQUIRED — tests physically cannot import it today)**
+
+`startup/*.js` resolves as CJS from Node (no package.json up its tree declares module type), so `import { busPrelude } from "../../startup/lz-bus.js"` fails with a named-export error on Node 20. Commit:
+
+```bash
+cat > startup/package.json <<'EOF2'
+{ "type": "module" }
+EOF2
+```
+
+Safe: browsers never read it; the only Node consumers of `startup/` today are `.mjs` files (server/index.mjs, server/dev-views.mjs — unaffected).
+
 - [ ] **Step 1b: Capture the golden (BEFORE changing lz-bus.js)**
 
 ```bash
+# (requires Step 1a's startup/package.json)
 node --input-type=module -e "
 import { busPrelude } from './startup/lz-bus.js';
 const decls = [{ tag: 'clock', attrs: [{ name: 'seconds', value: '0', type: 'number' }], methods: [{ name: 'reset' }] }];
@@ -328,7 +342,9 @@ console.log(JSON.stringify(busPrelude(decls)));
 " > /tmp/golden.json
 ```
 
-Paste the resulting JSON string into the test as `const GOLDEN = JSON.parse('<paste>');` (or embed via a template literal). This pins the CURRENT Slice-3 output before any edit; the new object-taking busPrelude must reproduce it byte-for-byte for node transport.
+Paste the resulting JSON string into the test as
+`const GOLDEN = JSON.parse(String.raw\`<paste>\`);`
+(`String.raw` is REQUIRED — a plain string/template literal re-interprets the JSON's `\n`/`\"` escapes before JSON.parse sees them and fails with "Bad control character"; the output contains no backticks or `${`, so raw is safe). Alternative: commit the string to `compiler/test/fixtures/prelude-node.golden` and `readFileSync` it. This pins the CURRENT Slice-3 output before any edit; the new object-taking busPrelude must reproduce it byte-for-byte for node transport.
 
 - [ ] **Step 2: Run to verify failure**
 
@@ -652,7 +668,7 @@ export function connectSupabase(decls, appPath) {
 }
 ```
 
-(The `apply`/`applyState` split above is load-bearing: presence-count updates use raw `apply` so they never block adoption; delta/echo/adoption/table paths use `applyState`, which clears the `fresh` flag.)
+(NOTE: the `try {` body above is deliberately NOT re-indented — do not reflow it; the braces are verified balanced. The `apply`/`applyState` split above is load-bearing: presence-count AND table-row updates use raw `apply` so they never block adoption; delta/echo/adoption use `applyState`, which clears the `fresh` flag.)
 
 - [ ] **Step 3: Implementation-time platform verification (spec principle 4)**
 
