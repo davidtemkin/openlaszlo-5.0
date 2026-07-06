@@ -50,3 +50,55 @@ test("checker: node-mode apps unaffected (regression)", () => {
   assert.equal(r.serverBodiesChecked, 1);
   assert.ok(!r.findings.some((f) => f.message.includes("no execution home")));
 });
+
+// ── Task 3: decls + prelude ──────────────────────────────────────────────────
+import { readFileSync } from "node:fs";
+import { extractServerDecls, busPrelude } from "../../startup/lz-bus.js";
+
+// GOLDEN: the PRE-CHANGE Slice-3 busPrelude output for NODE_DECLS_INPUT,
+// captured to a fixture before the object-shape change. assert.equal → byte parity.
+const GOLDEN = readFileSync(new URL("./fixtures/prelude-node.golden", import.meta.url), "utf8");
+
+// minimal live-DOM stub: lz-bus uses .children + getAttribute
+const elS = (tag, attrs = {}, ...children) => ({
+  tagName: tag.toUpperCase(),
+  children,
+  getAttribute: (n) => (n in attrs ? String(attrs[n]) : null),
+});
+
+const NODE_DECLS_INPUT = elS("server", {},
+  elS("clock", { name: "clock" },
+    elS("attribute", { name: "seconds", type: "number", value: "0" }),
+    elS("method", { name: "reset" })));
+
+test("extractServerDecls: object shape; node default; supabase attrs + table", () => {
+  const node = extractServerDecls(NODE_DECLS_INPUT);
+  assert.deepEqual(node, {
+    transport: "node",
+    tags: [{ tag: "clock", attrs: [{ name: "seconds", value: "0", type: "number" }], methods: [{ name: "reset" }] }],
+  });
+  const supa = extractServerDecls(elS("server",
+    { transport: "supabase", "supabase-url": "https://x.supabase.co", "supabase-key": "k" },
+    elS("chat", { name: "chat", table: "bus_messages" })));
+  assert.equal(supa.transport, "supabase");
+  assert.equal(supa.url, "https://x.supabase.co");
+  assert.equal(supa.key, "k");
+  assert.equal(supa.tags[0].table, "bus_messages");
+});
+
+test("busPrelude: NODE output is byte-identical to Slice 3 (FULL-STRING golden)", () => {
+  const out = busPrelude(extractServerDecls(NODE_DECLS_INPUT));
+  assert.equal(out, GOLDEN);
+});
+
+test("busPrelude: supabase mode adds presence proxy + table rows/insert stubs", () => {
+  const out = busPrelude(extractServerDecls(elS("server",
+    { transport: "supabase", "supabase-url": "u", "supabase-key": "k" },
+    elS("state", { name: "state" }, elS("attribute", { name: "count", type: "number", value: "0" })),
+    elS("chat", { name: "chat", table: "bus_messages" }))));
+  assert.ok(out.includes("window.server.presence"));
+  assert.ok(out.includes("o.rows = []"));
+  assert.ok(out.includes('op: "insert"'));
+  assert.ok(!out.includes('op: "call"'));       // no declared methods here -> no call machinery
+  assert.ok(out.includes('"rows" is read-only'));
+});

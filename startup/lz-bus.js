@@ -7,19 +7,26 @@
 // permanent singletons mutated in place — constraints captured them by
 // reference at bind time.
 
-/** Read declarations from the LIVE <server> element (before cleanup removes it). */
+/** Read declarations from the LIVE <server> element (before cleanup removes it).
+ *  Returns { transport, url?, key?, tags: [{tag, table?, attrs, methods}] }. */
 export function extractServerDecls(serverEl) {
-  const decls = [];
+  const transport = (serverEl.getAttribute("transport") || "node").toLowerCase();
+  const decls = { transport, tags: [] };
+  if (transport === "supabase") {
+    decls.url = serverEl.getAttribute("supabase-url") || undefined;
+    decls.key = serverEl.getAttribute("supabase-key") || undefined;
+  }
   for (const tagEl of [...serverEl.children]) {
     const tag = tagEl.getAttribute("name");
     if (!tag) continue;
+    const table = tagEl.getAttribute("table") || undefined;
     const attrs = [], methods = [];
     for (const c of [...tagEl.children]) {
       const t = c.tagName.toLowerCase();
       if (t === "attribute") attrs.push({ name: c.getAttribute("name"), value: c.getAttribute("value"), type: c.getAttribute("type") || "" });
       else if (t === "method") methods.push({ name: c.getAttribute("name") });
     }
-    decls.push({ tag, attrs, methods });
+    decls.tags.push({ tag, ...(table ? { table } : {}), attrs, methods });
   }
   return decls;
 }
@@ -35,9 +42,10 @@ const coerceJs = `function __lzCoerce(t, v) {
  *  SILENTLY NULLS constraint dependencies that fail `dp instanceof LzEventable`
  *  (applyConstraintExpr, release build: empty catch). */
 export function busPrelude(decls) {
+  const supa = decls.transport === "supabase";
   return `// lz-bus proxy prelude (generated)
 (function () {
-  var DECLS = ${JSON.stringify(decls)};
+  var DECLS = ${JSON.stringify(decls.tags)};
   var P = window.__lzBusProxies = {};
   var Q = window.__lzBusQueue = [];
   var C = window.__lzBusCalls = {};
@@ -48,7 +56,34 @@ export function busPrelude(decls) {
   DECLS.forEach(function (d) {
     var o = new LzEventable();
     d.attrs.forEach(function (a) { o[a.name] = __lzCoerce(a.type, a.value); });
-    // Server-authoritative: SEND, never apply locally (deltas apply via the
+${supa ? `    if (d.table) {
+      // Table-backed (3c): rows/insert exist at BIND TIME (constraints need
+      // them); inserts ride the ONE shared queue with the call machinery.
+      o.rows = [];
+      o.setAttribute = function (n, v) {
+        if (n === "rows") { if (window.console) console.warn('lz-bus: "rows" is read-only (table-backed)'); return; }
+        window.__lzBusSend({ op: "set", tag: d.tag, attr: n, value: v });
+      };
+      o.insert = function (record) {
+        var id = ++uid;
+        var settle = {};
+        var prom = new Promise(function (res, rej) { settle.res = res; settle.rej = rej; });
+        C[id] = settle;
+        window.__lzBusSend({ op: "insert", tag: d.tag, record: record, uid: id });
+        return prom;
+      };
+    } else {
+      o.setAttribute = function (n, v) { window.__lzBusSend({ op: "set", tag: d.tag, attr: n, value: v }); };
+    }
+    // Spec runtime contract: declared methods are ignored with one warning
+    // (checker findings; no execution home in supabase mode).
+    d.methods.forEach(function (m) {
+      o[m.name] = function () {
+        if (window.console) console.warn('lz-bus: "' + m.name + '" has no execution home in supabase mode');
+        return Promise.reject(new Error("no execution home in supabase mode"));
+      };
+    });
+` : `    // Server-authoritative: SEND, never apply locally (deltas apply via the
     // ORIGINAL LzEventable.prototype.setAttribute in connectBus).
     o.setAttribute = function (n, v) { window.__lzBusSend({ op: "set", tag: d.tag, attr: n, value: v }); };
     d.methods.forEach(function (m) {
@@ -62,10 +97,14 @@ export function busPrelude(decls) {
         return prom;
       };
     });
-    P[d.tag] = o;
+`}    P[d.tag] = o;
     window.server[d.tag] = o;
   });
-})();
+${supa ? `  var pres = new LzEventable();
+  pres.count = 0;
+  P.presence = pres;
+  window.server.presence = pres;
+` : ``}})();
 `;
 }
 
