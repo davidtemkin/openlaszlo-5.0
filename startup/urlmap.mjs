@@ -29,6 +29,7 @@ export function toSourceUrl(path) {
   if (path.startsWith("/runtime/")) return path;
   if (path.startsWith("/docs/")) return path;
   if (path.startsWith("/compiler/")) return path;   // the browser compiler bundle lives here
+  if (path.startsWith("/startup/")) return path;    // DOM-dialect bootstrap modules (laszlo-dom, lz-bus, lz-ts, lz-adopt-patch)
   // Coverpage HTML (demos_cover.html etc.) carries baked `../../lps/includes/explore.css`
   // refs → serve them from the flat runtime/ tree. Without this the cover CSS 404s and the
   // section landings render as unstyled serif text.

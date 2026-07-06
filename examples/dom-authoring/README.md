@@ -46,3 +46,20 @@ ES4 bodies skipped, everything else validated).
 Exit 1 + `file:line:col TS<code>` diagnostics on findings; non-TS bodies
 (`text/lzs`, `.lzx`) are skipped and counted. Checking never blocks
 running — the browser pipeline only strips types.
+
+## Realtime bus (Slice 3)
+
+A `<server>` section inside `<laszlo-app>` declares server-side reactive tags
+(same dialect, same TypeScript carriers). Run under the Node server:
+
+    node server/index.mjs 8090
+    open http://localhost:8090/examples/dom-authoring/bus-demo.html   # in two browsers
+
+Server attributes sync to every client (constraints track them:
+`width="${100 + server.state.count * 12}"`); inline apps only in v1
+(`src=`-loaded apps can't reach the bus yet); clients write back with
+`server.state.setAttribute(...)` and call server `<method>`s as Promises.
+State is server-authoritative and shared (one singleton per app).
+`lzx-check` types both sides — server bodies run in Node (so `setInterval`
+is legal there and flagged in client code). Static hosting: the section is
+inert (console warning, defaults hold).
