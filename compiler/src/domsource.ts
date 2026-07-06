@@ -157,6 +157,7 @@ function walkElem(el: DomElementLike, ctx: Ctx, isRoot: boolean): XmlElem {
   const children: XmlNode[] = [];
   const isCodeParent = CODE_PARENTS.has(name);
   let sawCarrier = false;
+  let sawServer = false;
   for (let i = 0; i < el.childNodes.length; i++) {
     const c = el.childNodes[i] as DomNodeLike;
     if (c.nodeType === COMMENT) continue;
@@ -166,6 +167,16 @@ function walkElem(el: DomElementLike, ctx: Ctx, isRoot: boolean): XmlElem {
     }
     if (c.nodeType !== ELEMENT) continue;
     const ce = c as DomElementLike;
+    if (localName(ce) === "server") {
+      // Realtime-bus section (spec 2026-07-06-realtime-bus-design.md):
+      // stripped from the client compile BEFORE stamping and BEFORE the child
+      // walk — load-bearing: an unstamped subtree is removed from the live
+      // page by the bootstrap's existing cleanup().
+      if (!isRoot) throw new DomDialectError("<server> must be a direct child of <laszlo-app>");
+      if (sawServer) throw new DomDialectError("at most one <server> section per app");
+      sawServer = true;
+      continue;
+    }
     if (localName(ce) === "script") {
       children.push(...scriptNodes(ce, name, childCtx));
       if (isCodeParent) sawCarrier = true;

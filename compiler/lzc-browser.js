@@ -1358,32 +1358,40 @@ var Parser = class {
    *  `cast` operator). A type is `*`, or a (possibly dotted) name — keywords
    *  `void`/`null`/`function` are also valid type names — with an optional
    *  `.<…>` vector parameter and an optional trailing `?` (nullable type). */
+  /** Skip an ActionScript-style `:Type` annotation — erased from OUTPUT, but the
+   *  type TEXT is returned for reflection (lfc-reflect). null = no annotation. */
   skipTypeAnnotation() {
     if (!this.is(":"))
-      return;
+      return null;
     this.next();
-    this.typeExpr();
+    return this.typeExpr();
   }
   typeExpr() {
+    let text = "";
     if (this.is("*")) {
       this.next();
+      text = "*";
     } else {
       if (this.is("id") || this.is("void") || this.is("null") || this.is("function"))
-        this.next();
+        text = this.next().v;
       else
         throw new ScUnsupported(`type: unexpected ${this.peek().t} '${this.peek().v}'`);
       while (this.is(".")) {
         this.next();
         if (this.is("<")) {
           this.next();
-          this.typeExpr();
+          text += ".<" + this.typeExpr();
           this.eat(">");
+          text += ">";
         } else
-          this.eat("id");
+          text += "." + this.eat("id").v;
       }
     }
-    if (this.is("?"))
+    if (this.is("?")) {
       this.next();
+      text += "?";
+    }
+    return text;
   }
   parseProgram() {
     const body = [];
@@ -1629,13 +1637,13 @@ var Parser = class {
         this.next();
         do {
           const vn = this.eat("id").v;
-          this.skipTypeAnnotation();
+          const varType = this.skipTypeAnnotation();
           let init = null;
           if (this.is("=")) {
             this.next();
             init = this.assign();
           }
-          members.push({ kind: "var", name: vn, init, static: isStatic });
+          members.push({ kind: "var", name: vn, init, static: isStatic, ...varType ? { varType } : {} });
         } while (this.is(",") && this.next());
         this.semi();
       } else if (this.is("function") && this.peek(1).t === "id") {
@@ -1932,8 +1940,8 @@ var Parser = class {
     let name = null;
     if (this.is("id"))
       name = this.next().v;
-    const { names, defaults, rest } = this.formalParams();
-    this.skipTypeAnnotation();
+    const { names, defaults, rest, types } = this.formalParams();
+    const returnType = this.skipTypeAnnotation();
     this.eat("{");
     let throwsError = false;
     let userFunctionName;
@@ -1959,13 +1967,14 @@ var Parser = class {
       const init = { k: "call", c: slice, args: [{ k: "id", name: "arguments" }, { k: "num", raw: String(names.length) }], line: restLine };
       body.unshift({ s: "var", decls: [{ name: rest, init }], line: restLine });
     }
-    return { k: "func", name, params: names, defaults, body, line: fline, col: ftok.col, file: ftok.file, ...throwsError ? { throwsError: true } : {}, ...noBacktrace ? { noBacktrace: true } : {}, ...noProfile ? { noProfile: true } : {}, ...userFunctionName !== void 0 ? { userFunctionName } : {} };
+    return { k: "func", name, params: names, defaults, body, line: fline, col: ftok.col, file: ftok.file, ...throwsError ? { throwsError: true } : {}, ...noBacktrace ? { noBacktrace: true } : {}, ...noProfile ? { noProfile: true } : {}, ...userFunctionName !== void 0 ? { userFunctionName } : {}, ...types.some((t) => t != null) ? { paramTypes: types } : {}, ...returnType != null ? { returnType } : {} };
   }
   /** Formal parameter list `(a, b:Type, c=default)` → names + optional defaults. */
   formalParams() {
     this.eat("(");
     const names = [];
     const defaults = [];
+    const types = [];
     let rest = null;
     while (!this.is(")")) {
       if (this.is("...")) {
@@ -1975,7 +1984,7 @@ var Parser = class {
         break;
       }
       const nm = this.eat("id").v;
-      this.skipTypeAnnotation();
+      const pt = this.skipTypeAnnotation();
       let def = null;
       if (this.is("=")) {
         this.next();
@@ -1983,13 +1992,14 @@ var Parser = class {
       }
       names.push(nm);
       defaults.push(def);
+      types.push(pt);
       if (this.is(","))
         this.next();
       else
         break;
     }
     this.eat(")");
-    return { names, defaults, rest };
+    return { names, defaults, rest, types };
   }
   argList() {
     this.eat("(");
@@ -2237,7 +2247,7 @@ function foldNode(n) {
     case "cast":
       return { k: "cast", e: foldNode(n.e), type: foldNode(n.type) };
     case "func":
-      return { k: "func", name: n.name, params: n.params, defaults: n.defaults.map((d) => d ? foldNode(d) : null), body: foldStmts(n.body), line: n.line, col: n.col, file: n.file, ...n.throwsError ? { throwsError: true } : {}, ...n.noBacktrace ? { noBacktrace: true } : {}, ...n.noProfile ? { noProfile: true } : {}, ...n.userFunctionName !== void 0 ? { userFunctionName: n.userFunctionName } : {} };
+      return { k: "func", name: n.name, params: n.params, defaults: n.defaults.map((d) => d ? foldNode(d) : null), body: foldStmts(n.body), line: n.line, col: n.col, file: n.file, ...n.throwsError ? { throwsError: true } : {}, ...n.noBacktrace ? { noBacktrace: true } : {}, ...n.noProfile ? { noProfile: true } : {}, ...n.userFunctionName !== void 0 ? { userFunctionName: n.userFunctionName } : {}, ...n.paramTypes ? { paramTypes: n.paramTypes } : {}, ...n.returnType != null ? { returnType: n.returnType } : {} };
     case "bin":
       return { k: "bin", op: n.op, l: foldNode(n.l), r: foldNode(n.r) };
     case "assign":
@@ -8004,6 +8014,7 @@ function walkElem(el, ctx, isRoot) {
   const children = [];
   const isCodeParent = CODE_PARENTS.has(name);
   let sawCarrier = false;
+  let sawServer = false;
   for (let i = 0; i < el.childNodes.length; i++) {
     const c = el.childNodes[i];
     if (c.nodeType === COMMENT)
@@ -8015,6 +8026,14 @@ function walkElem(el, ctx, isRoot) {
     if (c.nodeType !== ELEMENT)
       continue;
     const ce = c;
+    if (localName(ce) === "server") {
+      if (!isRoot)
+        throw new DomDialectError("<server> must be a direct child of <laszlo-app>");
+      if (sawServer)
+        throw new DomDialectError("at most one <server> section per app");
+      sawServer = true;
+      continue;
+    }
     if (localName(ce) === "script") {
       children.push(...scriptNodes(ce, name, childCtx));
       if (isCodeParent)

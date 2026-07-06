@@ -1,0 +1,7 @@
+<canvas width="400" height="200">
+  <view name="box" width="oops" x="${nope + 1}">
+    <method name="f">
+      return this doesn't parse as TS but is never checked;
+    </method>
+  </view>
+</canvas>
