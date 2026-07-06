@@ -3,7 +3,14 @@
 **Date:** 2026-07-06 (rev 3 — round-2 review applied: engine-control rule
 respects authored/constrained sizes, text restore mechanism designed,
 adapter init rules made normative, factual corrections)
-**Status:** Approved design, pre-implementation
+**Status:** Implemented — 2026-07-06 (branch dom-authoring-slice6; 131 tests green
+incl. 14-case geometry battery + compile + checker fixtures; demo lzx-check-clean.
+Deviations: engine accessor layer fixed for reverse axes — dreemgl's rewritten
+isDimDefined + 14 siblings threw on row-reverse/column-reverse, normalized via
+baseAxis(), asymmetric-margin flip under reverse documented out of scope; snapshots
+taken at TAKEOVER not adoption (constraints may apply after onaddsubview).
+In-browser interaction pass (toolbar resize, wrap re-flow) pending user browser —
+no browser automation in this environment.)
 **Builds on:** Slices 1–4 (lands after Slice 5 in the stack; no functional
 dependency on it).
 **Engine provenance:** dreemgl `system/lib/layout.js` — Facebook's
