@@ -75,7 +75,8 @@ const textOf = (el) => {
 };
 export function extractApp(root, opts = {}) {
     const model = { classes: [], instances: [], bodies: [], constraints: [],
-        skippedLzs: 0, nameIssues: [], staticIssues: [], serverTags: [] };
+        skippedLzs: 0, nameIssues: [], staticIssues: [], serverTags: [],
+        serverTransport: { mode: "node" } };
     const seenIds = new Set();
     const userClasses = new Map();
     let instSeq = 0;
@@ -193,17 +194,30 @@ export function extractApp(root, opts = {}) {
     // The <server> section (realtime bus): tags -> typed model with RAW TS
     // bodies (the bus transpiles; the checker's SERVER program checks them).
     function walkServer(serverEl) {
+        const transport = (serverEl.getAttribute("transport") ?? "node").toLowerCase();
+        if (transport === "supabase") {
+            const url = serverEl.getAttribute("supabase-url") ?? undefined;
+            const key = serverEl.getAttribute("supabase-key") ?? undefined;
+            model.serverTransport = { mode: "supabase", url, key };
+            if (!url || !key)
+                model.staticIssues.push({ message: `transport="supabase" requires supabase-url and supabase-key`, line: serverEl.line });
+        }
         const seen = new Set();
         for (const tagEl of elemChildren(serverEl)) {
             const name = tagEl.getAttribute("name") ?? "";
             if (!checkName("server tag name", name, tagEl.line))
                 continue;
+            if (model.serverTransport.mode === "supabase" && name === "presence") {
+                model.staticIssues.push({ message: `server tag name "presence" is reserved in supabase mode (built-in)`, line: tagEl.line });
+                continue;
+            }
             if (seen.has(name)) {
                 model.staticIssues.push({ message: `duplicate server tag name "${name}"`, line: tagEl.line });
                 continue;
             }
             seen.add(name);
-            const tag = { name, tsName: "LzSrv_" + name, attrs: [], methods: [], handlers: [] };
+            const table = tagEl.getAttribute("table") ?? undefined;
+            const tag = { name, tsName: "LzSrv_" + name, attrs: [], methods: [], handlers: [], ...(table ? { table } : {}) };
             const rawBody = (el) => {
                 const carrier = elemChildren(el).find((c) => c.tagName === "SCRIPT");
                 return textOf(carrier ?? el);
@@ -217,11 +231,15 @@ export function extractApp(root, opts = {}) {
                         tag.attrs.push(declAttr(cn, c.getAttribute("type")));
                 }
                 else if (t === "method") {
+                    if (model.serverTransport.mode === "supabase")
+                        model.staticIssues.push({ message: `<method> on server tag "${name}": no execution home in supabase mode — use the Node bus, or a table-backed tag`, line: c.line });
                     const { code, line } = rawBody(c);
                     if (checkName("method", cn, c.line))
                         tag.methods.push({ name: cn, args, code, srcLine: line });
                 }
                 else if (t === "handler") {
+                    if (model.serverTransport.mode === "supabase")
+                        model.staticIssues.push({ message: `<handler> on server tag "${name}": no execution home in supabase mode — use the Node bus, or a table-backed tag`, line: c.line });
                     const { code, line } = rawBody(c);
                     tag.handlers.push({ name: cn, args, code, srcLine: line });
                 }
