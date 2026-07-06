@@ -295,7 +295,7 @@ export function parseHtmlDialect(src: string): HtmlElem[] {
   return tops;
 }
 
-/** Depth-first search for the <laszlo-app> element. */
+/** Breadth-first search for the <laszlo-app> element. */
 export function findLaszloApp(tops: HtmlElem[]): HtmlElem {
   const stack = [...tops];
   while (stack.length) {
@@ -450,6 +450,8 @@ const VIEW_RELATIONAL: Record<string, string> = { subviews: "LzView[]" };
 // LaszloView.lzs:2854/:2926/:2986). The strict setAttribute catches both
 // misspelled attribute names and wrong-typed values; escape: (this as any).
 const NODE_METHODS = [
+  // NOTE: `keyof this & string` also admits method/event names (harmless);
+  // the point is rejecting MISSPELLED names and wrong-typed values.
   "setAttribute<K extends keyof this & string>(name: K, value: this[K]): void;",
   "destroy(): void;",
   "animate(prop: string, to: number, duration: number, isRelative?: boolean | null, moreargs?: Record<string, any> | null): any;",
@@ -540,11 +542,13 @@ export interface AppInstanceModel {
   namedChildren: { name: string; tsName: string }[];
   id?: string;
 }
+export interface NameIssue { message: string; line: number }
 export interface AppModel {
   classes: AppClassModel[];
   instances: AppInstanceModel[];
   bodies: BodyInfo[];
   skippedLzs: number;     // text/lzs carriers not checked
+  nameIssues: NameIssue[]; // invalid TS identifiers (ids/class/attr names) — excluded from emission, reported as findings
 }
 export function extractApp(root: HtmlElem): AppModel
 ```
@@ -555,7 +559,7 @@ export function extractApp(root: HtmlElem): AppModel
 - Every element that is an app *instance* (the root, plus any element that is not one of `attribute/method/handler/setter/script/class/interface/mixin/dataset/include/font/resource`) gets an `AppInstanceModel` with a synthesized `LzInst_<n>` type extending its base; `name="x"` on a child adds `x: LzInst_<child>` to the PARENT instance's `namedChildren`; `id="y"` records `id`.
 - `<class name="rec" extends="view">`: attrs from `<attribute name= type=>` children (type map: same `tsTypeOf` keys; missing/unknown type → `any` — LZX's default attribute type is expression); `<method name="f" args="a,b">` → `methodSigs` entry `f(a: any, b: any): any;`; bodies inside the class get `ownerType = LzUser_rec`. Class subtrees do NOT produce `AppInstanceModel`s (they are templates).
 - **Bodies**: `<method>/<handler>/<setter>` with a `text/typescript` carrier (or plain text) produce a `BodyInfo`; `text/lzs` carriers increment `skippedLzs`. `srcLine` = the carrier text node's `line` (or the plain text node's).
-- **Params**: `<method args="a, b">` → `a: any, b: any`. `<handler name="onXYZ" args="v">` → `v` typed by resolving attr `XYZ`: (1) instance/class declared `<attribute>` walking the user-extends chain, (2) `schemaAttrType(baseTag, "XYZ")` → `tsTypeOf`, else `any`. `<setter name="w" args="v">` → same resolution for attr `w`.
+- **Params**: `<method args="a, b">` → `a: any, b: any`. `<handler name="onXYZ" args="v">` → `v` typed by resolving attr `XYZ`: (1) instance/class declared `<attribute>` walking the user-extends chain, (2) `schemaAttrType(baseTag, "XYZ")`, else `any`. **Payloads use the RESOLVED type** — `size`/`sizeExpression` → `number`, not `number | string`: the LFC fires attribute events with the resolved value (verified: `$lzc$set_width` sends the computed pixel number, LaszloView.lzs:1354/:2498; a `number | string` payload would false-positive TS2362 on `w * 2` in every real onwidth handler). `<setter name="w" args="v">` → the PROPERTY type (setters receive the authored value, which may be a percent string).
 - `<dataset>` subtrees are data: skipped entirely.
 
 - [ ] **Step 1: Write the failing tests**
@@ -607,11 +611,20 @@ test("handler payload typed from the declared attribute; setter arg likewise", (
     '<setter name="count" args="v"><script type="text/typescript">return v;</script></setter>' +
     "</view></laszlo-app>");
   const [oncount, onwidth, onclick, setcount] = m.bodies;
-  assert.deepEqual(oncount.params, [{ name: "c", tsType: "number" }]);          // declared attr
-  assert.deepEqual(onwidth.params, [{ name: "w", tsType: "number | string" }]); // schema size
-  assert.deepEqual(onclick.params, [{ name: "e", tsType: "any" }]);             // non-attr event
+  assert.deepEqual(oncount.params, [{ name: "c", tsType: "number" }]);  // declared attr
+  assert.deepEqual(onwidth.params, [{ name: "w", tsType: "number" }]);  // schema size, RESOLVED for payloads
+  assert.deepEqual(onclick.params, [{ name: "e", tsType: "any" }]);     // non-attr event
   assert.deepEqual(setcount.params, [{ name: "v", tsType: "number" }]);
   assert.equal(oncount.ownerType, "LzInst_2");
+});
+
+test("name validation: constructor / invalid identifiers become issues, not declarations", () => {
+  const m = app('<laszlo-app><view id="my-id"><attribute name="constructor" type="number"></attribute></view></laszlo-app>');
+  assert.equal(m.nameIssues.length, 2);
+  assert.ok(m.nameIssues[0].message.includes("my-id"));
+  assert.ok(m.nameIssues[1].message.includes("constructor"));
+  assert.equal(m.instances[1].id, undefined);
+  assert.deepEqual(m.instances[1].attrs, []);
 });
 
 test("text/lzs carriers skipped and counted; dataset subtrees skipped; srcLine recorded", () => {
@@ -649,7 +662,15 @@ export interface AppModel { classes: AppClassModel[]; instances: AppInstanceMode
 
 const ELEMENT = 1, TEXT = 3;
 const NON_INSTANCE = new Set(["attribute", "method", "handler", "setter", "script",
-  "class", "interface", "mixin", "dataset", "include", "font", "resource"]);
+  "class", "interface", "mixin", "dataset", "include", "font", "resource",
+  "event", "splash", "stylesheet", "import"]);
+
+// Names emitted into the generated .d.ts must be TS identifiers; `constructor`
+// is a class-member keyword. Invalid names become NameIssue findings and are
+// excluded from emission (a corrupted declaration file would poison the whole
+// check — the driver also surfaces any residual app-d.ts diagnostics).
+const TS_IDENT = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
+const validName = (n: string) => TS_IDENT.test(n) && n !== "constructor";
 
 // LZX <attribute type=…> vocabulary → TS (shares tsTypeOf keys; default any —
 // LZX's default attribute type is `expression`).
@@ -671,13 +692,24 @@ const textOf = (el: HtmlElem): { code: string; line: number } => {
 };
 
 export function extractApp(root: HtmlElem): AppModel {
-  const model: AppModel = { classes: [], instances: [], bodies: [], skippedLzs: 0 };
+  const model: AppModel = { classes: [], instances: [], bodies: [], skippedLzs: 0, nameIssues: [] };
   const userClasses = new Map<string, AppClassModel>();
   let instSeq = 0;
 
+  /** Validate a to-be-emitted name; record + reject invalid ones. */
+  function checkName(kind: string, n: string, line: number): boolean {
+    if (validName(n)) return true;
+    model.nameIssues.push({ message: `${kind} "${n}" is not a valid identifier (or is "constructor") — excluded from checking`, line });
+    return false;
+  }
+
   // Resolve an attribute's TS type on an owner: declared attrs (walking the
-  // user-extends chain), then the built-in schema, else any.
-  function resolveAttrType(name: string, declared: AppAttr[], baseTag: string, extChain: string[]): string {
+  // user-extends chain), then the built-in schema, else any. `resolved: true`
+  // is the EVENT-PAYLOAD flavor: the LFC fires attribute events with the
+  // resolved value (e.g. onwidth sends the computed pixel number, never a
+  // percent string — LaszloView.lzs $lzc$set_width/updateWidth), so size
+  // maps to plain number there; property declarations keep number | string.
+  function resolveAttrType(name: string, declared: AppAttr[], baseTag: string, extChain: string[], resolved: boolean): string {
     const d = declared.find((a) => a.name === name);
     if (d) return d.tsType;
     for (const cn of extChain) {
@@ -686,7 +718,9 @@ export function extractApp(root: HtmlElem): AppModel {
       if (ca) return ca.tsType;
     }
     const s = schemaAttrType(baseTag, name);
-    return s ? tsTypeOf(s) : "any";
+    if (!s) return "any";
+    if (resolved && (s === "size" || s === "sizeExpression")) return "number";
+    return tsTypeOf(s);
   }
 
   // Collect a code body from <method>/<handler>/<setter>. Returns null for
@@ -715,11 +749,11 @@ export function extractApp(root: HtmlElem): AppModel {
     if (kind === "handler") {
       const ev = el.getAttribute("name") ?? "";
       const attr = ev.startsWith("on") ? ev.slice(2) : "";
-      const t = attr ? resolveAttrType(attr, declared, baseTag, extChain) : "any";
+      const t = attr ? resolveAttrType(attr, declared, baseTag, extChain, true) : "any";
       return args.map((a, i) => ({ name: a, tsType: i === 0 ? t : "any" }));
     }
     if (kind === "setter") {
-      const t = resolveAttrType(el.getAttribute("name") ?? "", declared, baseTag, extChain);
+      const t = resolveAttrType(el.getAttribute("name") ?? "", declared, baseTag, extChain, false);
       return args.map((a, i) => ({ name: a, tsType: i === 0 ? t : "any" }));
     }
     return args.map((a) => ({ name: a, tsType: "any" }));
@@ -727,6 +761,7 @@ export function extractApp(root: HtmlElem): AppModel {
 
   function walkClass(el: HtmlElem): void {
     const name = el.getAttribute("name") ?? "anonymous";
+    if (!checkName("class", name, el.line)) return; // issue recorded; class skipped
     const ext = el.getAttribute("extends") ?? "view";
     const extUser = userClasses.get(ext);
     const cls: AppClassModel = {
@@ -741,7 +776,10 @@ export function extractApp(root: HtmlElem): AppModel {
     const desc = `<class name="${name}">`;
     for (const c of elemChildren(el)) {
       const t = c.tagName.toLowerCase();
-      if (t === "attribute") cls.attrs.push({ name: c.getAttribute("name") ?? "", tsType: attrDeclTsType(c.getAttribute("type")) });
+      if (t === "attribute") {
+        const an = c.getAttribute("name") ?? "";
+        if (checkName("attribute", an, c.line)) cls.attrs.push({ name: an, tsType: attrDeclTsType(c.getAttribute("type")) });
+      }
       else if (t === "method") {
         const args = (c.getAttribute("args") ?? "").split(/[\s,]+/).filter(Boolean);
         cls.methodSigs.push(`${c.getAttribute("name")}(${args.map((a) => a + ": any").join(", ")}): any;`);
@@ -765,9 +803,9 @@ export function extractApp(root: HtmlElem): AppModel {
     };
     model.instances.push(inst);
     const id = el.getAttribute("id");
-    if (id) inst.id = id;
+    if (id && checkName("id", id, el.line)) inst.id = id;
     const nm = el.getAttribute("name");
-    if (nm && parent) parent.namedChildren.push({ name: nm, tsName: inst.tsName });
+    if (nm && parent && checkName("name", nm, el.line)) parent.namedChildren.push({ name: nm, tsName: inst.tsName });
 
     const baseTag = builtinTsName(tag) ? tag : "view";
     const extChain = user ? [tag] : [];
@@ -775,8 +813,10 @@ export function extractApp(root: HtmlElem): AppModel {
 
     // First pass: attribute declarations (so handler payloads can see them).
     for (const c of elemChildren(el))
-      if (c.tagName.toLowerCase() === "attribute")
-        inst.attrs.push({ name: c.getAttribute("name") ?? "", tsType: attrDeclTsType(c.getAttribute("type")) });
+      if (c.tagName.toLowerCase() === "attribute") {
+        const an = c.getAttribute("name") ?? "";
+        if (checkName("attribute", an, c.line)) inst.attrs.push({ name: an, tsType: attrDeclTsType(c.getAttribute("type")) });
+      }
 
     for (const c of elemChildren(el)) {
       const t = c.tagName.toLowerCase();
@@ -786,7 +826,9 @@ export function extractApp(root: HtmlElem): AppModel {
       if (t === "method") {
         const args = (c.getAttribute("args") ?? "").split(/[\s,]+/).filter(Boolean);
         // instance methods surface on the instance type via methodSigs-like attr
-        inst.attrs.push({ name: c.getAttribute("name") ?? "", tsType: `(${args.map((a) => a + ": any").join(", ")}) => any` });
+        const mn = c.getAttribute("name") ?? "";
+        if (checkName("method", mn, c.line))
+          inst.attrs.push({ name: mn, tsType: `(${args.map((a) => a + ": any").join(", ")}) => any` });
         collectBody(c, inst.tsName, desc, bodyParams(c, "method", inst.attrs, baseTag, extChain));
         continue;
       }
@@ -995,7 +1037,7 @@ Create `compiler/test/fixtures/check-errors.html`:
 </laszlo-app>
 ```
 
-Seeded errors: (1) wrong-typed `setAttribute('count', 'oops')` — `count: number`; (2) misspelled member `this.cuont`; (3) `w.toUpperCase()` where `onwidth`'s payload is `number | string` → not callable without narrowing. These are exactly the spec's Testing #6 triple.
+Seeded errors: (1) wrong-typed `setAttribute('count', 'oops')` — `count: number`; (2) misspelled member `this.cuont`; (3) `w.toUpperCase()` where `onwidth`'s payload is `number` (resolved) → TS2339. These are exactly the spec's Testing #6 triple.
 
 - [ ] **Step 2: Write the failing tests**
 
@@ -1040,6 +1082,13 @@ test("lzs carriers are skipped, not failed", () => {
   assert.equal(r.skippedLzs, 1);
   assert.equal(r.findings.length, 0);
 });
+
+test("invalid names surface as findings instead of corrupting the check", () => {
+  const r = checkApp('<laszlo-app><view id="my-id"><attribute name="constructor"></attribute><handler name="onclick"><script type="text/typescript">return 1;</script></handler></view></laszlo-app>', "x.html");
+  assert.equal(r.findings.filter((f) => f.element === "(name validation)").length, 2);
+  // the body still checks (and is clean) despite the rejected declarations
+  assert.equal(r.bodiesChecked, 1);
+});
 ```
 
 - [ ] **Step 3: Run to verify failure**
@@ -1064,7 +1113,8 @@ Create `compiler/src/lzx-check.ts`:
 // mapped back to the app file through the BodySpan table.
 
 import ts from "typescript";
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 import { parseHtmlDialect, findLaszloApp } from "./htmlsource.js";
 import { extractApp } from "./app-model.js";
 import { generateAppDts, generateBodies, BodySpan } from "./app-dts.js";
@@ -1098,10 +1148,27 @@ export function checkApp(html: string, fileName: string): CheckResult {
   host.readFile = (name) => virtual.get(name) ?? origRead(name);
 
   const prog = ts.createProgram([...virtual.keys()], COMPILER_OPTS, host);
+  const findings: Finding[] = [];
+
+  // Extraction-time name validation (invalid ids/class/attribute names).
+  for (const ni of model.nameIssues)
+    findings.push({ line: ni.line, col: 1, code: 0, message: ni.message, element: "(name validation)" });
+
+  // Diagnostics in the generated APP DECLARATIONS are real findings too (an
+  // invalid id/attribute name corrupts the type model): swallowing them would
+  // let the checker report a false "OK" over a broken program. lfc.d.ts is
+  // covered by its own compiles-clean unit test.
+  const appSf = prog.getSourceFile("__lzapp.d.ts")!;
+  for (const d of [...prog.getSyntacticDiagnostics(appSf), ...prog.getSemanticDiagnostics(appSf)]) {
+    findings.push({
+      line: 0, col: 0, code: d.code,
+      message: ts.flattenDiagnosticMessageText(d.messageText, " "),
+      element: "(generated app declarations — check id/class/attribute names)",
+    });
+  }
+
   const bodiesSf = prog.getSourceFile("__lzbodies.ts")!;
   const diags = [...prog.getSyntacticDiagnostics(bodiesSf), ...prog.getSemanticDiagnostics(bodiesSf)];
-
-  const findings: Finding[] = [];
   for (const d of diags) {
     if (d.file?.fileName !== "__lzbodies.ts" || d.start == null) continue;
     const pos = d.file.getLineAndCharacterOfPosition(d.start);
@@ -1120,7 +1187,11 @@ export function checkApp(html: string, fileName: string): CheckResult {
 }
 
 // ── CLI ─────────────────────────────────────────────────────────────────────
-const isMain = process.argv[1] && import.meta.url.endsWith(process.argv[1].split("/").pop()!);
+// realpath resolves the npm .bin symlink (whose basename has no .js extension —
+// a naive endsWith() check would make the installed bin a silent no-op);
+// pathToFileURL handles Windows paths.
+const isMain = !!process.argv[1] &&
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
 if (isMain) {
   const args = process.argv.slice(2);
   if (args[0] === "--write-lfc-dts") {
@@ -1216,6 +1287,13 @@ Then verify BOTH ways:
 node dist/lzx-check.js ../examples/dom-authoring/counter-app.html   # expect OK
 ```
 and load `http://localhost:8087/examples/dom-authoring/file-demo.html` in a browser (start `node tools/serve-static.mjs . 8087` if not running) — the counter must still widen on click.
+
+- [ ] **Step 2b: Verify the full-page (inline) path**
+
+```bash
+node dist/lzx-check.js ../examples/dom-authoring/index.html
+```
+Expected: `OK — 1 bodies checked, 0 findings` (the inline demo's handler uses `(this as any)` casts). This exercises the parser's void-element / raw-text-style / entity handling on a real page. If it errors on page structure, the parser has a well-formedness gap — fix `htmlsource.ts`.
 
 - [ ] **Step 3: Seed-check the error path end-to-end**
 

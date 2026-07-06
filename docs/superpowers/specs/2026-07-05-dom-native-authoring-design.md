@@ -218,23 +218,45 @@ in this repo.
 
 Three generated layers, then a checker harness:
 
-1. **`lfc.d.ts`** — generated from the compiler's schema + LFC: `LzView`,
-   `LzNode`, `LzText`, …, the tag→class map, event/delegate shapes, `lz.*`
-   services, `canvas`.
+1. **`lfc.d.ts`** — generated from the compiler's oracle schema
+   (`schema-types.ts`: class lineage, attribute types, event *names* —
+   events typed `any`) plus a small hand-curated method core verified
+   against `runtime/lfc-src` (`setAttribute`/`destroy`/`animate`; view:
+   `bringToFront`/`sendToBack`/`setSource`), and the `canvas` global.
+   Delegate shapes and `lz.*` typing are `any` in Slice 2 (follow-up).
 2. **Per-app declarations** — synthesized from the authored DOM: each
-   `<class name="rec" extends="view">` becomes an interface extending
+   `<class name="rec" extends="view">` becomes a declared class extending
    `LzView`, with `<attribute type="…">` mapped to TS types (`number`→
-   `number`, `boolean`→`boolean`, `color`→`string | number`, `expression`→
-   `unknown`, …), `<method>` signatures from their `args`, and named
-   children / `id`s as typed properties / globals.
+   `number`, `boolean`→`boolean`, `color`→`string | number`, `size`→
+   `number | string`, `expression`/`css`/missing→`any` — LZX's default
+   attribute type is `expression`), `<method>` signatures from their
+   `args`, and named children / `id`s as typed properties / globals.
+   Deterministic type names: built-ins `Lz<Tag>`, user classes
+   `LzUser_<name>`, per-instance synthesized types `LzInst_<n>`. Ids,
+   class names, and attribute names must be TS identifiers (and not
+   `constructor`) — violations are findings, and diagnostics from the
+   generated app declarations themselves are surfaced, never swallowed.
 3. **Body-checking harness** — each method/handler body is checked as a
-   function body with **typed `this`** (the owning class) and typed args
-   (a handler's event payload type). `${…}` constraint expressions get
-   best-effort checking the same way.
+   function body with **typed `this`** (the owning class) and typed args:
+   a handler observing an attribute is typed from that attribute, with
+   size attrs resolved to `number` (the LFC fires attribute events with
+   the *resolved* value — e.g. `$lzc$set_width` sends the computed pixel
+   number, never a percent string). `setAttribute` is strict —
+   `setAttribute<K extends keyof this & string>(name: K, value: this[K])`
+   — so misspelled attribute names and wrong-typed values are findings;
+   LZX's set-an-undeclared-name idiom needs the `(this as any)` escape
+   hatch, deliberately. TS bodies must use explicit `this.` (the runtime's
+   `with(this)` scoping tolerates bare names; the checker does not).
+   `${…}` **constraint expressions are deferred**: constraints compile
+   with `with(this)` scoping (bare `parent` etc., compile.ts:563), which
+   TS cannot model without identifier rewriting — a follow-up.
 
 **Where it runs:** dev-time. A Node CLI (`lzx-check`) loads an app (inline
-page or file), synthesizes the declarations, runs `tsc`, and reports
-diagnostics mapped back to their element. The browser bootstrap never blocks
+page or file — pages must be **well-formed**: explicit close tags; HTML void
+elements and raw-text `<script>`/`<style>` are supported, but the checker's
+dependency-free parser has no HTML implied-end-tag error recovery),
+synthesizes the declarations, runs `tsc`, and reports diagnostics mapped
+back to their element. The browser bootstrap never blocks
 on checking (erasability: strip always succeeds; diagnostics are a dev tool).
 An in-browser `?debug` diagnostics overlay is a possible later addition.
 
@@ -396,6 +418,9 @@ bundle (`compiler/lzc-browser.js`) directly.
 - Exhaustive component-library coverage or porting all examples.
 - The dreem2 visual editor.
 - In-browser type-diagnostics overlay (`lzx-check` is dev-time CLI first).
+- `${…}` constraint-expression checking (blocked on `with(this)` scoping —
+  see "App-aware type checking" layer 3).
+- Typed `lz.*` services and event/delegate shapes (`any` in Slice 2).
 - **Debug/backtrace/profile source-line parity for DOM-authored apps.** A
   live DOM has no source text lines; DOM-path apps target the production
   build. They still *run* under `?debug` — they just lack exact source-line
