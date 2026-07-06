@@ -253,3 +253,13 @@ replay/versioning, hot reload of the `<server>` section, `.lzx`-dialect
 `<server>`, multi-screen targets, the dreem2 visual editor, horizontal
 scaling. `SrvNode` is deliberately factored so plain-Node-module server
 objects (approach C) can register on the bus later without protocol changes.
+
+**Slice 3b (agreed roadmap): Supabase Realtime transport.** The protocol is
+transport-agnostic JSON, so Supabase Realtime channels map naturally
+(channel-per-app rooms, broadcast fan-out, managed presence — the feature
+this spec reserves). The unlock: shared state on STATIC hosting (GitHub
+Pages) with no Node server. The open design question for 3b's brainstorm:
+where server-tag LOGIC executes — a Supabase Edge Function hosting SrvNode
+(serverless, still server-authoritative), a client-authoritative degraded
+mode (state-only tags, no methods), or hybrid (Node bus authoritative,
+Supabase as scale-out transport).
