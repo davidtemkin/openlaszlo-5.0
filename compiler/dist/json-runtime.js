@@ -86,7 +86,55 @@ export class JsonRegistry {
         }, (e) => ds.fireError(`fetch ${url} failed: ${e.message}`));
     }
     liveInto(ds, url) {
-        ds.fireError("ws source not built yet"); // replaced in Task 9
+        const host = this.host;
+        if (!host.makeSocket) {
+            ds.fireError("no WebSocket available");
+            return;
+        }
+        let sawSnapshot = false;
+        let retry = 0;
+        const connect = () => {
+            const ws = host.makeSocket(url);
+            ws.onopen = () => { retry = 0; ws.send(JSON.stringify({ lz: 1, subscribe: ds.name })); };
+            ws.onmessage = (ev) => {
+                let m;
+                try {
+                    m = JSON.parse(ev.data);
+                }
+                catch {
+                    host.warn(`dataset "${ds.name}": malformed frame skipped`);
+                    return;
+                }
+                if (!m || m.dataset !== ds.name) {
+                    host.warn(`dataset "${ds.name}": message for "${m?.dataset}" skipped`);
+                    return;
+                }
+                if ("data" in m) {
+                    if (m.data !== null) {
+                        sawSnapshot = true;
+                        ds.setData(m.data);
+                    }
+                }
+                else if (m.update && typeof m.update.path === "string") {
+                    if (!sawSnapshot)
+                        host.warn(`dataset "${ds.name}": update before snapshot dropped`);
+                    else
+                        ds.updateData(m.update.path, m.update.value);
+                }
+                else if (typeof m.error === "string") {
+                    ds.fireError(m.error);
+                }
+                else
+                    host.warn(`dataset "${ds.name}": unknown message skipped`);
+            };
+            ws.onclose = () => {
+                const delay = Math.min(30000, 500 * 2 ** retry++);
+                if (retry === 8)
+                    ds.fireError("connection lost after 8 attempts; still retrying at the cap");
+                (host.setTimeoutFn ?? ((cb, ms) => setTimeout(cb, ms)))(connect, delay);
+            };
+        };
+        connect();
     }
 }
 /** Implicit replication over a JSON-dialect datapath (spec "Replication").

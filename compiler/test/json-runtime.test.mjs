@@ -167,6 +167,82 @@ test("onclones fires on the parent when an event exists; destroyed parent unbind
   assert.deepEqual(clonesSeen, [1]);              // no refresh after parent death
 });
 
+// ── live (WebSocket) source ────────────────────────────────────────────────
+
+function makeSocketRig() {
+  const sockets = [];
+  const makeSocket = (url) => {
+    const ws = { url, sent: [], onopen: null, onmessage: null, onclose: null,
+      send(s) { this.sent.push(JSON.parse(s)); }, close() {} };
+    sockets.push(ws);
+    return ws;
+  };
+  return { sockets, makeSocket, open: (ws) => ws.onopen(), msg: (ws, m) => ws.onmessage({ data: JSON.stringify(m) }) };
+}
+
+test("live: subscribe on open; snapshot then updates apply; pre-snapshot updates drop", () => {
+  const rig = makeSocketRig();
+  const host = makeHost({ makeSocket: rig.makeSocket, setTimeoutFn: () => {} });
+  const ds = installJsonRuntime(host).register("sensors", { ws: "ws://h/api/data" });
+  const [ws] = rig.sockets;
+  rig.open(ws);
+  assert.deepEqual(ws.sent, [{ lz: 1, subscribe: "sensors" }]);
+  rig.msg(ws, { dataset: "sensors", update: { path: "/temp", value: 1 } });   // before snapshot
+  assert.equal(ds.ready, false);
+  assert.ok(host.warnings.some((w) => /before snapshot/.test(w)));
+  rig.msg(ws, { dataset: "sensors", data: { temp: 20 } });
+  rig.msg(ws, { dataset: "sensors", update: { path: "/temp", value: 22.4 } });
+  assert.equal(ds.data.temp, 22.4);
+});
+
+test("live: null snapshot keeps waiting; wrong-dataset and malformed skipped; error fires onError", () => {
+  const rig = makeSocketRig();
+  const host = makeHost({ makeSocket: rig.makeSocket, setTimeoutFn: () => {} });
+  const ds = installJsonRuntime(host).register("sensors", { ws: "ws://h/api/data" });
+  const errs = [];
+  ds.onError((m) => errs.push(m));
+  const [ws] = rig.sockets;
+  rig.open(ws);
+  rig.msg(ws, { dataset: "sensors", data: null });
+  assert.equal(ds.ready, false);
+  rig.msg(ws, { dataset: "other", data: { x: 1 } });
+  ws.onmessage({ data: "{not json" });
+  assert.equal(ds.ready, false);
+  rig.msg(ws, { dataset: "sensors", error: "refused" });
+  assert.deepEqual(errs, ["refused"]);
+});
+
+test("live: reconnect with backoff, re-subscribe, backoff resets on open", () => {
+  const rig = makeSocketRig();
+  const delays = [];
+  const timers = [];
+  const host = makeHost({ makeSocket: rig.makeSocket,
+    setTimeoutFn: (cb, ms) => { delays.push(ms); timers.push(cb); } });
+  installJsonRuntime(host).register("sensors", { ws: "ws://h/api/data" });
+  rig.sockets[0].onclose();                        // drop before ever opening
+  assert.deepEqual(delays, [500]);
+  timers.shift()();                                // fire reconnect → socket #2
+  rig.sockets[1].onclose();
+  assert.deepEqual(delays, [500, 1000]);           // doubled
+  timers.shift()();
+  rig.open(rig.sockets[2]);                        // success resets backoff
+  assert.deepEqual(rig.sockets[2].sent, [{ lz: 1, subscribe: "sensors" }]);
+  rig.sockets[2].onclose();
+  assert.equal(delays[2], 500);
+});
+
+test("live: onerror fires ONCE after 8 consecutive failures; retries continue", () => {
+  const rig = makeSocketRig();
+  const timers = [];
+  const host = makeHost({ makeSocket: rig.makeSocket, setTimeoutFn: (cb) => timers.push(cb) });
+  const ds = installJsonRuntime(host).register("s", { ws: "ws://h/api/data" });
+  const errs = [];
+  ds.onError((m) => errs.push(m));
+  for (let i = 0; i < 10; i++) { rig.sockets[rig.sockets.length - 1].onclose(); timers.shift()(); }
+  assert.equal(errs.length, 1);
+  assert.equal(rig.sockets.length, 11);            // still reconnecting after the error
+});
+
 test("fetch source: ok sets data; failure fires onError", async () => {
   const okHost = makeHost({ fetchFn: async () => ({ ok: true, status: 200, json: async () => ({ v: 42 }) }) });
   const ds = installJsonRuntime(okHost).register("a", { src: "./a.json" });
