@@ -70,6 +70,13 @@ const VIEW_METHODS = [
   "sendToBack(): void;",
   "setSource(source: string, cache?: any, headers?: any, filetype?: any): void;",
 ];
+// Layout HINTS any view may carry (read by <flexlayout>; the `ignorelayout` precedent).
+// Optional so strict setAttribute('flex', 2) typechecks without requiring declarations.
+const VIEW_PROPS = [
+  "flex?: number;",
+  "alignself?: string;",
+  "margin?: number;",
+];
 
 export function generateLfcDts(reflection?: LfcReflection): string {
   // Reconcile reflected real spellings (LzAnimatorGroup) with schema emission
@@ -141,6 +148,7 @@ export function generateLfcDts(reflection?: LfcReflection): string {
     for (const ev of SCHEMA_EVENTS[tag] ?? []) if (!emitted.has(ev)) { out.push(`  ${ev}: LzDeclaredEvent;`); emitted.add(ev); }
     if (tag === "node") for (const m of NODE_METHODS) { out.push("  " + m); emitted.add(m.split(/[<(]/)[0]); }
     if (tag === "view") for (const m of VIEW_METHODS) { out.push("  " + m); emitted.add(m.split(/[<(]/)[0]); }
+    if (tag === "view") for (const p of VIEW_PROPS) { out.push("  " + p); emitted.add(p.split(/[?:]/)[0]); }
     // Derived members (reflection) — schema/curated win on collision.
     const rc = mergedInto.get(name);
     if (rc) {

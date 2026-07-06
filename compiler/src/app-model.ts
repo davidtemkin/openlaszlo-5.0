@@ -8,6 +8,7 @@
 import type { HtmlElem, HtmlNode } from "./htmlsource.js";
 import { builtinTsName, tsTypeOf } from "./lfc-dts.js";
 import { SCHEMA, schemaAttrType } from "./schema-types.js";
+import { registryFindings } from "./component-registry.js";
 
 export interface AppAttr { name: string; tsType: string; declKind?: string }
 export interface BodyParam { name: string; tsType: string }
@@ -322,6 +323,7 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
       if (d) return d.declKind ?? null; // the ORIGINAL LZX type string, no reverse-mapping
       return schemaAttrType(baseTag, n);
     };
+    const litAttrs: Array<{ name: string; value: string; line: number }> = [];
     for (const a of el.attributes) {
       if (SKIP_LITERAL.has(a.name) || a.name.startsWith("on")) continue;
       const cm = CONSTRAINT_RE.exec(a.value);
@@ -343,7 +345,12 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
       }
       const issue = literalIssue(a.name, a.value, declKindOf(a.name));
       if (issue) model.staticIssues.push({ message: issue, line: a.line });
+      litAttrs.push({ name: a.name, value: a.value, line: a.line });
     }
+    // Component-registry validation (curated component attrs + view layout hints);
+    // constraint-valued attrs never reach litAttrs (the `continue` above).
+    for (const f of registryFindings(el.tagName.toLowerCase(), true, litAttrs))
+      model.staticIssues.push(f);
 
     const childSiblings = new Set<string>();
     for (const c of elemChildren(el)) {
