@@ -24,7 +24,7 @@
 
 - Base class `runtime/components/utils/layouts/layout.lzx`: `construct` :123 (creates `updateDelegate` :143, registers `onaddsubview`/`onremovesubview` :159-162), `gotNewSubview` filters `sd.options['ignorelayout']` :224, `removeSubview` :235, `destroy` :174, `lock()` :273-274 sets `this.locked = true`, `update` :437 is the no-op to override.
 - Pattern precedent `resizelayout.lzx`: parent-size delegate `this.updateDelegate.register(this.immediateparent, "on"+sizeAxis)` :34; per-subview `resetDelegate.register(sd, "onvisible")` + `on<size>` :48-49; `this.lock()` … `this.locked = false` (direct assignment) :122,145; options read via `sd.getOption('releasetolayout')` :42.
-- JS include in a library: `<include href="rpc/library/javarpc.js"/>` (`runtime/components/rpc/javarpc.lzx:4`); compiler handles `script` elements (`compiler/src/compile.ts:1372`).
+- Raw JS in a component library goes through **`<script src="…"/>`** (precedent `runtime/components/rpc/rpc.js`… wait, `rpc.js:3` uses `<script src="json.js"/>`), handled at `compiler/src/compile.ts:1372-1390` via `resolveScriptSrc` (exists in node-io AND browser-io:341 — both compile paths). `<include href="…js"/>` does NOT work (expandIncludes XML-parses every non-text include, compile.ts:2279-2283; javarpc.js is itself an XML library document).
 - Engine `/tmp/dreemgl/system/lib/layout.js` (cloned; if `/tmp` was wiped: `git clone --depth 1 https://github.com/dreemproject/dreemgl /tmp/dreemgl`): `define(function(){…})` wrapper :11, `fillNodes` :13 (skips children lacking `_viewport` — bypassed), live `debugger` :440 (the one at :199 is inside a commented-out function), `layoutNode(node, parentMaxWidth, parentDirection)` :110, exported as `computeLayout` :1277, dimension-defined = `!isNaN(ref._size[i])` :475-478, stretch gate :730-739, flex sets main dim :941-944, grow-only clamp :933-935, engine default flexdirection `column` :424-429.
 - Ref contract the adapter must synthesize (round-2-verified): wrapper `{ref, children, visible: true, layout:{width: undefined, height: undefined, left: 0, top: 0, right: 0, bottom: 0}}`; every ref (incl. container) carries `_size,_pos,_corner,_margin[4],_padding[4],_borderwidth[4],_minsize,_maxsize` (+ container `_margin=[0,0,0,0]`); child `_pos`/`_corner` = `[NaN,NaN]`; no `measure` key; `_flexdirection/_justifycontent/_alignitems/_alignself/_flexwrap/_position:'relative'/_direction:'ltr'` (container `_position:'absolute'` is NOT needed — the container's own layout output is unused; we only read children).
 - lzx-check test surface: `checkApp(html, name)` → `{findings:[{line, code, message}], …}` (`compiler/test/lzx-check.test.mjs:1-30`), fixtures under `compiler/test/fixtures/`.
@@ -56,8 +56,8 @@ const ref = (over = {}) => ({
   _margin: [0, 0, 0, 0], _padding: [0, 0, 0, 0], _borderwidth: [0, 0, 0, 0],
   _minsize: [NaN, NaN], _maxsize: [NaN, NaN],
   _flexdirection: "row", _justifycontent: "flex-start", _alignitems: "stretch",
-  _alignself: "auto", _flexwrap: "nowrap", _position: "relative", _direction: "ltr",
-  _flex: 0, ...over,
+  _alignself: null, _flexwrap: "nowrap", _position: "relative", _direction: "ltr",
+  _flex: 0, ...over,   // _alignself NULL, never "auto": getAlignItem (layout.js:388-396) tests truthiness — "auto" matches nothing and falls through to flex-end
 });
 const node = (r, children = []) => ({
   ref: r, children, visible: true,
@@ -104,7 +104,7 @@ test("engine: flex child grows into remaining space", () => {
      ```
      → replace with
      ```js
-     var api = { layoutNode: layoutNode, computeLayout: layoutNode, fillNodes: fillNodes };
+     var api = { layoutNode: layoutNode, computeLayout: layoutNode, fillNodes: fillNodes, extractNodes: extractNodes };
      global.LzCssLayout = api;
      if (typeof module !== "undefined" && module.exports) module.exports = api;
      })(typeof globalThis !== "undefined" ? globalThis : this);
@@ -160,8 +160,9 @@ test("flex grow: auto-main flex child takes the remainder", () => {
 });
 
 test("flex on a NON-auto main dim is not engine-controlled (spec rule)", () => {
-  const w = run(box(), [kid({ flex: 1 })]);            // width authored 50
+  const w = run(box(), [kid({ flex: 1 }), kid({ width: 30 })]);  // width authored 50 — engine must KEEP it
   assert.equal(w[0].width, null);
+  assert.equal(w[1].x, 50, "authored width actually held in the engine pass");
 });
 
 test("stretch: only auto-cross children get height written", () => {
@@ -240,7 +241,7 @@ test("zero/negative container: no negative writes", () => {
       _margin: [0, 0, 0, 0], _padding: [0, 0, 0, 0], _borderwidth: [0, 0, 0, 0],
       _minsize: [NaN, NaN], _maxsize: [NaN, NaN],
       _flexdirection: "row", _justifycontent: "flex-start", _alignitems: "stretch",
-      _alignself: "auto", _flexwrap: "nowrap", _position: "relative", _direction: "ltr",
+      _alignself: null, _flexwrap: "nowrap", _position: "relative", _direction: "ltr",   // null, NEVER "auto" (truthy → engine treats as flex-end)
       _flex: 0,
     };
     for (var k in over) r[k] = over[k];
@@ -276,7 +277,7 @@ test("zero/negative container: no negative writes", () => {
       var m = ch.margin || 0;
       var node = mkNode(mkRef({
         _size: size, _flex: ch.flex > 0 && ec.main ? ch.flex : 0,
-        _alignself: ch.alignself || "auto",
+        _alignself: ch.alignself || null,
         _margin: [m, m, m, m],
       }));
       node.idx = i;
@@ -317,7 +318,7 @@ test("zero/negative container: no negative writes", () => {
 })(typeof globalThis !== "undefined" ? globalThis : this);
 ```
 
-- [ ] **Step 4:** Run → iterate until the battery passes. Engine quirks (e.g. how `_flex` interacts with a defined main size, exact wrap line heights) are discovered HERE, in pure JS, not in a browser. Where the engine's behavior contradicts a test's expectation AND the spec is silent, match the engine and note it in the test.
+- [ ] **Step 4:** Run → iterate until the battery passes. Engine quirks (e.g. how `_flex` interacts with a defined main size, exact wrap line heights) are discovered HERE, in pure JS, not in a browser. Where the engine's behavior contradicts a test's expectation AND the spec is silent, match the engine and note it in the test. EXCEPTION: cross-axis defaults are NOT silent spec territory (alignitems stretch is normative) — a cross-axis failure means an adapter contract bug (see the _alignself null rule), never an engine quirk to encode.
 - [ ] **Step 5:** Commit: `components: flex adapter — dimension-control rule, tree build, rounded write-backs (geometry battery)`
 
 ---
@@ -383,9 +384,9 @@ Fixture `flex-check.html` (shape mirrors existing fixtures — `<laszlo-app>` + 
 
 - [ ] **Step 2:** Run → FAIL.
 - [ ] **Step 3: Implement.**
-  - `component-registry.ts`: the two tables + `registryFindings(tagName, isViewDerived, attrs: {name, value, line}[], siblings?: {tags:string[]}): Finding[]` (pure; enum check = value ∈ values, number check = `/^-?\d+(\.\d+)?$/` — `${}`-constraint values are SKIPPED, constraints are typed elsewhere). **Spec item "flex on a constrained main-axis dimension":** when the walk can cheaply provide sibling context (a `flexlayout` sibling exists) AND the view carries both a `flex` hint and a `${…}` value for the main-axis dimension, emit a finding ("flex is ignored: width/height is constrained — only auto dimensions are engine-controlled"). If threading sibling context through the walk would collide with slice-4's app-model edits, SKIP it and record the deviation in the commit message — the dimension-control rule already prevents the runtime write-fight, so the finding is advisory, not load-bearing.
+  - `component-registry.ts`: the two tables + `registryFindings(tag: string, isViewDerived: boolean, attrs: {name, value, line}[], siblings?: {tags: string[]}): Finding[]` (pure; enum check = value ∈ values, number check = `/^-?\d+(\.\d+)?$/` — `${}`-constraint values are SKIPPED, constraints are typed elsewhere). **Spec item "flex on a constrained main-axis dimension":** when the walk can cheaply provide sibling context (a `flexlayout` sibling exists) AND the view carries both a `flex` hint and a `${…}` value for the main-axis dimension, emit a finding ("flex is ignored: width/height is constrained — only auto dimensions are engine-controlled"). If threading sibling context through the walk would collide with slice-4's app-model edits, SKIP it and record the deviation in the commit message — the dimension-control rule already prevents the runtime write-fight, so the finding is advisory, not load-bearing.
   - `app-model.ts`: import + call `registryFindings` at the point markup attrs are walked; thread findings into the existing findings array.
-  - `lfc-dts.ts`: add `flex?: number; alignself?: string; margin?: number;` to the curated LzView emission (the `VIEW_RELATIONAL` seam at :56 or the adjacent property table — follow the file's local convention), then regenerate `compiler/lfc.d.ts` with the file's own `--write-lfc-dts` flow and verify the byte-diff guard the repo uses for it still passes (`npm test` covers `lfc-dts.test.mjs`).
+  - `lfc-dts.ts`: add a curated `VIEW_PROPS` push beside `VIEW_METHODS` (lfc-dts.ts:143 — `if (tag === "view") …`; NOT `VIEW_RELATIONAL`:56, which is only consulted for attrs already in SCHEMA and would be silently dead) emitting `flex?: number; alignself?: string; margin?: number;`, then regenerate `compiler/lfc.d.ts` via `npm run gen:lfcdts` (package.json:23). There is no byte-diff guard for lfc.d.ts; `lfc-dts.test.mjs` typechecks the generated text and `checkApp` reads the committed artifact — the fixture test is the real gate.
 - [ ] **Step 4:** `npm test` → new tests pass, `lfc-dts`/`lzx-check` suites still green.
 - [ ] **Step 5:** Commit: `compiler: component attribute registry (flexlayout enums + view hints) + LzView hint typing`
 
@@ -405,8 +406,8 @@ Fixture `flex-check.html` (shape mirrors existing fixtures — `<laszlo-app>` + 
 ```xml
 <library>
 <include href="utils/layouts/layout.lzx"/>
-<include href="utils/layouts/css-layout.js"/>
-<include href="utils/layouts/flex-adapter.js"/>
+<script src="css-layout.js"/>
+<script src="flex-adapter.js"/>
 <class name="flexlayout" extends="layout">
     <!--- Main axis: row (default), column, row-reverse, column-reverse. -->
     <attribute name="flexdirection" value="row" type="string"/>
@@ -436,12 +437,10 @@ Fixture `flex-check.html` (shape mirrors existing fixtures — `<laszlo-app>` + 
     <method name="addSubview" args="sd"><![CDATA[
         super.addSubview(sd);
         var uid = sd.getUID();
-        // Snapshot the authored sizing state ONCE, at adoption (spec: dimension control).
-        this.$snapshots[uid] = {
-            width:  { auto: !sd.hassetwidth,  value: sd.width  },
-            height: { auto: !sd.hassetheight, value: sd.height },
-            controlled: { width: false, height: false }
-        };
+        // Snapshot container: filled lazily AT TAKEOVER (first engine write), not at adoption —
+        // a ${…} constraint may not have applied yet when onaddsubview fires, and hasset* only
+        // becomes reliable once it has. Until we control a dim, live hasset* is the truth.
+        this.$snapshots[uid] = { width: null, height: null, controlled: { width: false, height: false } };
         var dels = this.$subDelegates[uid] = [];
         var mk = new LzDelegate(this, "update");
         mk.register(sd, "onvisible");
@@ -466,7 +465,7 @@ Fixture `flex-check.html` (shape mirrors existing fixtures — `<laszlo-app>` + 
     ]]></method>
 
     <!--- @keywords private -->
-    <method name="destroy" args="..."><![CDATA[
+    <method name="destroy"><![CDATA[
         for (var i = 0; i < this.subviews.length; i++) this.$restore(this.subviews[i]);
         for (var uid in this.$subDelegates) {
             var dels = this.$subDelegates[uid];
@@ -504,8 +503,9 @@ Fixture `flex-check.html` (shape mirrors existing fixtures — `<laszlo-app>` + 
                 var s = subs[i], snap = this.$snapshots[s.getUID()];
                 kids.push({
                     width: s.width, height: s.height,
-                    autoWidth: snap ? snap.width.auto : !s.hassetwidth,
-                    autoHeight: snap ? snap.height.auto : !s.hassetheight,
+                    // Live hasset* unless WE set it (our own setAttribute flips hasset)
+                    autoWidth: snap && snap.controlled.width ? snap.width.auto : !s.hassetwidth,
+                    autoHeight: snap && snap.controlled.height ? snap.height.auto : !s.hassetheight,
                     // flex on a non-auto main dim is inert by the dimension rule; say so once in debug builds
                     flex: Number(s['flex']) > 0 ? Number(s['flex']) : 0,
                     alignself: s['alignself'] || null,
@@ -524,9 +524,15 @@ Fixture `flex-check.html` (shape mirrors existing fixtures — `<laszlo-app>` + 
                 var wr = writes[w], sv = subs[wr.idx], sn = this.$snapshots[sv.getUID()];
                 if (sv.x !== wr.x) sv.setAttribute('x', wr.x);
                 if (sv.y !== wr.y) sv.setAttribute('y', wr.y);
-                if (wr.width  != null) { if (sv.width  !== wr.width)  sv.setAttribute('width',  wr.width);  if (sn) sn.controlled.width  = true; }
+                if (wr.width  != null) {
+                    if (sn && !sn.controlled.width) { sn.width = { auto: !sv.hassetwidth, value: sv.width }; sn.controlled.width = true; }
+                    if (sv.width !== wr.width) sv.setAttribute('width', wr.width);
+                }
                 else if (sn && sn.controlled.width)  { /* left engine control */ this.$restoreDim(sv, sn, 'width'); }
-                if (wr.height != null) { if (sv.height !== wr.height) sv.setAttribute('height', wr.height); if (sn) sn.controlled.height = true; }
+                if (wr.height != null) {
+                    if (sn && !sn.controlled.height) { sn.height = { auto: !sv.hassetheight, value: sv.height }; sn.controlled.height = true; }
+                    if (sv.height !== wr.height) sv.setAttribute('height', wr.height);
+                }
                 else if (sn && sn.controlled.height) { this.$restoreDim(sv, sn, 'height'); }
             }
         } catch (err) {
@@ -562,8 +568,8 @@ Fixture `flex-check.html` (shape mirrors existing fixtures — `<laszlo-app>` + 
 ```
   Notes for the implementer: `sd is LzText` — use the runtime idiom the components use (`sd instanceof LzText` if `is` doesn't compile in this dialect; check a component using instanceof, e.g. grep `instanceof Lz` under runtime/components). `LzDelegate.unregisterAll` — verify the method name in `LaszloEvents.lzs` (it exists as `unregisterAll` in LFC; if named differently, use that). `hassetwidth`/`hassetheight` — verify readable at component level (LaszloView.lzs:1346).
 - [ ] **Step 2:** Add `flexlayout: utils/layouts/flexlayout.lzx` to `runtime/lzx-autoincludes.properties` (alphabetical placement, matching file style).
-- [ ] **Step 3: Compile-level test:** follow the pattern of an existing compile test (see how `compiler/test/domsource.test.mjs` or `harness.test.mjs` compiles fixtures) to compile a minimal app using `<flexlayout>` + `flex` hints; assert compile succeeds and emitted JS contains `LzFlexAdapter` (the include made it in). If the harness only supports the DOM dialect, author the fixture as `<laszlo-app>`.
-- [ ] **Step 4:** `npm test` → green (including untouched parity/oracle suites — this catches the autoincludes-oracle question empirically).
+- [ ] **Step 3: Compile-level test:** use `compileFile(appPath, { lpsHome })` from `compiler/dist/node.js` with `lpsHome` = the repo `runtime/` dir — the exact pattern of `compiler/compiler-verify/harness/closure-test.mjs:12,29`. Compile a minimal `.lzx` fixture app using `<flexlayout>` + `flex` hints; assert compile succeeds and the emitted JS contains `LzFlexAdapter` (the script include made it in).
+- [ ] **Step 4:** `npm test` → green. (compiler-verify parity suites are MANUAL, not part of npm test — the oracle-autoincludes question is settled by inspection: `find compiler/compiler-verify -name lzx-autoincludes.properties` exists but closure-test compiles with lpsHome=runtime/, and no parity fixture uses flexlayout; leave the oracle copy untouched. The runtime properties file header says "generated by ant" — hand-edit is the repo convention now; note in the commit.)
 - [ ] **Step 5:** Commit: `components: <flexlayout> — engine-controlled dims, snapshots/restore, delegate lifecycle`
 
 ---
