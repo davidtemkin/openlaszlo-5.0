@@ -59,7 +59,7 @@
   - `export { encodeText, decodeFrames, acceptKey }` (existing module-scope functions, now exported)
   - `export function wsAccept(req, socket): boolean` — writes the 101 handshake (returns false + destroys when no key)
   - `export function connectionUpgradeHandler(req, socket): void` — the existing chat behavior, minus the path guard
-  - `export function attachUpgradeDispatcher(httpServer, routes: Record<string, (req, socket) => void>): void` — ONE `upgrade` listener; longest-prefix match on `req.url`; unclaimed paths destroyed exactly once
+  - `export function attachUpgradeDispatcher(httpServer, routes: Record<string, (req, socket) => void>): void` — ONE `upgrade` listener; FIRST match over the routes' insertion order (exact path or `prefix + "/"`); unclaimed paths destroyed exactly once
 
 - [ ] **Step 1: Write the failing test**
 
@@ -116,6 +116,9 @@ export function wsClient(port, path) {
       }
     });
     sock.on("error", rej);
+    // A destroyed unclaimed socket produces a clean FIN with NO 'error' event —
+    // without this, an await on `ready` for a refused path hangs the suite.
+    sock.on("close", () => { if (!up) rej(new Error("connection refused before 101")); });
   });
   return {
     ready,
@@ -243,7 +246,7 @@ and the import (line 20): `import { attachUpgradeDispatcher, connectionUpgradeHa
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd compiler && npm test` — Expected: PASS (66 tests). Also boot-check the server: `cd .. && timeout 3 node server/index.mjs 8099 2>&1 | head -5` — expect the startup lines, no crash.
+Run: `cd compiler && npm test` — Expected: PASS (66 tests). Also boot-check the server (macOS has no `timeout`): `cd .. && (node server/index.mjs 8099 > /tmp/boot.log 2>&1 & BOOT=$!; sleep 2; kill $BOOT; head -5 /tmp/boot.log)` — expect the startup lines, no crash.
 
 - [ ] **Step 5: Commit**
 
@@ -306,7 +309,10 @@ const APP = `<laszlo-app>
 
 test("domsource: <server> stripped from the client compile, never stamped", () => {
   const xml = domToXmlElem(parse(APP), { domAdopt: true, transpileTs: (s) => s });
-  assert.ok(!JSON.stringify(xml).includes("clock"), "server subtree leaked into client compile");
+  // NOTE: the client view's constraint STRING contains "server.clock", so assert
+  // on markers that exist ONLY inside the <server> subtree:
+  assert.ok(!JSON.stringify(xml).includes("setInterval"), "server body leaked into client compile");
+  assert.ok(xml.children.every((c) => c.type !== "elem" || c.name !== "clock"), "server tag element leaked");
   // and nothing inside <server> got a live data-lz-adopt stamp
   const root = parse(APP);
   domToXmlElem(root, { domAdopt: true, transpileTs: (s) => s });
@@ -374,7 +380,7 @@ Concretely: `walkElem(el, ctx, isRoot)` — inside ITS child loop, `isRoot` refe
 - [ ] **Step 4: Implement — app-model.ts**
 
 (a) Add the interfaces (per the Interfaces block) and `serverTags: []` to the model init.
-(b) Add `"server"` to `NON_INSTANCE`.
+(b) The explicit `t === "server"` case below is AUTHORITATIVE (it must run walkServer); do NOT rely on `NON_INSTANCE` (which would silently swallow the section). Adding "server" to NON_INSTANCE is unnecessary.
 (c) In `walkInstance`'s child loop, BEFORE the `NON_INSTANCE` fall-through:
 
 ```ts
@@ -384,16 +390,29 @@ Concretely: `walkElem(el, ctx, isRoot)` — inside ITS child loop, `isRoot` refe
       }
 ```
 
-(d) Reserved-name findings — in `walkInstance` where `id`/`nm` are validated, add:
+(d) Reserved-name findings — these must be STRUCTURAL guards (the reserved
+name is never registered — a `declare const server: LzInst_N;` would collide
+with the bus `server` const in `__lzapp.d.ts`). Extend the existing chains:
 
 ```ts
-    if (id === "server") { model.staticIssues.push({ message: `id "server" is reserved (the bus proxy root)`, line: el.line }); }
-    // and for root-level names:
-    if (nm === "server" && parent && parent.baseTsName === "LzCanvas")
-      model.staticIssues.push({ message: `name "server" is reserved at canvas level (binds globally)`, line: el.line });
+    if (id === "server") {
+      model.staticIssues.push({ message: `id "server" is reserved (the bus proxy root)`, line: el.line });
+      // NOT registered: no seenIds.add, no inst.id
+    } else if (id && seenIds.has(id)) {
+      /* existing duplicate branch unchanged */
+    } else if (id) { /* existing registration branch unchanged */ }
 ```
 
-(guard these BEFORE the normal id/name registration so a reserved name is never emitted; also add in the `<attribute>` first pass: `if (an === "server") { model.staticIssues.push({ message: `attribute name "server" is reserved`, line: c.line }); continue; }`).
+and for names:
+
+```ts
+    if (nm === "server" && parent && parent.baseTsName === "LzCanvas") {
+      model.staticIssues.push({ message: `name "server" is reserved at canvas level (binds globally)`, line: el.line });
+      // NOT pushed into parent.namedChildren
+    } else if (nm && parent) { /* existing duplicate-sibling + registration chain unchanged */ }
+```
+
+and in the `<attribute>` first pass: `if (an === "server") { model.staticIssues.push({ message: \`attribute name "server" is reserved\`, line: c.line }); continue; }` (before the `checkName` push).
 
 (e) The server walk (module-level within `extractApp`'s closure):
 
@@ -436,14 +455,15 @@ Concretely: `walkElem(el, ctx, isRoot)` — inside ITS child loop, `isRoot` refe
 
 (`declAttr` and `textOf` already exist from Slice 2. NOTE: `rawBody` ignores carrier `type=` — server bodies are TS by definition; a `text/lzs` carrier in `<server>` is out of scope and simply treated as TS, which the server-body check will flag if invalid.)
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [ ] **Step 5: Run tests + REBUILD THE BROWSER BUNDLE**
 
-Run: `cd compiler && npm test` — Expected: PASS (all suites; Slice-2 tests unaffected because apps without `<server>` produce `serverTags: []`).
+Run: `cd compiler && npm test && npm run bundle:browser`
+Expected: PASS (all suites; Slice-2 tests unaffected because apps without `<server>` produce `serverTags: []`). The bundle rebuild is **mandatory**: `startup/laszlo-dom.js` imports `domToXmlElem` from the COMMITTED `compiler/lzc-browser.js` — without the rebuild, the Task-6 demo runs the OLD bundle, `<server>` leaks into the in-browser compile as an unknown tag, and the app never renders.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add compiler/src/domsource.ts compiler/src/app-model.ts compiler/test/bus-model.test.mjs
+git add compiler/src/domsource.ts compiler/src/app-model.ts compiler/test/bus-model.test.mjs compiler/lzc-browser.js
 git commit -m "compiler: <server> dialect rule (strip-before-stamp) + server-tag model extraction"
 ```
 
@@ -460,7 +480,7 @@ git commit -m "compiler: <server> dialect rule (strip-before-stamp) + server-tag
 **Interfaces:**
 - Consumes: `attachUpgradeDispatcher`/`wsAccept`/codec (Task 1); `extractApp`+`parseHtmlDialect`+`findLaszloApp`+`transpileTsBody` from `compiler/dist` (Slice 2 / Task 2).
 - Produces:
-  - `class SrvNode { constructor(tagModel, { onDelta }) }` — `tagModel` is a `ServerTagModel` whose bodies are ALREADY-TRANSPILED JS; members: `name`, `setAttribute(attr, value)`, `callMethod(method, args): any|Promise`, `snapshot(): Record<string, any>`, `hasAttr(a)`, `hasMethod(m)`, `init()` (fires oninit).
+  - `class SrvNode { constructor(tagModel, { defaults, onDelta }) }` — `defaults` maps attr name to the authored value= string — `tagModel` is a `ServerTagModel` whose bodies are ALREADY-TRANSPILED JS; members: `name`, `setAttribute(attr, value)`, `callMethod(method, args): any|Promise`, `snapshot(): Record<string, any>`, `hasAttr(a)`, `hasMethod(m)`, `init()` (fires oninit).
   - `export function busUpgradeHandler(req, socket): void` (bus.mjs) and `export async function getBusApp(appRelPath): BusApp` (exposed for tests); `BusApp = { nodes: Map<string, SrvNode>, addSocket, ... }`.
 
 **Protocol recap (spec):** S→C `snapshot`/`delta`/`result`/`error`; C→S `set`/`call`. Snapshot before join. Declared surface only. Promise-returning methods settle `result` with the resolved value.
@@ -665,6 +685,22 @@ test("bus: call (sync, promise, throwing) + declared-surface enforcement", async
   c.close(); server.close();
 });
 
+test("bus: reconnect gets a fresh snapshot with persisted state", async () => {
+  const { server, port } = await busServer();
+  const a = wsClient(port, `/api/bus?app=${FIXTURE}`);
+  await a.ready;
+  const before = (await a.next()).tags.state.count;
+  a.send({ op: "set", tag: "state", attr: "count", value: before + 1 });
+  await a.next(); // delta
+  a.close();
+  const b = wsClient(port, `/api/bus?app=${FIXTURE}`); // "reconnect"
+  await b.ready;
+  const snap = await b.next();
+  assert.equal(snap.op, "snapshot");
+  assert.equal(snap.tags.state.count, before + 1); // persisted, not defaults
+  b.close(); server.close();
+});
+
 test("bus: unknown app path refused; traversal refused", async () => {
   const { server, port } = await busServer();
   for (const bad of ["nope/missing.html", "../etc/passwd"]) {
@@ -705,6 +741,11 @@ class BusApp {
     const root = findLaszloApp(parseHtmlDialect(readFileSync(absPath, "utf8")));
     const model = extractApp(root);
     if (!model.serverTags.length) throw new Error("no <server> section");
+    // Spec: duplicate/invalid server tag names REFUSE the app (a silently
+    // partial server would mask authoring bugs).
+    const bad = [...model.staticIssues, ...model.nameIssues]
+      .find((i) => i.message.includes("server tag name"));
+    if (bad) throw new Error(bad.message);
     // Re-read declared defaults from the live section (app-model attrs carry
     // types, not values): walk the raw DOM for value= per attribute.
     const defaults = {};
@@ -794,7 +835,7 @@ export function busUpgradeHandler(req, socket) {
       if (m.ping) { socket.write(Buffer.concat([Buffer.from([0x8a, m.ping.length]), m.ping])); continue; }
       if (m.text == null) continue;
       let msg;
-      try { msg = JSON.parse(m.text); } catch { app.sockets.delete(socket); socket.end(); return; }
+      try { msg = JSON.parse(m.text); } catch { send({ op: "error", message: "malformed frame — closing" }); app.sockets.delete(socket); socket.end(); return; }
       app.handle(msg, socket);
     }
     if (closed) { app.sockets.delete(socket); socket.end(); }
@@ -808,7 +849,7 @@ Wire `server/index.mjs`: add `import { busUpgradeHandler } from "./bus.mjs";` an
 
 - [ ] **Step 5: Run tests**
 
-Run: `cd compiler && npm test` — Expected: all PASS (the delta-vs-result ordering in the call test is asserted order-independently). Boot check: `cd .. && timeout 3 node server/index.mjs 8099 2>&1 | head -5`.
+Run: `cd compiler && npm test` — Expected: all PASS (the delta-vs-result ordering in the call test is asserted order-independently). Boot check (portable): `cd .. && (node server/index.mjs 8099 > /tmp/boot.log 2>&1 & BOOT=$!; sleep 2; kill $BOOT; head -5 /tmp/boot.log)`.
 
 - [ ] **Step 6: Commit**
 
@@ -1135,7 +1176,7 @@ export function generateServerBodies(model: AppModel): { source: string; spans: 
 }
 ```
 
-lzx-check.ts — in `checkApp`, after the client program's findings:
+lzx-check.ts — in `checkApp`: `generateServerDts(model)` is called BEFORE the virtual-map assembly (its `clientDts` is part of `__lzapp.d.ts`); the server program + findings run after the client program's findings:
 
 ```ts
   // Server bodies: a SECOND program — ambient globals are program-wide, so
@@ -1247,7 +1288,7 @@ cd /Users/maxcarlsonold/openlaszlo-5.0 && node server/index.mjs 8090 &
 
 Open TWO tabs on `http://localhost:8090/examples/dom-authoring/bus-demo.html` (Playwright `browser_tabs` + `browser_navigate`). Verify:
 1. Both render; counter text reads `count: 0`.
-2. Click the blue box in tab A → BOTH tabs show `count: 1` and the box widens (constraint-refire canary: `${100 + server.state.count * 12}` is a compiled constraint updating from a delta — the silent-null failure mode guard).
+2. Click the blue box in tab A → BOTH tabs show `count: 1` and the box widens. **This IS the spec's mandatory constraint-refire canary** (`${100 + server.state.count * 12}` is a compiled constraint updating from a delta — the silent `instanceof LzEventable` null guard). It is deliberately a browser check, not a Node unit test: the failure mode only exists in the real compiled-LFC + prelude environment. Record the result in the task summary.
 3. Type in tab B's input, click send → the log `<text>` updates in BOTH tabs.
 4. Reload tab A → snapshot restores current count/log (not defaults).
 5. Console: no errors (the `lz-bus:` warning must NOT appear when the server is up).
@@ -1283,6 +1324,13 @@ cd .. && git add examples/dom-authoring/ && git commit -m "examples: realtime bu
 ```
 
 ---
+
+## Known limitation (document, don't fix in v1)
+
+`src=`-loaded apps (`<laszlo-app src="app.html">`) with a `<server>` section:
+`connectBus(location.pathname)` points the bus at the HOST PAGE, not the
+fetched src document, so the bus refuses (console warning, defaults hold).
+Inline apps only for v1; note this in the README bus section.
 
 ## Out of scope (per spec Non-goals — do not build)
 
