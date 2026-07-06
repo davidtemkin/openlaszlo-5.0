@@ -102,3 +102,24 @@ test("busPrelude: supabase mode adds presence proxy + table rows/insert stubs", 
   assert.ok(!out.includes('op: "call"'));       // no declared methods here -> no call machinery
   assert.ok(out.includes('"rows" is read-only'));
 });
+
+// ── Task 4: bridge pure helpers ──────────────────────────────────────────────
+import { pickAdoptionSource, dedupeAppend } from "../../startup/lz-bus-supabase.js";
+
+test("pickAdoptionSource: oldest joined_at wins; malformed/empty ignored; empty null", () => {
+  assert.equal(pickAdoptionSource({}), null);
+  const st = pickAdoptionSource({
+    a: [{ joined_at: 200, state: { s: { count: 2 } } }],
+    b: [{ joined_at: 100, state: { s: { count: 9 } } }],
+    c: [{ nope: true }, { joined_at: 50 }, { joined_at: 10, state: {} }], // malformed / empty state: ignored
+  });
+  assert.deepEqual(st, { s: { count: 9 } });
+});
+
+test("dedupeAppend: id-deduped, immutable append", () => {
+  const rows = [{ id: 1, body: "a" }];
+  assert.equal(dedupeAppend(rows, { id: 1, body: "a" }), null);
+  const next = dedupeAppend(rows, { id: 2, body: "b" });
+  assert.equal(next.length, 2);
+  assert.equal(rows.length, 1); // immutable
+});
