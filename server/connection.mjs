@@ -15,10 +15,10 @@
 import crypto from "node:crypto";
 
 const WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-const acceptKey = k => crypto.createHash("sha1").update(k + WS_GUID).digest("base64");
+export const acceptKey = k => crypto.createHash("sha1").update(k + WS_GUID).digest("base64");
 
 // ---- minimal WebSocket frame codec (RFC 6455, the subset we need) ----
-function encodeText(str) {
+export function encodeText(str) {
   const data = Buffer.from(str, "utf8");
   const len = data.length;
   let header;
@@ -28,7 +28,7 @@ function encodeText(str) {
   return Buffer.concat([header, data]);
 }
 // Pull complete frames out of a buffer. Returns {messages, closed, rest}.
-function decodeFrames(buf) {
+export function decodeFrames(buf) {
   const messages = []; let closed = false; let off = 0;
   while (off + 2 <= buf.length) {
     const b0 = buf[off], b1 = buf[off + 1];
@@ -94,18 +94,39 @@ function leave(agent) {
 }
 
 // ---- attach to the relay's http server ----
-export function attachConnectionServer(httpServer, pathPrefix = "/api/connection") {
+
+/** Write the 101 handshake. Returns false (socket destroyed) when the key is missing. */
+export function wsAccept(req, socket) {
+  const key = req.headers["sec-websocket-key"];
+  if (!key) { socket.destroy(); return false; }
+  socket.write(
+    "HTTP/1.1 101 Switching Protocols\r\n" +
+    "Upgrade: websocket\r\nConnection: Upgrade\r\n" +
+    "Sec-WebSocket-Accept: " + acceptKey(key) + "\r\n\r\n");
+  return true;
+}
+
+/** ONE upgrade listener for the whole server; handlers registered by path
+ *  prefix (FIRST match over insertion order — exact path or prefix + "/").
+ *  Node runs EVERY `upgrade` listener, so multiple listeners each guarding
+ *  their own path would destroy each other's sockets — this dispatcher
+ *  destroys unclaimed paths exactly once. */
+export function attachUpgradeDispatcher(httpServer, routes) {
   httpServer.on("upgrade", (req, socket) => {
-    if (!req.url.startsWith(pathPrefix)) { socket.destroy(); return; }
-    const key = req.headers["sec-websocket-key"];
-    if (!key) { socket.destroy(); return; }
-    socket.write(
-      "HTTP/1.1 101 Switching Protocols\r\n" +
-      "Upgrade: websocket\r\nConnection: Upgrade\r\n" +
-      "Sec-WebSocket-Accept: " + acceptKey(key) + "\r\n\r\n");
-    // group from query (?app=chat); default "chat"
-    const u = new URL(req.url, "http://localhost");
-    const agent = new Agent(socket, u.searchParams.get("app") || "chat");
+    const path = (req.url || "").split("?")[0];
+    for (const [prefix, handler] of Object.entries(routes)) {
+      if (path === prefix || path.startsWith(prefix + "/")) { handler(req, socket); return; }
+    }
+    socket.destroy();
+  });
+}
+
+/** The chat connection behavior (was the body of the old upgrade listener). */
+export function connectionUpgradeHandler(req, socket) {
+  if (!wsAccept(req, socket)) return;
+  // group from query (?app=chat); default "chat"
+  const u = new URL(req.url, "http://localhost");
+  const agent = new Agent(socket, u.searchParams.get("app") || "chat");
     let buf = Buffer.alloc(0);
     socket.on("data", chunk => {
       buf = Buffer.concat([buf, chunk]);
@@ -118,6 +139,10 @@ export function attachConnectionServer(httpServer, pathPrefix = "/api/connection
     });
     socket.on("close", () => leave(agent));
     socket.on("error", () => leave(agent));
-  });
+}
+
+/** Back-compat sugar: single-route dispatcher. */
+export function attachConnectionServer(httpServer, pathPrefix = "/api/connection") {
+  attachUpgradeDispatcher(httpServer, { [pathPrefix]: connectionUpgradeHandler });
   console.log(`  connection (WebSocket) server on ${pathPrefix}`);
 }
