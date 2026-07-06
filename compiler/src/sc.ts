@@ -244,7 +244,7 @@ type Node =
   | { k: "object"; props: { key: string; keyKind: "str" | "num" | "id"; computed: boolean; v: Node }[] }
   | { k: "paren"; e: Node }
   | { k: "cast"; e: Node; type: Node } // OL `e cast Type`: erased in print, but Type is a free ref
-  | { k: "func"; name: string | null; params: string[]; defaults: (Node | null)[]; body: Stmt[]; line?: number; col?: number; file?: string; throwsError?: boolean; noBacktrace?: boolean; noProfile?: boolean; userFunctionName?: string } // function expression (line/col/file = the `function` keyword position, for the debug displayName/source directive; throwsError = `#pragma "throwsError=true"` → try/catch error wrapper; noBacktrace = `#pragma "debugBacktrace=false"` → exempt from DEBUG_BACKTRACE frame; noProfile = `#pragma 'profile=false'` scope → exempt from the $lzprofiler meter; userFunctionName = `#pragma "userFunctionName=…"` → debug displayName override)
+  | { k: "func"; name: string | null; params: string[]; defaults: (Node | null)[]; body: Stmt[]; line?: number; col?: number; file?: string; throwsError?: boolean; noBacktrace?: boolean; noProfile?: boolean; userFunctionName?: string; paramTypes?: (string | null)[]; returnType?: string | null } // function expression (line/col/file = the `function` keyword position, for the debug displayName/source directive; throwsError = `#pragma "throwsError=true"` → try/catch error wrapper; noBacktrace = `#pragma "debugBacktrace=false"` → exempt from DEBUG_BACKTRACE frame; noProfile = `#pragma 'profile=false'` scope → exempt from the $lzprofiler meter; userFunctionName = `#pragma "userFunctionName=…"` → debug displayName override)
   | { k: "seq"; es: Node[] };
 
 type Stmt =
@@ -273,7 +273,7 @@ type Stmt =
 // statement (e.g. `foo.dependencies = function(){…}`) which is moved to the
 // post-Class.make `(function($lzsc$c){with(…){…}})(Class)` initializer block.
 type ClassMember =
-  | { kind: "var"; name: string; init: Node | null; static: boolean }
+  | { kind: "var"; name: string; init: Node | null; static: boolean; varType?: string | null }
   | { kind: "method"; name: string; fn: Extract<Node, { k: "func" }>; static: boolean }
   | { kind: "stmt"; stmt: Stmt };
 
@@ -392,24 +392,28 @@ class Parser {
    *  `cast` operator). A type is `*`, or a (possibly dotted) name — keywords
    *  `void`/`null`/`function` are also valid type names — with an optional
    *  `.<…>` vector parameter and an optional trailing `?` (nullable type). */
-  skipTypeAnnotation(): void {
-    if (!this.is(":")) return;
+  /** Skip an ActionScript-style `:Type` annotation — erased from OUTPUT, but the
+   *  type TEXT is returned for reflection (lfc-reflect). null = no annotation. */
+  skipTypeAnnotation(): string | null {
+    if (!this.is(":")) return null;
     this.next();
-    this.typeExpr();
+    return this.typeExpr();
   }
-  typeExpr(): void {
-    if (this.is("*")) { this.next(); }
+  typeExpr(): string {
+    let text = "";
+    if (this.is("*")) { this.next(); text = "*"; }
     else {
-      if (this.is("id") || this.is("void") || this.is("null") || this.is("function")) this.next();
+      if (this.is("id") || this.is("void") || this.is("null") || this.is("function")) text = this.next().v;
       else throw new ScUnsupported(`type: unexpected ${this.peek().t} '${this.peek().v}'`);
       while (this.is(".")) {
         this.next();
         if (this.is("<")) { // Vector.<T>
-          this.next(); this.typeExpr(); this.eat(">");
-        } else this.eat("id");
+          this.next(); text += ".<" + this.typeExpr(); this.eat(">"); text += ">";
+        } else text += "." + this.eat("id").v;
       }
     }
-    if (this.is("?")) this.next(); // nullable type marker (`LzNode?`)
+    if (this.is("?")) { this.next(); text += "?"; } // nullable type marker (`LzNode?`)
+    return text;
   }
 
   parseProgram(): Stmt[] {
@@ -674,10 +678,10 @@ class Parser {
         this.next(); // var/const
         do {
           const vn = this.eat("id").v;
-          this.skipTypeAnnotation();
+          const varType = this.skipTypeAnnotation();
           let init: Node | null = null;
           if (this.is("=")) { this.next(); init = this.assign(); }
-          members.push({ kind: "var", name: vn, init, static: isStatic });
+          members.push({ kind: "var", name: vn, init, static: isStatic, ...(varType ? { varType } : {}) });
         } while (this.is(",") && this.next());
         this.semi();
       } else if (this.is("function") && this.peek(1).t === "id") {
@@ -932,8 +936,8 @@ class Parser {
     this.eat("function");
     let name: string | null = null;
     if (this.is("id")) name = this.next().v;
-    const { names, defaults, rest } = this.formalParams();
-    this.skipTypeAnnotation(); // optional return type
+    const { names, defaults, rest, types } = this.formalParams();
+    const returnType = this.skipTypeAnnotation(); // optional return type (captured for reflection)
     this.eat("{");
     // Leading `#pragma "throwsError=true"` (lexed to a `pragma` token) flags the
     // try/catch error wrapper. The pragma heads the body but sits past the empty-
@@ -977,13 +981,14 @@ class Parser {
       const init: Node = { k: "call", c: slice, args: [{ k: "id", name: "arguments" }, { k: "num", raw: String(names.length) }], line: restLine };
       body.unshift({ s: "var", decls: [{ name: rest, init }], line: restLine } as Stmt);
     }
-    return { k: "func", name, params: names, defaults, body, line: fline, col: ftok.col, file: ftok.file, ...(throwsError ? { throwsError: true } : {}), ...(noBacktrace ? { noBacktrace: true } : {}), ...(noProfile ? { noProfile: true } : {}), ...(userFunctionName !== undefined ? { userFunctionName } : {}) };
+    return { k: "func", name, params: names, defaults, body, line: fline, col: ftok.col, file: ftok.file, ...(throwsError ? { throwsError: true } : {}), ...(noBacktrace ? { noBacktrace: true } : {}), ...(noProfile ? { noProfile: true } : {}), ...(userFunctionName !== undefined ? { userFunctionName } : {}), ...(types.some((t) => t != null) ? { paramTypes: types } : {}), ...(returnType != null ? { returnType } : {}) };
   }
   /** Formal parameter list `(a, b:Type, c=default)` → names + optional defaults. */
-  formalParams(): { names: string[]; defaults: (Node | null)[]; rest: string | null } {
+  formalParams(): { names: string[]; defaults: (Node | null)[]; rest: string | null; types: (string | null)[] } {
     this.eat("(");
     const names: string[] = [];
     const defaults: (Node | null)[] = [];
+    const types: (string | null)[] = []; // captured :Type annotations (reflection-only)
     let rest: string | null = null;
     while (!this.is(")")) {
       // A rest parameter `...name` (the LAST formal) — desugared by the caller to a
@@ -996,15 +1001,16 @@ class Parser {
         break;
       }
       const nm = this.eat("id").v;
-      this.skipTypeAnnotation();
+      const pt = this.skipTypeAnnotation();
       let def: Node | null = null;
       if (this.is("=")) { this.next(); def = this.assign(); }
       names.push(nm);
       defaults.push(def);
+      types.push(pt);
       if (this.is(",")) this.next(); else break;
     }
     this.eat(")");
-    return { names, defaults, rest };
+    return { names, defaults, rest, types };
   }
   argList(): Node[] {
     this.eat("(");
@@ -1250,7 +1256,7 @@ function foldNode(n: Node): Node {
     }
     case "paren": return { k: "paren", e: foldNode(n.e) };
     case "cast": return { k: "cast", e: foldNode(n.e), type: foldNode(n.type) };
-    case "func": return { k: "func", name: n.name, params: n.params, defaults: n.defaults.map((d) => d ? foldNode(d) : null), body: foldStmts(n.body), line: n.line, col: n.col, file: n.file, ...(n.throwsError ? { throwsError: true } : {}), ...(n.noBacktrace ? { noBacktrace: true } : {}), ...(n.noProfile ? { noProfile: true } : {}), ...(n.userFunctionName !== undefined ? { userFunctionName: n.userFunctionName } : {}) };
+    case "func": return { k: "func", name: n.name, params: n.params, defaults: n.defaults.map((d) => d ? foldNode(d) : null), body: foldStmts(n.body), line: n.line, col: n.col, file: n.file, ...(n.throwsError ? { throwsError: true } : {}), ...(n.noBacktrace ? { noBacktrace: true } : {}), ...(n.noProfile ? { noProfile: true } : {}), ...(n.userFunctionName !== undefined ? { userFunctionName: n.userFunctionName } : {}), ...(n.paramTypes ? { paramTypes: n.paramTypes } : {}), ...(n.returnType != null ? { returnType: n.returnType } : {}) };
     case "bin": return { k: "bin", op: n.op, l: foldNode(n.l), r: foldNode(n.r) };
     case "assign": return { k: "assign", op: n.op, l: foldNode(n.l), r: foldNode(n.r) };
     case "member": return { k: "member", o: foldNode(n.o), p: n.p };
@@ -4412,3 +4418,33 @@ function renderDebugFuncNode(
   const inner = S1 + NL + S2 + S2bt + NL + elideSemi(S3);
   return "(function () {" + NL + inner + NL + "}" + FB + ")()";
 }
+
+/** REFLECTION-ONLY: parse + #include-expand + fold a library root, returning
+ *  the raw statement AST (with captured :Type annotations). Read-only sibling
+ *  of compileLibraryProgram — shares no state with codegen and never emits. */
+export function parseLibraryAst(
+  rootSource: string,
+  rootFile: string,
+  resolveInclude: (path: string) => string | null,
+): Stmt[] {
+  const parseFold = (src: string, file: string): Stmt[] => {
+    const p = new Parser(lex("#file " + file + "\n#line 1\n" + src, 1, undefined, true));
+    p.lfc = true;
+    return foldStmts(p.parseProgram());
+  };
+  const expand = (stmts: Stmt[], stack: string[]): Stmt[] => {
+    const out: Stmt[] = [];
+    for (const s of stmts) {
+      if (s.s === "include") {
+        if (stack.includes(s.path)) throw new ScUnsupported(`#include cycle: ${[...stack, s.path].join(" -> ")}`);
+        const src = resolveInclude(s.path);
+        if (src == null) throw new ScUnsupported(`#include not found: ${s.path}`);
+        out.push(...expand(parseFold(src, s.path), [...stack, s.path]));
+      } else if (s.s === "block") out.push({ ...s, body: expand(s.body, stack) });
+      else out.push(s); // top-level classes/assignments are what reflection reads
+    }
+    return out;
+  };
+  return expand(parseFold(rootSource, rootFile), [rootFile]);
+}
+export type { Stmt, ClassMember, Node as ScNode };
