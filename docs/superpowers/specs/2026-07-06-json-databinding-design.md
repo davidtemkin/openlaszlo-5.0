@@ -38,6 +38,9 @@ systems meet only at an explicit bridge.
 - Lazy/resize replication variants; fine-grained (per-clone) update propagation.
 - Dynamic datapaths: `setAttribute('datapath', …)` after init is unsupported in
   this slice (it would bypass the instantiation-time interception seam).
+- JSON datapaths inside `<state>` (statically refused: LzState applies children
+  via `makeChild` and destroys the returned node with no null guard, so a
+  diverted replication template would crash state removal).
 
 ## Decisions (settled during brainstorming)
 

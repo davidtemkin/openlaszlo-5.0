@@ -599,10 +599,11 @@ interface Ctx {
   counter: { n: number };
   inTemplate: boolean;
   jsonBound: boolean;
+  inState: boolean;
 }
 ```
 
-(Also add `jsonBound: false` to the initial ctx in `domToXmlElem`.)
+(Also add `jsonBound: false, inState: false` to the initial ctx in `domToXmlElem`.)
 
 In `scriptNodes`, change the signature to `scriptNodes(el, parentName, ctx, parentIsJsonDataset: boolean)` and insert BEFORE the `application/xml` case:
 
@@ -630,12 +631,26 @@ In `walkElem`, after the attrs loop, classify the datapath and rename:
   const dp = attrs["datapath"];
   if (dp != null) {
     if (isJsonAbsolutePath(dp) || (dp.startsWith("/") && ctx.jsonBound)) {
+      // LzState applies its children via makeChild and calls .destroy() on the
+      // return value with no null guard (LzState.lzs:280,329-341) — a diverted
+      // spec would crash state removal. Refuse statically.
+      if (ctx.inState)
+        throw new DomDialectError("a JSON datapath inside <state> is not supported (state children cannot be replication templates)");
       boundKind = "json";
       attrs["jsondatapath"] = dp;
       delete attrs["datapath"];
       attrOrder[attrOrder.indexOf("datapath")] = "jsondatapath";
     } else if (!/^\s*\$\w*\{/.test(dp)) boundKind = "xpath";
   }
+```
+
+`Ctx` gains `inState: boolean` (initial `false`; the `childCtx` computation sets `inState: ctx.inState || name === "state"`), and add a test:
+
+```js
+test("json datapath inside <state> is a dialect error", () => {
+  assert.throws(() => domToXmlElem(app(jsonDs("b", "{}"),
+    el("view", {}, el("state", {}, el("view", { datapath: "$b/l[*]" }))))), DomDialectError);
+});
 ```
 
 Replace the `childCtx` computation with (keeping the template logic, adding json context — a json-bound element IS a template):
@@ -646,6 +661,7 @@ Replace the `childCtx` computation with (keeping the template logic, adding json
     ...ctx,
     inTemplate: ctx.inTemplate || enterTemplate,
     jsonBound: boundKind ? boundKind === "json" : ctx.jsonBound,
+    inState: ctx.inState || name === "state",
   };
 ```
 
@@ -817,7 +833,7 @@ git commit -m "compiler: compileJsonDataset — lz.jsondata.register emission, b
   - `interface RuntimeHost { lzNodeProto: any; warn(msg: string): void; fetchFn?: (url: string) => Promise<{ok: boolean; status: number; json(): Promise<any>}>; makeSocket?: (url: string) => WsLike; setTimeoutFn?: (cb: () => void, ms: number) => any; globals?: any }`
   - `class JsonDataset { name: string; data: any; ready: boolean; onData(cb): void; offData(cb): void; onError(cb): void; setData(v): void; updateData(pointer: string, value: any): boolean; toLzDataset(name?, opts?): any /* Task 12 */ }`
   - `class JsonRegistry { register(name, init: {json?: any; src?: string; ws?: string}, shape?: string): JsonDataset; get(name): JsonDataset | undefined; whenRegistered(name, cb: (ds: JsonDataset) => void): void }`
-  - `installJsonRuntime(host: RuntimeHost): JsonRegistry` (Task 5 installs registry + sources; Task 6 adds the createChildren wrap)
+  - `installJsonRuntime(host: RuntimeHost): JsonRegistry` (Task 5 installs registry + sources; Task 6 adds the makeChild wrap)
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -981,7 +997,7 @@ export class JsonRegistry {
 
 export function installJsonRuntime(host: RuntimeHost): JsonRegistry {
   const reg = new JsonRegistry(host);
-  // Task 6 wraps host.lzNodeProto.createChildren here.
+  // Task 6 wraps host.lzNodeProto.makeChild here.
   return reg;
 }
 ```
@@ -1077,7 +1093,7 @@ test("replication: nothing before the queue drains; N tracked clones after (make
 });
 
 test("canvas-level bound view: diverted at makeChild directly (the LzInstantiator call shape)", () => {
-  const { proto, root, drain } = makeFakeLfc();
+  const { proto, root } = makeFakeLfc();
   const jd = installJsonRuntime(makeHost({ lzNodeProto: proto }));
   jd.register("b", { json: { l: ["x", "y"] } });
   const ret = root.makeChild({ class: "view", attrs: { jsondatapath: "$b/l[*]" } }, true);
@@ -1259,6 +1275,7 @@ export function installJsonRuntime(host: RuntimeHost): JsonRegistry {
   // bound views entirely and could not track idle-queued clones.
   const orig = host.lzNodeProto.makeChild;
   host.lzNodeProto.makeChild = function (e: any, async?: any) {
+    if (this.__LZdeleted) return orig.call(this, e, async); // mirror the LFC's early-out
     const p = e && e.attrs && e.attrs.jsondatapath;
     if (typeof p === "string") { new ReplicationManager(reg, host, this, e, p, orig); return null; }
     return orig.call(this, e, async);
@@ -1276,7 +1293,7 @@ Expected: PASS.
 
 ```bash
 git add compiler/src/json-runtime.ts compiler/test/json-runtime.test.mjs
-git commit -m "runtime: replication manager — createChildren interception, destroy/recreate + pooled reconcile, nesting"
+git commit -m "runtime: replication manager — makeChild interception, destroy/recreate + pooled reconcile, nesting"
 ```
 
 ---
@@ -1509,7 +1526,7 @@ In `compiler/src/app-model.ts`, add imports and the model field:
 import { parsePath, isJsonAbsolutePath, JsonPathError, ParsedPath } from "./json-path.js";
 import { inferShape, renderShape, walkShapePath, Shape } from "./json-shape.js";
 
-export interface JsonDatasetModel { name: string; rootType: string; shape: Shape | null; line: number }
+export interface JsonDatasetModel { name: string; rootType: string; shape: Shape | null; declaredLiteral?: string; line: number }
 // AppModel gains:
 //   jsonDatasets: JsonDatasetModel[];
 ```
@@ -1591,14 +1608,8 @@ Add a `jsonCtx` parameter to `walkInstance` (`jsonCtx: { shape: Shape | null; ts
 
 Pass `childJsonCtx` through the recursive call (`walkInstance(c, inst, childSiblings, childJsonCtx)`), and update the initial call to `walkInstance(root, null, new Set(), null)`.
 
-The `JsonDatasetModel` interface (defined in the app-model snippet above) must
-also carry the declared literal so app-dts can emit it:
-
-```ts
-export interface JsonDatasetModel { name: string; rootType: string; shape: Shape | null; declaredLiteral?: string; line: number }
-```
-
-In the extract pre-pass, the `shapeEl` branch becomes:
+The declared literal travels on `JsonDatasetModel.declaredLiteral` (already in
+the interface above). In the extract pre-pass, the `shapeEl` branch becomes:
 
 ```ts
     } else if (shapeEl) {
@@ -2256,5 +2267,5 @@ git commit -m "examples: live sensors demo + feeder peer over /api/data; README;
 ## Plan Self-Review (performed)
 
 - **Spec coverage:** dialect grammar → Task 1; unification/typing rules → Tasks 2, 8; authoring/routing → Tasks 3–4; dataset sources + mutation → Tasks 5, 9; replication/pooling/nesting/onclones → Task 6; blob order + `lz.jsondata` install → Task 7; wire protocol + lifecycle rules + relay-on-dispatcher → Tasks 9–10; filter/sort → Task 11 (with a spec amendment for the filterfunction host — the bound view is a template, so the method lives on the constructed parent); bridge + guard → Tasks 6, 12; error-handling table rows are each asserted in a test (compile diagnostics T4/T8, unknown-$name T6, fetch failure T5, ws drop/error/malformed/pre-snapshot T9, relay errors T10, updateData miss T5, zero matches T6, LzDataNodeMixin guard T6/T12).
-- **Known deviations/limitations (all recorded in spec rev 4):** filterfunction host = parent of the bound view; debug-build JSON datasets refused (Task 4, DOM-authored apps never compile debug); `onclones` fires on the parent, only when a delegate created the event (guarded send); ws `onerror` once after 8 consecutive failures, retries continue at the cap; shapeless datasets type as `any` with no finding; lz-shape TS syntax errors surface as line-0 generated-declaration findings; nested relative bindings inside POOLED clones do not re-evaluate on datum swap (default destroy/recreate rebuilds them); class-template JSON datapaths work at runtime but are unchecked (slice-2 template follow-up); `initstage="defer"` replication follows the LFC queue timing.
+- **Known deviations/limitations (all recorded in spec rev 4):** filterfunction host = parent of the bound view; debug-build JSON datasets refused (Task 4, DOM-authored apps never compile debug); `onclones` fires on the parent, only when a delegate created the event (guarded send); ws `onerror` once after 8 consecutive failures, retries continue at the cap; shapeless datasets type as `any` with no finding; lz-shape TS syntax errors surface as line-0 generated-declaration findings; nested relative bindings inside POOLED clones do not re-evaluate on datum swap (default destroy/recreate rebuilds them); class-template JSON datapaths work at runtime but are unchecked (slice-2 template follow-up); `initstage="defer"` replication follows the LFC queue timing; JSON datapaths inside `<state>` are statically refused (LzState null-guards, Task 3).
 - **Type consistency:** `ParsedPath/Selector/Shape/RuntimeHost/WsLike/JsonRegistry` names are used identically across Tasks 1–12; `jsondatapath` is the single cross-layer key (domsource → compile output → runtime interception → checker).
