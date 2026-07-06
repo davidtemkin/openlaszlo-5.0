@@ -124,3 +124,53 @@ test("carrier: application/xml outside dataset is a dialect error", () => {
     el("view", {}, el("script", { type: "application/xml" }, text("<x></x>"))));
   assert.throws(() => domToXmlElem(dom, { transpileTs: T }), DomDialectError);
 });
+
+// ── Task 5: adopt-id stamping ────────────────────────────────────────────────
+
+test("stamping: off by default — no lzdomadopt anywhere (byte-parity guard)", () => {
+  const dom = el("laszlo-app", {}, el("view", {}, el("view", {})));
+  assert.ok(!JSON.stringify(domToXmlElem(dom)).includes("lzdomadopt"));
+});
+
+test("stamping: on — plain views get sequential ids on BOTH the XmlElem and the live element", () => {
+  const inner = el("view", { width: "5" });
+  const outer = el("view", {}, inner);
+  const dom = el("laszlo-app", {}, outer);
+  const out = domToXmlElem(dom, { domAdopt: true });
+  assert.equal(out.attrs.lzdomadopt, undefined);            // root never stamped
+  assert.equal(out.children[0].attrs.lzdomadopt, "1");
+  assert.equal(out.children[0].children[0].attrs.lzdomadopt, "2");
+  assert.equal(outer.getAttribute("data-lz-adopt"), "1");
+  assert.equal(inner.getAttribute("data-lz-adopt"), "2");
+});
+
+test("stamping: excluded inside class/interface/mixin/dataset subtrees", () => {
+  const tmplView = el("view", {});
+  const dom = el("laszlo-app", {},
+    el("class", { name: "rec", extends: "view" }, tmplView),
+    el("dataset", { name: "d" }, el("script", { type: "application/xml" }, text("<r></r>"))));
+  const out = domToXmlElem(dom, { domAdopt: true, transpileTs: (s) => s });
+  assert.ok(!JSON.stringify(out).includes("lzdomadopt"));
+  assert.equal(tmplView.getAttribute("data-lz-adopt"), null);
+});
+
+test("stamping: text/inputtext and non-visual tags excluded; user tags stamped", () => {
+  const dom = el("laszlo-app", {},
+    el("text", {}, text("hi")),
+    el("inputtext", {}),
+    el("simplelayout", { axis: "y" }),
+    el("mybutton", {}));            // unknown tag = assumed user view class
+  const out = domToXmlElem(dom, { domAdopt: true });
+  const names = out.children.filter((c) => c.type === "elem");
+  assert.equal(names.find((c) => c.name === "text").attrs.lzdomadopt, undefined);
+  assert.equal(names.find((c) => c.name === "inputtext").attrs.lzdomadopt, undefined);
+  assert.equal(names.find((c) => c.name === "simplelayout").attrs.lzdomadopt, undefined);
+  assert.equal(names.find((c) => c.name === "mybutton").attrs.lzdomadopt, "1");
+});
+
+test("stamping: a stale data-lz-adopt on input is never emitted as source", () => {
+  const dom = el("laszlo-app", {}, el("view", { "data-lz-adopt": "99" }));
+  const out = domToXmlElem(dom); // domAdopt OFF
+  assert.ok(!JSON.stringify(out).includes("99"));
+  assert.ok(!JSON.stringify(out).includes("data-lz-adopt"));
+});
