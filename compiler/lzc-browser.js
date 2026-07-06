@@ -6332,7 +6332,9 @@ function spliceDebuggerLibrary(root, opts, seen, at) {
   root.children.splice(at, 0, ...children);
 }
 function compile(source, opts = {}) {
-  const root = parseXml(source);
+  return compileFromXml(parseXml(source), opts);
+}
+function compileFromXml(root, opts = {}) {
   if (root.name !== "canvas") {
     return { js: "", unsupported: `root is <${root.name}>, expected <canvas>` };
   }
@@ -7863,6 +7865,188 @@ var BrowserCache = class {
   }
 };
 
+// dist/domsource.js
+var DomDialectError = class extends Error {
+};
+var ELEMENT = 1;
+var TEXT = 3;
+var CDATA = 4;
+var COMMENT = 8;
+var PREFIX = "lz-";
+var FORBIDDEN_BARE = {
+  canvas: "the app root is <laszlo-app>; a literal <canvas> is an HTML canvas element",
+  style: "HTML parses <style> as raw CSS and applies it to the page; write <lz-style>",
+  image: "HTML rewrites <image> to a void <img>, destroying children; write <lz-image>",
+  img: "HTML rewrote your <image> to <img>; write <lz-image>",
+  html: "an in-body <html> start tag merges into the document; write <lz-html>",
+  form: "HTML drops nested <form> start tags; write <lz-form>",
+  button: "an adopted <button> carries UA chrome/semantics; write <lz-button>",
+  label: "write <lz-label>",
+  menu: "write <lz-menu>",
+  param: "<param> is a void element; write <lz-param>"
+};
+var CODE_PARENTS = /* @__PURE__ */ new Set(["method", "handler", "setter"]);
+var NO_STAMP_SUBTREE = /* @__PURE__ */ new Set(["class", "interface", "mixin", "dataset"]);
+var NO_STAMP_TAGS = /* @__PURE__ */ new Set([
+  "canvas",
+  "attribute",
+  "method",
+  "handler",
+  "setter",
+  "script",
+  "include",
+  "font",
+  "resource",
+  "dataset",
+  "datapath",
+  "datapointer",
+  "class",
+  "interface",
+  "mixin",
+  "node",
+  "state",
+  "animator",
+  "animatorgroup",
+  "layout",
+  "simplelayout",
+  "stableborderlayout",
+  "constantlayout",
+  "wrappinglayout",
+  "text",
+  "inputtext",
+  "splash",
+  "switch",
+  "when",
+  "otherwise"
+]);
+function localName(el) {
+  return el.tagName.toLowerCase();
+}
+function dialectName(raw) {
+  if (raw.startsWith(PREFIX))
+    return raw.slice(PREFIX.length);
+  const why = FORBIDDEN_BARE[raw];
+  if (why)
+    throw new DomDialectError(`<${raw}> cannot be authored bare: ${why}`);
+  return raw;
+}
+var normAttr = (v) => v.replace(/[\t\r\n]/g, " ");
+function textContentOf(el) {
+  let s = "";
+  for (let i = 0; i < el.childNodes.length; i++) {
+    const c = el.childNodes[i];
+    if (c.nodeType === TEXT || c.nodeType === CDATA)
+      s += c.nodeValue ?? "";
+    else if (c.nodeType === ELEMENT)
+      s += textContentOf(c);
+  }
+  return s;
+}
+function transpile(ctx, code, owner) {
+  if (!ctx.opts.transpileTs)
+    throw new DomDialectError("TypeScript code present but no transpileTs was provided (text/lzs carriers pass through)");
+  try {
+    return ctx.opts.transpileTs(code);
+  } catch (e) {
+    throw new DomDialectError(`in <${owner}>: ${e.message}`);
+  }
+}
+function scriptNodes(el, parentName, ctx) {
+  const type = (el.getAttribute("type") ?? "").trim().toLowerCase();
+  if (type === "application/xml") {
+    if (parentName !== "dataset")
+      throw new DomDialectError('<script type="application/xml"> is only valid inside <dataset>');
+    return [parseXml(textContentOf(el).trim())];
+  }
+  let body;
+  if (type === "text/typescript")
+    body = transpile(ctx, textContentOf(el), CODE_PARENTS.has(parentName) ? parentName : "script");
+  else if (type === "text/lzs")
+    body = textContentOf(el);
+  else
+    throw new DomDialectError('bare or JavaScript-typed <script> is not allowed (the page parser would execute it); use <script type="text/typescript"> or <script type="text/lzs">');
+  const textNode = { type: "text", value: body, cdata: false };
+  if (CODE_PARENTS.has(parentName))
+    return [textNode];
+  const attrs = {};
+  const attrOrder = [];
+  for (let i = 0; i < el.attributes.length; i++) {
+    const a = el.attributes[i];
+    if (a.name === "type" || a.name === "data-lz-adopt")
+      continue;
+    if (!(a.name in attrs)) {
+      attrOrder.push(a.name);
+      attrs[a.name] = normAttr(a.value);
+    }
+  }
+  return [{ type: "elem", name: "script", attrs, attrOrder, children: [textNode] }];
+}
+function walkElem(el, ctx, isRoot) {
+  const raw = localName(el);
+  const name = isRoot && raw === "laszlo-app" ? "canvas" : dialectName(raw);
+  const attrs = {};
+  const attrOrder = [];
+  for (let i = 0; i < el.attributes.length; i++) {
+    const a = el.attributes[i];
+    if (a.name === "data-lz-adopt")
+      continue;
+    if (!(a.name in attrs)) {
+      attrOrder.push(a.name);
+      attrs[a.name] = normAttr(a.value);
+    }
+  }
+  const childCtx = ctx.inTemplate || !NO_STAMP_SUBTREE.has(name) ? { ...ctx, inTemplate: ctx.inTemplate } : { ...ctx, inTemplate: true };
+  let adoptId = null;
+  if (ctx.opts.domAdopt && !isRoot && !ctx.inTemplate && !NO_STAMP_TAGS.has(name)) {
+    adoptId = String(ctx.counter.n++);
+    el.setAttribute("data-lz-adopt", adoptId);
+  }
+  const children = [];
+  const isCodeParent = CODE_PARENTS.has(name);
+  let sawCarrier = false;
+  for (let i = 0; i < el.childNodes.length; i++) {
+    const c = el.childNodes[i];
+    if (c.nodeType === COMMENT)
+      continue;
+    if (c.nodeType === TEXT || c.nodeType === CDATA) {
+      children.push({ type: "text", value: c.nodeValue ?? "", cdata: false });
+      continue;
+    }
+    if (c.nodeType !== ELEMENT)
+      continue;
+    const ce = c;
+    if (localName(ce) === "script") {
+      children.push(...scriptNodes(ce, name, childCtx));
+      if (isCodeParent)
+        sawCarrier = true;
+      continue;
+    }
+    children.push(walkElem(ce, childCtx, false));
+  }
+  if (isCodeParent) {
+    if (sawCarrier) {
+      const kept = children.filter((k) => !(k.type === "text" && k.value.trim() === ""));
+      children.length = 0;
+      children.push(...kept);
+    } else if (children.length && children.every((k) => k.type === "text")) {
+      const joined = children.map((k) => k.value).join("");
+      if (joined.trim() !== "") {
+        children.length = 0;
+        children.push({ type: "text", value: transpile(childCtx, joined, name), cdata: false });
+      }
+    }
+  }
+  const elem = { type: "elem", name, attrs, attrOrder, children };
+  if (adoptId !== null) {
+    elem.attrs["lzdomadopt"] = adoptId;
+    elem.attrOrder.push("lzdomadopt");
+  }
+  return elem;
+}
+function domToXmlElem(root, opts = {}) {
+  return walkElem(root, { opts, counter: { n: 1 }, inTemplate: false }, true);
+}
+
 // dist/browser.js
 var COMPILER_VERSION = "lzc-ts-0.0.1";
 var textDecoder = typeof TextDecoder !== "undefined" ? new TextDecoder("utf-8") : null;
@@ -7874,6 +8058,7 @@ function decode(bytes) {
     s += String.fromCharCode(bytes[i]);
   return s;
 }
+var cloneXml = (e) => JSON.parse(JSON.stringify(e));
 function compileProps(o) {
   return {
     debug: String(!!o.debug || !!o.backtrace),
@@ -7890,7 +8075,7 @@ async function compileInBrowser(mainUrl, o = {}) {
     throw new Error("compileInBrowser: no fetch available (pass fetchFn)");
   const sprites = o.sprites ?? "none";
   const props = compileProps(o);
-  if (o.cache) {
+  if (o.cache && !o.rootXml) {
     const hit = await o.cache.get(mainUrl, props, fetchFn);
     if (hit) {
       return { js: hit.blob, closure: hit.closure, tag: hit.tag, cached: true, passes: 0 };
@@ -7922,7 +8107,8 @@ async function compileInBrowser(mainUrl, o = {}) {
     if (!tracker.has(url))
       tracker.record(url, validators.get(url) ?? { missing: true });
   };
-  await fetchOne(mainUrl);
+  if (!o.rootXml)
+    await fetchOne(mainUrl);
   if (o.lpsUrl) {
     const lps = o.lpsUrl.endsWith("/") ? o.lpsUrl.slice(0, -1) : o.lpsUrl;
     await fetchOne(lps + "/WEB-INF/lps/misc/lzx-autoincludes.properties");
@@ -7935,7 +8121,15 @@ async function compileInBrowser(mainUrl, o = {}) {
     tracker.reset();
     tracker.record(mainUrl, validators.get(mainUrl) ?? { missing: true });
     const opts = browserOptions({ baseUrl: mainUrl, lpsUrl: o.lpsUrl, state, sprites });
-    const r = compile(state.map.get(mainUrl).text, {
+    const r = o.rootXml ? compileFromXml(cloneXml(o.rootXml), {
+      ...opts,
+      debug: o.debug,
+      backtrace: o.backtrace,
+      profile: o.profile,
+      proxied: o.proxied,
+      sprites,
+      canvas: o.canvas
+    }) : compile(state.map.get(mainUrl).text, {
       ...opts,
       debug: o.debug,
       backtrace: o.backtrace,
@@ -7959,7 +8153,7 @@ async function compileInBrowser(mainUrl, o = {}) {
   const closure = { entries: tracker.entries(), props };
   let tag;
   let cached = false;
-  if (o.cache && !result.unsupported) {
+  if (o.cache && !result.unsupported && !o.rootXml) {
     tag = await o.cache.put(mainUrl, closure, result.js);
   } else {
     tag = contentTag(mainUrl, closure, COMPILER_VERSION);
@@ -7971,14 +8165,18 @@ export {
   BrowserCache,
   BrowserTracker,
   COMPILER_VERSION,
+  DomDialectError,
   browserOptions,
   browserProbe,
   compile,
+  compileFromXml,
   compileInBrowser,
   contentTag,
+  domToXmlElem,
   fnv1a,
   isUpToDate,
   lookupKey,
+  parseXml,
   validatorFromResponse,
   validatorsEqual
 };
