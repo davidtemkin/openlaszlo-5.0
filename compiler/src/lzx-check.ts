@@ -18,12 +18,12 @@ import { parseHtmlDialect, findLaszloApp } from "./htmlsource.js";
 import { parseXml } from "./xml.js";
 import { xmlToHtml } from "./xml-adapter.js";
 import { extractApp } from "./app-model.js";
-import { generateAppDts, generateBodies, generateConstraintChecks, BodySpan } from "./app-dts.js";
+import { generateAppDts, generateBodies, generateConstraintChecks, generateServerDts, generateServerBodies, SRVNODE_DTS, BodySpan } from "./app-dts.js";
 import { generateLfcDts } from "./lfc-dts.js";
 import { loadLfcReflection } from "./lfc-reflect.js";
 
 export interface Finding { line: number; col: number; code: number; message: string; element: string }
-export interface CheckResult { findings: Finding[]; skippedLzs: number; bodiesChecked: number; constraintsChecked: number }
+export interface CheckResult { findings: Finding[]; skippedLzs: number; bodiesChecked: number; constraintsChecked: number; serverBodiesChecked: number }
 
 const COMPILER_OPTS: ts.CompilerOptions = {
   noEmit: true, strict: false, types: [], lib: ["lib.es2020.d.ts"],
@@ -50,7 +50,11 @@ export function checkApp(source: string, fileName: string): CheckResult {
   const isLzx = /\.lzx$/i.test(fileName);
   const root = isLzx ? xmlToHtml(parseXml(source)) : findLaszloApp(parseHtmlDialect(source));
   const model = extractApp(root, { es4Bodies: isLzx, knownTags: knownComponentTags() });
-  const appDts = generateAppDts(model);
+  // Server typing (realtime bus): clientDts joins the CLIENT program;
+  // serverDts + Node globals live in a SEPARATE program below (ambient
+  // globals are program-wide — isolation is the point).
+  const { clientDts, serverDts } = generateServerDts(model);
+  const appDts = generateAppDts(model) + "\n" + clientDts;
   const { source: bodiesSrc, spans } = generateBodies(model);
   const { source: constrSrc, spans: constrSpans } = generateConstraintChecks(model);
   const virtual = new Map<string, string>([
@@ -124,7 +128,42 @@ export function checkApp(source: string, fileName: string): CheckResult {
     }
     findings.push({ line: span?.attrLine ?? genLine, col: 1, code: d.code, message: msg, element: span?.label ?? "(constraint)" });
   }
-  return { findings, skippedLzs: model.skippedLzs, bodiesChecked: model.bodies.length, constraintsChecked: model.constraints.length };
+  // Server bodies: the SECOND program (no lfc.d.ts — setInterval et al must
+  // never leak into client bodies, and canvas/LzView must not leak here).
+  let serverBodiesChecked = 0;
+  if (model.serverTags.length) {
+    serverBodiesChecked = model.serverTags.reduce((n, t) => n + t.methods.length + t.handlers.length, 0);
+    const { source: srvSrc, spans: srvSpans } = generateServerBodies(model);
+    const srvVirtual = new Map<string, string>([
+      ["srvnode.d.ts", SRVNODE_DTS],
+      ["__lzsrvapp.d.ts", serverDts],
+      ["__lzsrvbodies.ts", srvSrc],
+    ]);
+    const srvHost = ts.createCompilerHost(COMPILER_OPTS);
+    const sGet = srvHost.getSourceFile.bind(srvHost);
+    srvHost.getSourceFile = (name, langVer) =>
+      srvVirtual.has(name) ? ts.createSourceFile(name, srvVirtual.get(name)!, langVer, true) : sGet(name, langVer);
+    const sExists = srvHost.fileExists.bind(srvHost);
+    srvHost.fileExists = (name) => srvVirtual.has(name) || sExists(name);
+    const sRead = srvHost.readFile.bind(srvHost);
+    srvHost.readFile = (name) => srvVirtual.get(name) ?? sRead(name);
+    const srvProg = ts.createProgram([...srvVirtual.keys()], COMPILER_OPTS, srvHost);
+    const srvSf = srvProg.getSourceFile("__lzsrvbodies.ts")!;
+    for (const d of [...srvProg.getSyntacticDiagnostics(srvSf), ...srvProg.getSemanticDiagnostics(srvSf)]) {
+      if (d.file?.fileName !== "__lzsrvbodies.ts" || d.start == null) continue;
+      const pos = d.file.getLineAndCharacterOfPosition(d.start);
+      const genLine = pos.line + 1;
+      let span: BodySpan | undefined;
+      for (const sp of srvSpans) if (sp.genStartLine <= genLine) span = sp; else break;
+      const line = span ? span.srcLine + (genLine - span.genStartLine) : genLine;
+      findings.push({
+        line, col: pos.character + 1, code: d.code,
+        message: ts.flattenDiagnosticMessageText(d.messageText, " "),
+        element: span?.label ?? "(server body)",
+      });
+    }
+  }
+  return { findings, skippedLzs: model.skippedLzs, bodiesChecked: model.bodies.length, constraintsChecked: model.constraints.length, serverBodiesChecked };
 }
 
 // ── CLI ─────────────────────────────────────────────────────────────────────
@@ -151,7 +190,7 @@ if (isMain) {
   for (const f of r.findings)
     console.error(`${file}:${f.line}:${f.col} TS${f.code} ${f.message}   [${f.element}]`);
   const note = r.skippedLzs ? ` (${r.skippedLzs} non-TS bod${r.skippedLzs > 1 ? "ies" : "y"} skipped)` : "";
-  const scope = `${r.bodiesChecked} bodies, ${r.constraintsChecked} constraints`;
+  const scope = `${r.bodiesChecked} bodies, ${r.constraintsChecked} constraints, ${r.serverBodiesChecked} server bodies`;
   if (r.findings.length) {
     console.error(`${r.findings.length} finding(s) across ${scope}${note}`);
     process.exit(1);
