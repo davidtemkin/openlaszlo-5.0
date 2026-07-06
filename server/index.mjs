@@ -24,7 +24,7 @@ import { handleApi } from "./example-data/index.mjs";
 import { handleDataProxy } from "./data-proxy.mjs";
 import { wrapperFor } from "./wrapper.mjs";
 import { serveSource, serveSrcText, serveEditor, editCompile, editToken, serveEditApp } from "./dev-views.mjs";
-import { createReloadHub } from "./dev-reload.mjs";
+import { createReloadHub, injectHtml, reloadTagIfEnabled, setReloadEnabled } from "./dev-reload.mjs";
 
 const MIME = {
   ".html": "text/html;charset=utf-8", ".htm": "text/html;charset=utf-8",
@@ -86,11 +86,18 @@ function serveStatic(req, res, abs, { inject = false } = {}) {
   try { st = fs.statSync(abs); } catch { return notFound(req, res); }
   if (st.isDirectory()) return serveStatic(req, res, path.join(abs, "index.html"), { inject });
 
-  // index.html → inject window.__OL_COMPILE="server" so the SW registers in server mode.
-  if (inject) {
+  // HTML → serve from memory so the reload client can be injected (dev mode). index.html
+  // additionally gets window.__OL_COMPILE="server" so the SW registers in server mode.
+  // The ETag carries an "-r" suffix: injected bodies must never revalidate against a
+  // pre-injection cache entry. (It does NOT key on the reload flag — a client that cached
+  // with-reload HTML keeps its self-quieting reload client across a --no-reload restart.)
+  if (mimeOf(abs).startsWith("text/html") || inject) {
     let html = fs.readFileSync(abs, "utf8");
-    html = html.replace(/<\/head>/i, '<script>window.__OL_COMPILE="server"</script></head>');
-    return send(res, 200, html, { "Content-Type": "text/html;charset=utf-8", "Cache-Control": "no-cache" });
+    if (inject) html = html.replace(/<\/head>/i, '<script>window.__OL_COMPILE="server"</script></head>');
+    html = injectHtml(html, reloadTagIfEnabled());
+    const etag = `"${st.size.toString(16)}-${Math.floor(st.mtimeMs).toString(16)}-r"`;
+    if (req.headers["if-none-match"] === etag) return send(res, 304, undefined, { ETag: etag });
+    return send(res, 200, html, { "Content-Type": "text/html;charset=utf-8", "Cache-Control": "no-cache", ETag: etag });
   }
 
   const etag = `"${st.size.toString(16)}-${Math.floor(st.mtimeMs).toString(16)}"`;
@@ -135,7 +142,7 @@ function serveWrapper(req, res, p, url) {
   if (!srcAbs.startsWith(DISTRO) || !fs.existsSync(srcAbs)) return notFound(req, res);
   const r = wrapperFor(p, srcAbs, url.searchParams);
   if (r.unsupported) return send(res, 200, errStub("compile UNSUPPORTED: " + r.unsupported), JS_HDR);
-  send(res, 200, r.html, { "Content-Type": "text/html;charset=utf-8", "Cache-Control": "no-cache" });
+  send(res, 200, injectHtml(r.html, reloadTagIfEnabled()), { "Content-Type": "text/html;charset=utf-8", "Cache-Control": "no-cache" });
 }
 
 const refererPath = (req) => {
@@ -209,6 +216,7 @@ export function parseServerArgs(argv) {
 }
 
 export function createDevServer({ port = 8090, reload = true } = {}) {
+  setReloadEnabled(reload);
   const hub = reload ? createReloadHub({ distro: DISTRO, runtime: RUNTIME }) : null;
   if (hub) hub.start();
   const server = http.createServer(makeHandler(hub));

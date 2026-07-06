@@ -46,3 +46,41 @@ test("--no-reload leaves the endpoint unregistered", async () => {
     await assert.rejects(ws.ready);       // dispatcher destroys unclaimed paths
   } finally { await srv.close(); }
 });
+
+test("wrapper, static html, and editor pages carry the reload client; index keeps __OL_COMPILE", async () => {
+  const srv = await createDevServer({ port: 0 });
+  try {
+    const idx = await get(srv.port, "/");
+    assert.match(idx.body, /__OL_COMPILE="server"/);
+    assert.match(idx.body, /dev-reload-client\.js/);
+    const wrap = await get(srv.port, "/examples/calendar/calendar.lzx", { accept: "text/html" });
+    assert.match(wrap.body, /dev-reload-client\.js/);
+    const ed = await get(srv.port, "/examples/calendar/calendar.lzx?edit", { accept: "text/html" });
+    assert.match(ed.body, /dev-reload-client\.js/);
+  } finally { await srv.close(); }
+});
+
+test("--no-reload injects nothing", async () => {
+  const srv = await createDevServer({ port: 0, reload: false });
+  try {
+    const wrap = await get(srv.port, "/examples/calendar/calendar.lzx", { accept: "text/html" });
+    assert.doesNotMatch(wrap.body, /dev-reload-client\.js/);
+  } finally { await srv.close(); }
+});
+
+test("injected static html gets a distinct etag (no stale 304 from pre-injection caches)", async () => {
+  const srv = await createDevServer({ port: 0 });
+  try {
+    const one = await get(srv.port, "/examples/dom-authoring/file-demo.html");
+    assert.match(one.body, /dev-reload-client\.js/);
+    assert.match(one.headers.etag || "", /-r"$/);
+    const not = await get(srv.port, "/examples/dom-authoring/file-demo.html", { "if-none-match": one.headers.etag });
+    assert.equal(not.status, 304);
+  } finally { await srv.close(); }
+});
+
+test("reload client file serves from /startup/", async () => {
+  const srv = await createDevServer({ port: 0 });
+  try { assert.equal((await get(srv.port, "/startup/dev-reload-client.js")).status, 200); }
+  finally { await srv.close(); }
+});

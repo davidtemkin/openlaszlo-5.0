@@ -27,6 +27,13 @@ export function filterClosureEntries(entries, { distro, runtime }) {
   return { files: files.slice(0, WATCH_CAP), dropped };
 }
 
+// ── injection (HTML emitters call these; --no-reload flips the module flag) ──────────────
+// Module-level state: one dev-server instance per process (documented in the spec/tests).
+export const RELOAD_TAG = '<script src="/startup/dev-reload-client.js" defer></script>';
+let reloadEnabled = true;
+export const setReloadEnabled = (v) => { reloadEnabled = !!v; };
+export const reloadTagIfEnabled = () => (reloadEnabled ? RELOAD_TAG : "");
+
 export function injectHtml(html, tag) {
   if (!tag) return html;
   if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, tag + "</head>");

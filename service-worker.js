@@ -272,6 +272,14 @@ self.addEventListener("fetch", (event) => {
   //    the legacy-docs `lzt=html/source/xml` aliases identically.
   {
     const op = classifyLzxRequest(path, url.searchParams, req.method, req.mode === "navigate");
+    // SERVER mode: the Node server owns the page-synthesizing ops (wrapper/source/editor)
+    // so dev-mode injection (live reload) is authoritative — mirrors the /api and COMPILED
+    // passthroughs. COMPILED keeps its own passthrough inside compileResponse (edit tokens).
+    if (COMPILE_MODE === "server" &&
+        (op === OP.RUN || op === OP.SOURCE || op === OP.SRCTEXT || op === OP.EDIT || op === OP.EDIT_POST)) {
+      event.respondWith(fetch(req));
+      return;
+    }
     if (op === OP.EDIT_POST) { event.respondWith(editCompile(url, req)); return; }
     if (op === OP.SRCTEXT)   { event.respondWith(sourceTextResponse(path)); return; }
     if (op === OP.SOURCE)    { event.respondWith(htmlResponse(framesetHtml(physical(path)))); return; }
