@@ -1,6 +1,6 @@
 # JSON Databinding — Design (Slice 4)
 
-**Date:** 2026-07-06 (rev 3, post adversarial re-review)
+**Date:** 2026-07-06 (rev 4 — replication seam moved to makeChild + deviations recorded after plan review)
 **Status:** Approved design, pre-implementation
 **Sequencing:** This is **Slice 4**, on branch `dom-authoring-slice4`. Slice 3 is
 the realtime bus (`2026-07-06-realtime-bus-design.md` + plan, parallel
@@ -168,8 +168,9 @@ containing LzDataElement values are unsupported.
   `datasetArgs`/`lzAddLocalData` path entirely (which parses dataset bodies and
   `src` targets as XML at compile time and would choke on JSON/ws URLs). Instead
   the compiler emits a registration call into the app JS —
-  `lz.jsondata.register(name, {json: <literal>} | {src: <url>} | {ws: <url>},
-  shape?)` — consumed by the runtime module. `src` is never fetched at compile
+  `lz.jsondata.register(name, {json: <literal>} | {src: <url>} | {ws: <url>})`
+  — consumed by the runtime module (shapes are checker-only; they never travel
+  to the runtime). `src` is never fetched at compile
   time. JSON datasets therefore never emit a global binding (classic datasets
   compile to `name = canvas.lzAddLocalData(…)`), so a dataset named `server`
   cannot clobber the bus's reserved proxy root.
@@ -250,10 +251,16 @@ ws.send(ujson.dumps({"dataset": "sensors",
 
 ### Replication
 
-The interception seam is `LzNode.prototype.createChildren` (wrapped by the patch
-module, same pattern as `lz-adopt-patch.js` wrapping `__makeSprite`): child specs
-carrying `jsondatapath` are diverted to a lightweight replication manager instead
-of plain instantiation.
+The interception seam is `LzNode.prototype.makeChild` (wrapped by the patch
+module, same pattern as `lz-adopt-patch.js` wrapping `__makeSprite`).
+`makeChild` is the LFC's universal instantiation funnel — every queued spec at
+every level, including canvas-level children, passes through it
+(`LzInstantiator` calls `parent.makeChild(spec, true)` when draining its idle
+queue), and it returns the constructed node. Child specs carrying
+`jsondatapath` are diverted to a lightweight replication manager instead of
+plain instantiation; the manager creates clones through the original
+`makeChild`, so clone tracking is the return value — no scanning, and correct
+under the LFC's idle-queued (asynchronous) instantiation.
 
 1. Evaluate the path against the dataset → N matches.
 2. Instantiate N clones of the authored template into the parent. `data` and
@@ -267,8 +274,11 @@ of plain instantiation.
      matches. No stale per-clone state, ever.
    - `pooling="true"`: reuse clones by index via `setAttribute('data', newDatum)`
      (constraints re-run; imperative per-clone state is the author's
-     responsibility), create the shortfall, hide the surplus.
-   After reconcile the manager fires `onclones` (classic LFC event name).
+     responsibility). **Nested relative bindings inside reused clones do NOT
+     re-evaluate on a pooled datum swap** — use the default `pooling="false"`
+     for nested replication. Shortfall is created, surplus hidden.
+   After reconcile the manager fires the parent's `onclones` event (classic LFC
+   event name; guarded — the manager itself is not eventable).
 
 Zero matches → zero clones (not an error). A non-wildcard path with exactly one
 match binds the single view without cloning, mirroring classic datapath behavior.
@@ -277,9 +287,12 @@ Relative paths nest: `<lz-view datapath="/subgenres[*]">` inside a clone evaluat
 against that clone's datum (dreem's genres example).
 
 Filter/sort (phase 5): `[@]` invokes `filterfunction(obj, accum)`, authored as
-`<method name="filterfunction">` on the datapath-bound view; `sortfield` /
-`sortasc` attributes apply between evaluate and reconcile. (dreem2's `sortpath`
-is omitted.)
+`<method name="filterfunction">` on the **parent** of the datapath-bound view
+(the node that hosts the clones — it is fully constructed when replication
+runs; the bound view is a template and cannot carry a live method yet),
+mirroring where dreem's `<replicator>` held it. `sortfield` / `sortasc`
+attributes on the bound view apply between evaluate and reconcile. (dreem2's
+`sortpath` is omitted.)
 
 ### End-to-end change propagation
 
@@ -294,9 +307,9 @@ clones when `pooling="true"`) → the LFC constraint system runs the
 - **Shape acquisition:** inline datasets infer a TS type from the JSON literal.
   Fetched/live datasets use the optional `application/lz-shape` declaration —
   its body is a **TypeScript type literal**, inserted verbatim as the dataset's
-  root type in the generated d.ts; TS syntax errors in it surface as diagnostics
-  mapped to the script's source line. Absent a shape, the dataset types as `any`
-  with a lint note (not an error).
+  root type in the generated d.ts; TS syntax errors in it surface as
+  generated-declaration diagnostics (source-line mapping for shape literals is
+  a follow-up). Absent a shape, the dataset types as `any` (no finding).
 - **Array unification (inference rule):** element object shapes merge into a
   single object type; properties absent from some elements become optional;
   properties present with differing types union. `[{color:"red"},{price:1}]` →
@@ -319,7 +332,7 @@ clones when `pooling="true"`) → the LFC constraint system runs the
 | Malformed inline JSON | Compile-time diagnostic (lzx-check + in-browser compile) |
 | Unknown `$name` at runtime | Console warning once; binds if the dataset later registers |
 | Fetch failure / bad JSON from URL | `onerror` on the dataset; bound views stay empty |
-| WebSocket drop | Capped-backoff reconnect + re-subscribe; `onerror` after retries exhausted |
+| WebSocket drop | Capped-backoff reconnect + re-subscribe; `onerror` fired once after 8 consecutive failures (retries continue at the 30s cap) |
 | Wire `error` message | `onerror` on the dataset, message logged |
 | Update before first snapshot | Dropped with console warning |
 | Malformed/unknown wire message | Logged and skipped |

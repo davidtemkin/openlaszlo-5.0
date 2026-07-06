@@ -4,7 +4,7 @@
 
 **Goal:** dreem's JSONPath databinding for DOM-authored openlaszlo-5.0 apps — native JSON datasets (inline / fetched / live WebSocket), implicit view replication over dreem slash-dialect paths, raw JS datums bound via the `data` attribute and existing `${}` constraints, statically typed by lzx-check, with a transport-independent wire protocol whose reference relay rides the bus's upgrade dispatcher.
 
-**Architecture:** One shared TS core (`json-path.ts`, pure) consumed by three layers: the compiler (domsource routes `type="json"` datasets and renames JSON-dialect `datapath` → `jsondatapath`; compile emits `lz.jsondata.register(...)` instead of `lzAddLocalData`), the checker (shape inference + path validation + typed `data`), and a browser micro-runtime (`json-runtime.ts`, esbuild-IIFE'd to `startup/lz-json-data.js`, prepended into the app blob) that wraps `LzNode.prototype.createChildren` to replicate clones. The LFC is untouched; constraints refire because `(boundView,"data")` dependency pairs register on the declared `ondata` event and `$lzc$set_data` fires it.
+**Architecture:** One shared TS core (`json-path.ts`, pure) consumed by three layers: the compiler (domsource routes `type="json"` datasets and renames JSON-dialect `datapath` → `jsondatapath`; compile emits `lz.jsondata.register(...)` instead of `lzAddLocalData`), the checker (shape inference + path validation + typed `data`), and a browser micro-runtime (`json-runtime.ts`, esbuild-IIFE'd to `startup/lz-json-data.js`, prepended into the app blob) that wraps `LzNode.prototype.makeChild` — the LFC's universal instantiation funnel (every idle-queued spec at every level, including canvas children, passes through it via `LzInstantiator`'s `parent.makeChild(spec, true)`, and it RETURNS the constructed node) — to replicate clones. The LFC is untouched; constraints refire because `(boundView,"data")` dependency pairs register on the declared `ondata` event and `$lzc$set_data` fires it.
 
 **Tech Stack:** TypeScript in `compiler/src` (built by `npm run build`, bundled by esbuild per the `bundle:lzts` precedent), `node --test`, the bus's dep-free WS codec (`server/connection.mjs`) and `wsClient` test helper. Zero new dependencies.
 
@@ -749,6 +749,13 @@ Expected: new tests FAIL (`lzAddLocalData` emitted / XML parse of JSON content f
 
 - [ ] **Step 3: Implement in `compiler/src/compile.ts`**
 
+First extend the xml.js import at compile.ts:4 — `XmlText` is not currently
+imported and the type predicate below needs it:
+
+```ts
+import { parseXml, XmlElem, XmlNode, XmlText } from "./xml.js";
+```
+
 Add next to `compileDataset` (~line 495):
 
 ```ts
@@ -993,53 +1000,75 @@ git commit -m "runtime: json-runtime core — JsonDataset registry, mutation API
 
 ---
 
-### Task 6: json-runtime replication — createChildren interception + reconcile
+### Task 6: json-runtime replication — makeChild interception + reconcile
 
 **Files:**
 - Modify: `compiler/src/json-runtime.ts`
 - Test: `compiler/test/json-runtime.test.mjs` (extend)
 
+**Why `makeChild`, not `createChildren` (load-bearing):** the LFC's default
+instantiation is IDLE-QUEUED — `createChildren` dispatches to
+`lz.Instantiator.requestInstantiation` (LzNode.lzs:1387-1400), which queues and
+returns; the queue drains later in idle ticks calling
+`parent.makeChild(spec, true)` (LzInstantiator.lzs:299). So (a) nothing is in
+`subnodes` when `createChildren` returns — scan-based clone tracking finds
+nothing; and (b) canvas-level children NEVER pass through `createChildren`
+(they go `LzInstantiateView` → `initDone` → `requestInstantiation(canvas, …)` →
+`makeChild`, LaszloCanvas.lzs:671-691). `makeChild` is the universal funnel at
+every level and RETURNS the constructed node (LzNode.lzs:1449-1477) — clone
+tracking is its return value. Clones the manager creates via the original
+`makeChild(spec)` (no `async` arg → `__LZisnew = true` → subtree instantiates
+synchronously via `createImmediate`, LzInstantiator syncNew).
+
 **Interfaces:**
-- Consumes: Task 5's registry; child specs shaped `{class, attrs, children}` (the LFC's `createChildren(carr)` contract, LzNode.lzs:1387).
+- Consumes: Task 5's registry; child specs shaped `{class, attrs, children}` (what `emitSpec` compiles, compile.ts:941-949; `makeChild` reads `e['class']`, `e.attrs`, `e.children`, LzNode.lzs:1449-1477). The LFC mutates the attrs object it is handed (`$lzc$bind_id`, `delete iargs["$datapath"]`) — the manager spread-copies attrs per clone, so specs stay reusable.
 - Produces:
-  - `installJsonRuntime` wraps `host.lzNodeProto.createChildren`: specs with a string `attrs.jsondatapath` are diverted to a `ReplicationManager`; the rest pass through.
-  - `export class ReplicationManager { clones: any[]; refresh(): void }` — clone attrs get `data`, `clonenumber`, `cloneManager` (construction attrs); `jsondatapath` removed. Default destroy/recreate; `pooling` (`true`/`"true"`) reuses by index, hides surplus (`setAttribute("visible", false)`). After reconcile, fires the parent's `onclones` event if one exists (`parent.onclones.sendEvent(clones)` guarded).
-  - Relative paths evaluate against the nearest ancestor (walking `immediateparent`) whose `data !== undefined && !== null`... precisely: first ancestor where `data != null`.
+  - `installJsonRuntime` wraps `host.lzNodeProto.makeChild(e, async)`: a spec with a string `e.attrs.jsondatapath` is diverted to a `ReplicationManager` (returns `null`); everything else passes through to the original.
+  - `export class ReplicationManager { clones: any[]; refresh(): void }` — clone attrs get `data`, `clonenumber`, `cloneManager` (construction attrs); `jsondatapath` removed. Clones are the original `makeChild`'s return values. Default destroy/recreate; `pooling` (`true`/`"true"`) reuses by index, hides surplus (`setAttribute("visible", false)`). After reconcile, fires the parent's `onclones` event if one exists (`parent.onclones.sendEvent(clones)` guarded).
+  - Relative paths evaluate against the nearest ancestor (walking `immediateparent`) where `data != null`.
   - Zero matches → zero clones. Unknown dataset → warn once, bind on later registration. Parent destroyed (`__LZdeleted`) → unbind.
+  - Known corner (document in a code comment, don't solve): a bound view with `initstage="defer"` replicates when the deferred spec finally drains through `makeChild` — replication timing follows the LFC queue, by design.
+  - Known limitation (spec rev 4): nested relative bindings inside a POOLED (reused) clone do not re-evaluate on datum swap; the default destroy/recreate path rebuilds them correctly.
 
 - [ ] **Step 1: Write the failing tests** (append; note the fake-LFC harness)
 
 ```js
-// ── replication harness: a minimal LzNode-ish fake ────────────────────────
+// ── replication harness: a minimal LzNode-ish fake that MODELS THE QUEUE ──
+// The real LFC idle-queues instantiation: createChildren enqueues; the
+// instantiator later calls parent.makeChild(spec, true) per spec; makeChild
+// constructs synchronously and RETURNS the node. Mirroring that here pins the
+// contract the runtime actually relies on — a synchronous fake would pass with
+// broken scan-based tracking.
 function makeFakeLfc() {
+  const queue = [];
   const proto = {
-    createChildren(carr) {                     // "the original": instantiates synchronously
-      for (const spec of carr ?? []) {
-        const node = {
-          __proto__: proto, __LZdeleted: false, subnodes: [],
-          immediateparent: this, attrs: spec.attrs,
-          destroyed: false,
-        };
-        for (const [k, v] of Object.entries(spec.attrs ?? {})) node[k] = v;
-        node.setAttribute = function (n, v) { this[n] = v; (this.sets ??= []).push([n, v]); };
-        node.destroy = function () { this.destroyed = true; this.__LZdeleted = true; this.immediateparent.subnodes = this.immediateparent.subnodes.filter((s) => s !== this); };
-        this.subnodes.push(node);
-        if (spec.children) node.createChildren(spec.children);
-      }
+    makeChild(e, _async) {
+      const node = { __proto__: proto, __LZdeleted: false, destroyed: false, subnodes: [], immediateparent: this };
+      for (const [k, v] of Object.entries(e.attrs ?? {})) node[k] = v;
+      node.setAttribute = function (n, v) { this[n] = v; (this.sets ??= []).push([n, v]); };
+      node.destroy = function () { this.destroyed = true; this.__LZdeleted = true; this.immediateparent.subnodes = this.immediateparent.subnodes.filter((s) => s !== this); };
+      this.subnodes.push(node);
+      for (const c of e.children ?? []) node.makeChild(c, true); // subtree: same funnel, sync (createImmediate-like)
+      return node;
     },
+    createChildren(carr) { for (const spec of carr ?? []) queue.push([this, spec]); }, // idle-queued
   };
   const root = { __proto__: proto, __LZdeleted: false, subnodes: [], immediateparent: null };
   root.setAttribute = function (n, v) { this[n] = v; };
-  return { proto, root };
+  const drain = () => { while (queue.length) { const [parent, spec] = queue.shift(); parent.makeChild(spec, true); } };
+  return { proto, root, drain };
 }
 
-test("replication: N clones with data/clonenumber, jsondatapath stripped", () => {
-  const { proto, root } = makeFakeLfc();
+test("replication: nothing before the queue drains; N tracked clones after (makeChild return values)", () => {
+  const { proto, root, drain } = makeFakeLfc();
   const host = makeHost({ lzNodeProto: proto });
   const jd = installJsonRuntime(host);
   jd.register("b", { json: { bicycle: [{ color: "red" }, { color: "green" }] } });
   root.createChildren([{ class: "view", attrs: { jsondatapath: "$b/bicycle[*]", height: 20 } }]);
+  assert.equal(root.subnodes.length, 0);          // queued, not instantiated — the real-LFC contract
+  drain();
   assert.equal(root.subnodes.length, 2);
+  assert.equal(root.subnodes[0].cloneManager.clones.length, 2); // tracked via return values, no scan
   assert.deepEqual(root.subnodes.map((n) => n.data.color), ["red", "green"]);
   assert.deepEqual(root.subnodes.map((n) => n.clonenumber), [0, 1]);
   assert.equal(root.subnodes[0].jsondatapath, undefined);
@@ -1047,11 +1076,22 @@ test("replication: N clones with data/clonenumber, jsondatapath stripped", () =>
   assert.ok(root.subnodes[0].cloneManager);
 });
 
+test("canvas-level bound view: diverted at makeChild directly (the LzInstantiator call shape)", () => {
+  const { proto, root, drain } = makeFakeLfc();
+  const jd = installJsonRuntime(makeHost({ lzNodeProto: proto }));
+  jd.register("b", { json: { l: ["x", "y"] } });
+  const ret = root.makeChild({ class: "view", attrs: { jsondatapath: "$b/l[*]" } }, true);
+  assert.equal(ret, null);                        // diverted spec constructs no view itself
+  assert.equal(root.subnodes.length, 2);          // …but its clones do, synchronously via origMakeChild
+  assert.deepEqual(root.subnodes.map((n) => n.data), ["x", "y"]);
+});
+
 test("reconcile default: destroy + recreate on ondata; zero matches → zero clones", () => {
-  const { proto, root } = makeFakeLfc();
+  const { proto, root, drain } = makeFakeLfc();
   const jd = installJsonRuntime(makeHost({ lzNodeProto: proto }));
   const ds = jd.register("b", { json: { l: [1, 2, 3] } });
   root.createChildren([{ class: "view", attrs: { jsondatapath: "$b/l[*]" } }]);
+  drain();
   const first = [...root.subnodes];
   ds.setData({ l: [7] });
   assert.ok(first.every((n) => n.destroyed));
@@ -1062,10 +1102,11 @@ test("reconcile default: destroy + recreate on ondata; zero matches → zero clo
 });
 
 test("reconcile pooling=true: reuse by index, hide surplus, grow shortfall", () => {
-  const { proto, root } = makeFakeLfc();
+  const { proto, root, drain } = makeFakeLfc();
   const jd = installJsonRuntime(makeHost({ lzNodeProto: proto }));
   const ds = jd.register("b", { json: { l: ["a", "b", "c"] } });
   root.createChildren([{ class: "view", attrs: { jsondatapath: "$b/l[*]", pooling: true } }]);
+  drain();
   const first = [...root.subnodes];
   ds.setData({ l: ["x"] });
   assert.equal(first[0].destroyed, false);
@@ -1077,20 +1118,22 @@ test("reconcile pooling=true: reuse by index, hide surplus, grow shortfall", () 
 });
 
 test("relative path binds against nearest ancestor datum (nested replication)", () => {
-  const { proto, root } = makeFakeLfc();
+  const { proto, root, drain } = makeFakeLfc();
   const jd = installJsonRuntime(makeHost({ lzNodeProto: proto }));
   jd.register("g", { json: { genres: [{ name: "jazz", sub: ["cool", "free"] }] } });
   root.createChildren([{ class: "view", attrs: { jsondatapath: "$g/genres[*]" },
     children: [{ class: "view", attrs: { jsondatapath: "/sub[*]" } }] }]);
+  drain();
   const outer = root.subnodes[0];
   assert.deepEqual(outer.subnodes.map((n) => n.data), ["cool", "free"]);
 });
 
 test("single non-fanout match binds one view; unknown dataset warns then binds on register", () => {
-  const { proto, root } = makeFakeLfc();
+  const { proto, root, drain } = makeFakeLfc();
   const host = makeHost({ lzNodeProto: proto });
   const jd = installJsonRuntime(host);
   root.createChildren([{ class: "view", attrs: { jsondatapath: "$late/title" } }]);
+  drain();
   assert.equal(root.subnodes.length, 0);
   assert.equal(host.warnings.length, 1);
   jd.register("late", { json: { title: "hi" } });
@@ -1099,12 +1142,13 @@ test("single non-fanout match binds one view; unknown dataset warns then binds o
 });
 
 test("onclones fires on the parent when an event exists; destroyed parent unbinds", () => {
-  const { proto, root } = makeFakeLfc();
+  const { proto, root, drain } = makeFakeLfc();
   const jd = installJsonRuntime(makeHost({ lzNodeProto: proto }));
   const ds = jd.register("b", { json: { l: [1] } });
   const clonesSeen = [];
   root.onclones = { sendEvent: (c) => clonesSeen.push(c.length) };
   root.createChildren([{ class: "view", attrs: { jsondatapath: "$b/l[*]" } }]);
+  drain();
   assert.deepEqual(clonesSeen, [1]);
   root.__LZdeleted = true;
   ds.setData({ l: [1, 2] });
@@ -1115,7 +1159,7 @@ test("onclones fires on the parent when an event exists; destroyed parent unbind
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `cd compiler && npm test`
-Expected: replication tests FAIL (clones = raw spec instantiation with jsondatapath intact).
+Expected: replication tests FAIL (without the makeChild wrap, the drained spec instantiates ONCE with `jsondatapath` still set — no clones, no diversion).
 
 - [ ] **Step 3: Implement** — append to `compiler/src/json-runtime.ts` and wire into `installJsonRuntime`:
 
@@ -1130,7 +1174,7 @@ export class ReplicationManager {
   constructor(
     private reg: JsonRegistry, private host: RuntimeHost,
     private parent: any, private spec: any, private path: string,
-    private origCreate: (carr: any[]) => void,
+    private origMake: (e: any, async?: any) => any,
   ) {
     try { this.parsed = parsePath(path); }
     catch (e) { host.warn(`jsondatapath "${path}": ${(e as JsonPathError).message}`); return; }
@@ -1179,19 +1223,18 @@ export class ReplicationManager {
     if (ev && typeof ev.sendEvent === "function") ev.sendEvent(this.clones);
   }
   private create(datums: unknown[], base: number): void {
-    const specs: any[] = [];
     for (let i = 0; i < datums.length; i++) {
       const datum = datums[i];
       if (isLzDataNode(datum)) { this.host.warn(`jsondatapath "${this.path}": LzDataElement datum refused (use the bridge one-way)`); continue; }
       const attrs = { ...this.spec.attrs, data: datum, clonenumber: base + i, cloneManager: this };
       delete attrs.jsondatapath;
-      specs.push({ ...this.spec, attrs });
+      // No async arg: __LZisnew=true → the clone's own subtree instantiates
+      // synchronously (createImmediate / syncNew). makeChild RETURNS the node —
+      // that return value IS the clone tracking (the LFC's default path is
+      // idle-queued, so scanning subnodes after the fact finds nothing).
+      const node = this.origMake.call(this.parent, { ...this.spec, attrs });
+      if (node) this.clones.push(node);
     }
-    const before = new Set(this.parent.subnodes ?? []);
-    this.origCreate.call(this.parent, specs);
-    // scan-tracking: clones are whatever new subnodes claim this manager
-    for (const n of this.parent.subnodes ?? [])
-      if (!before.has(n) && n.cloneManager === this) this.clones.push(n);
   }
   private sorted(m: unknown[]): unknown[] { return m; } // Task 11
 }
@@ -1210,15 +1253,15 @@ Replace `installJsonRuntime`:
 ```ts
 export function installJsonRuntime(host: RuntimeHost): JsonRegistry {
   const reg = new JsonRegistry(host);
-  const orig = host.lzNodeProto.createChildren;
-  host.lzNodeProto.createChildren = function (carr: any[]) {
-    const plain: any[] = [];
-    for (const spec of carr ?? []) {
-      const p = spec && spec.attrs && spec.attrs.jsondatapath;
-      if (typeof p === "string") new ReplicationManager(reg, host, this, spec, p, orig);
-      else plain.push(spec);
-    }
-    return orig.call(this, plain);
+  // makeChild is the LFC's universal instantiation funnel (LzInstantiator calls
+  // parent.makeChild(spec, true) for every queued spec at every level,
+  // including canvas children). Wrapping createChildren would miss canvas-level
+  // bound views entirely and could not track idle-queued clones.
+  const orig = host.lzNodeProto.makeChild;
+  host.lzNodeProto.makeChild = function (e: any, async?: any) {
+    const p = e && e.attrs && e.attrs.jsondatapath;
+    if (typeof p === "string") { new ReplicationManager(reg, host, this, e, p, orig); return null; }
+    return orig.call(this, e, async);
   };
   return reg;
 }
@@ -1548,20 +1591,36 @@ Add a `jsonCtx` parameter to `walkInstance` (`jsonCtx: { shape: Shape | null; ts
 
 Pass `childJsonCtx` through the recursive call (`walkInstance(c, inst, childSiblings, childJsonCtx)`), and update the initial call to `walkInstance(root, null, new Set(), null)`.
 
-In `compiler/src/app-dts.ts`, in `generateAppDts` before the classes loop:
+The `JsonDatasetModel` interface (defined in the app-model snippet above) must
+also carry the declared literal so app-dts can emit it:
 
 ```ts
-  for (const d of model.jsonDatasets)
-    if (d.rootType.startsWith("__LzShape_"))
-      out.push(`type ${d.rootType} = ${"__LZ_DECLARED__"};`);
+export interface JsonDatasetModel { name: string; rootType: string; shape: Shape | null; declaredLiteral?: string; line: number }
 ```
 
-…except the declared literal text must travel on the model: change `JsonDatasetModel.rootType` handling so app-model stores the literal too. Concretely, add `declaredLiteral?: string` to `JsonDatasetModel`; in the extract pre-pass set `declaredLiteral = textOf(shapeEl).code.trim()`; and emit:
+In the extract pre-pass, the `shapeEl` branch becomes:
+
+```ts
+    } else if (shapeEl) {
+      rootType = `__LzShape_${name}`;   // declared literal, emitted as a type alias
+      declaredLiteral = textOf(shapeEl).code.trim();
+    }
+```
+
+(with `let declaredLiteral: string | undefined;` above and `declaredLiteral`
+included in the pushed model object). In `compiler/src/app-dts.ts`, in
+`generateAppDts` before the classes loop:
 
 ```ts
   for (const d of model.jsonDatasets)
     if (d.declaredLiteral) out.push(`type ${d.rootType} = ${d.declaredLiteral};`);
 ```
+
+Note (documented limitation, spec rev 4): a TS syntax error in the declared
+literal surfaces as a generated-declarations finding (line 0), not mapped to
+the script's source line. JSON datapaths inside `<class>` templates are
+renamed by domsource (they work at runtime) but are NOT checked/typed —
+consistent with the slice-2 "template subtrees" follow-up.
 
 Note: `data`/`clonenumber` are already ownerMembers via `inst.attrs` (the constraint collector includes `inst.attrs.map((x) => x.name)`), and `SKIP_LITERAL` still contains `datapath` so the literal validator never fires on it — nothing else to change there.
 
@@ -1653,6 +1712,18 @@ test("live: reconnect with backoff, re-subscribe, backoff resets on open", () =>
   rig.sockets[2].onclose();
   assert.equal(delays[2], 500);
 });
+
+test("live: onerror fires ONCE after 8 consecutive failures; retries continue", () => {
+  const rig = makeSocketRig();
+  const timers = [];
+  const host = makeHost({ makeSocket: rig.makeSocket, setTimeoutFn: (cb) => timers.push(cb) });
+  const ds = installJsonRuntime(host).register("s", { ws: "ws://h/api/data" });
+  const errs = [];
+  ds.onError((m) => errs.push(m));
+  for (let i = 0; i < 10; i++) { rig.sockets[rig.sockets.length - 1].onclose(); timers.shift()(); }
+  assert.equal(errs.length, 1);
+  assert.equal(rig.sockets.length, 11);            // still reconnecting after the error
+});
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -1686,6 +1757,7 @@ Expected: FAIL (`ws source not built yet` error fires).
       };
       ws.onclose = () => {
         const delay = Math.min(30000, 500 * 2 ** retry++);
+        if (retry === 8) ds.fireError("connection lost after 8 attempts; still retrying at the cap");
         (host.setTimeoutFn ?? ((cb: () => void, ms: number) => setTimeout(cb, ms)))(connect, delay);
       };
     };
@@ -1721,7 +1793,7 @@ git commit -m "runtime: live dataset source — wire protocol client, capped-bac
 - Produces:
   - `export function dataUpgradeHandler(req, socket)` — the `/api/data` route.
   - `export function _resetForTests()` — clears retained state between tests.
-  - Behavior: any peer on the socket may subscribe AND publish. `{"lz":1,"subscribe":name}` → immediate snapshot reply (retained or `{dataset,data:null}`); unknown `lz` version → `{dataset:null,error}` + skip. `{dataset,data}` → retain + broadcast to that dataset's subscribers. `{dataset,update:{path,value}}` → apply to retained via `resolvePointer` (miss → error reply to sender only) + broadcast the update verbatim. Malformed frames: logged, skipped (socket stays). Publishers that also subscribed receive their own messages (LWW in arrival order, per spec).
+  - Behavior: any peer on the socket may subscribe AND publish. `{"lz":1,"subscribe":name}` → immediate snapshot reply (retained or `{dataset,data:null}`); unknown `lz` version → `{dataset:<name>,error}` reply to the sender + skip. `{dataset,data}` → retain + broadcast to that dataset's subscribers. `{dataset,update:{path,value}}` → apply to retained via `resolvePointer` (miss → error reply to sender only) + broadcast the update verbatim. Malformed frames: logged, skipped (socket stays). Publishers that also subscribed receive their own messages (LWW in arrival order, per spec).
 
 - [ ] **Step 1: Move the helper.** Create `compiler/test/helpers/wsclient.mjs` containing `encodeTextMasked` and `wsClient` EXACTLY as they exist at the top of `compiler/test/bus-integration.test.mjs` (copy verbatim, including the `decodeFrames` import from `../../server/connection.mjs` — note the extra `../` from `helpers/`). In `bus-integration.test.mjs`, delete the two definitions and add `import { wsClient, encodeTextMasked } from "./helpers/wsclient.mjs";`. Run `cd compiler && npm test` — bus tests must stay green before proceeding.
 
@@ -1861,7 +1933,7 @@ export function dataUpgradeHandler(req, socket) {
       if (m.ping) { socket.write(Buffer.concat([Buffer.from([0x8a, m.ping.length]), m.ping])); continue; }
       if (m.text == null) continue;
       try { handle(JSON.parse(m.text), socket); }
-      catch { /* malformed frame: logged-equivalent skip */ }
+      catch (e) { console.warn("data-relay: malformed frame skipped:", String(e && e.message || e)); }
     }
     if (closed) { drop(); socket.end(); }
   });
@@ -1903,10 +1975,9 @@ git commit -m "server: /api/data JSON-dataset relay on the shared dispatcher (re
 
 **Files:**
 - Modify: `compiler/src/json-runtime.ts` (fill `filterFn()` and `sorted()`)
-- Modify: `docs/superpowers/specs/2026-07-06-json-databinding-design.md` (one amendment, below)
 - Test: `compiler/test/json-runtime.test.mjs` (extend)
 
-**Spec amendment (make it in the spec file, "Replication" section):** the spec says `filterfunction` is "authored as `<method name="filterfunction">` on the datapath-bound view" — that's a chicken-and-egg: the bound view is the *template*; no instance exists before replication runs. Amend to: *"`[@]` invokes `filterfunction(obj, accum)` authored on the **parent** of the datapath-bound view (the node that hosts the clones — it is fully constructed when replication runs), mirroring where dreem's `<replicator>` held it."* Commit the spec edit together with this task.
+**Spec note:** rev 4 already places `filterfunction` on the **parent** of the datapath-bound view (the bound view is a template — no instance exists before replication runs). No spec edit needed here.
 
 **Interfaces:**
 - Consumes: `this.parent.filterfunction` (a compiled LZX method, present on the constructed parent); `spec.attrs.sortfield` (string), `spec.attrs.sortasc` (`true`/`"true"`/`false`/`"false"`, default true).
@@ -1916,32 +1987,35 @@ git commit -m "server: /api/data JSON-dataset relay on the shared dispatcher (re
 
 ```js
 test("[@] filter: parent-hosted filterfunction accumulates (dreem signature)", () => {
-  const { proto, root } = makeFakeLfc();
+  const { proto, root, drain } = makeFakeLfc();
   const jd = installJsonRuntime(makeHost({ lzNodeProto: proto }));
   jd.register("b", { json: { bicycle: [
     { color: "red", price: 19.95 }, { color: "green", price: 29.95 }, { color: "blue", price: 59.95 } ] } });
   root.filterfunction = function (obj, accum) { if (obj.price > 20) accum.unshift(obj.color); return accum; };
   root.createChildren([{ class: "view", attrs: { jsondatapath: "$b/bicycle[*][@]" } }]);
+  drain();
   assert.deepEqual(root.subnodes.map((n) => n.data), ["blue", "green"]);
 });
 
 test("[@] without a parent filterfunction warns and yields zero clones", () => {
-  const { proto, root } = makeFakeLfc();
+  const { proto, root, drain } = makeFakeLfc();
   const host = makeHost({ lzNodeProto: proto });
   const jd = installJsonRuntime(host);
   jd.register("b", { json: { l: [1, 2] } });
   root.createChildren([{ class: "view", attrs: { jsondatapath: "$b/l[*][@]" } }]);
+  drain();
   assert.equal(root.subnodes.length, 0);
   assert.ok(host.warnings.some((w) => /filterfunction/.test(w)));
 });
 
 test("sortfield/sortasc: numeric sort, descending", () => {
-  const { proto, root } = makeFakeLfc();
+  const { proto, root, drain } = makeFakeLfc();
   const jd = installJsonRuntime(makeHost({ lzNodeProto: proto }));
   jd.register("b", { json: { bicycle: [
     { color: "green", price: 29.95 }, { color: "red", price: 9.95 }, { color: "blue", price: 59.95 } ] } });
   root.createChildren([{ class: "view",
     attrs: { jsondatapath: "$b/bicycle[*]", sortfield: "price", sortasc: "false" } }]);
+  drain();
   assert.deepEqual(root.subnodes.map((n) => n.data.color), ["blue", "green", "red"]);
 });
 ```
@@ -1976,8 +2050,6 @@ Expected: filter test FAIL (filterFn stub returns undefined → unfiltered order
   }
 ```
 
-Also make the spec amendment described above in `docs/superpowers/specs/2026-07-06-json-databinding-design.md`.
-
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `cd compiler && npm test`
@@ -1986,9 +2058,8 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add compiler/src/json-runtime.ts compiler/test/json-runtime.test.mjs \
-        docs/superpowers/specs/2026-07-06-json-databinding-design.md
-git commit -m "runtime: [@] filterfunction (parent-hosted; spec amended) + sortfield/sortasc"
+git add compiler/src/json-runtime.ts compiler/test/json-runtime.test.mjs
+git commit -m "runtime: [@] filterfunction (parent-hosted per spec) + sortfield/sortasc"
 ```
 
 ---
@@ -2027,7 +2098,7 @@ test("toLzDataset: one-shot converts via __LZv2E; live re-converts on ondata", (
   assert.deepEqual(xml.kids[0].converted, { x: 1 });   // one-shot: unchanged
 
   const live = ds.toLzDataset(undefined, { live: true });
-  assert.equal(live.attrs.name, "b_xml2" === undefined ? "" : live.attrs.name); // default name = "<name>_xml"
+  assert.equal(live.attrs.name, "b_xml");          // default name = "<name>_xml"
   ds.setData({ x: 3 });
   assert.deepEqual(live.kids[0].converted, { x: 3 });
 });
@@ -2038,8 +2109,6 @@ test("toLzDataset without LFC globals throws a clear error", () => {
   assert.throws(() => ds.toLzDataset(), /LFC/);
 });
 ```
-
-(Fix the default-name assertion to `assert.equal(live.attrs.name, "b_xml");` — both bridges may share the default name; the test's point is the LIVE re-conversion.)
 
 - [ ] **Step 2: Run tests to verify they fail**
 
@@ -2105,8 +2174,8 @@ git commit -m "runtime: toLzDataset bridge — one-shot/live __LZv2E conversion 
   <dataset name="sensors" type="json" src="ws://localhost:8090/api/data">
     <script type="application/lz-shape">{ temp: number, readings: number[] }</script>
   </dataset>
-  <lz-view x="10" y="10" height="24">
-    <lz-text text="${'temp: ' + (parent.data ? parent.data.temp : '…')}" datapath="$sensors"></lz-text>
+  <lz-view x="10" y="10" height="24" datapath="$sensors">
+    <lz-text text="${'temp: ' + parent.data.temp}"></lz-text>
   </lz-view>
   <lz-view x="10" y="40">
     <simplelayout axis="y" spacing="2"></simplelayout>
@@ -2119,7 +2188,7 @@ git commit -m "runtime: toLzDataset bridge — one-shot/live __LZv2E conversion 
 </html>
 ```
 
-Note the first binding: `datapath="$sensors"` on the *text* element itself — the whole-dataset single-bind; its own `data` is the root object, so `parent.data` inside… is wrong there. Correct it while writing: put the datapath on the enclosing `lz-view` (as shown) and keep `parent.data` in the text constraint. The snippet above already does this — implementer: double-check the datapath sits on the `lz-view`, not the `lz-text`.
+Note the first binding: `datapath="$sensors"` sits on the enclosing `lz-view` (the whole-dataset single-bind), and the text constraint reads `parent.data.temp`. The bound view does not exist until the first snapshot arrives — that IS the loading state.
 
 - [ ] **Step 2: Write `examples/dom-authoring/sensor-feeder.mjs`** (a "device" peer — deliberately dumb: socket + JSON, nothing else):
 
@@ -2176,14 +2245,16 @@ Expected: all suites green; regenerated `lzc-browser.js`, `startup/lz-json-data.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add examples/dom-authoring/ startup/lz-json-data.js compiler/lzc-browser.js
+git add examples/dom-authoring/ startup/lz-json-data.js startup/lz-ts.js compiler/lzc-browser.js
 git commit -m "examples: live sensors demo + feeder peer over /api/data; README; final dist artifacts"
 ```
+
+(`startup/lz-ts.js` is included in case `npm run dist` refreshed it; `git status` must be clean after this commit.)
 
 ---
 
 ## Plan Self-Review (performed)
 
 - **Spec coverage:** dialect grammar → Task 1; unification/typing rules → Tasks 2, 8; authoring/routing → Tasks 3–4; dataset sources + mutation → Tasks 5, 9; replication/pooling/nesting/onclones → Task 6; blob order + `lz.jsondata` install → Task 7; wire protocol + lifecycle rules + relay-on-dispatcher → Tasks 9–10; filter/sort → Task 11 (with a spec amendment for the filterfunction host — the bound view is a template, so the method lives on the constructed parent); bridge + guard → Tasks 6, 12; error-handling table rows are each asserted in a test (compile diagnostics T4/T8, unknown-$name T6, fetch failure T5, ws drop/error/malformed/pre-snapshot T9, relay errors T10, updateData miss T5, zero matches T6, LzDataNodeMixin guard T6/T12).
-- **Known deviations recorded:** filterfunction host (parent, spec amended in Task 11); debug-build JSON datasets refused (Task 4, DOM-authored apps never compile debug); `onclones` fires only when a delegate created the event (LFC auto-creates on registration — guarded send).
+- **Known deviations/limitations (all recorded in spec rev 4):** filterfunction host = parent of the bound view; debug-build JSON datasets refused (Task 4, DOM-authored apps never compile debug); `onclones` fires on the parent, only when a delegate created the event (guarded send); ws `onerror` once after 8 consecutive failures, retries continue at the cap; shapeless datasets type as `any` with no finding; lz-shape TS syntax errors surface as line-0 generated-declaration findings; nested relative bindings inside POOLED clones do not re-evaluate on datum swap (default destroy/recreate rebuilds them); class-template JSON datapaths work at runtime but are unchecked (slice-2 template follow-up); `initstage="defer"` replication follows the LFC queue timing.
 - **Type consistency:** `ParsedPath/Selector/Shape/RuntimeHost/WsLike/JsonRegistry` names are used identically across Tasks 1–12; `jsondatapath` is the single cross-layer key (domsource → compile output → runtime interception → checker).
