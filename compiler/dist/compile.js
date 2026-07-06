@@ -2274,7 +2274,12 @@ function spliceDebuggerLibrary(root, opts, seen, at) {
     root.children.splice(at, 0, ...children);
 }
 export function compile(source, opts = {}) {
-    const root = parseXml(source);
+    return compileFromXml(parseXml(source), opts);
+}
+/** Compile from a pre-built root XmlElem — the DOM-authored path's entry point
+ *  (spec: docs/superpowers/specs/2026-07-05-dom-native-authoring-design.md).
+ *  The text path above is exactly parseXml + this; its output is IDENTICAL. */
+export function compileFromXml(root, opts = {}) {
     if (root.name !== "canvas") {
         return { js: "", unsupported: `root is <${root.name}>, expected <canvas>` };
     }

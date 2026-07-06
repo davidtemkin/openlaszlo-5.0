@@ -12,7 +12,8 @@
 // We use the explicit `faults` side-channel (not exceptions) because compileInner
 // swallows errors into `{unsupported}`.
 
-import { compile } from "./compile.js";
+import { compile, compileFromXml } from "./compile.js";
+import type { XmlElem } from "./xml.js";
 import { browserOptions, type BrowserIoState, type FetchedFile } from "./browser-io.js";
 import {
   BrowserTracker, BrowserCache, validatorFromResponse, browserProbe, type FetchFn,
@@ -34,6 +35,12 @@ export {
   BrowserTracker, BrowserCache, browserProbe, validatorFromResponse,
 } from "./cache-browser.js";
 export type { FetchFn, BrowserCacheEntry } from "./cache-browser.js";
+// DOM-authored dialect front-end (spec: docs/superpowers/specs/2026-07-05-dom-native-authoring-design.md)
+export { domToXmlElem, DomDialectError } from "./domsource.js";
+export type { DomElementLike, DomNodeLike, DomSourceOptions } from "./domsource.js";
+export { parseXml } from "./xml.js";
+export type { XmlElem, XmlNode, XmlText } from "./xml.js";
+export { compileFromXml } from "./compile.js";
 
 /** A version tag baked into cache keys/tags (bump when codegen changes). */
 export const COMPILER_VERSION = "lzc-ts-0.0.1";
@@ -64,6 +71,11 @@ export interface CompileInBrowserOptions {
   canvas?: boolean;
   /** Retry cap for the preload loop (a runaway guard). */
   maxRetries?: number;
+  /** DOM-authored path (spec: docs/superpowers/specs/2026-07-05-dom-native-authoring-design.md):
+   *  compile this pre-built root instead of fetching `mainUrl`. `mainUrl` is still
+   *  required — it is the BASE URL for relative includes/resources. The compile
+   *  cache is SKIPPED (an inline DOM root has no fetchable validator). */
+  rootXml?: XmlElem;
 }
 
 export interface CompileInBrowserResult {
@@ -85,6 +97,10 @@ function decode(bytes: Uint8Array): string {
   return s;
 }
 
+/** XmlElem trees are plain JSON data; clone per pass (compileFromXml may mutate,
+ *  e.g. the autoinclude splice into root.children). */
+const cloneXml = (e: XmlElem): XmlElem => JSON.parse(JSON.stringify(e)) as XmlElem;
+
 /** The compiler properties that gate cache staleness (must match api-node's). */
 function compileProps(o: CompileInBrowserOptions): Record<string, string> {
   return { debug: String(!!o.debug || !!o.backtrace), backtrace: String(!!o.backtrace),
@@ -104,8 +120,9 @@ export async function compileInBrowser(
   const sprites = o.sprites ?? "none";
   const props = compileProps(o);
 
-  // 1. Cache lookup (re-validates the stored closure over HTTP).
-  if (o.cache) {
+  // 1. Cache lookup (re-validates the stored closure over HTTP) — SKIPPED for
+  // the rootXml path (no fetchable validator for an inline DOM root).
+  if (o.cache && !o.rootXml) {
     const hit = await o.cache.get(mainUrl, props, fetchFn);
     if (hit) {
       return { js: hit.blob, closure: hit.closure, tag: hit.tag, cached: true, passes: 0 };
@@ -153,8 +170,9 @@ export async function compileInBrowser(
   };
 
   // The MAIN app source is always the first dependency. Fetch it before pass 1 so
-  // the compile has something to parse.
-  await fetchOne(mainUrl);
+  // the compile has something to parse. (Text path only — a rootXml build has no
+  // main source to fetch; the page's DOM is the source.)
+  if (!o.rootXml) await fetchOne(mainUrl);
   // Eagerly fetch the autoincludes properties (node reads it during option build);
   // recording it keeps the closure aligned with the Node path.
   if (o.lpsUrl) {
@@ -173,9 +191,13 @@ export async function compileInBrowser(
     tracker.reset();
     tracker.record(mainUrl, validators.get(mainUrl) ?? { missing: true });
     const opts = browserOptions({ baseUrl: mainUrl, lpsUrl: o.lpsUrl, state, sprites });
-    const r = compile(state.map.get(mainUrl)!.text, {
-      ...opts, debug: o.debug, backtrace: o.backtrace, profile: o.profile, proxied: o.proxied, sprites, canvas: o.canvas,
-    });
+    const r = o.rootXml
+      ? compileFromXml(cloneXml(o.rootXml), {
+          ...opts, debug: o.debug, backtrace: o.backtrace, profile: o.profile, proxied: o.proxied, sprites, canvas: o.canvas,
+        })
+      : compile(state.map.get(mainUrl)!.text, {
+          ...opts, debug: o.debug, backtrace: o.backtrace, profile: o.profile, proxied: o.proxied, sprites, canvas: o.canvas,
+        });
     passes++;
     result = { js: r.js, unsupported: r.unsupported };
     if (state.faults.size === 0) break; // converged: no new misses
@@ -197,7 +219,7 @@ export async function compileInBrowser(
   // 4. Store in the cache (never cache an unsupported/failed compile).
   let tag: string;
   let cached = false;
-  if (o.cache && !result.unsupported) {
+  if (o.cache && !result.unsupported && !o.rootXml) {
     tag = await o.cache.put(mainUrl, closure, result.js);
   } else {
     // Compute the tag inline so callers always get a stable ETag.

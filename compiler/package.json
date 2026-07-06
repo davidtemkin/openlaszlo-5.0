@@ -16,7 +16,9 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "bundle:browser": "npx esbuild dist/browser.js --bundle --format=esm --platform=browser --outfile=lzc-browser.js",
-    "dist": "npm run build && npm run bundle:browser"
+    "bundle:lzts": "npx esbuild dist/ts-carrier.js --bundle --format=esm --platform=browser --minify --outfile=../startup/lz-ts.js --define:process.env.NODE_ENV='\"production\"' --external:fs --external:path --external:os --external:inspector --external:perf_hooks --external:crypto --external:buffer --external:source-map-support",
+    "dist": "npm run build && npm run bundle:browser && npm run bundle:lzts",
+    "test": "npm run build && node --test test/*.test.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.0.0",
