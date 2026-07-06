@@ -3,6 +3,11 @@
 // an AppModel.
 export function generateAppDts(model) {
     const out = ["// AUTO-GENERATED per-app declarations (lzx-check). Do not edit.", ""];
+    // Declared JSON-dataset shapes (application/lz-shape): TS type literal,
+    // inserted verbatim (spec "Compile-time typing").
+    for (const d of model.jsonDatasets)
+        if (d.declaredLiteral)
+            out.push(`type ${d.rootType} = ${d.declaredLiteral};`);
     for (const c of model.classes) {
         out.push(`declare class ${c.tsName} extends ${c.extTsName} {`);
         for (const a of c.attrs)

@@ -8,6 +8,10 @@ export interface BodySpan { genStartLine: number; srcLine: number; label: string
 
 export function generateAppDts(model: AppModel): string {
   const out: string[] = ["// AUTO-GENERATED per-app declarations (lzx-check). Do not edit.", ""];
+  // Declared JSON-dataset shapes (application/lz-shape): TS type literal,
+  // inserted verbatim (spec "Compile-time typing").
+  for (const d of model.jsonDatasets)
+    if (d.declaredLiteral) out.push(`type ${d.rootType} = ${d.declaredLiteral};`);
   for (const c of model.classes) {
     out.push(`declare class ${c.tsName} extends ${c.extTsName} {`);
     for (const a of c.attrs) out.push(`  ${a.name}: ${a.tsType};`);
