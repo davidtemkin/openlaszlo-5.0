@@ -1,6 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { domToXmlElem, DomDialectError } from "../dist/domsource.js";
+import { compileInBrowser } from "../dist/browser.js";
+import { parseXml } from "../dist/xml.js";
 import { el, text } from "./helpers/fakedom.mjs";
 
 const app = (...children) => el("laszlo-app", {}, ...children);
@@ -65,4 +67,42 @@ test("json-bound subtrees are never adopt-stamped (template semantics)", () => {
 test("json datapath inside <state> is a dialect error", () => {
   assert.throws(() => domToXmlElem(app(jsonDs("b", "{}"),
     el("view", {}, el("state", {}, el("view", { datapath: "$b/l[*]" }))))), DomDialectError);
+});
+
+// ── Task 4: compile emission ───────────────────────────────────────────────
+
+const fetch404 = async () => ({ ok: false, status: 404, headers: { get: () => null }, arrayBuffer: async () => new ArrayBuffer(0) });
+
+async function compileApp(xml) {
+  const r = await compileInBrowser("http://t.test/app.html", { rootXml: parseXml(xml), fetchFn: fetch404, maxRetries: 5 });
+  assert.equal(r.unsupported, undefined, r.unsupported);
+  return r.js;
+}
+
+test("compile: inline json dataset emits lz.jsondata.register, no lzAddLocalData, no global", async () => {
+  const js = await compileApp(
+    '<canvas><dataset name="bikeshop" type="json">{"bicycle":[{"color":"red"}]}</dataset></canvas>');
+  assert.ok(js.includes('lz.jsondata.register("bikeshop",{json:{"bicycle":[{"color":"red"}]}});'));
+  assert.ok(!js.includes("lzAddLocalData"));
+  assert.ok(!/var bikeshop/.test(js)); // no global binding — name "server" can never clobber the bus root
+});
+
+test("compile: src and ws datasets", async () => {
+  const js = await compileApp(
+    '<canvas><dataset name="a" type="json" src="./a.json"/><dataset name="s" type="json" src="ws://h/api/data"/></canvas>');
+  assert.ok(js.includes('lz.jsondata.register("a",{src:"./a.json"});'));
+  assert.ok(js.includes('lz.jsondata.register("s",{ws:"ws://h/api/data"});'));
+});
+
+test("compile: malformed inline JSON is a compile error naming the dataset", async () => {
+  const r = await compileInBrowser("http://t.test/app.html", {
+    rootXml: parseXml('<canvas><dataset name="bad" type="json">{oops}</dataset></canvas>'),
+    fetchFn: fetch404, maxRetries: 5 });
+  assert.match(r.unsupported ?? "", /dataset "bad".*JSON/);
+});
+
+test("compile: jsondatapath flows through as a plain string attr", async () => {
+  const js = await compileApp(
+    '<canvas><dataset name="b" type="json">{"l":[1]}</dataset><view jsondatapath="$b/l[*]"/></canvas>');
+  assert.ok(js.includes('jsondatapath:"$b/l[*]"'));
 });
