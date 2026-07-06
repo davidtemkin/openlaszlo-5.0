@@ -237,7 +237,7 @@ export function attachConnectionServer(httpServer, pathPrefix = "/api/connection
 ```js
 attachUpgradeDispatcher(server, {
   "/api/connection": connectionUpgradeHandler,
-  "/api/bus": busUpgradeHandler,           // Task 3 — until then, comment this route out
+  // "/api/bus": busUpgradeHandler,        // UNCOMMENT in Task 3 (import arrives there too)
 });
 console.log("  connection (WebSocket) server on /api/connection");
 ```
@@ -312,12 +312,12 @@ test("domsource: <server> stripped from the client compile, never stamped", () =
   // NOTE: the client view's constraint STRING contains "server.clock", so assert
   // on markers that exist ONLY inside the <server> subtree:
   assert.ok(!JSON.stringify(xml).includes("setInterval"), "server body leaked into client compile");
-  assert.ok(xml.children.every((c) => c.type !== "elem" || c.name !== "clock"), "server tag element leaked");
+  assert.ok(xml.children.every((c) => c.type !== "elem" || c.name !== "server"), "server section element leaked");
   // and nothing inside <server> got a live data-lz-adopt stamp
   const root = parse(APP);
   domToXmlElem(root, { domAdopt: true, transpileTs: (s) => s });
   const srv = [...root.childNodes].find((c) => c.nodeType === 1 && c.tagName === "SERVER");
-  assert.ok(!JSON.stringify(srv, (k, v) => (k === "attributes" ? v : v)).includes("data-lz-adopt"));
+  assert.ok(!JSON.stringify(srv).includes("data-lz-adopt"));
 });
 
 test("domsource: non-root or duplicate <server> is a dialect error", () => {
@@ -481,7 +481,7 @@ git commit -m "compiler: <server> dialect rule (strip-before-stamp) + server-tag
 - Consumes: `attachUpgradeDispatcher`/`wsAccept`/codec (Task 1); `extractApp`+`parseHtmlDialect`+`findLaszloApp`+`transpileTsBody` from `compiler/dist` (Slice 2 / Task 2).
 - Produces:
   - `class SrvNode { constructor(tagModel, { defaults, onDelta }) }` — `defaults` maps attr name to the authored value= string — `tagModel` is a `ServerTagModel` whose bodies are ALREADY-TRANSPILED JS; members: `name`, `setAttribute(attr, value)`, `callMethod(method, args): any|Promise`, `snapshot(): Record<string, any>`, `hasAttr(a)`, `hasMethod(m)`, `init()` (fires oninit).
-  - `export function busUpgradeHandler(req, socket): void` (bus.mjs) and `export async function getBusApp(appRelPath): BusApp` (exposed for tests); `BusApp = { nodes: Map<string, SrvNode>, addSocket, ... }`.
+  - `export function busUpgradeHandler(req, socket): void` (bus.mjs) and `export function getBusApp(appRelPath): BusApp` (synchronous; exposed for tests); `BusApp = { nodes: Map<string, SrvNode>, sockets: Set, broadcast, handle, snapshotMsg }`.
 
 **Protocol recap (spec):** S→C `snapshot`/`delta`/`result`/`error`; C→S `set`/`call`. Snapshot before join. Declared surface only. Promise-returning methods settle `result` with the resolved value.
 
@@ -993,7 +993,7 @@ export function connectBus(appPath) {
 
 - [ ] **Step 2: Hook the bootstrap (`startup/laszlo-dom.js`)**
 
-(a) After the file-dialect inlining and BEFORE `domToXmlElem` (which strips nothing live) / `cleanup()` (which removes the live section), detect + extract:
+(a) After the file-dialect inlining and BEFORE `domToXmlElem` (which strips nothing live) / `cleanup()` (which removes the live section), detect + extract. (NOTE: the existing `querySelector("method,handler,setter,script")` lazy-load check also matches carriers inside `<server>`, so `lz-ts.js` may load for server-only code — harmless, do NOT "fix" it; `domToXmlElem` skips the subtree so nothing server-side is transpiled client-side.)
 
 ```js
   // Realtime bus: extract <server> declarations before cleanup() removes the
@@ -1310,7 +1310,8 @@ A `<server>` section inside `<laszlo-app>` declares server-side reactive tags
     open http://localhost:8090/examples/dom-authoring/bus-demo.html   # in two browsers
 
 Server attributes sync to every client (constraints track them:
-`width="${100 + server.state.count * 12}"`); clients write back with
+`width="${100 + server.state.count * 12}"`); inline apps only in v1
+(`src=`-loaded apps can't reach the bus yet); clients write back with
 `server.state.setAttribute(...)` and call server `<method>`s as Promises.
 State is server-authoritative and shared (one singleton per app).
 `lzx-check` types both sides — server bodies run in Node (so `setInterval`
