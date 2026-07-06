@@ -1,0 +1,18 @@
+<laszlo-app width="400" height="200">
+  <view name="box" height="12px" visible="maybe" y="${this.parent.nosuchthing}">
+    <attribute name="count" type="number" value="0"></attribute>
+    <handler name="onclick">
+      <script type="text/typescript">
+        this.setAttribute('count', 'oops');
+      </script>
+    </handler>
+    <handler name="onwidth" args="w">
+      <script type="text/typescript">
+        return this.cuont + w.toUpperCase();
+      </script>
+    </handler>
+    <view width="${width - 10}" x="${parent.count + wat}"></view>
+  </view>
+  <view id="dup"></view>
+  <view id="dup" bgcolor="notacolor!"></view>
+</laszlo-app>
