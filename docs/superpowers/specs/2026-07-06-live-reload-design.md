@@ -3,7 +3,7 @@
 **Date:** 2026-07-06 (rev 3 — round-2 review applied: service-worker
 passthrough, closure-store lifecycle, sweep liveness bound, closure
 filtering)
-**Status:** Approved design, pre-implementation
+**Status:** Implemented — 2026-07-06 (branch dom-authoring-slice5; 105 tests green; one plan deviation: `createDevServer.close()` tracks and destroys sockets itself — upgraded WS sockets escape `closeAllConnections`)
 **Builds on:** Slices 1–4. Depends on two pieces of bus (Slice 3) plumbing —
 the shared WebSocket upgrade dispatcher (`attachUpgradeDispatcher`) and the
 `/startup/*` URL-map pass-through; whichever slice lands first brings them
@@ -41,7 +41,7 @@ reload connected pages via reconnect.
 | reload hub | `server/dev-reload.mjs` (new) | per-app watch sets + closure store, mtime poller, WS handler for `/api/dev-reload`, `noteRequest()`/`noteClosure()` hooks |
 | reload client | `startup/dev-reload-client.js` (new) | opens the WS, sends `watch` (with its load timestamp), reloads on `changed`; reconnect with capped backoff; boot-id comparison |
 | inject helper + hooks | `server/index.mjs`, `server/wrapper.mjs` (touch) | one shared `injectReloadClient(html)` applied to **every** server-side HTML emitter; `noteRequest`/`noteClosure` calls |
-| service-worker passthrough | `explorer/service-worker.js` (touch) | server-mode passthrough for RUN/SOURCE/EDIT (see below) |
+| service-worker passthrough | `service-worker.js` (repo root; touch) | server-mode passthrough for RUN/SOURCE/EDIT (see below) |
 | server testability refactor | `server/index.mjs` (refactor) | export `createDevServer(opts)` (start/stop, port 0 via the bound address — request URLs must not be built from the module-level `PORT`); the CLI entry parses argv and calls it |
 
 ### Dependencies brought by whichever slice lands first
