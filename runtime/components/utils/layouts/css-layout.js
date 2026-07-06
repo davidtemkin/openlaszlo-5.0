@@ -289,17 +289,30 @@
 	//	return getSpacing(node, 'margin', '', locations);
 	//}
 
+
+	// Vendoring fix: dreemgl rewrote these accessors against ref._* arrays keyed by the
+	// two BASE axes only — 'row-reverse'/'column-reverse' threw ("axis not defined").
+	// For dimensions the reverse axis uses the same slot (see the `dim` table), so we
+	// normalize here. KNOWN LIMIT (documented): per-side asymmetric margins/padding do
+	// not flip leading/trailing under reverse directions; the flexlayout adapter emits
+	// uniform boxes only, where the flip is a no-op.
+	function baseAxis(axis) {
+		if (axis === 'row-reverse') return 'row';
+		if (axis === 'column-reverse') return 'column';
+		return axis;
+	}
+
 	function getLeadingMargin(node, axis) {
 		var style = node.ref
-		if(axis === 'row') return style._margin[0] >=0? style._margin[0]: 0
-		if(axis === 'column') return style._margin[1] >=0? style._margin[1]: 0
+		if(baseAxis(axis) === 'row') return style._margin[0] >=0? style._margin[0]: 0
+		if(baseAxis(axis) === 'column') return style._margin[1] >=0? style._margin[1]: 0
 		throw new Error('implement other axes')
 	}
 
 	function getTrailingMargin(node, axis) {
 		var style = node.ref
-		if(axis === 'row') return style._margin[2] >=0? style._margin[2]: 0
-		if(axis === 'column') return style._margin[3] >=0? style._margin[3]: 0
+		if(baseAxis(axis) === 'row') return style._margin[2] >=0? style._margin[2]: 0
+		if(baseAxis(axis) === 'column') return style._margin[3] >=0? style._margin[3]: 0
 		throw new Error('implement other axes')
 	}
 
@@ -308,15 +321,15 @@
 	//}
 	function getLeadingPadding(node, axis) {
 		var style = node.ref
-		if(axis === 'row') return style._padding[0] >=0? style._padding[0]: 0
-		if(axis === 'column') return style._padding[1] >=0? style._padding[1]: 0
+		if(baseAxis(axis) === 'row') return style._padding[0] >=0? style._padding[0]: 0
+		if(baseAxis(axis) === 'column') return style._padding[1] >=0? style._padding[1]: 0
 		throw new Error('implement other axes')
 	}
 
 	function getTrailingPadding(node, axis) {
 		var style = node.ref
-		if(axis === 'row') return style._padding[2] >=0? style._padding[2]: 0
-		if(axis === 'column') return style._padding[3] >=0? style._padding[3]: 0
+		if(baseAxis(axis) === 'row') return style._padding[2] >=0? style._padding[2]: 0
+		if(baseAxis(axis) === 'column') return style._padding[3] >=0? style._padding[3]: 0
 		throw new Error('implement other axes')
 	}
 
@@ -326,54 +339,54 @@
 
 	function getLeadingBorder(node, axis) {
 		var style = node.ref
-		if(axis === 'row') return style._borderwidth[0] >=0? style._borderwidth[0]: 0
-		if(axis === 'column') return  style._borderwidth[1] >=0? style._borderwidth[1]: 0
+		if(baseAxis(axis) === 'row') return style._borderwidth[0] >=0? style._borderwidth[0]: 0
+		if(baseAxis(axis) === 'column') return  style._borderwidth[1] >=0? style._borderwidth[1]: 0
 		throw new Error('implement other axes')
 	}
 
 	function getTrailingBorder(node, axis) {
 		var style = node.ref
-		if(axis === 'row') return style._borderwidth[2] >=0? style._borderwidth[2]: 0
-		if(axis === 'column') return  style._borderwidth[3] >=0? style._borderwidth[3]: 0
+		if(baseAxis(axis) === 'row') return style._borderwidth[2] >=0? style._borderwidth[2]: 0
+		if(baseAxis(axis) === 'column') return  style._borderwidth[3] >=0? style._borderwidth[3]: 0
 		throw new Error('implement other axes')
 	}
 
 	function getLeadingPaddingAndBorder(node, axis) {
 		var style = node.ref
-		if(axis === 'row') return (style._padding[0] >=0? style._padding[0]: 0) + (style._borderwidth[0] >=0? style._borderwidth[0]: 0)
-		if(axis === 'column') return (style._padding[1] >=0? style._padding[1]: 0) + (style._borderwidth[1] >=0? style._borderwidth[1]: 0)
+		if(baseAxis(axis) === 'row') return (style._padding[0] >=0? style._padding[0]: 0) + (style._borderwidth[0] >=0? style._borderwidth[0]: 0)
+		if(baseAxis(axis) === 'column') return (style._padding[1] >=0? style._padding[1]: 0) + (style._borderwidth[1] >=0? style._borderwidth[1]: 0)
 		throw new Error('implement other axes')
 	}
 
 	function getTrailingPaddingAndBorder(node, axis) {
 		var style = node.ref
-		if(axis === 'row') return (style._padding[2] >=0? style._padding[2]: 0) + (style._borderwidth[2] >=0? style._borderwidth[2]: 0)
-		if(axis === 'column') return (style._padding[3] >=0? style._padding[3]: 0) + (style._borderwidth[3] >=0? style._borderwidth[3]: 0)
+		if(baseAxis(axis) === 'row') return (style._padding[2] >=0? style._padding[2]: 0) + (style._borderwidth[2] >=0? style._borderwidth[2]: 0)
+		if(baseAxis(axis) === 'column') return (style._padding[3] >=0? style._padding[3]: 0) + (style._borderwidth[3] >=0? style._borderwidth[3]: 0)
 		throw new Error('implement other axes')
 	}
 
 	function getBorderAxis(node, axis) {
 		var style = node.ref
-		if(axis === 'row') return (style._borderwidth[0] >=0? style._borderwidth[0]: 0) + (style._borderwidth[2] >=0? style._borderwidth[2]: 0)
-		if(axis === 'column') return (style._borderwidth[1] >=0? style._borderwidth[1]: 0) + (style._borderwidth[3] >=0? style._borderwidth[3]: 0)
+		if(baseAxis(axis) === 'row') return (style._borderwidth[0] >=0? style._borderwidth[0]: 0) + (style._borderwidth[2] >=0? style._borderwidth[2]: 0)
+		if(baseAxis(axis) === 'column') return (style._borderwidth[1] >=0? style._borderwidth[1]: 0) + (style._borderwidth[3] >=0? style._borderwidth[3]: 0)
 		throw new Error('implement other axes')
 	}
 
 	function getMarginAxis(node, axis) {
 		var style = node.ref
-		if(axis === 'row') return (style._margin[0] >=0? style._margin[0]: 0) + (style._margin[2] >=0? style._margin[2]: 0)
-		if(axis === 'column') return (style._margin[1] >=0? style._margin[1]: 0) + (style._margin[3] >=0? style._margin[3]: 0)
+		if(baseAxis(axis) === 'row') return (style._margin[0] >=0? style._margin[0]: 0) + (style._margin[2] >=0? style._margin[2]: 0)
+		if(baseAxis(axis) === 'column') return (style._margin[1] >=0? style._margin[1]: 0) + (style._margin[3] >=0? style._margin[3]: 0)
 		throw new Error('implement other axes')
 	}
 
 	function getPaddingAndBorderAxis(node, axis) {
 		// expand the fucker
 		var style = node.ref
-		if(axis === 'row'){
+		if(baseAxis(axis) === 'row'){
 			return (style._padding[0] >=0? style._padding[0]: 0) + (style._borderwidth[0] >=0? style._borderwidth[0]: 0) +
 			       (style._padding[2] >=0? style._padding[2]: 0) + (style._borderwidth[2] >=0? style._borderwidth[2]: 0)
 		}
-		else if(axis === 'column') {
+		else if(baseAxis(axis) === 'column') {
 			return (style._padding[1] >=0? style._padding[1]: 0) + (style._borderwidth[1] >=0? style._borderwidth[1]: 0) +
 			       (style._padding[3] >=0? style._padding[3]: 0) + (style._borderwidth[3] >=0? style._borderwidth[3]: 0)
 		}
@@ -479,8 +492,8 @@
 
 
 	function isDimDefined(node, axis) {
-		if(axis === 'row') return !isNaN(node.ref._size[0])
-		if(axis === 'column') return !isNaN(node.ref._size[1])
+		if(baseAxis(axis) === 'row') return !isNaN(node.ref._size[0])
+		if(baseAxis(axis) === 'column') return !isNaN(node.ref._size[1])
 		throw new Error('axis not defined' + axis)
 	}
 
@@ -512,8 +525,8 @@
 	function boundAxis(node, axis, value) {
 
 		var min, max
-		if(axis === 'row') min = node.ref._minsize[0], max = node.ref._maxsize[0]
-		else if(axis === 'column') min = node.ref._minsize[1], max = node.ref._maxsize[1]
+		if(baseAxis(axis) === 'row') min = node.ref._minsize[0], max = node.ref._maxsize[0]
+		else if(baseAxis(axis) === 'column') min = node.ref._minsize[1], max = node.ref._maxsize[1]
 		else throw new Error('axis not defined')
 
 		var boundValue = value;
@@ -550,8 +563,8 @@
 
 		// The dimensions can never be smaller than the padding and border
 		var bound
-		if(axis === 'row') bound = node.ref._size[0]
-		else if(axis === 'column') bound = node.ref._size[1]
+		if(baseAxis(axis) === 'row') bound = node.ref._size[0]
+		else if(baseAxis(axis) === 'column') bound = node.ref._size[1]
 		else throw new Error('axis not found')
 
 		node.layout[dim[axis]] = round(fmaxf(
@@ -569,8 +582,8 @@
 	// +left or -right depending on which is defined.
 	function getRelativePosition(node, axis) {
 		var lead
-		if(axis === 'row') lead = !isNaN(node.ref._pos[0])
-		else if(axis === 'column') lead = !isNaN(node.ref._pos[1])
+		if(baseAxis(axis) === 'row') lead = !isNaN(node.ref._pos[0])
+		else if(baseAxis(axis) === 'column') lead = !isNaN(node.ref._pos[1])
 		//console.log(leading[axis])
 		if (lead) {
 			return getPosition(node, leading[axis]);
