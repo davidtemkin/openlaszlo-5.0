@@ -37,10 +37,19 @@ function readLfcDts(): string {
   catch { return generateLfcDts(); }
 }
 
+/** Component tags from the distro's autoincludes properties (legal extends
+ *  targets the schema doesn't know) — best-effort; empty when absent. */
+function knownComponentTags(): Set<string> {
+  try {
+    const txt = readFileSync(fileURLToPath(new URL("../../runtime/lzx-autoincludes.properties", import.meta.url)), "utf8");
+    return new Set(txt.split("\n").filter((l) => !l.startsWith("#") && l.includes(":")).map((l) => l.split(":")[0].trim()));
+  } catch { return new Set(); }
+}
+
 export function checkApp(source: string, fileName: string): CheckResult {
   const isLzx = /\.lzx$/i.test(fileName);
   const root = isLzx ? xmlToHtml(parseXml(source)) : findLaszloApp(parseHtmlDialect(source));
-  const model = extractApp(root, { es4Bodies: isLzx });
+  const model = extractApp(root, { es4Bodies: isLzx, knownTags: knownComponentTags() });
   const appDts = generateAppDts(model);
   const { source: bodiesSrc, spans } = generateBodies(model);
   const { source: constrSrc, spans: constrSpans } = generateConstraintChecks(model);

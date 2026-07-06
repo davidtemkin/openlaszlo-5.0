@@ -129,7 +129,13 @@ export function generateLfcDts(reflection?: LfcReflection): string {
     for (const [attr, sType] of Object.entries(cls.attrs)) {
       if (attr.startsWith("$") || attr === "with") continue;
       const override = tag === "node" ? RELATIONAL[attr] : tag === "view" ? VIEW_RELATIONAL[attr] : undefined;
-      out.push(`  ${attr}: ${override ?? tsTypeOf(sType)};`);
+      // Size PROPERTIES read as resolved numbers at runtime (the percent
+      // string is authoring syntax; the LFC stores/fires computed pixels) —
+      // `number | string` here would TS2362 every `parent.width - 20`.
+      // Authored-value flexibility lives in markup-literal validation and
+      // setter args instead.
+      const propType = sType === "size" || sType === "sizeExpression" ? "number" : tsTypeOf(sType);
+      out.push(`  ${attr}: ${override ?? propType};`);
       emitted.add(attr);
     }
     for (const ev of SCHEMA_EVENTS[tag] ?? []) if (!emitted.has(ev)) { out.push(`  ${ev}: LzDeclaredEvent;`); emitted.add(ev); }

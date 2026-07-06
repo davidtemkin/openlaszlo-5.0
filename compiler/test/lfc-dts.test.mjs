@@ -25,7 +25,7 @@ test("builtinTsName", () => {
 test("schema-only d.ts (fallback, no reflection) has the expected shape", () => {
   const dts = generateLfcDts();
   assert.ok(dts.includes("declare class LzView extends LzNode"));
-  assert.ok(dts.includes("width: number | string;"));            // size
+  assert.ok(dts.includes("width: number;"));                     // size PROPERTY reads resolved
   assert.ok(dts.includes("bgcolor: string | number;"));          // color
   assert.ok(dts.includes("x: number;"));                         // numberExpression
   assert.ok(dts.includes("setAttribute<K extends keyof this & string>(name: K, value: this[K]): void;"));

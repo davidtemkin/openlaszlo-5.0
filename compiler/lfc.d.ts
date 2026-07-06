@@ -399,13 +399,13 @@ declare class LzView extends LzNode {
   focusable: boolean;
   focustrap: boolean;
   font: string;
-  fontsize: number | string;
+  fontsize: number;
   fontstyle: string;
   frame: number;
   framesloadratio: number;
   hassetheight: boolean;
   hassetwidth: boolean;
-  height: number | string;
+  height: number;
   layout: any;
   loadratio: number;
   mask: string;
@@ -432,7 +432,7 @@ declare class LzView extends LzNode {
   valign: string;
   visibility: string;
   visible: boolean;
-  width: number | string;
+  width: number;
   x: number;
   xoffset: number;
   xscale: number;

@@ -9,7 +9,7 @@ import type { HtmlElem, HtmlNode } from "./htmlsource.js";
 import { builtinTsName, tsTypeOf } from "./lfc-dts.js";
 import { SCHEMA, schemaAttrType } from "./schema-types.js";
 
-export interface AppAttr { name: string; tsType: string }
+export interface AppAttr { name: string; tsType: string; declKind?: string }
 export interface BodyParam { name: string; tsType: string }
 export interface BodyInfo { label: string; ownerType: string; params: BodyParam[]; code: string; srcLine: number }
 export interface AppClassModel { tsName: string; extTsName: string; attrs: AppAttr[]; methodSigs: string[] }
@@ -31,7 +31,10 @@ export interface AppModel {
   nameIssues: NameIssue[]; // invalid TS identifiers — excluded from emission, reported as findings
   staticIssues: NameIssue[]; // markup-literal + cross-reference findings
 }
-export interface ExtractOptions { es4Bodies?: boolean } // .lzx mode: skip every body (ES4, not TS)
+export interface ExtractOptions {
+  es4Bodies?: boolean;      // .lzx mode: skip every body (ES4, not TS)
+  knownTags?: Set<string>;  // component tags (autoincludes) — legal extends targets
+}
 
 const ELEMENT = 1, TEXT = 3;
 const NON_INSTANCE = new Set(["attribute", "method", "handler", "setter", "script",
@@ -49,11 +52,18 @@ const CONSTRAINT_RE = /^\s*\$\w*\{([\s\S]*)\}\s*$/;
 const SKIP_LITERAL = new Set(["name", "id", "data-lz-adopt", "lzdomadopt", "with", "placement", "options", "styleclass", "datapath"]);
 
 // LZX <attribute type=…> vocabulary → TS (shares tsTypeOf keys; default any —
-// LZX's default attribute type is `expression`).
+// LZX's default attribute type is `expression`). Size PROPERTIES read as
+// resolved numbers (see lfc-dts.ts) — percent flexibility lives in the
+// literal validator (via declKind), not the property type.
 function attrDeclTsType(t: string | null): string {
   if (!t) return "any";
   if (t === "expression" || t === "html") return "any";
+  if (t === "size" || t === "sizeExpression") return "number";
   return tsTypeOf(t);
+}
+/** Build an AppAttr from a declaration, keeping the LZX type for literal validation. */
+function declAttr(name: string, t: string | null): AppAttr {
+  return { name, tsType: attrDeclTsType(t), ...(t ? { declKind: t } : {}) };
 }
 
 /** All schema attr names up the extends chain (with(this)-legal bare names). */
@@ -66,7 +76,7 @@ function schemaAttrNames(tag: string): string[] {
 
 /** Literal validation by SCHEMA kind (declared <attribute type> checked via its TS type). */
 function literalIssue(name: string, value: string, kind: string | null): string | null {
-  const num = /^-?\d+(\.\d+)?$/.test(value);
+  const num = /^-?(\d+(\.\d+)?|\.\d+)$/.test(value); // .3 is legal LZX
   switch (kind) {
     case "number": case "numberExpression":
       return num ? null : `attribute ${name}="${value}" is not a number`;
@@ -167,7 +177,7 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
     const name = el.getAttribute("name") ?? "anonymous";
     if (!checkName("class", name, el.line)) return; // issue recorded; class skipped
     const ext = el.getAttribute("extends") ?? "view";
-    if (!userClasses.has(ext) && !(ext in SCHEMA))
+    if (!userClasses.has(ext) && !(ext in SCHEMA) && !opts.knownTags?.has(ext))
       model.staticIssues.push({ message: `<class name="${name}"> extends unknown "${ext}"`, line: el.line });
     const extUser = userClasses.get(ext);
     const cls: AppClassModel = {
@@ -184,7 +194,7 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
       const t = c.tagName.toLowerCase();
       if (t === "attribute") {
         const an = c.getAttribute("name") ?? "";
-        if (checkName("attribute", an, c.line)) cls.attrs.push({ name: an, tsType: attrDeclTsType(c.getAttribute("type")) });
+        if (checkName("attribute", an, c.line)) cls.attrs.push(declAttr(an, c.getAttribute("type")));
       }
       else if (t === "method") {
         const args = (c.getAttribute("args") ?? "").split(/[\s,]+/).filter(Boolean);
@@ -231,22 +241,14 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
     for (const c of elemChildren(el))
       if (c.tagName.toLowerCase() === "attribute") {
         const an = c.getAttribute("name") ?? "";
-        if (checkName("attribute", an, c.line)) inst.attrs.push({ name: an, tsType: attrDeclTsType(c.getAttribute("type")) });
+        if (checkName("attribute", an, c.line)) inst.attrs.push(declAttr(an, c.getAttribute("type")));
       }
 
     // Markup literals + constraint collection (spec "Beyond bodies").
-    // Reverse-map a DECLARED attr's TS type back to a literal-validation kind.
-    // Compared via tsTypeOf() so the string coupling is explicit (size and
-    // color have distinct orderings: "number | string" vs "string | number").
+    // Declared attrs validate by their ORIGINAL LZX type (declKind).
     const declKindOf = (n: string): string | null => {
       const d = inst.attrs.find((a) => a.name === n);
-      if (d) {
-        if (d.tsType === tsTypeOf("number")) return "number";
-        if (d.tsType === tsTypeOf("boolean")) return "boolean";
-        if (d.tsType === tsTypeOf("color")) return "color";
-        if (d.tsType === tsTypeOf("size")) return "size";
-        return null; // any/string/… — not literal-validated
-      }
+      if (d) return d.declKind ?? null; // the ORIGINAL LZX type string, no reverse-mapping
       return schemaAttrType(baseTag, n);
     };
     for (const a of el.attributes) {

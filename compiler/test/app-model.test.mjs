@@ -19,7 +19,7 @@ test("instances get document-order LzInst types; named children and ids recorded
 
 test("instance <attribute> declarations become typed attrs", () => {
   const m = app('<laszlo-app><view><attribute name="count" type="number" value="0"></attribute><attribute name="tag"></attribute></view></laszlo-app>');
-  assert.deepEqual(m.instances[1].attrs, [{ name: "count", tsType: "number" }, { name: "tag", tsType: "any" }]);
+  assert.deepEqual(m.instances[1].attrs, [{ name: "count", tsType: "number", declKind: "number" }, { name: "tag", tsType: "any" }]);
 });
 
 test("user classes: attrs, method sigs, body owner; template makes no instances", () => {
@@ -27,7 +27,7 @@ test("user classes: attrs, method sigs, body owner; template makes no instances"
   assert.equal(m.classes.length, 1);
   assert.equal(m.classes[0].tsName, "LzUser_rec");
   assert.equal(m.classes[0].extTsName, "LzView");
-  assert.deepEqual(m.classes[0].attrs, [{ name: "hue", tsType: "string | number" }]);
+  assert.deepEqual(m.classes[0].attrs, [{ name: "hue", tsType: "string | number", declKind: "color" }]);
   assert.deepEqual(m.classes[0].methodSigs, ["f(a: any, b: any): any;"]);
   assert.equal(m.instances.length, 1);                    // only the canvas root
   assert.equal(m.bodies.length, 1);
