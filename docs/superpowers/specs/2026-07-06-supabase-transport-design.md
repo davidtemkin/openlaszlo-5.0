@@ -29,7 +29,12 @@ presence count, persistent chat.
 2. **No secrets in markup.** Only the publishable key ever appears
    (public by design); RLS is the authorization boundary (Supabase skill
    security checklist). `supabase-js` is vendored and version-pinned into
-   the distro (static-host friendly; npm-security pinning guidance).
+   the distro as the OFFICIAL UMD single-file build
+   (`@supabase/supabase-js@2.110.0` `dist/umd/supabase.js`, ~206KB,
+   `window.supabase.createClient`), loaded via the bootstrap's
+   `loadScript` — the jsdelivr `/+esm` variant is a multi-file CDN wrapper
+   and `dist/index.mjs` has bare specifiers, so a single committed ESM
+   file does NOT exist without a local bundling step.
 3. **Typed discipline carries over.** `lzx-check` knows the transport:
    `<method>`/`<handler>` in supabase mode are findings (no execution home);
    table-backed tags type `rows` and `insert`; `server.presence.count` is a
@@ -91,10 +96,10 @@ presence count, persistent chat.
 
 | Unit | Location | Purpose |
 | --- | --- | --- |
-| transport parsing | `compiler/src/app-model.ts` | `<server transport= supabase-url= supabase-key=>` into the model; supabase-mode findings (methods/handlers, reserved `presence`, missing url/key); `table=` marks table-backed tags |
+| transport parsing | `compiler/src/app-model.ts` + `startup/lz-bus.js` | `<server transport= supabase-url= supabase-key=>` into the model AND into the client decls — NOTHING reads `<server>`'s own attributes today (verified: `walkServer` and `extractServerDecls` both ignore them). Pinned extended decl shape: `{ transport, url, key, tags: [{tag, table?, attrs, methods}] }`; `busPrelude`'s node-transport output must be byte-identical to Slice 3 (tested). Supabase-mode findings: methods/handlers, reserved `presence`, missing url/key; `table=` marks table-backed tags |
 | checker typing | `compiler/src/app-dts.ts` + `lzx-check.ts` | supabase mode: ephemeral tags = attrs only; table-backed tags get `rows: any[]` + `insert(record: any): Promise<any>`; `presence` built-in typed `{ count: number }`; server-body SECOND program only runs for node transport |
 | `lz-bus-supabase.js` | `startup/` (new) | the bridge: channel join, broadcast/presence (3b), table select/subscribe/insert (3c), joiner state adoption — pure decision helpers exported for unit tests |
-| vendored client | `startup/vendor/supabase-js-<ver>.js` | pinned ESM build, committed (static hosting; no CDN dependency) |
+| vendored client | `startup/vendor/supabase-js-2.110.0.js` | the official UMD single-file build, committed (static hosting; no CDN dependency); classic-script loaded, `window.supabase` |
 | bootstrap hook | `startup/laszlo-dom.js` | route to `connectSupabase(cfg)` instead of `connectBus` when the transport says so |
 | demo | `examples/dom-authoring/bus-supabase-demo.html` | counter (3b) + presence count + persistent chat (3c), static-hostable |
 | migration | `docs/superpowers/assets/2026-07-06-bus-messages.sql` + applied via MCP | `bus_messages` schema + RLS |
@@ -121,16 +126,28 @@ presence count, persistent chat.
 
 ## 3c — table-backed tags
 
-- On join: `select * from <table> where app = <app-path> order by id` fills
-  `rows` (applied via the original setter → constraints fire once).
-- Live: a `postgres_changes` INSERT subscription (filtered `app=eq.<app>`)
-  appends to `rows` and re-fires the setter. (Updates/deletes are out of
-  scope v1 — append-only semantics, documented.)
+- Ordering (race-proof): SUBSCRIBE the `postgres_changes` INSERT stream
+  (filtered `app=eq.<app>`) FIRST, then run the initial
+  `select * from <table> where app = <app-path> order by id`, then apply —
+  deduplicating every subsequent event by `id` (an insert landing between
+  select and a later-activated subscription would otherwise be lost;
+  reversed, duplicated). Appends re-fire the original setter.
+  (Updates/deletes are out of scope v1 — append-only semantics,
+  documented.)
 - `insert(record)` — the tag's built-in method: supabase-js insert of
   `{ ...record, app: <app-path> }`; RLS decides. Returns the client
   library's promise (errors reject).
 - `rows` is read-only from app code: the proxy's `setAttribute("rows", …)`
-  is a console warning + no-op (state authority is the table).
+  is a console warning + no-op (state authority is the table), and the
+  checker EXCLUDES `rows` from the strict setter's key union so the no-op
+  can never typecheck silently.
+- **Table-backed prelude story (same "too late" trap as presence):**
+  constraints referencing `server.chat.rows.length` bind at app start, so
+  the PRELUDE initializes `rows: []` on table-backed proxies and installs
+  an `insert` stub that queues `{op:"insert", tag, record}` — NEVER
+  `op:"call"` — returning a Promise settled by the bridge. On connect the
+  bridge drains queued inserts (executing them as supabase-js inserts) and
+  swaps the stub for the direct implementation.
 
 **Schema + RLS (the migration, per the security checklist):**
 
@@ -147,9 +164,12 @@ create policy "bus demo read" on public.bus_messages
 create policy "bus demo write" on public.bus_messages
   for insert to anon, authenticated
   with check (char_length(body) <= 500 and char_length(app) <= 200);
--- realtime: table added to the supabase_realtime publication for
--- postgres_changes (demo scale; broadcast_changes triggers are the
--- documented scale-up path)
+create index bus_messages_app_id on public.bus_messages (app, id);
+-- REQUIRED for postgres_changes delivery (not a comment — silent
+-- non-delivery without it):
+alter publication supabase_realtime add table public.bus_messages;
+-- (broadcast_changes triggers are the documented scale-up path; hosted
+-- default privileges cover anon/authenticated grants)
 ```
 
 Data-API exposure + advisors are checked at apply time (MCP `get_advisors`).
@@ -159,7 +179,10 @@ Data-API exposure + advisors are checked at apply time (MCP `get_advisors`).
 The user creates the demo project (free tier) in the dashboard; when it
 appears in MCP `list_projects`, execution applies the migration
 (`apply_migration`), verifies with `get_advisors` + a test insert/select,
-and reads the URL + publishable key (`get_project_url`,
+**verifies the Realtime "Channel Restrictions / Allow public access"
+setting permits public channels** (docs now lean private-by-default; a
+private-only project refuses `lzbus:` joins absent `realtime.messages`
+RLS), and reads the URL + publishable key (`get_project_url`,
 `get_publishable_keys`) into the demo page. The demo page's committed copy
 carries the real demo-project values (public by design).
 
@@ -189,6 +212,26 @@ carries the real demo-project values (public by design).
    assert it adopts the bumped value.
 3. **Advisors clean** after the migration (MCP `get_advisors`, security +
    performance).
+
+## Known limitations & platform notes (v1)
+
+- **src=-loaded apps** (carried from Slice 3, mutated here): rooms key on
+  the EMBEDDING PAGE's path, so the same `src=` app on two pages shares
+  nothing. Inline apps recommended.
+- **Broadcast event name:** all 3b traffic uses event `"lzbus"` on ONE
+  channel per app carrying broadcast + presence; 3c's `postgres_changes`
+  rides a second channel (subscription lifecycle differs).
+- **Fresh flag:** lives in the bridge; cleared by the FIRST applied state
+  of any kind — including the client's own echo.
+- `joined_at` oldest-peer adoption trusts client clocks (acceptable for
+  ephemeral rooms; documented).
+- **Presence rate caution:** free tier allows ~20 presence msgs/sec and
+  docs advise "slow-changing state" — per-set `track()` is fine for the
+  demo; a real app should throttle presence meta updates (note in README).
+- **Free-tier auto-pause** (~1 week idle) qualifies the "survives everyone
+  leaving" durability claim for the committed demo project.
+- Verify presence "keys per object: 10" and message limits at
+  implementation time (spec principle 4).
 
 ## Non-goals (v1)
 
