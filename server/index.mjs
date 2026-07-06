@@ -18,6 +18,7 @@ import { toSourceUrl } from "../startup/urlmap.mjs";
 import { classifyLzxRequest, OP } from "../startup/reqtypes.mjs";
 import { compileApp, DISTRO, RUNTIME } from "./compile.mjs";
 import { attachUpgradeDispatcher, connectionUpgradeHandler } from "./connection.mjs";
+import { busUpgradeHandler } from "./bus.mjs";
 import { handleApi } from "./example-data/index.mjs";
 import { handleDataProxy } from "./data-proxy.mjs";
 import { wrapperFor } from "./wrapper.mjs";
@@ -193,7 +194,7 @@ const server = http.createServer(async (req, res) => {
 
 attachUpgradeDispatcher(server, {
   "/api/connection": connectionUpgradeHandler,
-  // "/api/bus": busUpgradeHandler,        // UNCOMMENT in Task 3 (import arrives there too)
+  "/api/bus": busUpgradeHandler,           // realtime bus (spec 2026-07-06-realtime-bus-design.md)
 });
 console.log("  connection (WebSocket) server on /api/connection");
 server.listen(PORT, () => {

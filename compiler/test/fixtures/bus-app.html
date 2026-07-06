@@ -1,0 +1,19 @@
+<laszlo-app width="100" height="100">
+  <view width="${server.state.count}"></view>
+  <server>
+    <state name="state">
+      <attribute name="count" type="number" value="0"></attribute>
+      <attribute name="log" type="string" value=""></attribute>
+      <method name="bump" args="by"><script type="text/typescript">
+        this.setAttribute('count', this.count + by);
+        return this.count;
+      </script></method>
+      <method name="boom"><script type="text/typescript">
+        throw new Error('kaboom');
+      </script></method>
+      <method name="slow"><script type="text/typescript">
+        return new Promise((res) => setTimeout(() => res('done'), 10));
+      </script></method>
+    </state>
+  </server>
+</laszlo-app>
