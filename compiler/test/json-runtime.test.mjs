@@ -167,6 +167,40 @@ test("onclones fires on the parent when an event exists; destroyed parent unbind
   assert.deepEqual(clonesSeen, [1]);              // no refresh after parent death
 });
 
+// ── LzDataElement bridge (Task 12) ─────────────────────────────────────────
+
+function makeBridgeGlobals() {
+  const made = [];
+  class FakeLDE { constructor() { this.appendChild = () => {}; this.ownerDocument = {}; } }
+  FakeLDE.__LZv2E = (v) => [{ converted: structuredClone(v) }];
+  class FakeDataset { constructor(parent, attrs) { this.attrs = attrs; made.push(this); }
+    setChildNodes(kids) { this.kids = kids; } }
+  return { made, globals: { canvas: {}, lz: { dataset: FakeDataset }, LzDataElement: FakeLDE } };
+}
+
+test("toLzDataset: one-shot converts via __LZv2E; live re-converts on ondata", () => {
+  const b = makeBridgeGlobals();
+  const jd = installJsonRuntime(makeHost({ globals: b.globals }));
+  const ds = jd.register("b", { json: { x: 1 } });
+  const xml = ds.toLzDataset("b_xml");
+  assert.equal(b.made.length, 1);
+  assert.equal(xml.attrs.name, "b_xml");
+  assert.deepEqual(xml.kids[0].converted, { x: 1 });
+  ds.setData({ x: 2 });
+  assert.deepEqual(xml.kids[0].converted, { x: 1 });   // one-shot: unchanged
+
+  const live = ds.toLzDataset(undefined, { live: true });
+  assert.equal(live.attrs.name, "b_xml");              // default name = "<name>_xml"
+  ds.setData({ x: 3 });
+  assert.deepEqual(live.kids[0].converted, { x: 3 });
+});
+
+test("toLzDataset without LFC globals throws a clear error", () => {
+  const jd = installJsonRuntime(makeHost());
+  const ds = jd.register("b", { json: 1 });
+  assert.throws(() => ds.toLzDataset(), /LFC/);
+});
+
 // ── filter + sort (Task 11) ────────────────────────────────────────────────
 
 test("[@] filter: parent-hosted filterfunction accumulates (dreem signature)", () => {

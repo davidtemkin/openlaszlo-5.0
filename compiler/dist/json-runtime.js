@@ -34,6 +34,22 @@ export class JsonDataset {
             cb();
         return true;
     }
+    /** Bridge to the classic XML data stack (spec "JsonDataset > Bridge"): a real
+     *  LzDataset filled via the frozen LzDataElement.__LZv2E converter. One-shot
+     *  by default; {live:true} re-converts on every ondata. ONE-directional —
+     *  edits to the converted tree do not flow back, and bridged values must not
+     *  be fed into JSON bindings (the replication guard refuses them). */
+    toLzDataset(name, opts) {
+        const g = this.host.globals;
+        if (!g || !g.lz || !g.lz.dataset || !g.LzDataElement || typeof g.LzDataElement.__LZv2E !== "function")
+            throw new Error("toLzDataset requires the LFC (lz.dataset / LzDataElement.__LZv2E) on the host globals");
+        const ds = new g.lz.dataset(g.canvas, { name: name ?? this.name + "_xml" });
+        const fill = () => ds.setChildNodes(g.LzDataElement.__LZv2E(this.data));
+        fill();
+        if (opts?.live)
+            this.onData(fill);
+        return ds;
+    }
 }
 export class JsonRegistry {
     constructor(host) {
