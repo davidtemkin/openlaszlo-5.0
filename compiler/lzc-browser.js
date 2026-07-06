@@ -5203,6 +5203,24 @@ function datasetArgs(el, globals, globalOrigins, opts) {
   globalOrigins.push(el.origin ?? "");
   return { name, content, trim, nsprefix };
 }
+function compileJsonDataset(el) {
+  const name = el.attrs["name"];
+  if (!name)
+    throw new Unsupported(`<dataset type="json"> without name`);
+  const src = el.attrs["src"];
+  if (src != null) {
+    const kind = /^wss?:/.test(src) ? "ws" : "src";
+    return `lz.jsondata.register(${jsString(name)},{${kind}:${jsString(src)}});`;
+  }
+  const text = el.children.filter((c) => c.type === "text").map((c) => c.value).join("");
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch (e) {
+    throw new Unsupported(`dataset "${name}": invalid JSON \u2014 ${e.message}`);
+  }
+  return `lz.jsondata.register(${jsString(name)},{json:${JSON.stringify(parsed)}});`;
+}
 function compileDataset(el, globals, globalOrigins, opts) {
   const { name, content, trim, nsprefix } = datasetArgs(el, globals, globalOrigins, opts);
   return `${name}=canvas.lzAddLocalData(${jsString(name)},${jsString(content)},${trim},${nsprefix});${name}==true;`;
@@ -7280,6 +7298,12 @@ function compileInner(root, opts, debug) {
           js += ";" + compileProgram(prog);
         continue;
       }
+      if (child.name === "dataset" && child.attrs["type"] === "json") {
+        if (DEBUG_STMTS)
+          throw new Unsupported(`<dataset type="json"> in a debug build`);
+        js += compileJsonDataset(child);
+        continue;
+      }
       if (child.name === "dataset" && isLocalDataset(child)) {
         if (DEBUG_STMTS) {
           const dsDir = debugAnonPrev ? ["", 0] : [crossUnitFile, 1];
@@ -7875,6 +7899,13 @@ var BrowserCache = class {
   }
 };
 
+// dist/json-path.js
+var ABS_RE = /^\$([A-Za-z_]\w*)([\/\[]|$)/;
+function isJsonAbsolutePath(s) {
+  const m = ABS_RE.exec(s);
+  return !!m && !/^\$\w*\{/.test(s);
+}
+
 // dist/domsource.js
 var DomDialectError = class extends Error {
 };
@@ -7961,8 +7992,18 @@ function transpile(ctx, code, owner) {
     throw new DomDialectError(`in <${owner}>: ${e.message}`);
   }
 }
-function scriptNodes(el, parentName, ctx) {
+function scriptNodes(el, parentName, ctx, parentIsJsonDataset) {
   const type = (el.getAttribute("type") ?? "").trim().toLowerCase();
+  if (type === "application/json") {
+    if (!parentIsJsonDataset)
+      throw new DomDialectError('<script type="application/json"> is only valid inside <dataset type="json">');
+    return [{ type: "text", value: textContentOf(el), cdata: false }];
+  }
+  if (type === "application/lz-shape") {
+    if (!parentIsJsonDataset)
+      throw new DomDialectError('<script type="application/lz-shape"> is only valid inside <dataset type="json">');
+    return [];
+  }
   if (type === "application/xml") {
     if (parentName !== "dataset")
       throw new DomDialectError('<script type="application/xml"> is only valid inside <dataset>');
@@ -8005,9 +8046,28 @@ function walkElem(el, ctx, isRoot) {
       attrs[a.name] = normAttr(a.value);
     }
   }
-  const childCtx = ctx.inTemplate || !NO_STAMP_SUBTREE.has(name) ? { ...ctx, inTemplate: ctx.inTemplate } : { ...ctx, inTemplate: true };
+  let boundKind = null;
+  const dp = attrs["datapath"];
+  if (dp != null) {
+    if (isJsonAbsolutePath(dp) || dp.startsWith("/") && ctx.jsonBound) {
+      if (ctx.inState)
+        throw new DomDialectError("a JSON datapath inside <state> is not supported (state children cannot be replication templates)");
+      boundKind = "json";
+      attrs["jsondatapath"] = dp;
+      delete attrs["datapath"];
+      attrOrder[attrOrder.indexOf("datapath")] = "jsondatapath";
+    } else if (!/^\s*\$\w*\{/.test(dp))
+      boundKind = "xpath";
+  }
+  const enterTemplate = !ctx.inTemplate && (NO_STAMP_SUBTREE.has(name) || boundKind === "json");
+  const childCtx = {
+    ...ctx,
+    inTemplate: ctx.inTemplate || enterTemplate,
+    jsonBound: boundKind ? boundKind === "json" : ctx.jsonBound,
+    inState: ctx.inState || name === "state"
+  };
   let adoptId = null;
-  if (ctx.opts.domAdopt && !isRoot && !ctx.inTemplate && !NO_STAMP_TAGS.has(name)) {
+  if (ctx.opts.domAdopt && !isRoot && !ctx.inTemplate && boundKind !== "json" && !NO_STAMP_TAGS.has(name)) {
     adoptId = String(ctx.counter.n++);
     el.setAttribute("data-lz-adopt", adoptId);
   }
@@ -8034,8 +8094,10 @@ function walkElem(el, ctx, isRoot) {
       sawServer = true;
       continue;
     }
+    if ((localName(ce) === "dataset" || localName(ce) === "lz-dataset") && ce.getAttribute("type") === "json" && !isRoot)
+      throw new DomDialectError('<dataset type="json"> must be a direct child of <laszlo-app>');
     if (localName(ce) === "script") {
-      children.push(...scriptNodes(ce, name, childCtx));
+      children.push(...scriptNodes(ce, name, childCtx, name === "dataset" && attrs["type"] === "json"));
       if (isCodeParent)
         sawCarrier = true;
       continue;
@@ -8063,7 +8125,7 @@ function walkElem(el, ctx, isRoot) {
   return elem;
 }
 function domToXmlElem(root, opts = {}) {
-  return walkElem(root, { opts, counter: { n: 1 }, inTemplate: false }, true);
+  return walkElem(root, { opts, counter: { n: 1 }, inTemplate: false, jsonBound: false, inState: false }, true);
 }
 
 // dist/browser.js

@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>JSON databinding — bikeshop</title>
+  <script type="module" src="../../startup/laszlo-dom.js"></script>
+</head>
+<body>
+<laszlo-app height="300" bgcolor="#f7f7f7">
+  <dataset name="bikeshop" type="json">
+    <script type="application/json">
+      { "bicycle": [
+        { "color": "red",   "price": 19.95 },
+        { "color": "green", "price": 29.95 },
+        { "color": "blue",  "price": 59.95 } ] }
+    </script>
+  </dataset>
+
+  <lz-view x="10" y="10">
+    <simplelayout axis="y" spacing="4"></simplelayout>
+    <lz-view datapath="$bikeshop/bicycle[*]" height="18">
+      <lz-text text="${parent.data.color + ' — $' + parent.data.price}"
+               fgcolor="${parent.data.price > 20 ? '#999999' : '#000000'}"></lz-text>
+    </lz-view>
+  </lz-view>
+
+  <lz-view x="10" y="120" width="140" height="22" bgcolor="#dddddd">
+    <lz-text text="sale: first bike $9.99" x="4" y="3"></lz-text>
+    <handler name="onclick">
+      lz.jsondata.get('bikeshop').updateData('/bicycle/0/price', 9.99);
+    </handler>
+  </lz-view>
+</laszlo-app>
+</body>
+</html>
