@@ -27,7 +27,7 @@
 - `NON_INSTANCE` at `app-model.ts:52-54`; instance body collection at `:371,374`.
 - domsource `<server>` strip-before-stamp: `domsource.ts:170-178` (`continue` before stamping/child-walk); `transpileTs` injection seam `:89-99`; carrier typing `:110-119`.
 - Generated-attr precedents: `compile.ts:1465` (`$lzc$bind_id`), `:1862` (`$datapath`), `:1870` (`$delegates`) — attrs-map strings, `jsString`-escaped at emission.
-- Injection plumbing: `startup/laszlo-dom.js:40-51` passes `transpileTs` from `lz-ts.js` into `compileInBrowser`; autoincludes read at `:40-50`.
+- Injection plumbing: `startup/laszlo-dom.js` ~:89-96 passes `transpileTs` from `lz-ts.js` into `compileInBrowser`; `distroFetch` (:40-51) maps runtime-tree URLs (autoincludes). checkApp never runs domsource — Task 4 is fully independent of Task 5.
 - Sprite DOM access: `drawview.lzx:580` `this.sprite.__LZcanvas` (LzSprite props readable from component methods); shader creates its own `<canvas>` in `this.sprite.__LZdiv`.
 - Script-in-library: `<script src="…"/>` (slice-6 flexlayout precedent; `compile.ts:1372-1390`).
 
@@ -117,7 +117,7 @@ test("genShaderDts: settable swizzles, readonly repeats, operator intrinsics, bu
   `input = { color: {code, srcLine}, helpers: Array<{name, params: {name,type}[], ret, code, srcLine}>, uniforms: Array<{name, lzType: "number"|"color"}>, shaderlib?: ShaderlibPort }`
   `ShaderProgram = { glsl: string, uniforms: Array<{name, glslType}>, usesTime, usesMouse }`
 - Emission is parser-only: `ts.createSourceFile` per body; the lattice types every expression from the table (Task 1) + uniforms + helper signatures; violations accumulate as findings (never throws).
-- Also exports `rewriteOperators(code): { code, map: Array<{genLine, srcLine}> }` — the checker pre-pass (Task 4) — arithmetic/compound-assign/unary-minus → `__mul(a,b)` etc., produced from the same AST walk (one definition of "what is an operator").
+- Also exports `rewriteOperators(code): { code }` — the checker pre-pass (Task 4) — arithmetic/compound-assign/unary-minus → `__mul(a,b)` etc., produced from the same AST walk. **Line-preserving by construction** (intra-line span splices; the implementation asserts equal newline counts), so the existing BodySpan formula alone maps lines; finding COLUMNS are approximate (documented).
 
 - [ ] **Step 1: Failing golden tests** (`compiler/test/glsl-gen.test.mjs`) — the contract, complete:
 
@@ -141,13 +141,13 @@ test("minimal color(): preamble, main wrapper, float literals", () => {
 });
 
 test("uniforms: this.speed → uniform float; color type → vec3; only referenced ones", () => {
-  const r = gen("return vec4(uv * this.speed, this.tint);",
+  const r = gen("return vec4(uv * this.speed, this.tint.x, 1.0);",
     [{ name: "speed", lzType: "number" }, { name: "tint", lzType: "color" }, { name: "unused", lzType: "number" }]);
   assert.equal(r.ok, true);
   assert.match(r.program.glsl, /uniform float speed;/);
   assert.match(r.program.glsl, /uniform vec3 tint;/);
   assert.deepEqual(r.program.uniforms.map(u => u.name).sort(), ["speed", "tint"]);
-  assert.match(r.program.glsl, /vec4\(uv \* speed, tint\)/);
+  assert.match(r.program.glsl, /vec4\(uv \* speed, tint\.x, 1\.0\)/);
 });
 
 test("builtins: uv/time/mouse/size wire varyings/uniforms and set flags", () => {
@@ -218,6 +218,7 @@ test("findings: dialect violations, each with a line", () => {
     ["let z = vec3(); return vec4(z, 1.0);", /constructor/i],
     ["for (let i = 0; i < this.n; i++) {} return vec4(1.0,0.0,0.0,1.0);", /loop bound/i],
     ["return vec4(uv, 1.0);", /components|arity|vec4/i],                   // 3 for vec4
+    ["return vec4(uv, vec3(1.0));", /components|arity|vec4/i],              // 5 for vec4 — STRICT summation; partial consumption of the last arg is a WebGL1 portability trap, rejected
     ["let q = uv + vec3(1.0,1.0,1.0); return vec4(q, 0.0, 1.0);", /vec2.*vec3|mismatch/i],
     ["return this.nope;", /undeclared|nope/i],
   ]) {
@@ -227,7 +228,9 @@ test("findings: dialect violations, each with a line", () => {
 });
 
 test("rewriteOperators: arithmetic → intrinsic calls; positions mapped", () => {
-  const { code } = rewriteOperators("let m = uv * 8.0 + n;\nlet k = -m;");
+  const src = "let m = uv * 8.0 + n;\nlet k = -m;";
+  const { code } = rewriteOperators(src);
+  assert.equal(code.split("\n").length, src.split("\n").length, "line-preserving");
   assert.match(code, /__add\(__mul\(uv, 8\.0\), n\)/);
   assert.match(code, /__neg\(m\)/);
 });
@@ -252,7 +255,7 @@ test("the hero example generates clean", () => {
 ### Task 3: The shaderlib curated port
 
 **Files:**
-- Create: `compiler/shaderlib/{noise,shape,pal,color,math}.ts` (dialect-clean sources) + `compiler/src/shaderlib-port.ts` (loader: parses the five files ONCE via glsl-gen's function parser, exposes `signatures` + `glslFor(reachableNames)`)
+- Create: `compiler/shaderlib/{noise,shape,pal,color,math}.ts` (dialect-clean sources) + `compiler/src/shaderlib-port.ts` (loader) + **`compiler/src/shaderlib-sources.ts` (GENERATED — string constants of the five sources, emitted by `npm run gen:shaderlib` added to package.json; the browser bundle gets the sources this way, since `--platform=browser --external:fs` turns fs reads into throw-shims)**. `loadShaderlib(sources = EMBEDDED)` parses the injected/embedded sources ONCE, exposes `signatures` + `glslFor(reachableNames)` + `findings`.
 - Test: `compiler/test/shaderlib-port.test.mjs`
 
 - [ ] **Step 1: Failing test:**
@@ -288,7 +291,7 @@ test("cross-namespace calls + constants resolve; pruning emits only reachable co
 });
 ```
 
-- [ ] **Step 2:** Run → FAIL. **Step 3:** Port the five dreemgl files (`/tmp/dreemgl/system/shaderlib/`; re-clone if wiped) by hand into the dialect: AMD unwrapped, `var`→`let`, alias chains split (keep the PRIMARY name: `snoise2v`, `rainbow`→`pal1` keeps `pal1`), `this.`-calls → namespace-qualified, string constants → `const PI: float = 3.141592653589793;`, exclusions + corrections per the spec list. Every function annotated (`function snoise2v(v: vec2): float`). `loadShaderlib()` parses once, caches, returns findings (must be `[]`).
+- [ ] **Step 2:** Run → FAIL. **Step 3:** Port the five dreemgl files (`/tmp/dreemgl/system/shaderlib/`; re-clone if wiped) by hand into the dialect (each ported file KEEPS a provenance header + the repo NOTICE gains a dreemgl entry — Apache §4(d), spec-normative): AMD unwrapped, `var`→`let`, alias chains split (keep the PRIMARY name: `snoise2v`, `rainbow`→`pal1` keeps `pal1`), `this.`-calls → namespace-qualified, string constants → `const PI: float = 3.141592653589793;`, exclusions + corrections per the spec list. Every function annotated (`function snoise2v(v: vec2): float`). `loadShaderlib()` parses once, caches, returns findings (must be `[]`).
 - [ ] **Step 4:** Green. **Step 5:** Commit: `compiler: shaderlib curated port (5 namespaces, corrections + exclusions documented) + loader`
 
 ---
@@ -328,8 +331,8 @@ test("shader findings map to source lines; client program is untouched both ways
   assert.ok(find("this.notdeclared"), "undeclared uniform finding");
   assert.ok(find("vec4 leaked"), "client body using vec4 is still a finding (isolation)");
   assert.ok(!find("let ok = uv * 8.0"), "operator arithmetic itself is NOT a finding");
-  assert.ok(find('width="${'), "constraints on the shader tag's own attrs still checked") ||
-    assert.ok(r.constraints >= 1);
+  assert.ok(find('${parent.bogus}'), "invalid constraint on the shader tag IS a finding (attrs still constraint-checked)");
+  assert.ok(r.constraintsChecked >= 1);
 });
 ```
 
@@ -347,7 +350,7 @@ Fixture `shader-check-clean.html` — the hero example inside the standard scaff
 </laszlo-app>
 ```
 
-`shader-check.html`: a shader whose `color()` contains `let m = uv * 8.0; let ok = uv * 8.0; return pal.pal1(m.xyz.x);` (wrong swizzle on vec2-typed m), a `noise.snoise2v(badarg, 2.0)` call, `this.notdeclared`, a `width="${parent.width}"` constraint on the shader tag, and a SIBLING plain `<view>` with a client `<method>` body `const vec4 leaked = 1;`-style use of `vec4` (asserting isolation).
+`shader-check.html`: a shader whose `color()` contains `let m = uv * 8.0; let ok = uv * 8.0; return pal.pal1(m.xyz.x);` (wrong swizzle on vec2-typed m), a `noise.snoise2v(badarg, 2.0)` call, `this.notdeclared`, a `width="${parent.bogus}"` INVALID constraint on the shader tag (must produce a finding — proves shader-tag attrs still constraint-check), and a SIBLING plain `<view>` with a client `<method>` body `const vec4 leaked = 1;`-style use of `vec4` (asserting isolation).
 
 - [ ] **Step 2:** Run → FAIL. **Step 3:** Implement:
   - `app-model.ts`: `<shader>` stays an instance (attrs/constraints walked); its `<method>` children route to `model.shaderPrograms.push({ name, uniforms: declaredAttrs, color, helpers })` via `rawBody` (the walkServer pattern) INSTEAD of `collectBody`. Gate: inside the instance child loop, `if (t === "method" && tagIs("shader")) { …raw collect…; continue; }` before the normal method branch.
@@ -360,7 +363,7 @@ Fixture `shader-check-clean.html` — the hero example inside the standard scaff
 ### Task 5: Routing — domsource strip + injected glslGen + attribute embedding
 
 **Files:**
-- Modify: `compiler/src/domsource.ts` (shader subtree handling), `compiler/src/browser.ts` (thread `opts.glslGen` if opts flow through it), `startup/lz-ts.js` source (`compiler/src/lzts-entry.ts` or wherever the bundle entry lives — locate by `grep -rn transpileTsBody compiler/src | grep -i entry`), `startup/laszlo-dom.js` (pass `glslGen` alongside `transpileTs`)
+- Modify: `compiler/src/domsource.ts` (shader subtree handling), `compiler/src/browser.ts` (thread `opts.glslGen` if opts flow through it), NEW bundle entry `compiler/src/lzts-entry.ts` (re-exports ts-carrier's surface + exports `glslGen` built from glsl-gen + the EMBEDDED shaderlib) + `compiler/package.json` `bundle:lzts` script pointed at `dist/lzts-entry.js` (today it bundles `dist/ts-carrier.js` directly — ts-carrier.ts itself stays untouched; the invariant becomes: typescript-importing modules live ONLY in the lzts bundle graph + dev-time lzx-check, never lzc-browser), `startup/laszlo-dom.js` (pass `glslGen` alongside `transpileTs`)
 - Test: `compiler/test/shader-domsource.test.mjs` + rebuild dist/bundles
 
 - [ ] **Step 1: Failing test:**
@@ -416,9 +419,9 @@ test("domsource: generation findings become dialect errors; no glslGen provided 
 
 **Files:**
 - Create: `runtime/components/extensions/webgl-quad.js` (UMD, pure-ish GL boilerplate: compile/link, quad, uniform setters, context-loss re-init; injectable gl for the one node-testable pure part — uniform table → setter plan)
-- Create: `runtime/components/extensions/shader.lzx` (`<class name="shader" extends="view">`)
+- Create: `runtime/components/extensions/shader.lzx` (`<class name="shader" extends="view">`). MUST declare `<attribute name="shaderprogram" type="string" value=""/>` — the type annotation is load-bearing: an UNTYPED declaration compiles authored values as "expression" and the stamped JSON would emit as a raw object literal (compile.ts:2895-2908), breaking JSON.parse; `type="string"` routes through jsString. Empty default doubles as the frozen-.lzx-path "absent" detection.
 - Modify: `runtime/lzx-autoincludes.properties` (+`shader: extensions/shader.lzx`)
-- Create: `examples/dom-authoring/shader-demo.html` (hero noise/palette surface + `<slider>`-bound `speed`), `examples/dom-authoring/shader-validate.html` (self-checking: compiles the emitted shaderlib + demo shaders via `gl.compileShader`, renders a pass/fail table — the browser-side conformance gate the spec demands, runnable by the user)
+- Create: `examples/dom-authoring/shader-demo.html` (hero noise/palette surface + `<slider>`-bound `speed`; the slider instance REDECLARES `<attribute name="value" type="number" value="1"/>` so the `${sl.value}` constraint typechecks — lzx-check types unknown component tags as closed LzView; if redeclaration trips other checks, fall back to a click-stepper view and record the deviation), `examples/dom-authoring/shader-validate.html` (self-checking: compiles the emitted shaderlib + demo shaders via `gl.compileShader`, renders a pass/fail table — the browser-side conformance gate the spec demands, runnable by the user)
 - Test: `compiler/test/shader-runtime.test.mjs` (pure parts: uniform plan mapping number/color→float/vec3 incl. 24-bit normalize; plus a compile-level test that the demo app compiles via checkApp/domsource clean)
 
 - [ ] **Step 1: Failing test** (uniform plan + demo-clean):
@@ -446,10 +449,10 @@ test("the shader demo checks clean end-to-end", () => {
 });
 ```
 
-- [ ] **Step 2:** Implement `webgl-quad.js` (UMD like flex-adapter): `init(canvas, glsl)` → `{gl, program, setUniform(name, kind, value), draw(), dispose()}`; static vertex shader (`attribute vec2 pos; varying vec2 uv; …`); context-lost/restored hooks; returns null (with reason) when WebGL unavailable.
+- [ ] **Step 2:** Implement `webgl-quad.js` (UMD like flex-adapter): `init(canvas, glsl)` → `{gl, program, setUniform(name, kind, value), draw(), dispose()}`; static vertex shader (`attribute vec2 pos; varying vec2 uv; …`); context-lost/restored hooks; returns null (with reason) when WebGL unavailable; **on compile/link failure logs the generated source + infoLog ONCE and returns null** (spec's driver-variance path → bgcolor fallback).
 - [ ] **Step 3:** Implement `shader.lzx` per the spec's Runtime section: parse `this.shaderprogram` (absent/empty → one `Debug.warn` + bgcolor fallback — the frozen-path story), create canvas in `this.sprite.__LZdiv` (DPR-aware), init quad, per-uniform `on<attr>` delegates (LzDelegate) setting via the plan + coalesced rAF render, `usesTime` → visibility-gated rAF loop, `usesMouse` → pointermove, `onwidth/onheight` resize. `<script src="webgl-quad.js"/>` include; autoincludes entry.
 - [ ] **Step 4:** Demo + validation page. Demo authoring mirrors flex-demo conventions (laszlo-dom module script; `<slider>` if available in the dialect, else a click-stepper view like counter-app). Validation page: plain JS, no LFC — fetches nothing, embeds the emitted GLSL of (a) each demo shader (author them inline via lz-ts's exported glslGen in the page) or (b) simplest: a `<laszlo-app>` with several `<shader>` tags exercising noise/shape/pal/color/math, plus a plain-JS footer that finds every canvas's compiled program status. Keep it simple and honest: it must render PASS/FAIL text per shader without user interpretation.
-- [ ] **Step 5:** `npm test` green; `node compiler/dist/lzx-check.js examples/dom-authoring/shader-demo.html` → OK. **Step 6:** Spec status → implemented (record: browser conformance pass = user runs shader-validate.html + demo; no automation available). Commit: `components+examples: <shader> runtime, webgl-quad, demo + self-checking validation page; spec status`
+- [ ] **Step 5:** `npm test` green; `node compiler/dist/lzx-check.js examples/dom-authoring/shader-demo.html` → OK. **Step 6:** Spec status → implemented (record: browser conformance pass = user runs shader-validate.html + demo — no automation available; the signature table's docs consumer is deferred to follow-up). Commit: `components+examples: <shader> runtime, webgl-quad, demo + self-checking validation page; spec status`
 
 ## Execution notes
 
