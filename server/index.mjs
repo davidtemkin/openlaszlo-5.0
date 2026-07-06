@@ -9,11 +9,12 @@
 // namespace map stay in the SW). A dumb static host serves index.html verbatim → the SW
 // compiles in-browser. One distro, two modes, one Explorer.
 //
-//   node server/index.mjs [port=8090]   →  http://localhost:8090/
+//   node server/index.mjs [port=8090] [--no-reload]   →  http://localhost:8090/
 
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { toSourceUrl } from "../startup/urlmap.mjs";
 import { classifyLzxRequest, OP } from "../startup/reqtypes.mjs";
 import { compileApp, DISTRO, RUNTIME } from "./compile.mjs";
@@ -23,8 +24,6 @@ import { handleApi } from "./example-data/index.mjs";
 import { handleDataProxy } from "./data-proxy.mjs";
 import { wrapperFor } from "./wrapper.mjs";
 import { serveSource, serveSrcText, serveEditor, editCompile, editToken, serveEditApp } from "./dev-views.mjs";
-
-const PORT = parseInt(process.argv[2] || "8090", 10);
 
 const MIME = {
   ".html": "text/html;charset=utf-8", ".htm": "text/html;charset=utf-8",
@@ -135,9 +134,9 @@ function serveWrapper(req, res, p, url) {
   send(res, 200, r.html, { "Content-Type": "text/html;charset=utf-8", "Cache-Control": "no-cache" });
 }
 
-const server = http.createServer(async (req, res) => {
+async function handleRequest(req, res) {
   let url;
-  try { url = new URL(req.url, `http://localhost:${PORT}`); }
+  try { url = new URL(req.url, "http://localhost"); }   // host part unused; parsing only
   catch { return send(res, 400, "bad request\n"); }
   const p = decodeURIComponent(url.pathname);
 
@@ -190,14 +189,37 @@ const server = http.createServer(async (req, res) => {
   } catch (e) {
     send(res, 500, "500 " + (e && e.message || e) + "\n", { "Content-Type": "text/plain" });
   }
-});
+}
 
-attachUpgradeDispatcher(server, {
-  "/api/connection": connectionUpgradeHandler,
-  "/api/bus": busUpgradeHandler,           // realtime bus (spec 2026-07-06-realtime-bus-design.md)
-});
-console.log("  connection (WebSocket) server on /api/connection");
-server.listen(PORT, () => {
-  console.log(`OpenLaszlo dynamic server → http://localhost:${PORT}/`);
-  console.log("  server-side compile (TS, disk-cached) + /api + persistent connection");
-});
+export function parseServerArgs(argv) {
+  const flags = new Set(argv.filter(a => a.startsWith("--")));
+  const pos = argv.find(a => !a.startsWith("--"));
+  return { port: parseInt(pos || "8090", 10), reload: !flags.has("--no-reload") };
+}
+
+export function createDevServer({ port = 8090, reload = true } = {}) {
+  const server = http.createServer(handleRequest);
+  attachUpgradeDispatcher(server, {
+    "/api/connection": connectionUpgradeHandler,
+    "/api/bus": busUpgradeHandler,           // realtime bus (spec 2026-07-06-realtime-bus-design.md)
+  });
+  return new Promise((resolve) => {
+    server.listen(port, () => resolve({
+      server, port: server.address().port, hub: null,
+      close: () => new Promise((r) => {
+        server.closeIdleConnections?.();     // keep-alive sockets would otherwise hold close() open (Node ≥19)
+        server.close(r);
+        server.closeAllConnections?.();      // upgraded/WS sockets leaked by a failed test must not hang the suite
+      }),
+    }));
+  });
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const { port, reload } = parseServerArgs(process.argv.slice(2));
+  createDevServer({ port, reload }).then((s) => {
+    console.log(`OpenLaszlo dynamic server → http://localhost:${s.port}/`);
+    console.log("  server-side compile (TS, disk-cached) + /api + persistent connection");
+    console.log("  connection (WebSocket) server on /api/connection");
+  });
+}
