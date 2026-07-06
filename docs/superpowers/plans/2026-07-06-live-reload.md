@@ -13,7 +13,8 @@
 ## Global Constraints
 
 - Base: branch `dom-authoring-slice5` REBASED onto `dom-authoring-slice3` HEAD (`caee598` — slice 3 complete; 3b/3c docs on top are inert). Work happens in worktree `.claude/worktrees/reload-slice5`.
-- Do NOT touch files owned by frozen in-flight plans: `server/bus.mjs`, `server/srvnode.mjs`, `startup/lz-bus.js`, `compiler/src/{domsource,app-model,lzx-check}.ts`. (`server/connection.mjs` is touched ONLY by the already-landed slice-3 shape; we import from it, never edit it.)
+- Do NOT touch files owned by frozen in-flight plans: `server/bus.mjs`, `server/srvnode.mjs`, `startup/lz-bus.js`, `startup/laszlo-dom.js`, `compiler/src/{domsource,app-model,app-dts,lzx-check}.ts`. (`server/connection.mjs` is touched ONLY by the already-landed slice-3 shape; we import from it, never edit it.)
+- **Known slice-4 contact points (coordinate, don't collide):** the frozen slice-4 plan (a) adds `/api/data` to the dispatcher routes in `server/index.mjs` — after this slice that edit lands INSIDE `createDevServer`'s route map (note for whoever lands second); (b) extracts the same WS test client to `compiler/test/helpers/wsclient.mjs` — this plan uses **that exact filename** so the two extractions merge trivially.
 - `runtime/lfc-src` and the `.lzx`-text compile path are byte-frozen — nothing in this slice goes near them.
 - Poll interval 500 ms; liveness bound 6 busy sweeps; grace 10 s; cap 100 files/app (log drops); denylist prefixes `/runtime/ /compiler/ /startup/ /lps/` + any path containing `/lps/resources/`.
 - Tests live in `compiler/test/` and run via `cd compiler && npm test` (which builds first). Server integration fixtures are created under `examples/.tmp-reload/` and removed in `after()`.
@@ -34,7 +35,7 @@
 
 **Files:** none (git topology only)
 
-- [ ] **Step 1:** From the main checkout (currently ON `dom-authoring-slice5`): move it off the branch, rebase the branch onto slice 3, create the worktree.
+- [ ] **Step 1:** From the main checkout: move it off `dom-authoring-slice5` if it holds it, rebase the branch onto slice 3, create the worktree. (`caee598..dom-authoring-slice5` is 4 docs-only commits — specs rev 1-3 + this plan; the rebase is clean, no path overlap.)
 
 ```bash
 cd /Users/maxcarlsonold/openlaszlo-5.0
@@ -52,14 +53,14 @@ Expected: rebase applies the 3 spec commits cleanly (docs-only).
 ### Task 1: Extract the WS test client into a shared helper
 
 **Files:**
-- Create: `compiler/test/helpers/ws-client.mjs`
+- Create: `compiler/test/helpers/wsclient.mjs`  ← EXACTLY this name: the frozen slice-4 plan extracts the same helper to this path; identical filenames merge trivially
 - Modify: `compiler/test/bus-integration.test.mjs` (delete local defs, import instead)
 
 **Interfaces:**
 - Produces: `wsClient(port, path) -> { ready: Promise, send(obj), next(): Promise<obj>, close(), destroyed(): bool }`, `encodeTextMasked(str): Buffer` — used by Task 5's integration tests.
 
-- [ ] **Step 1:** Move the two functions VERBATIM (lines 9-60 of `bus-integration.test.mjs`, including the masked-frame comment and the close-before-101 rejection) into `compiler/test/helpers/ws-client.mjs`, with the imports they need (`node:net`, `node:crypto`, `decodeFrames` from `../../../server/connection.mjs` — note the extra `../` from `helpers/`).
-- [ ] **Step 2:** In `bus-integration.test.mjs` replace the definitions with `import { wsClient, encodeTextMasked } from "./helpers/ws-client.mjs";` (keep its other imports; `encodeTextMasked` may be unused there after the move — keep the import only if used).
+- [ ] **Step 1:** Move the two functions VERBATIM (lines 9-62 of `bus-integration.test.mjs` — `encodeTextMasked` and `wsClient` incl. the masked-frame comment, the close-before-101 rejection, and `destroyed()`) into `compiler/test/helpers/wsclient.mjs`, with the imports they need (`node:net`, `node:crypto`, `decodeFrames` from `../../../server/connection.mjs` — note the extra `../` from `helpers/`).
+- [ ] **Step 2:** In `bus-integration.test.mjs` replace the definitions with `import { wsClient, encodeTextMasked } from "./helpers/wsclient.mjs";` (keep its other imports; `encodeTextMasked` may be unused there after the move — keep the import only if used).
 - [ ] **Step 3:** Run: `cd compiler && npm test` → all existing tests PASS (pure move).
 - [ ] **Step 4:** Commit: `test: extract dependency-free WS client into test helper`
 
@@ -84,7 +85,7 @@ import http from "node:http";
 import { parseServerArgs, createDevServer } from "../../server/index.mjs";
 
 const get = (port, path, headers = {}) => new Promise((res, rej) => {
-  http.get({ host: "127.0.0.1", port, path, headers }, (r) => {
+  http.get({ host: "127.0.0.1", port, path, headers, agent: false }, (r) => {   // agent:false — no keep-alive sockets to hang close()
     let d = ""; r.on("data", c => d += c); r.on("end", () => res({ status: r.statusCode, headers: r.headers, body: d }));
   }).on("error", rej);
 });
@@ -129,7 +130,11 @@ export function createDevServer({ port = 8090, reload = true } = {}) {
   return new Promise((resolve) => {
     server.listen(port, () => resolve({
       server, port: server.address().port, hub: null,
-      close: () => new Promise((r) => server.close(r)),
+      close: () => new Promise((r) => {
+        server.closeIdleConnections?.();     // keep-alive sockets would otherwise hold close() open (Node ≥19)
+        server.close(r);
+        server.closeAllConnections?.();      // upgraded/WS sockets leaked by a failed test must not hang the suite
+      }),
     }));
   });
 }
@@ -144,7 +149,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   });
 }
 ```
-  (Move the two existing `console.log` lines into the CLI branch as shown; `reload` is accepted and ignored until Task 4.)
+  (Move the three existing `console.log` lines — `index.mjs:199,201,202` — into the CLI branch as shown; `reload` is accepted and ignored until Task 4.)
 - [ ] **Step 4:** Run: `cd compiler && npm test` → both new tests PASS, everything else still green. Also `node server/index.mjs 8091 &` from the worktree root; `curl -s localhost:8091/ | grep -c __OL_COMPILE` → 1; kill it.
 - [ ] **Step 5:** Commit: `server: export createDevServer() + flag-aware argv (port 0 testable, --no-reload parsed)`
 
@@ -366,6 +371,27 @@ test("noteRequest joins live sets via referer; denylisted and non-source never j
   assert.ok(hub.watchedFiles(app).includes(tsAbs));
 });
 
+test("poller against a real temp distro: change, delete, reappear, same-second size-change", async () => {
+  const os = await import("node:os");
+  const fsr = await import("node:fs");
+  const tmp = fsr.mkdtempSync(path.join(os.tmpdir(), "olreload-"));
+  fsr.mkdirSync(path.join(tmp, "examples"), { recursive: true });
+  const appAbs = path.join(tmp, "examples/app.html");
+  fsr.writeFileSync(appAbs, "<html>1</html>");
+  const hub = createReloadHub({ distro: tmp, runtime: path.join(tmp, "runtime"), log: () => {} }); // REAL statFn
+  const sock = fakeSock(); hub.attach(sock);
+  hub.watch("/examples/app.html", Date.now() + 1000, sock);
+  const changedCount = () => frames(sock).filter(m => m.op === "changed").length;
+  const until = async (n) => { for (let i = 0; i < 40 && changedCount() < n; i++) { hub.sweepOnce(); await new Promise(r => setTimeout(r, 5)); } };
+  fsr.writeFileSync(appAbs, "<html>2!</html>");            // same-second rewrite, different SIZE
+  await until(1); assert.ok(changedCount() >= 1, "size change detected");
+  fsr.unlinkSync(appAbs);                                   // delete
+  await until(2); assert.ok(changedCount() >= 2, "deletion detected");
+  fsr.writeFileSync(appAbs, "<html>3</html>");              // reappear
+  await until(3); assert.ok(changedCount() >= 3, "reappearance detected");
+  fsr.rmSync(tmp, { recursive: true, force: true });
+});
+
 test("grace teardown: last socket close keeps the set for graceMs, then drops it", () => {
   const app = "/examples/t/app.lzx";
   const appAbs = path.join(DISTRO, "examples/t/app.lzx");
@@ -409,8 +435,11 @@ export function createReloadHub({
 
   const norm = (p) => toSourceUrl(p.split("?")[0]);
   const absOf = (urlPath) => {
+    // Refuse traversal BEFORE normalization: toSourceUrl may prefix /explorer,
+    // making "/../x" normalize back INSIDE distro ("/explorer/../x" → "/x").
+    if (urlPath.split("?")[0].split("/").includes("..")) return null;
     const abs = path.normalize(path.join(distro, norm(urlPath)));
-    return abs.startsWith(distro) ? abs : null;
+    return abs.startsWith(distro.endsWith(path.sep) ? distro : distro + path.sep) ? abs : null;
   };
   const sendTo = (sock, obj) => { try { sock.write(encodeText(JSON.stringify(obj))); } catch {} };
   const baseline = (a, absPath) => {
@@ -450,6 +479,8 @@ export function createReloadHub({
     },
 
     watch(appUrlPath, loadedAt, sock) {
+      const st0 = sockets.get(sock);
+      if (st0 && st0.app) return { error: "one watch per socket" };   // spec: one app per page/socket
       const key = norm(appUrlPath);
       const abs = absOf(appUrlPath);
       if (!abs) return { error: "path outside served root" };
@@ -555,7 +586,7 @@ export function createReloadHub({
 
 ```js
 test("dev-reload endpoint answers hello over a real socket", async () => {
-  const { wsClient } = await import("./helpers/ws-client.mjs");
+  const { wsClient } = await import("./helpers/wsclient.mjs");
   const srv = await createDevServer({ port: 0 });
   try {
     const ws = wsClient(srv.port, "/api/dev-reload");
@@ -568,7 +599,7 @@ test("dev-reload endpoint answers hello over a real socket", async () => {
 });
 
 test("--no-reload leaves the endpoint unregistered", async () => {
-  const { wsClient } = await import("./helpers/ws-client.mjs");
+  const { wsClient } = await import("./helpers/wsclient.mjs");
   const srv = await createDevServer({ port: 0, reload: false });
   try {
     const ws = wsClient(srv.port, "/api/dev-reload");
@@ -600,7 +631,7 @@ import path from "node:path";
 import http from "node:http";
 import { fileURLToPath } from "node:url";
 import { createDevServer } from "../../server/index.mjs";
-import { wsClient } from "./helpers/ws-client.mjs";
+import { wsClient } from "./helpers/wsclient.mjs";
 
 const DISTRO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const FIX = path.join(DISTRO, "examples/.tmp-reload");
@@ -662,14 +693,35 @@ test("stale loadedAt gets immediate changed", async () => {
   ws.close();
 });
 
-test("referer-tracked source fetch joins; denylisted does not", async () => {
-  const ws = await watched(APP);
-  const referer = `http://127.0.0.1:${srv.port}${APP}`;
-  await get(srv.port, "/examples/.tmp-reload/inc.lzx", { referer });     // source-typed → joins
-  await get(srv.port, "/runtime/lfc/lfc.js", { referer });               // denylisted → no
-  assert.ok(srv.hub.watchedFiles(APP).some(f => f.endsWith("inc.lzx")));
-  assert.ok(!srv.hub.watchedFiles(APP).some(f => f.includes("runtime")));
-  ws.close();
+test("referer-tracked source fetch joins a DOM-authored page's set; denylisted does not; 304 registers", async () => {
+  // A DOM-authored page (no compile closure!) — the referer path must do ALL the work here.
+  const PAGE = "/examples/.tmp-reload/page.html";
+  fs.writeFileSync(path.join(FIX, "page.html"), "<html><head></head><body>x</body></html>");
+  fs.writeFileSync(path.join(FIX, "code.ts"), "export const x: number = 1;");
+  const ws = await watched(PAGE);
+  const referer = `http://127.0.0.1:${srv.port}${PAGE}`;
+  const first = await get(srv.port, "/examples/.tmp-reload/code.ts", { referer });   // 200 → joins
+  await get(srv.port, "/runtime/lfc/lfc.js", { referer });                            // denylisted → no
+  assert.ok(srv.hub.watchedFiles(PAGE).some(f => f.endsWith("code.ts")));
+  assert.ok(!srv.hub.watchedFiles(PAGE).some(f => f.includes("runtime")));
+  // 304 registers too: re-fetch with the validator on a SECOND page's set
+  const PAGE2 = "/examples/.tmp-reload/page2.html";
+  fs.writeFileSync(path.join(FIX, "page2.html"), "<html><head></head><body>y</body></html>");
+  const ws2 = await watched(PAGE2);
+  const etag = first.headers.etag;
+  const not = await get(srv.port, "/examples/.tmp-reload/code.ts",
+    { referer: `http://127.0.0.1:${srv.port}${PAGE2}`, "if-none-match": etag });
+  assert.equal(not.status, 304);
+  assert.ok(srv.hub.watchedFiles(PAGE2).some(f => f.endsWith("code.ts")), "304 joined the set");
+  ws.close(); ws2.close();
+});
+
+test("bootId is stable across connections to one server instance", async () => {
+  const a = wsClient(srv.port, "/api/dev-reload"); await a.ready;
+  const b = wsClient(srv.port, "/api/dev-reload"); await b.ready;
+  const ha = await a.next(), hb = await b.next();
+  assert.equal(ha.op, "hello"); assert.equal(ha.bootId, hb.bootId);
+  a.close(); b.close();
 });
 ```
 
@@ -752,7 +804,8 @@ test("reload client file serves from /startup/", async () => {
     return send(res, 200, html, { "Content-Type": "text/html;charset=utf-8", "Cache-Control": "no-cache", ETag: etag });
   }
 ```
-  - `serveWrapper`: `send(res, 200, injectHtml(r.html, reloadTagIfEnabled()), …)`.
+  - `serveWrapper`: `send(res, 200, injectHtml(r.html, reloadTagIfEnabled()), { "Content-Type": "text/html;charset=utf-8", "Cache-Control": "no-cache" });` (headers verbatim from the current `index.mjs:135`).
+  - Comment on the `-r` ETag (in code): it does not key on the reload flag — a client that cached with-reload HTML keeps its (self-quieting) reload client across a `--no-reload` restart; harmless, documented.
   - `dev-views.mjs` `sendHtml`: `res.end(injectHtml(body, reloadTagIfEnabled()))` (import both from `./dev-reload.mjs`).
 - [ ] **Step 3: Write `startup/dev-reload-client.js`:**
 
@@ -808,5 +861,5 @@ test("reload client file serves from /startup/", async () => {
 
 - [ ] **Step 1: Full suite** — `cd compiler && npm test` → green; note the count delta vs. Task 0's baseline.
 - [ ] **Step 2: Manual E2E via Playwright MCP** (the repo has no Playwright dep — this is operator verification, per plan): `node server/index.mjs 8090` in the worktree; browser to `http://localhost:8090/examples/calendar/calendar.lzx`; confirm the app renders; `echo ' ' >> examples/calendar/calendar.lzx` (whitespace append; revert after); confirm the tab reloads within ~2 s. Repeat once after visiting `/` first (SW installed) — same behavior. Revert the file (`git checkout -- examples/calendar/calendar.lzx`).
-- [ ] **Step 3: Docs** — extend the header comment of `server/index.mjs` usage line to `node server/index.mjs [port=8090] [--no-reload]`; add a short "Live reload" paragraph to `docs/` alongside the spec (one file: `docs/superpowers/specs/2026-07-06-live-reload-design.md` gains a final `**Status:** implemented — <date>` line edit at the top instead of a separate doc).
+- [ ] **Step 3: Docs** — extend the header comment of `server/index.mjs` usage line to `node server/index.mjs [port=8090] [--no-reload]`; update `docs/superpowers/specs/2026-07-06-live-reload-design.md`: `**Status:** implemented — <date>` at the top, and fix the architecture table's `explorer/service-worker.js` → `service-worker.js` (repo root — review catch).
 - [ ] **Step 4:** Commit: `docs: live reload usage + spec status`; update project memory (slice 5 done, branch state).
