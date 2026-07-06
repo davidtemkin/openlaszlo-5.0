@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
 import { parseServerArgs, createDevServer } from "../../server/index.mjs";
+import { wsClient } from "./helpers/wsclient.mjs";
 
 const get = (port, path, headers = {}) => new Promise((res, rej) => {
   http.get({ host: "127.0.0.1", port, path, headers, agent: false }, (r) => {   // agent:false — no keep-alive sockets to hang close()
@@ -23,5 +24,25 @@ test("createDevServer boots on port 0 and serves the Explorer index", async () =
     const r = await get(srv.port, "/");
     assert.equal(r.status, 200);
     assert.match(r.body, /__OL_COMPILE="server"/);
+  } finally { await srv.close(); }
+});
+
+test("dev-reload endpoint answers hello over a real socket", async () => {
+  const srv = await createDevServer({ port: 0 });
+  try {
+    const ws = wsClient(srv.port, "/api/dev-reload");
+    await ws.ready;
+    const hello = await ws.next();
+    assert.equal(hello.op, "hello");
+    assert.ok(hello.bootId);
+    ws.close();
+  } finally { await srv.close(); }
+});
+
+test("--no-reload leaves the endpoint unregistered", async () => {
+  const srv = await createDevServer({ port: 0, reload: false });
+  try {
+    const ws = wsClient(srv.port, "/api/dev-reload");
+    await assert.rejects(ws.ready);       // dispatcher destroys unclaimed paths
   } finally { await srv.close(); }
 });
