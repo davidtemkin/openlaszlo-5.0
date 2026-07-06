@@ -1,0 +1,120 @@
+<library>
+<script src="webgl-quad.js"/>
+<class name="shader" extends="view">
+    <!--- The compiled program (JSON: {glsl, uniforms, usesTime, usesMouse}), stamped by
+          the DOM-dialect compile. The type="string" annotation is LOAD-BEARING: an
+          untyped declaration would compile the stamped JSON as a raw expression and
+          JSON.parse would receive an object. Empty = compiled through a path with no
+          GLSL emission (e.g. the frozen .lzx-text path) → warn once, show bgcolor. -->
+    <attribute name="shaderprogram" type="string" value=""/>
+
+    <handler name="oninit"><![CDATA[
+        if (!this.shaderprogram) {
+            if ($debug) Debug.warn("shader %w: no compiled program (DOM-dialect apps only); showing bgcolor", this);
+            return;
+        }
+        var prog;
+        try { prog = JSON.parse(this.shaderprogram); }
+        catch (e) { if ($debug) Debug.warn("shader %w: bad program JSON: %w", this, e); return; }
+        this.$prog = prog;
+        var doc = this.sprite.__LZdiv.ownerDocument;
+        var canvas = doc.createElement('canvas');
+        canvas.style.position = 'absolute';
+        canvas.style.left = '0';
+        canvas.style.top = '0';
+        this.sprite.__LZdiv.appendChild(canvas);
+        this.$canvas = canvas;
+        var host = LzWebglQuad.init(canvas, prog.glsl);
+        if (host.error) { this.$host = null; return; }   // logged by webgl-quad; bgcolor shows
+        this.$host = host;
+        this.$plan = LzWebglQuad.uniformPlan(prog.uniforms);
+        this.$dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
+        // uniform delegates: any declared-uniform attr change re-pushes + renders
+        this.$udel = new LzDelegate(this, "$uniformsChanged");
+        for (var i = 0; i < prog.uniforms.length; i++)
+            this.$udel.register(this, "on" + prog.uniforms[i].name);
+        this.$rdel = new LzDelegate(this, "$resized");
+        this.$rdel.register(this, "onwidth");
+        this.$rdel.register(this, "onheight");
+        if (prog.usesMouse) {
+            var self = this;
+            this.$onmove = function (ev) {
+                var r = canvas.getBoundingClientRect();
+                self.$mouse = [(ev.clientX - r.left) / Math.max(1, r.width),
+                               (ev.clientY - r.top) / Math.max(1, r.height)];
+                self.$render();
+            };
+            canvas.addEventListener('pointermove', this.$onmove);
+        }
+        this.$resized();
+        this.$pushUniforms();
+        if (prog.usesTime) { this.$t0 = Date.now(); this.$tick(); }
+        else this.$render();
+    ]]></handler>
+
+    <method name="$pushUniforms"><![CDATA[
+        if (!this.$host) return;
+        var us = this.$prog.uniforms;
+        for (var i = 0; i < us.length; i++) {
+            var u = us[i], v = this[u.name];
+            this.$host.setUniform(u.name, this.$plan[u.name].kind,
+                u.glslType === 'vec3' ? LzWebglQuad.lzColorToVec3(v) : v);
+        }
+    ]]></method>
+
+    <!--- Any uniform-backing attribute changed: re-push all (few) and render. -->
+    <method name="$uniformsChanged" args="ignore=null"><![CDATA[
+        this.$pushUniforms();
+        this.$render();
+    ]]></method>
+
+    <method name="$resized" args="ignore=null"><![CDATA[
+        if (!this.$host) return;
+        this.$host.resize(this.width, this.height, this.$dpr);
+        this.$render();
+    ]]></method>
+
+    <method name="$render"><![CDATA[
+        if (!this.$host) return;
+        var gl = this.$host.gl;
+        // built-in uniforms, pushed per frame; declared uniforms go through the host
+        var sizeLoc = gl.getUniformLocation(gl.getParameter(gl.CURRENT_PROGRAM), 'size');
+        if (sizeLoc) gl.uniform2f(sizeLoc, this.width, this.height);
+        if (this.$prog.usesMouse && this.$mouse) {
+            var mLoc = gl.getUniformLocation(gl.getParameter(gl.CURRENT_PROGRAM), 'mouse');
+            if (mLoc) gl.uniform2f(mLoc, this.$mouse[0], this.$mouse[1]);
+        }
+        if (this.$prog.usesTime) {
+            var tLoc = gl.getUniformLocation(gl.getParameter(gl.CURRENT_PROGRAM), 'time');
+            if (tLoc) gl.uniform1f(tLoc, (Date.now() - this.$t0) / 1000);
+        }
+        this.$host.draw();
+    ]]></method>
+
+    <method name="$tick"><![CDATA[
+        if (!this.$host || this.$dead) return;
+        var self = this;
+        if (typeof document === 'undefined' || !document.hidden) {
+            if (this.visible) this.$render();
+        }
+        window.requestAnimationFrame(function () { self.$tick(); });
+    ]]></method>
+
+    <!--- @keywords private -->
+    <method name="destroy"><![CDATA[
+        this.$dead = true;
+        if (this.$onmove && this.$canvas) this.$canvas.removeEventListener('pointermove', this.$onmove);
+        if (this.$host) this.$host.dispose();
+        super.destroy();
+    ]]></method>
+
+    <doc>
+        <tag name="shortdesc"><text>A view whose surface is a fragment shader (WebGL1).</text></tag>
+        <text>Authored with a color() method in the shader TS dialect; declared number/color
+        attributes bind as uniforms, so constraints and setAttribute animate the shader.
+        Built-ins: uv, time, mouse, size. DOM-dialect apps only (the program is compiled
+        by glsl-gen and stamped as the shaderprogram attribute); elsewhere the view shows
+        its bgcolor with one debug warning. No WebGL → same fallback.</text>
+    </doc>
+</class>
+</library>

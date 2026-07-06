@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>OpenLaszlo — &lt;shader&gt; demo</title>
+  <style>laszlo-app{visibility:hidden;display:block;position:relative}</style>
+  <script type="module" src="../../startup/laszlo-dom.js"></script>
+</head>
+<body style="font:14px sans-serif;margin:16px">
+  <h2>&lt;shader&gt; — animated simplex noise through a palette</h2>
+  <p>Click the buttons to change <code>speed</code> — a plain <code>setAttribute</code> on a
+     declared attribute drives the uniform. (A constraint or a bus delta would too.)</p>
+  <laszlo-app width="640" height="440" bgcolor="#f7f2ee">
+    <shader name="surf" width="640" height="360" bgcolor="#404040">
+      <attribute name="speed" type="number" value="1"></attribute>
+      <attribute name="zoom" type="number" value="8"></attribute>
+      <method name="color"><script type="text/typescript">
+        let n = noise.snoise2v(uv * this.zoom + time * this.speed);
+        return pal.pal1(n * 0.5 + 0.5);
+      </script></method>
+    </shader>
+    <view name="controls" y="372" width="640" height="48">
+      <flexlayout flexdirection="row" alignitems="center" padding="8"></flexlayout>
+      <text text="speed:"></text>
+      <view width="40" height="28" bgcolor="#cccccc" margin="4">
+        <text text="−" x="15" y="4"></text>
+        <handler name="onclick"><script type="text/typescript">
+          const s = (this.parent as any).parent.surf;
+          s.setAttribute('speed', Math.max(0, s.speed - 0.5));
+        </script></handler>
+      </view>
+      <view width="40" height="28" bgcolor="#cccccc" margin="4">
+        <text text="+" x="15" y="4"></text>
+        <handler name="onclick"><script type="text/typescript">
+          const s = (this.parent as any).parent.surf;
+          s.setAttribute('speed', s.speed + 0.5);
+        </script></handler>
+      </view>
+    </view>
+  </laszlo-app>
+</body>
+</html>

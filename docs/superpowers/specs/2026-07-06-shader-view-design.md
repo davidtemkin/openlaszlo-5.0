@@ -4,7 +4,16 @@
 pre-pass replaces diagnostic suppression, the signature table is scoped to
 include GLSL intrinsics and constructor rules, the client-program gate is
 body-only, the emission seam names its parity cost)
-**Status:** Approved design, pre-implementation
+**Status:** Implemented — 2026-07-06 (branch dom-authoring-slice7; 157 tests green
+incl. hero canary end-to-end, 12-case validation battery, curated-port
+transpiles-finding-free). Deviations: routing needed ZERO compile.ts changes
+(domsource strips carriers + stamps a JSON shaderprogram attribute; glslGen
+injected like transpileTs via a new lzts-entry bundle entry); helper params
+typed inline in args="p: vec2" + returns= attr; shaderlib deferred bits:
+cell3w, math macro-constants (documented in port headers); signature-table
+docs consumer deferred. Browser conformance pass = user opens
+examples/dom-authoring/shader-validate.html (ALL PASS expected) + the demo —
+no browser automation available in the implementing environment.
 **Builds on:** Slices 1–4. Shader bodies check in their own
 `ts.createProgram` — the same isolation the bus spec establishes for server
 bodies (realtime-bus spec, "Checker integration": a separate *program*, not
