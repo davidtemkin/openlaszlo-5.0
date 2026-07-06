@@ -1,0 +1,9 @@
+<laszlo-app width="400" height="300">
+  <shader width="400" height="300">
+    <attribute name="speed" type="number" value="1"></attribute>
+    <method name="color"><script type="text/typescript">
+      let n = noise.snoise2v(uv * 8.0 + time * this.speed);
+      return pal.pal1(n);
+    </script></method>
+  </shader>
+</laszlo-app>

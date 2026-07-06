@@ -25,6 +25,13 @@ export interface ServerTagModel {
   handlers: ServerBody[];   // includes oninit and on<attr> handlers
   table?: string;           // table-backed (supabase 3c)
 }
+export interface ShaderProgramModel {
+  label: string;            // for finding elements
+  line: number;
+  uniforms: Array<{ name: string; lzType: "number" | "color" }>;
+  color: { code: string; srcLine: number } | null;
+  helpers: Array<{ name: string; params: { name: string; type: string }[]; ret: string; code: string; srcLine: number }>;
+}
 export interface ConstraintInfo {
   expr: string;           // the inner expression of ${…} / $once{…} / …
   line: number;           // the attribute's source line
@@ -41,6 +48,7 @@ export interface AppModel {
   nameIssues: NameIssue[]; // invalid TS identifiers — excluded from emission, reported as findings
   staticIssues: NameIssue[]; // markup-literal + cross-reference findings
   serverTags: ServerTagModel[]; // the <server> section (realtime bus)
+  shaderPrograms: ShaderProgramModel[]; // <shader> tags (typed GPU leaf view)
   serverTransport: { mode: "node" | "supabase"; url?: string; key?: string };
 }
 export interface ExtractOptions {
@@ -116,7 +124,7 @@ const textOf = (el: HtmlElem): { code: string; line: number } => {
 
 export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel {
   const model: AppModel = { classes: [], instances: [], bodies: [], constraints: [],
-    skippedLzs: 0, nameIssues: [], staticIssues: [], serverTags: [],
+    skippedLzs: 0, nameIssues: [], staticIssues: [], serverTags: [], shaderPrograms: [],
     serverTransport: { mode: "node" } };
   const seenIds = new Set<string>();
   const userClasses = new Map<string, AppClassModel>();
@@ -352,6 +360,25 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
     for (const f of registryFindings(el.tagName.toLowerCase(), true, litAttrs))
       model.staticIssues.push(f);
 
+    // <shader> tags: method bodies are GLSL dialect, NOT client TS — they route to
+    // model.shaderPrograms (raw, like walkServer's bodies) and are checked in the
+    // shader program. The tag itself stays a FULL instance (attrs, id/name, constraint
+    // checking on its markup attributes) — a NON_INSTANCE-style prune would silently
+    // uncheck the tag's own ${…} constraints.
+    const isShader = tag === "shader";
+    const shaderProg: ShaderProgramModel | null = isShader ? {
+      label: desc, line: el.line,
+      uniforms: inst.attrs
+        .filter((a) => a.declKind === "number" || a.declKind === "color")
+        .map((a) => ({ name: a.name, lzType: a.declKind as "number" | "color" })),
+      color: null, helpers: [],
+    } : null;
+    if (shaderProg) model.shaderPrograms.push(shaderProg);
+    const shaderRawBody = (mEl: HtmlElem): { code: string; line: number } => {
+      const carrier = elemChildren(mEl).find((cc) => cc.tagName === "SCRIPT");
+      return textOf(carrier ?? mEl);
+    };
+
     const childSiblings = new Set<string>();
     for (const c of elemChildren(el)) {
       const t = c.tagName.toLowerCase();
@@ -362,6 +389,18 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
       }
       if (t === "class" || t === "interface" || t === "mixin") { walkClass(c); continue; }
       if (t === "dataset") continue; // data, not code
+      if (t === "method" && shaderProg) {
+        const mn = c.getAttribute("name") ?? "";
+        const { code, line } = shaderRawBody(c);
+        if (mn === "color") shaderProg.color = { code, srcLine: line };
+        else {
+          // helper params: `args="p: vec2, k: float"` (type defaults float); `returns="vec4"`
+          const params = (c.getAttribute("args") ?? "").split(",").map((s) => s.trim()).filter(Boolean)
+            .map((s) => { const [n, ty] = s.split(":").map((x) => x.trim()); return { name: n, type: ty || "float" }; });
+          shaderProg.helpers.push({ name: mn, params, ret: c.getAttribute("returns") ?? "float", code, srcLine: line });
+        }
+        continue;   // NOT collectBody: shader bodies never join the client program
+      }
       if (t === "method") {
         const args = (c.getAttribute("args") ?? "").split(/[\s,]+/).filter(Boolean);
         // instance methods surface on the instance type via methodSigs-like attr

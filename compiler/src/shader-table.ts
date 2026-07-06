@@ -122,6 +122,7 @@ const TS_OF: Record<string, string> = {
   float: "number", int: "number", bool: "boolean",
   vec2: "vec2", vec3: "vec3", vec4: "vec4", bvec2: "bvec2", bvec3: "bvec3", bvec4: "bvec4", void: "void",
 };
+export const tsNameOf = (t: string): string => TS_OF[t] ?? t;
 const tsOf = (t: ShaderType): string => TS_OF[t];
 
 function* swizzleCombos(n: number): Generator<string> {
