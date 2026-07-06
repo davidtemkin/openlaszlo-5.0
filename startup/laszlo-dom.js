@@ -74,6 +74,18 @@ async function boot(host) {
     host.replaceChildren(...app.childNodes);
   }
 
+  // Realtime bus: extract <server> declarations before cleanup() removes the
+  // live section (spec: 2026-07-06-realtime-bus-design.md). NOTE: the
+  // querySelector below also matches carriers inside <server> — harmless,
+  // do NOT "fix" it (domToXmlElem skips the subtree, so nothing server-side
+  // is transpiled client-side).
+  let busDecls = null;
+  const serverEl = [...host.children].find((c) => c.tagName === "SERVER");
+  if (serverEl) {
+    const busMod = await import(new URL("lz-bus.js", HERE).href);
+    busDecls = { decls: busMod.extractServerDecls(serverEl), mod: busMod };
+  }
+
   // TS transpile, lazy-loaded only when the app has code to transpile.
   let transpileTs;
   if (host.querySelector("method,handler,setter,script")) {
@@ -102,7 +114,8 @@ async function boot(host) {
   // Assemble: adoption patch + app JS in ONE script. lz.embed loads the LFC
   // first, then this blob — so the patch installs before any view constructs.
   const patch = await (await fetch(new URL("lz-adopt-patch.js", HERE))).text();
-  const appUrl = URL.createObjectURL(new Blob([patch, "\n", r.js], { type: "text/javascript" }));
+  const prelude = busDecls ? busDecls.mod.busPrelude(busDecls.decls) : "";
+  const appUrl = URL.createObjectURL(new Blob([prelude, patch, "\n", r.js], { type: "text/javascript" }));
 
   if (typeof window.lz === "undefined" || !window.lz.embed) {
     await loadScript(RUNTIME + "/embed.js");
@@ -144,6 +157,7 @@ async function boot(host) {
   window.lz.embed.applications.lzapp.onload = function () {
     host.style.visibility = "visible";
   };
+  if (busDecls) busDecls.mod.connectBus(location.pathname);
 }
 
 // embed.js hard-caps ONE DHTML app per window (dhtmlapploaded guard), so boot
