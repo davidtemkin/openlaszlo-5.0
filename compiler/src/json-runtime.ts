@@ -81,8 +81,101 @@ export class JsonRegistry {
   }
 }
 
+/** Implicit replication over a JSON-dialect datapath (spec "Replication").
+ *  Diverted child specs never reach the LFC's XPath machinery. */
+export class ReplicationManager {
+  clones: any[] = [];
+  private parsed: ParsedPath | null = null;
+  private ds: JsonDataset | null = null;
+  private refreshCb = () => this.refresh();
+  constructor(
+    private reg: JsonRegistry, private host: RuntimeHost,
+    private parent: any, private spec: any, private path: string,
+    private origMake: (e: any, async?: any) => any,
+  ) {
+    try { this.parsed = parsePath(path); }
+    catch (e) { host.warn(`jsondatapath "${path}": ${(e as JsonPathError).message}`); return; }
+    if (this.parsed.dataset != null) {
+      if (!reg.get(this.parsed.dataset))
+        host.warn(`jsondatapath "${path}": unknown dataset "$${this.parsed.dataset}" (binds when registered)`);
+      reg.whenRegistered(this.parsed.dataset, (ds) => { this.ds = ds; ds.onData(this.refreshCb); this.refresh(); });
+    } else {
+      this.refresh(); // relative: context datum is already constructed on an ancestor
+      // relative rebinds arrive as full re-replication of the ancestor (destroy/recreate)
+    }
+  }
+  private contextValue(): unknown {
+    if (this.parsed!.dataset != null) return this.ds ? this.ds.data : null;
+    for (let n = this.parent; n; n = n.immediateparent) if (n.data != null) return n.data;
+    return null;
+  }
+  private matches(): unknown[] {
+    const filterFn = this.parsed!.filter ? this.filterFn() : undefined; // Task 11
+    return evaluatePath(this.contextValue(), this.parsed!, filterFn);
+  }
+  private filterFn(): ((obj: unknown, accum: unknown[]) => unknown[]) | undefined {
+    return undefined; // Task 11
+  }
+  refresh(): void {
+    if (this.parent.__LZdeleted) { if (this.ds) this.ds.offData(this.refreshCb); return; }
+    const m = this.sorted(this.matches()); // sorted() is identity until Task 11
+    const pooling = this.spec.attrs?.pooling === true || this.spec.attrs?.pooling === "true";
+    if (!pooling) {
+      for (const c of this.clones) if (!c.__LZdeleted) c.destroy();
+      this.clones = [];
+      this.create(m, 0);
+    } else {
+      const live = this.clones.filter((c) => !c.__LZdeleted);
+      const reuse = Math.min(live.length, m.length);
+      for (let i = 0; i < reuse; i++) {
+        if (live[i].visible === false) live[i].setAttribute("visible", true);
+        live[i].setAttribute("clonenumber", i);
+        live[i].setAttribute("data", m[i]);
+      }
+      for (let i = m.length; i < live.length; i++) live[i].setAttribute("visible", false);
+      this.clones = live;
+      if (m.length > live.length) this.create(m.slice(live.length), live.length);
+    }
+    const ev = this.parent.onclones;
+    if (ev && typeof ev.sendEvent === "function") ev.sendEvent(this.clones);
+  }
+  private create(datums: unknown[], base: number): void {
+    for (let i = 0; i < datums.length; i++) {
+      const datum = datums[i];
+      if (isLzDataNode(datum)) { this.host.warn(`jsondatapath "${this.path}": LzDataElement datum refused (use the bridge one-way)`); continue; }
+      const attrs = { ...this.spec.attrs, data: datum, clonenumber: base + i, cloneManager: this };
+      delete attrs.jsondatapath;
+      // No async arg: __LZisnew=true → the clone's own subtree instantiates
+      // synchronously (createImmediate / syncNew). makeChild RETURNS the node —
+      // that return value IS the clone tracking (the LFC's default path is
+      // idle-queued, so scanning subnodes after the fact finds nothing).
+      const node = this.origMake.call(this.parent, { ...this.spec, attrs });
+      if (node) this.clones.push(node);
+    }
+  }
+  private sorted(m: unknown[]): unknown[] { return m; } // Task 11
+}
+
+/** Duck-check for LFC data nodes (LzDataElement/LzDataText) without importing
+ *  the LFC: the $lzc$set_data setter would instantiate a classic LzDatapath on
+ *  anything that IS one — the guard keeps that branch unreachable. */
+function isLzDataNode(v: unknown): boolean {
+  return !!v && typeof v === "object" &&
+    typeof (v as any).appendChild === "function" && "ownerDocument" in (v as any);
+}
+
 export function installJsonRuntime(host: RuntimeHost): JsonRegistry {
   const reg = new JsonRegistry(host);
-  // Task 6 wraps host.lzNodeProto.makeChild here.
+  // makeChild is the LFC's universal instantiation funnel (LzInstantiator calls
+  // parent.makeChild(spec, true) for every queued spec at every level,
+  // including canvas children). Wrapping createChildren would miss canvas-level
+  // bound views entirely and could not track idle-queued clones.
+  const orig = host.lzNodeProto.makeChild;
+  host.lzNodeProto.makeChild = function (e: any, async?: any) {
+    if (this.__LZdeleted) return orig.call(this, e, async); // mirror the LFC's early-out
+    const p = e && e.attrs && e.attrs.jsondatapath;
+    if (typeof p === "string") { new ReplicationManager(reg, host, this, e, p, orig); return null; }
+    return orig.call(this, e, async);
+  };
   return reg;
 }

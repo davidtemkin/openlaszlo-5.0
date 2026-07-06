@@ -46,6 +46,127 @@ test("whenRegistered: fires immediately when present, later on register", () => 
   assert.deepEqual(order, ["now", "later"]);
 });
 
+// ── replication harness: a minimal LzNode-ish fake that MODELS THE QUEUE ──
+// The real LFC idle-queues instantiation: createChildren enqueues; the
+// instantiator later calls parent.makeChild(spec, true) per spec; makeChild
+// constructs synchronously and RETURNS the node. Mirroring that here pins the
+// contract the runtime actually relies on — a synchronous fake would pass with
+// broken scan-based tracking.
+export function makeFakeLfc() {
+  const queue = [];
+  const proto = {
+    makeChild(e, _async) {
+      const node = { __proto__: proto, __LZdeleted: false, destroyed: false, subnodes: [], immediateparent: this };
+      for (const [k, v] of Object.entries(e.attrs ?? {})) node[k] = v;
+      node.setAttribute = function (n, v) { this[n] = v; (this.sets ??= []).push([n, v]); };
+      node.destroy = function () { this.destroyed = true; this.__LZdeleted = true; this.immediateparent.subnodes = this.immediateparent.subnodes.filter((s) => s !== this); };
+      this.subnodes.push(node);
+      for (const c of e.children ?? []) node.makeChild(c, true); // subtree: same funnel, sync (createImmediate-like)
+      return node;
+    },
+    createChildren(carr) { for (const spec of carr ?? []) queue.push([this, spec]); }, // idle-queued
+  };
+  const root = { __proto__: proto, __LZdeleted: false, subnodes: [], immediateparent: null };
+  root.setAttribute = function (n, v) { this[n] = v; };
+  const drain = () => { while (queue.length) { const [parent, spec] = queue.shift(); parent.makeChild(spec, true); } };
+  return { proto, root, drain };
+}
+
+test("replication: nothing before the queue drains; N tracked clones after (makeChild return values)", () => {
+  const { proto, root, drain } = makeFakeLfc();
+  const host = makeHost({ lzNodeProto: proto });
+  const jd = installJsonRuntime(host);
+  jd.register("b", { json: { bicycle: [{ color: "red" }, { color: "green" }] } });
+  root.createChildren([{ class: "view", attrs: { jsondatapath: "$b/bicycle[*]", height: 20 } }]);
+  assert.equal(root.subnodes.length, 0);          // queued, not instantiated — the real-LFC contract
+  drain();
+  assert.equal(root.subnodes.length, 2);
+  assert.equal(root.subnodes[0].cloneManager.clones.length, 2); // tracked via return values, no scan
+  assert.deepEqual(root.subnodes.map((n) => n.data.color), ["red", "green"]);
+  assert.deepEqual(root.subnodes.map((n) => n.clonenumber), [0, 1]);
+  assert.equal(root.subnodes[0].jsondatapath, undefined);
+  assert.equal(root.subnodes[0].height, 20);
+});
+
+test("canvas-level bound view: diverted at makeChild directly (the LzInstantiator call shape)", () => {
+  const { proto, root } = makeFakeLfc();
+  const jd = installJsonRuntime(makeHost({ lzNodeProto: proto }));
+  jd.register("b", { json: { l: ["x", "y"] } });
+  const ret = root.makeChild({ class: "view", attrs: { jsondatapath: "$b/l[*]" } }, true);
+  assert.equal(ret, null);                        // diverted spec constructs no view itself
+  assert.equal(root.subnodes.length, 2);          // …but its clones do, synchronously via origMakeChild
+  assert.deepEqual(root.subnodes.map((n) => n.data), ["x", "y"]);
+});
+
+test("reconcile default: destroy + recreate on ondata; zero matches → zero clones", () => {
+  const { proto, root, drain } = makeFakeLfc();
+  const jd = installJsonRuntime(makeHost({ lzNodeProto: proto }));
+  const ds = jd.register("b", { json: { l: [1, 2, 3] } });
+  root.createChildren([{ class: "view", attrs: { jsondatapath: "$b/l[*]" } }]);
+  drain();
+  const first = [...root.subnodes];
+  ds.setData({ l: [7] });
+  assert.ok(first.every((n) => n.destroyed));
+  assert.equal(root.subnodes.length, 1);
+  assert.equal(root.subnodes[0].data, 7);
+  ds.setData({ l: [] });
+  assert.equal(root.subnodes.length, 0);
+});
+
+test("reconcile pooling=true: reuse by index, hide surplus, grow shortfall", () => {
+  const { proto, root, drain } = makeFakeLfc();
+  const jd = installJsonRuntime(makeHost({ lzNodeProto: proto }));
+  const ds = jd.register("b", { json: { l: ["a", "b", "c"] } });
+  root.createChildren([{ class: "view", attrs: { jsondatapath: "$b/l[*]", pooling: true } }]);
+  drain();
+  const first = [...root.subnodes];
+  ds.setData({ l: ["x"] });
+  assert.equal(first[0].destroyed, false);
+  assert.equal(first[0].data, "x");
+  assert.equal(first[1].visible, false);          // hidden, not destroyed
+  ds.setData({ l: ["p", "q", "r", "s"] });
+  assert.equal(root.subnodes.filter((n) => n.visible !== false).length, 4);
+  assert.equal(first[1].visible, true);            // resurrected from the pool
+});
+
+test("relative path binds against nearest ancestor datum (nested replication)", () => {
+  const { proto, root, drain } = makeFakeLfc();
+  const jd = installJsonRuntime(makeHost({ lzNodeProto: proto }));
+  jd.register("g", { json: { genres: [{ name: "jazz", sub: ["cool", "free"] }] } });
+  root.createChildren([{ class: "view", attrs: { jsondatapath: "$g/genres[*]" },
+    children: [{ class: "view", attrs: { jsondatapath: "/sub[*]" } }] }]);
+  drain();
+  const outer = root.subnodes[0];
+  assert.deepEqual(outer.subnodes.map((n) => n.data), ["cool", "free"]);
+});
+
+test("single non-fanout match binds one view; unknown dataset warns then binds on register", () => {
+  const { proto, root, drain } = makeFakeLfc();
+  const host = makeHost({ lzNodeProto: proto });
+  const jd = installJsonRuntime(host);
+  root.createChildren([{ class: "view", attrs: { jsondatapath: "$late/title" } }]);
+  drain();
+  assert.equal(root.subnodes.length, 0);
+  assert.equal(host.warnings.length, 1);
+  jd.register("late", { json: { title: "hi" } });
+  assert.equal(root.subnodes.length, 1);
+  assert.equal(root.subnodes[0].data, "hi");
+});
+
+test("onclones fires on the parent when an event exists; destroyed parent unbinds", () => {
+  const { proto, root, drain } = makeFakeLfc();
+  const jd = installJsonRuntime(makeHost({ lzNodeProto: proto }));
+  const ds = jd.register("b", { json: { l: [1] } });
+  const clonesSeen = [];
+  root.onclones = { sendEvent: (c) => clonesSeen.push(c.length) };
+  root.createChildren([{ class: "view", attrs: { jsondatapath: "$b/l[*]" } }]);
+  drain();
+  assert.deepEqual(clonesSeen, [1]);
+  root.__LZdeleted = true;
+  ds.setData({ l: [1, 2] });
+  assert.deepEqual(clonesSeen, [1]);              // no refresh after parent death
+});
+
 test("fetch source: ok sets data; failure fires onError", async () => {
   const okHost = makeHost({ fetchFn: async () => ({ ok: true, status: 200, json: async () => ({ v: 42 }) }) });
   const ds = installJsonRuntime(okHost).register("a", { src: "./a.json" });
