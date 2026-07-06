@@ -6,6 +6,7 @@
 // minimal structural DOM interface (DomElementLike) so it runs against the real
 // browser DOM and against the test fake alike — no lib.dom dependency.
 import { parseXml } from "./xml.js";
+import { isJsonAbsolutePath } from "./json-path.js";
 export class DomDialectError extends Error {
 }
 const ELEMENT = 1, TEXT = 3, CDATA = 4, COMMENT = 8;
@@ -73,8 +74,18 @@ function transpile(ctx, code, owner) {
     }
 }
 /** A <script> child of `parentName`. Returns the node(s) grafted into the parent. */
-function scriptNodes(el, parentName, ctx) {
+function scriptNodes(el, parentName, ctx, parentIsJsonDataset) {
     const type = (el.getAttribute("type") ?? "").trim().toLowerCase();
+    if (type === "application/json") {
+        if (!parentIsJsonDataset)
+            throw new DomDialectError('<script type="application/json"> is only valid inside <dataset type="json">');
+        return [{ type: "text", value: textContentOf(el), cdata: false }];
+    }
+    if (type === "application/lz-shape") {
+        if (!parentIsJsonDataset)
+            throw new DomDialectError('<script type="application/lz-shape"> is only valid inside <dataset type="json">');
+        return []; // checker-only (lzx-check reads it from the HTML directly); dropped from the compile
+    }
     if (type === "application/xml") {
         if (parentName !== "dataset")
             throw new DomDialectError('<script type="application/xml"> is only valid inside <dataset>');
@@ -121,14 +132,39 @@ function walkElem(el, ctx, isRoot) {
             attrs[a.name] = normAttr(a.value);
         }
     }
-    const childCtx = ctx.inTemplate || !NO_STAMP_SUBTREE.has(name)
-        ? { ...ctx, inTemplate: ctx.inTemplate }
-        : { ...ctx, inTemplate: true };
+    // JSON databinding (spec 2026-07-06-json-databinding-design.md): decide the
+    // datapath dialect STATICALLY and rename json ones to `jsondatapath` so the
+    // LFC's XPath machinery never sees them. Classification: $name-absolute, or
+    // /relative under a JSON-bound ancestor. A ${…} constraint is never json.
+    let boundKind = null;
+    const dp = attrs["datapath"];
+    if (dp != null) {
+        if (isJsonAbsolutePath(dp) || (dp.startsWith("/") && ctx.jsonBound)) {
+            // LzState applies its children via makeChild and calls .destroy() on the
+            // return value with no null guard (LzState.lzs:280,329-341) — a diverted
+            // spec would crash state removal. Refuse statically.
+            if (ctx.inState)
+                throw new DomDialectError("a JSON datapath inside <state> is not supported (state children cannot be replication templates)");
+            boundKind = "json";
+            attrs["jsondatapath"] = dp;
+            delete attrs["datapath"];
+            attrOrder[attrOrder.indexOf("datapath")] = "jsondatapath";
+        }
+        else if (!/^\s*\$\w*\{/.test(dp))
+            boundKind = "xpath";
+    }
+    const enterTemplate = !ctx.inTemplate && (NO_STAMP_SUBTREE.has(name) || boundKind === "json");
+    const childCtx = {
+        ...ctx,
+        inTemplate: ctx.inTemplate || enterTemplate,
+        jsonBound: boundKind ? boundKind === "json" : ctx.jsonBound,
+        inState: ctx.inState || name === "state",
+    };
     // Adopt-id stamping (spec Seam 1) — allocated BEFORE the child walk so ids
     // run in DOCUMENT order (parent before children; the contract the stamping
     // tests and the runtime patch pin). Root (canvas) is never adopted.
     let adoptId = null;
-    if (ctx.opts.domAdopt && !isRoot && !ctx.inTemplate && !NO_STAMP_TAGS.has(name)) {
+    if (ctx.opts.domAdopt && !isRoot && !ctx.inTemplate && boundKind !== "json" && !NO_STAMP_TAGS.has(name)) {
         adoptId = String(ctx.counter.n++);
         el.setAttribute("data-lz-adopt", adoptId);
     }
@@ -159,8 +195,11 @@ function walkElem(el, ctx, isRoot) {
             sawServer = true;
             continue;
         }
+        if ((localName(ce) === "dataset" || localName(ce) === "lz-dataset") &&
+            ce.getAttribute("type") === "json" && !isRoot)
+            throw new DomDialectError('<dataset type="json"> must be a direct child of <laszlo-app>');
         if (localName(ce) === "script") {
-            children.push(...scriptNodes(ce, name, childCtx));
+            children.push(...scriptNodes(ce, name, childCtx, name === "dataset" && attrs["type"] === "json"));
             if (isCodeParent)
                 sawCarrier = true;
             continue;
@@ -193,5 +232,5 @@ function walkElem(el, ctx, isRoot) {
 }
 /** DOM subtree → XmlElem tree (the DOM dialect's parseXml). */
 export function domToXmlElem(root, opts = {}) {
-    return walkElem(root, { opts, counter: { n: 1 }, inTemplate: false }, true);
+    return walkElem(root, { opts, counter: { n: 1 }, inTemplate: false, jsonBound: false, inState: false }, true);
 }
