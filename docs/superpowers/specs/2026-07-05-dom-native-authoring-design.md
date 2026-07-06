@@ -420,7 +420,16 @@ bundle (`compiler/lzc-browser.js`) directly.
 - In-browser type-diagnostics overlay (`lzx-check` is dev-time CLI first).
 - `${…}` constraint-expression checking (blocked on `with(this)` scoping —
   see "App-aware type checking" layer 3).
-- Typed `lz.*` services and event/delegate shapes (`any` in Slice 2).
+- **LFC-derived typing (planned Slice 3).** Typed `lz.*` services and full
+  class method/property signatures ARE derivable — not from the schema, but
+  from the LFC source via the compiler's own ES4 parser: `sc.ts:603`
+  `classDecl()` already builds `{name, sup, mixins, members}` with `:Type`
+  annotations for every LFC class, and services are plain assignments
+  (`lz.Focus = LzFocusService.LzFocus`, LzFocus.lzs:427). Slice 3 = a
+  read-only AST walk exported from `sc.ts`, visibility filtering
+  (`__LZ*`/`$lzc$*`/`@access private`), and a swap of the `lfc.d.ts`
+  generator's guts — the checker architecture is unchanged. Until then,
+  `lz.*` and event/delegate shapes are `any`.
 - **Debug/backtrace/profile source-line parity for DOM-authored apps.** A
   live DOM has no source text lines; DOM-path apps target the production
   build. They still *run* under `?debug` — they just lack exact source-line
