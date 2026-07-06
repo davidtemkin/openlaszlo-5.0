@@ -167,6 +167,41 @@ test("onclones fires on the parent when an event exists; destroyed parent unbind
   assert.deepEqual(clonesSeen, [1]);              // no refresh after parent death
 });
 
+// ── filter + sort (Task 11) ────────────────────────────────────────────────
+
+test("[@] filter: parent-hosted filterfunction accumulates (dreem signature)", () => {
+  const { proto, root, drain } = makeFakeLfc();
+  const jd = installJsonRuntime(makeHost({ lzNodeProto: proto }));
+  jd.register("b", { json: { bicycle: [
+    { color: "red", price: 19.95 }, { color: "green", price: 29.95 }, { color: "blue", price: 59.95 } ] } });
+  root.filterfunction = function (obj, accum) { if (obj.price > 20) accum.unshift(obj.color); return accum; };
+  root.createChildren([{ class: "view", attrs: { jsondatapath: "$b/bicycle[*][@]" } }]);
+  drain();
+  assert.deepEqual(root.subnodes.map((n) => n.data), ["blue", "green"]);
+});
+
+test("[@] without a parent filterfunction warns and yields zero clones", () => {
+  const { proto, root, drain } = makeFakeLfc();
+  const host = makeHost({ lzNodeProto: proto });
+  const jd = installJsonRuntime(host);
+  jd.register("b", { json: { l: [1, 2] } });
+  root.createChildren([{ class: "view", attrs: { jsondatapath: "$b/l[*][@]" } }]);
+  drain();
+  assert.equal(root.subnodes.length, 0);
+  assert.ok(host.warnings.some((w) => /filterfunction/.test(w)));
+});
+
+test("sortfield/sortasc: numeric sort, descending", () => {
+  const { proto, root, drain } = makeFakeLfc();
+  const jd = installJsonRuntime(makeHost({ lzNodeProto: proto }));
+  jd.register("b", { json: { bicycle: [
+    { color: "green", price: 29.95 }, { color: "red", price: 9.95 }, { color: "blue", price: 59.95 } ] } });
+  root.createChildren([{ class: "view",
+    attrs: { jsondatapath: "$b/bicycle[*]", sortfield: "price", sortasc: "false" } }]);
+  drain();
+  assert.deepEqual(root.subnodes.map((n) => n.data.color), ["blue", "green", "red"]);
+});
+
 // ── live (WebSocket) source ────────────────────────────────────────────────
 
 function makeSocketRig() {

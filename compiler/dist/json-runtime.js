@@ -181,7 +181,14 @@ export class ReplicationManager {
         return evaluatePath(this.contextValue(), this.parsed, filterFn);
     }
     filterFn() {
-        return undefined; // Task 11
+        // [@] invokes filterfunction on the PARENT of the bound view (spec rev 4:
+        // the bound view is a template — no instance exists before replication).
+        const f = this.parent.filterfunction;
+        if (typeof f !== "function") {
+            this.host.warn(`jsondatapath "${this.path}": [@] but no filterfunction on the parent — zero matches`);
+            return () => [];
+        }
+        return (obj, accum) => f.call(this.parent, obj, accum);
     }
     refresh() {
         if (this.parent.__LZdeleted) {
@@ -235,7 +242,18 @@ export class ReplicationManager {
                 this.clones.push(node);
         }
     }
-    sorted(m) { return m; } // Task 11
+    sorted(m) {
+        const field = this.spec.attrs?.sortfield;
+        if (typeof field !== "string" || field === "")
+            return m;
+        const asc = !(this.spec.attrs?.sortasc === false || this.spec.attrs?.sortasc === "false");
+        const key = (d) => (d == null ? undefined : d[field]);
+        return [...m].sort((a, b) => {
+            const ka = key(a), kb = key(b);
+            const c = typeof ka === "number" && typeof kb === "number" ? ka - kb : String(ka).localeCompare(String(kb));
+            return asc ? c : -c;
+        });
+    }
 }
 /** Duck-check for LFC data nodes (LzDataElement/LzDataText) without importing
  *  the LFC: the $lzc$set_data setter would instantiate a classic LzDatapath on
