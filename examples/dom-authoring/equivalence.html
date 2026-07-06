@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>DOM ↔ XML-text equivalence</title></head>
+<body style="font:13px monospace">
+<h2>DOM/text equivalence corpus (spec Testing #1)</h2>
+<div id="out">running…</div>
+<script type="module">
+import { domToXmlElem, parseXml } from "../../compiler/lzc-browser.js";
+
+// Strip the contract's excluded fields: source positions + cdata (spec Seam 1).
+function strip(n) {
+  if (n.type === "elem") {
+    delete n.line; delete n.endLine; delete n.endCol; delete n.closeLine;
+    delete n.attrLines; delete n.origin;
+    n.children.forEach(strip);
+  } else { delete n.line; delete n.cdata; }
+  return n;
+}
+
+// Each case: the SAME app in both dialects. Code uses text/lzs carriers so no
+// transpile is involved (transpile equivalence is ts-carrier.test.mjs's job).
+// Whitespace is written identically on both sides — the contract compares
+// text nodes verbatim.
+const CASES = [
+  {
+    name: "basic tree + attrs",
+    html: '<laszlo-app width="100" height="50"><view x="1" bgcolor="#ff0000"><view width="10"></view></view></laszlo-app>',
+    lzx: '<canvas width="100" height="50"><view x="1" bgcolor="#ff0000"><view width="10"></view></view></canvas>',
+  },
+  {
+    name: "lz- prefixed colliding tags",
+    html: '<laszlo-app><lz-image src="a.png"></lz-image></laszlo-app>',
+    lzx: '<canvas><image src="a.png"></image></canvas>',
+  },
+  {
+    name: "multi-line attribute value normalizes",
+    html: '<laszlo-app><view onclick="a=1;\n\tb=2;"></view></laszlo-app>',
+    lzx: '<canvas><view onclick="a=1;\n\tb=2;"></view></canvas>',
+  },
+  {
+    name: "method body via lzs carrier == XML text body",
+    html: '<laszlo-app><method name="f" args="n"><script type="text/lzs">return n*2;<\/script></method></laszlo-app>',
+    lzx: '<canvas><method name="f" args="n">return n*2;</method></canvas>',
+  },
+  {
+    // NOTE the asymmetry, which is the dialect's whole point: HTML <script> is
+    // RAW TEXT (no entity decoding — && stays &&), while the XML side must
+    // escape it as &amp;&amp; (which parseXml decodes back to &&).
+    name: "top-level script carrier == <script> (raw text vs XML escaping)",
+    html: '<laszlo-app><script type="text/lzs">var a = 1 && 2;<\/script></laszlo-app>',
+    lzx: '<canvas><script>var a = 1 &amp;&amp; 2;<\/script></canvas>',
+  },
+  {
+    name: "dataset xml carrier == inline dataset XML",
+    html: '<laszlo-app><dataset name="d"><script type="application/xml"><items><item x="1"></item></items><\/script></dataset></laszlo-app>',
+    lzx: '<canvas><dataset name="d"><items><item x="1"></item></items></dataset></canvas>',
+  },
+  {
+    name: "core entities in text",
+    html: '<laszlo-app><view><text>a &amp; b &lt; c</text></view></laszlo-app>',
+    lzx: '<canvas><view><text>a &amp; b &lt; c</text></view></canvas>',
+  },
+];
+
+const out = document.getElementById("out");
+out.textContent = "";
+let fails = 0;
+for (const c of CASES) {
+  let line;
+  try {
+    const dom = new DOMParser().parseFromString(c.html, "text/html").querySelector("laszlo-app");
+    const a = JSON.stringify(strip(domToXmlElem(dom)));
+    const b = JSON.stringify(strip(parseXml(c.lzx)));
+    const ok = a === b;
+    if (!ok) fails++;
+    line = (ok ? "PASS  " : "FAIL  ") + c.name + (ok ? "" : "\n  dom: " + a + "\n  xml: " + b);
+  } catch (e) {
+    fails++;
+    line = "ERROR " + c.name + ": " + e.message;
+  }
+  const div = document.createElement("div");
+  div.textContent = line;
+  div.style.color = line.startsWith("PASS") ? "#080" : "#a00";
+  out.appendChild(div);
+}
+const sum = document.createElement("h3");
+sum.id = "summary";
+sum.textContent = fails === 0 ? "ALL PASS (" + CASES.length + ")" : fails + " FAILURES";
+out.appendChild(sum);
+</script>
+</body>
+</html>
