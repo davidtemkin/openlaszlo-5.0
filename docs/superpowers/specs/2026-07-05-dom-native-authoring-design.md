@@ -216,14 +216,25 @@ in this repo.
 
 ### App-aware type checking (Slice 2, non-blocking)
 
-Three generated layers, then a checker harness:
+Slice 2 validates **the whole authored surface**: TS bodies, markup
+attribute literals, cross-references, `${…}` constraint expressions — for
+both the DOM dialect and (markup/constraints/refs only) existing `.lzx`
+apps. Three generated layers, then a checker harness:
 
-1. **`lfc.d.ts`** — generated from the compiler's oracle schema
-   (`schema-types.ts`: class lineage, attribute types, event *names* —
-   events typed `any`) plus a small hand-curated method core verified
-   against `runtime/lfc-src` (`setAttribute`/`destroy`/`animate`; view:
-   `bringToFront`/`sendToBack`/`setSource`), and the `canvas` global.
-   Delegate shapes and `lz.*` typing are `any` in Slice 2 (follow-up).
+1. **`lfc.d.ts`** — generated from TWO sources. (a) The oracle schema
+   (`schema-types.ts`: class lineage, attribute types, event names).
+   (b) **The LFC source itself, via the compiler's own ES4 parser**: a
+   read-only `parseLibraryAst` export from `sc.ts` (the `classDecl` AST +
+   `#include` expansion `compileLibraryProgram` already has), with `:Type`
+   annotations **captured into optional AST fields** (today the parser
+   erases them; capture is additive — emission never reads the new fields,
+   proven by the byte-diff guard). From (b): every LFC class's method
+   signatures and typed vars (visibility-filtered: `__*`/`$*` skipped),
+   and the `lz.*` service namespace (extracted from the LFC's literal
+   `lz.Focus = …`-style assignments, e.g. LzFocus.lzs:427). Events are
+   typed as a curated `LzDeclaredEvent` (`sendEvent(value?)`, `ready`) —
+   not `any`. The small hand-curated core (strict `setAttribute`,
+   relational overrides) remains on top of the derived surface.
 2. **Per-app declarations** — synthesized from the authored DOM: each
    `<class name="rec" extends="view">` becomes a declared class extending
    `LzView`, with `<attribute type="…">` mapped to TS types (`number`→
@@ -247,9 +258,29 @@ Three generated layers, then a checker harness:
    LZX's set-an-undeclared-name idiom needs the `(this as any)` escape
    hatch, deliberately. TS bodies must use explicit `this.` (the runtime's
    `with(this)` scoping tolerates bare names; the checker does not).
-   `${…}` **constraint expressions are deferred**: constraints compile
-   with `with(this)` scoping (bare `parent` etc., compile.ts:563), which
-   TS cannot model without identifier rewriting — a follow-up.
+
+**Beyond bodies, the checker validates:**
+
+- **Markup attribute literals** — every instance element's attribute value
+  is checked against its resolved type (declared `<attribute>` chain, then
+  schema): number/size attrs must parse numerically (or be a percent, for
+  size), booleans must be `true`/`false`, colors must be `#hex`/`0xhex`/a
+  CSS color name. Constraint-valued attributes route to constraint
+  checking instead.
+- **Cross-references** — `extends` targets must resolve (user class or
+  built-in), duplicate `id`s and duplicate sibling `name`s are findings.
+- **`${…}` constraint expressions** — checked with **statically-known
+  instance types**: the checker synthesizes a type for every instance, so
+  a constraint's `this`/`parent`/`immediateparent`/`classroot` are typed
+  as the *actual* enclosing types, not generic `LzNode` (this is what
+  makes precise checking possible despite the runtime's `with(this)`
+  scoping, compile.ts:563). Bare-name resolution: an unresolved identifier
+  (TS2304) that is a member of the owner's type is `with(this)`-legal and
+  suppressed; anything else is a finding.
+- **The `.lzx` XML dialect** — an XmlElem adapter feeds the same model
+  extractor, so existing `.lzx` apps get markup-literal, reference, and
+  constraint validation. Their ES4 bodies are skipped (not TypeScript),
+  counted in the report.
 
 **Where it runs:** dev-time. A Node CLI (`lzx-check`) loads an app (inline
 page or file — pages must be **well-formed**: explicit close tags; HTML void
@@ -418,18 +449,12 @@ bundle (`compiler/lzc-browser.js`) directly.
 - Exhaustive component-library coverage or porting all examples.
 - The dreem2 visual editor.
 - In-browser type-diagnostics overlay (`lzx-check` is dev-time CLI first).
-- `${…}` constraint-expression checking (blocked on `with(this)` scoping —
-  see "App-aware type checking" layer 3).
-- **LFC-derived typing (planned Slice 3).** Typed `lz.*` services and full
-  class method/property signatures ARE derivable — not from the schema, but
-  from the LFC source via the compiler's own ES4 parser: `sc.ts:603`
-  `classDecl()` already builds `{name, sup, mixins, members}` with `:Type`
-  annotations for every LFC class, and services are plain assignments
-  (`lz.Focus = LzFocusService.LzFocus`, LzFocus.lzs:427). Slice 3 = a
-  read-only AST walk exported from `sc.ts`, visibility filtering
-  (`__LZ*`/`$lzc$*`/`@access private`), and a swap of the `lfc.d.ts`
-  generator's guts — the checker architecture is unchanged. Until then,
-  `lz.*` and event/delegate shapes are `any`.
+- ~~Constraint checking / LFC-derived typing~~ — **pulled into Slice 2**
+  (see "App-aware type checking"): constraints check against
+  statically-known instance types; `lz.*`/class members derive from the
+  LFC source via `sc.ts`'s AST with captured `:Type` annotations.
+- Doc-comment (`@param`) type mining for the LFC members whose ES4
+  annotations are absent (those params stay `any` in Slice 2).
 - **Debug/backtrace/profile source-line parity for DOM-authored apps.** A
   live DOM has no source text lines; DOM-path apps target the production
   build. They still *run* under `?debug` — they just lack exact source-line

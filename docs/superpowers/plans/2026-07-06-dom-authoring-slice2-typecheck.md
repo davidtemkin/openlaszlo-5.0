@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** `lzx-check` — a dev-time Node CLI that type-checks DOM-authored apps: generated `lfc.d.ts` (from the compiler's oracle schema), per-app declarations synthesized from `<class>`/`<attribute>`/ids/named children, and every TS body checked with a typed `this`.
+**Goal:** `lzx-check` — a dev-time Node CLI that validates the WHOLE authored surface of DOM-dialect apps (and, for markup/constraints/refs, existing `.lzx` apps): TS bodies with typed `this`, markup attribute literals, cross-references, and `${…}` constraint expressions — against an `lfc.d.ts` derived from the oracle schema PLUS the LFC source itself (typed method signatures, `lz.*` services, `LzDeclaredEvent`-typed events via the compiler's own ES4 parser).
 
 **Architecture:** Four pure modules layered onto Slice 1: `htmlsource.ts` (a minimal dependency-free HTML-dialect parser for Node — raw-text `<script>`, void elements, line tracking), `lfc-dts.ts` (SCHEMA/SCHEMA_EVENTS → `lfc.d.ts`, committed artifact), `app-model.ts` (dialect tree → AppModel: classes, instance types, code bodies with source lines), `app-dts.ts` (AppModel → app `.d.ts` + a bodies file with a line-span map). `lzx-check.ts` drives `tsc` (the existing `typescript` devDependency) over {lfc.d.ts, app.d.ts, bodies.ts} via an in-memory-overlay CompilerHost and maps diagnostics back to source elements/lines. The browser runtime path is untouched — checking is erasure-independent (strip always succeeds; diagnostics are a dev tool, spec "App-aware type checking").
 
@@ -13,6 +13,7 @@
 ## Global Constraints
 
 - **Zero new dependencies** — `typescript` (devDep) is the only external module; `lzx-check` is a dev tool, never part of the browser bundle (`browser.ts` must NOT import any Slice-2 module).
+- **`sc.ts` changes are additive-only and byte-diff-guarded**: annotation capture stores into NEW optional AST fields that emission never reads; the Task-1B guard (before/after corpus compile + LFC build diff) must show byte-identical output.
 - **The `.lzx`-text compile path and `runtime/lfc-src` stay untouched** (byte-parity, as in Slice 1).
 - **Checking never blocks running** — `lzx-check` is a separate CLI; the Slice-1 bootstrap pipeline is not modified.
 - **Type names are deterministic**: built-ins `Lz<Capitalized-tag>` (`LzView`, `LzCanvas`, …), user classes `LzUser_<name>`, per-instance synthesized types `LzInst_<n>` in document order.
@@ -24,8 +25,11 @@
 
 | Path | Status | Responsibility |
 | --- | --- | --- |
-| `compiler/src/htmlsource.ts` | create | dependency-free HTML-dialect parser → `HtmlElem` (DomElementLike-compatible + `line`) |
-| `compiler/src/lfc-dts.ts` | create | `tsTypeOf(schemaType)` + `generateLfcDts()` from SCHEMA/SCHEMA_EVENTS + verified curated methods |
+| `compiler/src/htmlsource.ts` | create | dependency-free HTML-dialect parser → `HtmlElem` (DomElementLike-compatible + element AND per-attribute `line`s) |
+| `compiler/src/sc.ts` | modify (additive, guarded) | capture `:Type` annotations into optional AST fields; export `parseLibraryAst` + the `Stmt`/`ClassMember`/`Node` types |
+| `compiler/src/lfc-reflect.ts` | create | walk the expanded LFC AST → `LfcReflection` (classes/members with types, `lz.*` assignments), visibility-filtered |
+| `compiler/src/xml-adapter.ts` | create | `XmlElem` (parseXml) → `HtmlElem`-shaped tree so `.lzx` apps feed the same model extractor |
+| `compiler/src/lfc-dts.ts` | create | `tsTypeOf(schemaType)` + `generateLfcDts(reflection?)`: schema attrs + derived methods/vars + `LzDeclaredEvent` events + derived `lz` namespace + curated core |
 | `compiler/src/app-model.ts` | create | dialect tree → `AppModel` (classes, instances, bodies, ids; owner/payload type resolution) |
 | `compiler/src/app-dts.ts` | create | `AppModel` → app `.d.ts` text + bodies file text with `BodySpan[]` line map |
 | `compiler/src/lzx-check.ts` | create | `checkApp()` driver (tsc + diagnostics mapping) + CLI (`--write-lfc-dts` mode) |
@@ -55,7 +59,7 @@ Node has no DOM; `parseXml` can't read the dialect (raw-text `<script>` bodies c
 - Consumes: nothing from Slice 1 at runtime (interface-compatible with `DomElementLike` by shape).
 - Produces (used by Tasks 3, 5):
   - `interface HtmlNode { nodeType: number; nodeValue?: string | null; line: number }`
-  - `interface HtmlElem extends HtmlNode { tagName: string; attributes: {name: string; value: string}[]; childNodes: HtmlNode[]; getAttribute(n: string): string | null; setAttribute(n: string, v: string): void }`
+  - `interface HtmlElem extends HtmlNode { tagName: string; attributes: {name: string; value: string; line: number}[]; childNodes: HtmlNode[]; getAttribute(n: string): string | null; attrLine(n: string): number; setAttribute(n: string, v: string): void }` — per-attribute lines feed markup-literal and constraint diagnostics; `attrLine` returns the element's line for unknown names
   - `class HtmlDialectError extends Error` (message includes a 1-based line)
   - `function parseHtmlDialect(src: string): HtmlElem[]` — the top-level node sequence (elements only; whitespace/doctype/comments skipped at top level)
   - `function findLaszloApp(tops: HtmlElem[]): HtmlElem` — depth-first search for `<laszlo-app>`; throws `HtmlDialectError` if absent
@@ -76,6 +80,8 @@ test("elements, attrs, text, comments, lowercasing, lines", () => {
   assert.equal(app.tagName, "LASZLO-APP");          // DOM-style uppercase tagName
   assert.equal(app.getAttribute("width"), "10");     // attr names lowercased
   assert.equal(app.line, 3);
+  assert.equal(app.attrLine("width"), 3);            // per-attribute line
+  assert.equal(app.attrLine("nope"), 3);             // unknown -> element line
   const view = app.childNodes.find((c) => c.nodeType === 1);
   assert.equal(view.tagName, "VIEW");
   assert.equal(view.line, 4);
@@ -140,9 +146,11 @@ Create `compiler/src/htmlsource.ts`:
 export interface HtmlNode { nodeType: number; nodeValue?: string | null; line: number }
 export interface HtmlElem extends HtmlNode {
   tagName: string;
-  attributes: { name: string; value: string }[];
+  attributes: { name: string; value: string; line: number }[];
   childNodes: HtmlNode[];
   getAttribute(n: string): string | null;
+  /** 1-based source line of the attribute (the element's line if absent). */
+  attrLine(n: string): number;
   setAttribute(n: string, v: string): void;
 }
 export class HtmlDialectError extends Error {}
@@ -164,13 +172,14 @@ function decodeEnt(s: string): string {
 }
 
 function makeElem(tag: string, line: number): HtmlElem {
-  const attributes: { name: string; value: string }[] = [];
+  const attributes: { name: string; value: string; line: number }[] = [];
   return {
     nodeType: ELEMENT, line, tagName: tag.toUpperCase(), attributes, childNodes: [],
     getAttribute(n) { const a = attributes.find((x) => x.name === n); return a ? a.value : null; },
+    attrLine(n) { const a = attributes.find((x) => x.name === n); return a ? a.line : line; },
     setAttribute(n, v) {
       const a = attributes.find((x) => x.name === n);
-      if (a) a.value = String(v); else attributes.push({ name: n, value: String(v) });
+      if (a) a.value = String(v); else attributes.push({ name: n, value: String(v), line });
     },
   };
 }
@@ -206,6 +215,7 @@ export function parseHtmlDialect(src: string): HtmlElem[] {
       const m = /^[^\s=/>]+/.exec(src.slice(i));
       if (!m) err("malformed attribute");
       const name = m![0].toLowerCase();
+      const attrLine = line;
       advance(i + m![0].length);
       while (i < n && /\s/.test(src[i])) advance(i + 1);
       let value = "";
@@ -224,7 +234,7 @@ export function parseHtmlDialect(src: string): HtmlElem[] {
           advance(i + m2![0].length);
         }
       }
-      el.setAttribute(name, value);
+      el.attributes.push({ name, value, line: attrLine });
     }
   }
 
@@ -320,6 +330,308 @@ git commit -m "compiler: htmlsource.ts — dependency-free dialect HTML parser f
 
 ---
 
+### Task 1B: `sc.ts` — capture `:Type` annotations + export `parseLibraryAst` (byte-diff-guarded)
+
+The parser currently ERASES ES4 type annotations (`skipTypeAnnotation`, sc.ts:395). Capture them into NEW optional AST fields that emission never reads, and export a reflection entry that reuses `compileLibraryProgram`'s own parse+`#include`-expansion. Every change here is additive; the guard proves output bytes are untouched.
+
+**Files:**
+- Modify: `compiler/src/sc.ts` (four small edits)
+- No new test file (the guard IS the test; Task 1C unit-tests the consumer)
+
+**Interfaces:**
+- Produces (used by Task 1C):
+  - `export function parseLibraryAst(rootSource: string, rootFile: string, resolveInclude: (path: string) => string | null): Stmt[]` — the include-expanded, constant-folded statement list
+  - `export type { Stmt, ClassMember, Node }` (type-only; zero runtime impact)
+  - New optional AST fields: on `func` nodes `paramTypes?: (string | null)[]` and `returnType?: string | null`; on `var` class members `varType?: string | null`
+
+- [ ] **Step 1: Capture the BEFORE outputs (guard)**
+
+```bash
+cd compiler && npm run build && mkdir -p /tmp/lzc-guard2/before
+for f in ../docs/component-browser/components.lzx ../explorer/explore-nav.lzx \
+         ../examples/ten-minutes/sessionwindow.lzx ../examples/ten-minutes/path-attribute.lzx; do
+  LPS_HOME=../runtime node dist/cli.js "$f" > "/tmp/lzc-guard2/before/$(basename "$f").js"
+done
+# the LFC build exercises the class/var/param parse paths hardest:
+node dist/cli.js --lfc ../runtime/lfc-src/LaszloLibrary.lzs > /tmp/lzc-guard2/before/lfc.js 2>/dev/null \
+  || node dist/cli.js --lfc "$(ls ../runtime/lfc-src/*.lzs | head -1)" > /tmp/lzc-guard2/before/lfc.js
+wc -c /tmp/lzc-guard2/before/*
+```
+
+Expected: four app outputs + a multi-hundred-KB lfc.js. If the LFC root isn't `LaszloLibrary.lzs`, find it: `grep -rl "#include" ../runtime/lfc-src/*.lzs | head` — the root is the file that is not itself included (check `compiler/compiler-verify/` scripts or README for the exact `--lfc` invocation) — and use it consistently in BOTH guard passes and Task 1C/2.
+
+- [ ] **Step 2: Make `skipTypeAnnotation`/`typeExpr` capture**
+
+In `compiler/src/sc.ts`, change (current at ~:395):
+
+```ts
+  skipTypeAnnotation(): void {
+    if (!this.is(":")) return;
+    this.next();
+    this.typeExpr();
+  }
+```
+
+to:
+
+```ts
+  /** Skip an ActionScript-style `:Type` annotation — erased from OUTPUT, but the
+   *  type text is RETURNED for reflection (lfc-reflect). null = no annotation. */
+  skipTypeAnnotation(): string | null {
+    if (!this.is(":")) return null;
+    this.next();
+    return this.typeExpr();
+  }
+```
+
+and make `typeExpr()` build and return the text it consumes (it currently just advances). Follow its existing token walk exactly, concatenating: `*`, the (dotted) name, the optional `.<…>` vector parameter, the optional trailing `?`. Signature: `typeExpr(): string`. (Callers that ignore the return need no change.)
+
+- [ ] **Step 3: Thread captures into the three AST sites**
+
+(a) `formalParams()` (~:983): collect `const types: (string | null)[] = []`, pushing `this.skipTypeAnnotation()` where it is currently discarded (both the rest-param and normal-param sites push too — rest pushes its capture); return `{ names, defaults, rest, types }`.
+(b) The `func`-node construction site (~:980, the `return { k: "func", … }`): add `...(types.some((t) => t != null) ? { paramTypes: types } : {})`. Also capture the RETURN-type annotation — find where the function's post-paramlist `skipTypeAnnotation()` is called and store it the same way as `returnType`.
+(c) `classBody`'s var member (~:677): `const varType = this.skipTypeAnnotation();` then `members.push({ kind: "var", name: vn, init, static: isStatic, ...(varType ? { varType } : {}) });` — and add the optional fields to the `ClassMember`/`Node` type declarations (`varType?: string | null` on the var member; `paramTypes?: (string | null)[]; returnType?: string | null` on `func`).
+
+- [ ] **Step 4: Add the reflection export**
+
+At the bottom of `sc.ts` (near `compileLibraryProgram`), add:
+
+```ts
+/** REFLECTION-ONLY: parse + #include-expand + fold a library root, returning
+ *  the raw statement AST (with captured :Type annotations). Read-only sibling
+ *  of compileLibraryProgram — shares no state with codegen and never emits. */
+export function parseLibraryAst(
+  rootSource: string,
+  rootFile: string,
+  resolveInclude: (path: string) => string | null,
+): Stmt[] {
+  const parseFold = (src: string, file: string): Stmt[] => {
+    const p = new Parser(lex("#file " + file + "\n#line 1\n" + src, 1, undefined, true));
+    p.lfc = true;
+    return foldStmts(p.parseProgram());
+  };
+  const expand = (stmts: Stmt[], stack: string[]): Stmt[] => {
+    const out: Stmt[] = [];
+    for (const s of stmts) {
+      if (s.s === "include") {
+        if (stack.includes(s.path)) throw new ScUnsupported(`#include cycle: ${[...stack, s.path].join(" -> ")}`);
+        const src = resolveInclude(s.path);
+        if (src == null) throw new ScUnsupported(`#include not found: ${s.path}`);
+        out.push(...expand(parseFold(src, s.path), [...stack, s.path]));
+      } else if (s.s === "block") out.push({ ...s, body: expand(s.body, stack) });
+      else out.push(s); // top-level classes/assignments are what reflection reads
+    }
+    return out;
+  };
+  return expand(parseFold(rootSource, rootFile), [rootFile]);
+}
+export type { Stmt, ClassMember, Node as ScNode };
+```
+
+(If `Stmt`/`ClassMember`/`Node` are declared as non-exported types, the `export type` re-export at the bottom is sufficient; adjust to `export type Stmt = …` style only if tsc demands it.)
+
+- [ ] **Step 5: Rebuild, capture AFTER, byte-diff, full tests**
+
+```bash
+npm run build && mkdir -p /tmp/lzc-guard2/after
+for f in ../docs/component-browser/components.lzx ../explorer/explore-nav.lzx \
+         ../examples/ten-minutes/sessionwindow.lzx ../examples/ten-minutes/path-attribute.lzx; do
+  LPS_HOME=../runtime node dist/cli.js "$f" > "/tmp/lzc-guard2/after/$(basename "$f").js"
+done
+node dist/cli.js --lfc <SAME-ROOT-AS-STEP-1> > /tmp/lzc-guard2/after/lfc.js
+diff -r /tmp/lzc-guard2/before /tmp/lzc-guard2/after && echo "BYTE-IDENTICAL"
+npm test
+```
+
+Expected: `BYTE-IDENTICAL` + all tests PASS. Any diff = the capture leaked into emission; revert and re-approach.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add compiler/src/sc.ts
+git commit -m "compiler: capture ES4 :Type annotations in the AST + parseLibraryAst reflection export (byte-diff-guarded)"
+```
+
+---
+
+### Task 1C: `lfc-reflect.ts` — derive classes, members, and `lz.*` from the LFC AST
+
+**Files:**
+- Create: `compiler/src/lfc-reflect.ts`
+- Test: `compiler/test/lfc-reflect.test.mjs`
+
+**Interfaces:**
+- Consumes: `parseLibraryAst` (Task 1B); Node `fs` for the CLI-side loader.
+- Produces (used by Task 2):
+
+```ts
+export interface LfcMethod { name: string; params: { name: string; type: string | null }[]; returnType: string | null; isStatic: boolean }
+export interface LfcVar { name: string; type: string | null; isStatic: boolean }
+export interface LfcClass { name: string; sup: string | null; methods: LfcMethod[]; vars: LfcVar[] }
+export interface LfcReflection { classes: Map<string, LfcClass>; lzAssignments: { prop: string; className: string }[] }
+export function reflectLibrary(stmts: Stmt[]): LfcReflection
+export function loadLfcReflection(rootLzsPath: string): LfcReflection  // fs read + resolveInclude relative to root dir
+```
+
+**Rules:** visibility filter drops members whose name starts with `__` or `$` (the LFC's private conventions) and constructors (name === class name). `lz.*` extraction: top-level `{s:"expr", e:{k:"assign", l:{k:"member", o:…, p:P}, r:R}}` where the assign target chain bottoms out at identifier `lz` → record `{prop: P, className: <rightmost identifier chain of R, e.g. "LzTimerService.LzTimer" → "LzTimerService">}` — record the FULL dotted right side and let Task 2 decide typing (the singleton's class is the last-but-one segment for `X.Y` service-instance patterns; when `R` is a bare identifier, that identifier).
+
+- [ ] **Step 1: Write the failing tests**
+
+Create `compiler/test/lfc-reflect.test.mjs`:
+
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { parseLibraryAst } from "../dist/sc.js";
+import { reflectLibrary, loadLfcReflection } from "../dist/lfc-reflect.js";
+
+test("reflects classes, typed members, filters privates + constructor", () => {
+  const src = `
+class LzDemo extends LzEventable {
+  var count:Number = 0;
+  var __secret:Boolean = false;
+  static var flag:Boolean = true;
+  function LzDemo(parent = null) { }
+  function poke(n:Number, s:String = null):void { }
+  function $lzc$hidden() { }
+}
+lz.Demo = LzDemoService.LzDemo;
+`;
+  const r = reflectLibrary(parseLibraryAst(src, "demo.lzs", () => null));
+  const c = r.classes.get("LzDemo");
+  assert.ok(c);
+  assert.equal(c.sup, "LzEventable");
+  assert.deepEqual(c.vars, [
+    { name: "count", type: "Number", isStatic: false },
+    { name: "flag", type: "Boolean", isStatic: true },
+  ]);
+  assert.deepEqual(c.methods, [{
+    name: "poke", isStatic: false, returnType: "void",
+    params: [{ name: "n", type: "Number" }, { name: "s", type: "String" }],
+  }]);
+  assert.deepEqual(r.lzAssignments, [{ prop: "Demo", className: "LzDemoService.LzDemo" }]);
+});
+
+test("include expansion feeds reflection", () => {
+  const files = { "inc.lzs": "class LzInc { function go():void { } }" };
+  const r = reflectLibrary(parseLibraryAst('#include "inc.lzs"\n', "root.lzs", (p) => files[p] ?? null));
+  assert.ok(r.classes.get("LzInc"));
+});
+
+test("loads the REAL LFC: LzNode/LzView present with expected members", () => {
+  // Root discovery: the file compiler-verify/CLI --lfc builds from.
+  const root = new URL("../../runtime/lfc-src/LaszloLibrary.lzs", import.meta.url).pathname;
+  const r = loadLfcReflection(root);
+  const node = r.classes.get("LzNode");
+  assert.ok(node, "LzNode not found — wrong root file?");
+  assert.ok(node.methods.some((m) => m.name === "animate"));
+  const view = r.classes.get("LzView");
+  assert.ok(view.methods.some((m) => m.name === "bringToFront"));
+  assert.ok(r.lzAssignments.some((a) => a.prop === "Timer"));
+  assert.ok(r.lzAssignments.some((a) => a.prop === "Focus"));
+  // privates filtered
+  assert.ok(!view.methods.some((m) => m.name.startsWith("__") || m.name.startsWith("$")));
+});
+```
+
+(If the real root is not `LaszloLibrary.lzs`, fix the path in the test to the root found in Task 1B Step 1 — the assertion messages point there.)
+
+- [ ] **Step 2: Run to verify failure**
+
+Run: `cd compiler && npm test` — Expected: FAIL (module missing).
+
+- [ ] **Step 3: Implement**
+
+Create `compiler/src/lfc-reflect.ts`:
+
+```ts
+// lfc-reflect.ts — derive the LFC's typed API surface from its SOURCE via the
+// compiler's own ES4 parser (spec "App-aware type checking" layer 1b). The
+// schema gives attribute types; THIS gives method signatures, typed vars, and
+// the lz.* service namespace. Dev-tool-only (lzx-check); never bundled.
+
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { parseLibraryAst, type Stmt, type ClassMember, type ScNode } from "./sc.js";
+
+export interface LfcMethod { name: string; params: { name: string; type: string | null }[]; returnType: string | null; isStatic: boolean }
+export interface LfcVar { name: string; type: string | null; isStatic: boolean }
+export interface LfcClass { name: string; sup: string | null; methods: LfcMethod[]; vars: LfcVar[] }
+export interface LfcReflection { classes: Map<string, LfcClass>; lzAssignments: { prop: string; className: string }[] }
+
+const isPrivate = (n: string) => n.startsWith("__") || n.startsWith("$");
+
+/** Render a member/identifier chain (`a.b.c`) or null if not one. */
+function dottedName(n: any): string | null {
+  if (n.k === "id") return n.name;
+  if (n.k === "member") { const o = dottedName(n.o); return o ? o + "." + n.p : null; }
+  return null;
+}
+
+export function reflectLibrary(stmts: Stmt[]): LfcReflection {
+  const classes = new Map<string, LfcClass>();
+  const lzAssignments: { prop: string; className: string }[] = [];
+
+  const visit = (s: any): void => {
+    if (s.s === "block") { s.body.forEach(visit); return; }
+    if (s.s === "if") { if (s.t) visit(s.t); if (s.e) visit(s.e); return; }
+    if (s.s === "as3class") {
+      const cls: LfcClass = { name: s.name, sup: s.sup, methods: [], vars: [] };
+      for (const m of s.members as any[]) {
+        if (m.kind === "var" && !isPrivate(m.name))
+          cls.vars.push({ name: m.name, type: m.varType ?? null, isStatic: m.static });
+        else if (m.kind === "method" && !isPrivate(m.name) && m.name !== s.name) {
+          const fn = m.fn;
+          cls.methods.push({
+            name: m.name, isStatic: m.static, returnType: fn.returnType ?? null,
+            params: (fn.params as string[]).map((p: string, i: number) => ({
+              name: p, type: fn.paramTypes?.[i] ?? null,
+            })),
+          });
+        }
+      }
+      classes.set(s.name, cls);
+      return;
+    }
+    if (s.s === "expr" && s.e?.k === "assign" && s.e.op === "=") {
+      const l = s.e.l;
+      if (l?.k === "member" && l.o?.k === "id" && l.o.name === "lz") {
+        const right = dottedName(s.e.r);
+        if (right) lzAssignments.push({ prop: l.p, className: right });
+      }
+    }
+  };
+  stmts.forEach(visit);
+  return { classes, lzAssignments };
+}
+
+/** Load + reflect the real LFC from its library root (.lzs with #includes). */
+export function loadLfcReflection(rootLzsPath: string): LfcReflection {
+  const rootSource = readFileSync(rootLzsPath, "utf8");
+  const base = dirname(rootLzsPath);
+  const resolveInclude = (p: string): string | null => {
+    try { return readFileSync(join(base, p), "utf8"); } catch { return null; }
+  };
+  return reflectLibrary(parseLibraryAst(rootSource, rootLzsPath.split("/").pop()!, resolveInclude));
+}
+```
+
+(`ScNode` import may be unused — drop it if tsc flags it. If member/assign AST field names differ from this sketch, follow the ACTUAL shapes in sc.ts — `{s:"expr", e}`, `{k:"assign", op, l, r}`, `{k:"member", o, p}`, `{k:"id", name}` were verified during planning at sc.ts:251/:241/:234.)
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `cd compiler && npm test`
+Expected: PASS. The real-LFC test is the canary: if `parseLibraryAst` throws `ScUnsupported` on some construct, note WHERE and wrap only reflection (not codegen) with a per-file try/skip — reflection can tolerate skipping a problem file; codegen cannot.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add compiler/src/lfc-reflect.ts compiler/test/lfc-reflect.test.mjs
+git commit -m "compiler: lfc-reflect.ts — typed LFC API surface + lz.* services from the sc.ts AST"
+```
+
+---
+
 ### Task 2: `lfc-dts.ts` — generate and commit `lfc.d.ts`
 
 **Files:**
@@ -328,11 +640,18 @@ git commit -m "compiler: htmlsource.ts — dependency-free dialect HTML parser f
 - Generated + committed (in Task 5, once the CLI exists): `compiler/lfc.d.ts`
 
 **Interfaces:**
-- Consumes: `SCHEMA`, `SCHEMA_EVENTS` from `./schema-types.js` (existing).
+- Consumes: `SCHEMA`, `SCHEMA_EVENTS` from `./schema-types.js`; `LfcReflection` (Task 1C).
 - Produces (used by Tasks 3, 4, 5):
   - `function tsTypeOf(schemaType: string): string` — schema type string → TS type text
   - `function builtinTsName(tag: string): string | null` — `view`→`"LzView"`, … ; null if not an emitted built-in
-  - `function generateLfcDts(): string`
+  - `function generateLfcDts(reflection?: LfcReflection): string` — schema-only when no reflection (fallback); with reflection: derived methods merged onto the schema classes, ALL other reflected classes (services etc.) declared, `LzDeclaredEvent`-typed events, and a typed `lz` namespace
+
+**Reflection-merge rules (locked):**
+- ES4→TS type map (`es4TsType`, exported): `Number`/`int`/`uint`→`number`, `String`→`string`, `Boolean`→`boolean`, `void`→`void`, `Array`→`any[]`, `Function`→`(...args: any[]) => any`, `*`/`Object`/`null`/missing→`any`; a class-name type is kept verbatim IF that class is declared in this d.ts (computed against the declared-name set), else `any`. Trailing `?` (nullable) stripped; optional params from ES4 defaults (`= …` → `?`).
+- **Case reconciliation**: reflected LFC class names are the REAL spellings (`LzAnimatorGroup`); schema-lineage classes are emitted under `builtinTsName` (`LzAnimatorgroup`). Match reflected↔schema case-insensitively on `lz`+tag; merge the reflected members into the schema class emission; when spellings differ, ALSO emit `type LzAnimatorGroup = LzAnimatorgroup;` aliases so derived signatures' type refs resolve.
+- Derived members are added only when the name isn't already emitted (schema attr, event, curated method) — curated + schema win.
+- **Events**: `declare class LzDeclaredEvent { ready: boolean; sendEvent(value?: any): void; }` (verified: `$lzc$set_width` calls `onwidth.sendEvent(…)`, compiled output tests `.ready`); every SCHEMA_EVENTS property is `LzDeclaredEvent`, not `any`.
+- **`lz` namespace**: `declare const lz: { Timer: LzTimerService; Focus: LzFocusService; …; [k: string]: any }` — each `lz.X = A.B` assignment typed as class `A` when `A` is declared (the LFC's service-singleton pattern stores the instance on the service class), else `any`. The index signature keeps unreflected entries (tag map etc.) usable; documented as the remaining loose edge.
 
 Type mapping (locked): `number`/`numberExpression` → `number`; `size`/`sizeExpression` → `number | string` (percent strings); `boolean`/`inheritableBoolean` → `boolean`; `color` → `string | number`; `css`/`expression`/`node`/`reference` → `any`; everything else (`string`, `token`, `text`, `ID`, `script`, …) → `string`.
 
@@ -355,6 +674,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import ts from "typescript";
 import { generateLfcDts, tsTypeOf, builtinTsName } from "../dist/lfc-dts.js";
+import { loadLfcReflection } from "../dist/lfc-reflect.js";
 
 test("tsTypeOf mapping", () => {
   assert.equal(tsTypeOf("number"), "number");
@@ -374,29 +694,42 @@ test("builtinTsName", () => {
   assert.equal(builtinTsName("simplelayout"), null); // components are not in the emitted set
 });
 
-test("generated d.ts has the expected shape", () => {
+test("schema-only d.ts (fallback, no reflection) has the expected shape", () => {
   const dts = generateLfcDts();
   assert.ok(dts.includes("declare class LzView extends LzNode"));
   assert.ok(dts.includes("width: number | string;"));            // size
   assert.ok(dts.includes("bgcolor: string | number;"));          // color
   assert.ok(dts.includes("x: number;"));                         // numberExpression
   assert.ok(dts.includes("setAttribute<K extends keyof this & string>(name: K, value: this[K]): void;"));
-  assert.ok(dts.includes("onclick: any;"));                      // SCHEMA_EVENTS
+  assert.ok(dts.includes("onclick: LzDeclaredEvent;"));          // SCHEMA_EVENTS, typed
   assert.ok(dts.includes("parent: LzNode;"));                    // relational override
   assert.ok(dts.includes("declare const canvas: LzCanvas;"));
   assert.ok(!dts.includes("$lzc$"));                             // $-attrs skipped
 });
 
-test("generated d.ts compiles clean under tsc", () => {
-  const dts = generateLfcDts();
-  const host = ts.createCompilerHost({});
-  const orig = host.getSourceFile.bind(host);
-  host.getSourceFile = (name, langVer) =>
-    name === "lfc.d.ts" ? ts.createSourceFile(name, dts, langVer, true) : orig(name, langVer);
-  host.fileExists = ((oe) => (n) => n === "lfc.d.ts" || oe(n))(host.fileExists.bind(host));
-  const prog = ts.createProgram(["lfc.d.ts"], { noEmit: true, strict: false, types: [], lib: ["lib.es2020.d.ts"] }, host);
-  const diags = [...prog.getSyntacticDiagnostics(), ...prog.getSemanticDiagnostics()];
-  assert.deepEqual(diags.map((d) => ts.flattenDiagnosticMessageText(d.messageText, " ")), []);
+test("reflection-merged d.ts: derived methods, services, typed lz namespace", () => {
+  const root = new URL("../../runtime/lfc-src/LaszloLibrary.lzs", import.meta.url).pathname;
+  const dts = generateLfcDts(loadLfcReflection(root));
+  assert.ok(dts.includes("declare class LzDeclaredEvent {"));
+  assert.ok(/bringToFront\(\): (void|any);/.test(dts));          // derived onto LzView
+  assert.ok(dts.includes("declare const lz: {"));
+  assert.ok(/Timer: \w+;/.test(dts));                            // typed service singleton
+  assert.ok(/Focus: \w+;/.test(dts));
+  assert.ok(!/\b(__|\$)\w+\s*\(/.test(dts), "private members leaked");
+});
+
+test("generated d.ts compiles clean under tsc (BOTH modes)", () => {
+  const root = new URL("../../runtime/lfc-src/LaszloLibrary.lzs", import.meta.url).pathname;
+  for (const dts of [generateLfcDts(), generateLfcDts(loadLfcReflection(root))]) {
+    const host = ts.createCompilerHost({});
+    const orig = host.getSourceFile.bind(host);
+    host.getSourceFile = (name, langVer) =>
+      name === "lfc.d.ts" ? ts.createSourceFile(name, dts, langVer, true) : orig(name, langVer);
+    host.fileExists = ((oe) => (n) => n === "lfc.d.ts" || oe(n))(host.fileExists.bind(host));
+    const prog = ts.createProgram(["lfc.d.ts"], { noEmit: true, strict: false, types: [], lib: ["lib.es2020.d.ts"] }, host);
+    const diags = [...prog.getSyntacticDiagnostics(), ...prog.getSemanticDiagnostics()];
+    assert.deepEqual(diags.map((d) => ts.flattenDiagnosticMessageText(d.messageText, " ")), []);
+  }
 });
 ```
 
@@ -416,6 +749,7 @@ Create `compiler/src/lfc-dts.ts`:
 // small curated core VERIFIED against runtime/lfc-src (do not invent APIs).
 
 import { SCHEMA, SCHEMA_EVENTS } from "./schema-types.js";
+import type { LfcReflection, LfcClass, LfcMethod } from "./lfc-reflect.js";
 
 /** Schema type string -> TS type text. */
 export function tsTypeOf(t: string): string {
@@ -462,33 +796,114 @@ const VIEW_METHODS = [
   "setSource(source: string, cache?: any, headers?: any, filetype?: any): void;",
 ];
 
-export function generateLfcDts(): string {
+/** ES4 annotation text → TS type text. `declared` = names this d.ts declares
+ *  (class-name types survive only when they resolve). */
+export function es4TsType(t: string | null, declared: (n: string) => boolean): string {
+  if (!t) return "any";
+  const base = t.replace(/\?$/, "").replace(/\.<.*>$/, "");
+  switch (base) {
+    case "Number": case "int": case "uint": return "number";
+    case "String": return "string";
+    case "Boolean": return "boolean";
+    case "void": return "void";
+    case "Array": return "any[]";
+    case "Function": return "(...args: any[]) => any";
+    case "*": case "Object": case "null": return "any";
+    default: return declared(base) ? base : "any";
+  }
+}
+
+export function generateLfcDts(reflection?: LfcReflection): string {
+  // Reconcile reflected real spellings (LzAnimatorGroup) with schema emission
+  // names (LzAnimatorgroup): case-insensitive match on "lz"+tag.
+  const schemaNameFor = new Map<string, string>();  // lowercased reflected name -> emitted name
+  for (const tag of EMIT_ORDER) schemaNameFor.set(("lz" + tag).toLowerCase(), builtinTsName(tag)!);
+  const reflected = reflection ? [...reflection.classes.values()] : [];
+  const mergedInto = new Map<string, LfcClass>();   // emitted schema name -> reflected class
+  const standalone: LfcClass[] = [];
+  const aliases: [string, string][] = [];           // [realName, emittedName] when spellings differ
+  for (const rc of reflected) {
+    const emitted = schemaNameFor.get(rc.name.toLowerCase());
+    if (emitted) {
+      mergedInto.set(emitted, rc);
+      if (emitted !== rc.name) aliases.push([rc.name, emitted]);
+    } else standalone.push(rc);
+  }
+  const declaredNames = new Set<string>([
+    "LzEventable", "LzDeclaredEvent",
+    ...EMIT_ORDER.map((t) => builtinTsName(t)!),
+    ...standalone.map((c) => c.name),
+    ...aliases.map(([real]) => real),
+  ]);
+  const T = (t: string | null) => es4TsType(t, (n) => declaredNames.has(n));
+
+  const methodSig = (m: LfcMethod): string => {
+    const ps = m.params.map((p) => `${p.name}?: ${T(p.type)}`); // LFC params are widely defaulted; all optional
+    return `  ${m.isStatic ? "static " : ""}${m.name}(${ps.join(", ")}): ${m.returnType ? T(m.returnType) : "any"};`;
+  };
+
   const out: string[] = [
     "// AUTO-GENERATED by `node dist/lzx-check.js --write-lfc-dts` from the",
-    "// compiler's oracle schema (schema-types.ts). Do not edit by hand.",
+    "// compiler's oracle schema (schema-types.ts) and the LFC source AST",
+    "// (lfc-reflect.ts). Do not edit by hand.",
     "",
     "declare class LzEventable {}",
+    "declare class LzDeclaredEvent { ready: boolean; sendEvent(value?: any): void; }",
     "",
   ];
   for (const tag of EMIT_ORDER) {
     const cls = SCHEMA[tag];
     const name = builtinTsName(tag)!;
     const extTag = cls.ext && EMIT_ORDER.includes(cls.ext) ? builtinTsName(cls.ext)! : "LzEventable";
+    const emitted = new Set<string>();
     out.push(`declare class ${name} extends ${extTag} {`);
     if (tag === "node") out.push(`  constructor(parent?: LzNode, attrs?: Record<string, any>);`);
     for (const [attr, sType] of Object.entries(cls.attrs)) {
       if (attr.startsWith("$") || attr === "with") continue;
       const override = tag === "node" ? RELATIONAL[attr] : tag === "view" ? VIEW_RELATIONAL[attr] : undefined;
       out.push(`  ${attr}: ${override ?? tsTypeOf(sType)};`);
+      emitted.add(attr);
     }
-    for (const ev of SCHEMA_EVENTS[tag] ?? []) out.push(`  ${ev}: any;`);
-    if (tag === "node") for (const m of NODE_METHODS) out.push("  " + m);
-    if (tag === "view") for (const m of VIEW_METHODS) out.push("  " + m);
+    for (const ev of SCHEMA_EVENTS[tag] ?? []) if (!emitted.has(ev)) { out.push(`  ${ev}: LzDeclaredEvent;`); emitted.add(ev); }
+    if (tag === "node") for (const m of NODE_METHODS) { out.push("  " + m); emitted.add(m.split(/[<(]/)[0]); }
+    if (tag === "view") for (const m of VIEW_METHODS) { out.push("  " + m); emitted.add(m.split(/[<(]/)[0]); }
+    // Derived members (reflection) — schema/curated win on collision.
+    const rc = mergedInto.get(name);
+    if (rc) {
+      for (const v of rc.vars) if (!emitted.has(v.name)) { out.push(`  ${v.isStatic ? "static " : ""}${v.name}: ${T(v.type)};`); emitted.add(v.name); }
+      for (const m of rc.methods) if (!emitted.has(m.name)) { out.push(methodSig(m)); emitted.add(m.name); }
+    }
     out.push("}", "");
+  }
+  for (const [real, emitted] of aliases) out.push(`type ${real} = ${emitted};`);
+  if (aliases.length) out.push("");
+  // Non-schema reflected classes (services, kernel, …). Superclass kept when declared.
+  for (const rc of standalone) {
+    const sup = rc.sup && declaredNames.has(rc.sup) ? ` extends ${rc.sup}` : "";
+    const emitted = new Set<string>();
+    out.push(`declare class ${rc.name}${sup} {`);
+    for (const v of rc.vars) if (!emitted.has(v.name)) { out.push(`  ${v.isStatic ? "static " : ""}${v.name}: ${T(v.type)};`); emitted.add(v.name); }
+    for (const m of rc.methods) if (!emitted.has(m.name)) { out.push(methodSig(m)); emitted.add(m.name); }
+    out.push("}", "");
+  }
+  // The lz service namespace: `lz.X = A.B` → X typed as class A (the LFC's
+  // service-singleton-on-the-service-class pattern), else any. Index signature
+  // keeps unreflected entries (the tag map etc.) usable — the one loose edge.
+  if (reflection) {
+    out.push("declare const lz: {");
+    const seen = new Set<string>();
+    for (const a of reflection.lzAssignments) {
+      if (seen.has(a.prop) || !/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(a.prop)) continue;
+      seen.add(a.prop);
+      const cls = a.className.split(".")[0];
+      out.push(`  ${a.prop}: ${declaredNames.has(cls) ? cls : "any"};`);
+    }
+    out.push("  [k: string]: any;", "};");
+  } else {
+    out.push("declare const lz: any;");
   }
   out.push(
     "declare const canvas: LzCanvas;",
-    "declare const lz: any;",
     "declare const Debug: any;",
     "declare var $debug: boolean;",
     "");
@@ -543,15 +958,31 @@ export interface AppInstanceModel {
   id?: string;
 }
 export interface NameIssue { message: string; line: number }
+export interface ConstraintInfo {
+  expr: string;           // the inner expression of ${…} / $once{…} / …
+  line: number;           // the attribute's source line
+  label: string;          // e.g. `width constraint on <view name="bar">`
+  ownerType: string; parentType: string; classrootType: string;
+  ownerMembers: string[]; // with(this)-legal bare names (declared attrs + named children + schema chain)
+}
 export interface AppModel {
   classes: AppClassModel[];
   instances: AppInstanceModel[];
   bodies: BodyInfo[];
-  skippedLzs: number;     // text/lzs carriers not checked
-  nameIssues: NameIssue[]; // invalid TS identifiers (ids/class/attr names) — excluded from emission, reported as findings
+  constraints: ConstraintInfo[];
+  skippedLzs: number;      // non-TS bodies not checked (text/lzs carriers; ALL bodies in .lzx mode)
+  nameIssues: NameIssue[]; // invalid TS identifiers — excluded from emission, reported as findings
+  staticIssues: NameIssue[]; // markup-literal + cross-reference findings
 }
-export function extractApp(root: HtmlElem): AppModel
+export interface ExtractOptions { es4Bodies?: boolean } // .lzx mode: skip every body (ES4, not TS)
+export function extractApp(root: HtmlElem, opts?: ExtractOptions): AppModel
 ```
+
+**Markup-literal rules** (attribute values on instance elements, skipping `name`/`id`/`data-lz-adopt`/`lzdomadopt` and event/handler attributes starting `on`): resolve the attr's SCHEMA kind (declared `<attribute type>` first, then `schemaAttrType`); a value matching the constraint syntax `/^\s*\$\w*\{[\s\S]*\}\s*$/` routes to `constraints` instead; otherwise validate: `number`/`numberExpression` → `/^-?\d+(\.\d+)?$/`; `size`/`sizeExpression` → number OR `/^\d+(\.\d+)?%$/`; `boolean`/`inheritableBoolean` → `true`|`false`; `color` → `#hex3/6`, `0xhex6`, or a CSS name (`/^[a-zA-Z]+$/`). Violations → `staticIssues`.
+
+**Cross-reference rules:** `<class extends="x">` where `x` is neither a user class seen so far nor a schema tag → issue; duplicate `id` across the app → issue; duplicate `name` among element siblings → issue.
+
+**Constraint context types:** `ownerType` = the instance's synthesized type; `parentType` = the enclosing instance's type (`LzNode` for the root); `classrootType` = the root instance's type (v1: app-level nodes only — class-template subtrees are not walked, same scoping as bodies); `immediateparent` is typed as `parentType` (placement is a documented v1 approximation). `ownerMembers` = instance attrs + named children + user-class chain attrs + ALL schema attr names walking the base tag's extends chain.
 
 **Extraction rules (locked):**
 - Tag names: lowercase `tagName`, strip a leading `lz-`. `laszlo-app` root → base `LzCanvas`.
@@ -616,6 +1047,48 @@ test("handler payload typed from the declared attribute; setter arg likewise", (
   assert.deepEqual(onclick.params, [{ name: "e", tsType: "any" }]);     // non-attr event
   assert.deepEqual(setcount.params, [{ name: "v", tsType: "number" }]);
   assert.equal(oncount.ownerType, "LzInst_2");
+});
+
+test("markup literals: bad number/boolean/color values are staticIssues; constraints are not", () => {
+  const m = app('<laszlo-app>\n<view width="10p" visible="yes" bgcolor="#12" x="${parent.width}" y="12" opacity="0.5"></view>\n</laszlo-app>');
+  const msgs = m.staticIssues.map((i) => i.message).join("|");
+  assert.ok(msgs.includes("width"));
+  assert.ok(msgs.includes("visible"));
+  assert.ok(msgs.includes("bgcolor"));
+  assert.equal(m.staticIssues.length, 3);           // x is a constraint; y/opacity are fine
+  assert.equal(m.staticIssues[0].line, 2);
+  assert.equal(m.constraints.length, 1);
+});
+
+test("size accepts percents; color accepts names and 0x", () => {
+  const m = app('<laszlo-app><view width="50%" bgcolor="red" fgcolor="0xffcc00"></view></laszlo-app>');
+  assert.deepEqual(m.staticIssues, []);
+});
+
+test("cross-refs: unknown extends, duplicate ids, duplicate sibling names", () => {
+  const m = app('<laszlo-app><class name="a" extends="nosuch"></class><view id="x"></view><view id="x"></view><view name="n"></view><view name="n"></view></laszlo-app>');
+  const msgs = m.staticIssues.map((i) => i.message).join("|");
+  assert.ok(msgs.includes("nosuch"));
+  assert.ok(msgs.includes('duplicate id "x"'));
+  assert.ok(msgs.includes('duplicate sibling name "n"'));
+});
+
+test("constraints carry actual context types + ownerMembers", () => {
+  const m = app('<laszlo-app><view name="panel"><attribute name="grow" type="boolean"></attribute><view name="bar" width="${parent.width - 20}"></view></view></laszlo-app>');
+  assert.equal(m.constraints.length, 1);
+  const c = m.constraints[0];
+  assert.equal(c.expr, "parent.width - 20");
+  assert.equal(c.ownerType, "LzInst_3");   // bar
+  assert.equal(c.parentType, "LzInst_2");  // panel
+  assert.equal(c.classrootType, "LzInst_1");
+  assert.ok(c.ownerMembers.includes("width"));  // schema attr, with(this)-legal
+});
+
+test(".lzx mode (es4Bodies): every body skipped, markup still validated", () => {
+  const m = extractApp(findLaszloApp(parseHtmlDialect('<laszlo-app><view width="bad"><method name="f">return 1;</method></view></laszlo-app>')), { es4Bodies: true });
+  assert.equal(m.bodies.length, 0);
+  assert.equal(m.skippedLzs, 1);
+  assert.equal(m.staticIssues.length, 1);
 });
 
 test("name validation: constructor / invalid identifiers become issues, not declarations", () => {
@@ -843,6 +1316,110 @@ export function extractApp(root: HtmlElem): AppModel {
 }
 ```
 
+- [ ] **Step 3b: Integrate validation + constraints into the implementation**
+
+The Step-3 code needs these additions (same file, `app-model.ts`):
+
+(a) Model init and signature:
+
+```ts
+export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel {
+  const model: AppModel = { classes: [], instances: [], bodies: [], constraints: [],
+    skippedLzs: 0, nameIssues: [], staticIssues: [] };
+  const seenIds = new Set<string>();
+  // … (userClasses / instSeq / checkName as in Step 3)
+```
+
+(b) `.lzx` mode: at the TOP of `collectBody`, before the carrier logic:
+
+```ts
+    if (opts.es4Bodies) { model.skippedLzs++; return; } // .lzx bodies are ES4, not TS
+```
+
+(c) `walkClass` extends check (right after `const ext = …`):
+
+```ts
+    if (!userClasses.has(ext) && !(ext in SCHEMA))
+      model.staticIssues.push({ message: `<class name="${name}"> extends unknown "${ext}"`, line: el.line });
+```
+
+(import `SCHEMA` alongside `schemaAttrType` from `./schema-types.js`).
+
+(d) New helpers (module level):
+
+```ts
+const CONSTRAINT_RE = /^\s*\$\w*\{([\s\S]*)\}\s*$/;
+const SKIP_LITERAL = new Set(["name", "id", "data-lz-adopt", "lzdomadopt", "with", "placement", "options", "styleclass", "datapath"]);
+
+/** All schema attr names up the extends chain (with(this)-legal bare names). */
+function schemaAttrNames(tag: string): string[] {
+  const out: string[] = [];
+  let c: string | null = tag;
+  while (c && SCHEMA[c]) { out.push(...Object.keys(SCHEMA[c].attrs).filter((n) => !n.startsWith("$"))); c = SCHEMA[c].ext; }
+  return out;
+}
+
+/** Literal validation by SCHEMA kind (declared <attribute type> checked via its TS type). */
+function literalIssue(name: string, value: string, kind: string | null): string | null {
+  const num = /^-?\d+(\.\d+)?$/.test(value);
+  switch (kind) {
+    case "number": case "numberExpression":
+      return num ? null : `attribute ${name}="${value}" is not a number`;
+    case "size": case "sizeExpression":
+      return num || /^\d+(\.\d+)?%$/.test(value) ? null : `attribute ${name}="${value}" is not a number or percent`;
+    case "boolean": case "inheritableBoolean":
+      return value === "true" || value === "false" ? null : `attribute ${name}="${value}" is not true/false`;
+    case "color":
+      return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value) || /^0x[0-9a-fA-F]{6}$/.test(value) || /^[a-zA-Z]+$/.test(value)
+        ? null : `attribute ${name}="${value}" is not a color`;
+    default: return null;
+  }
+}
+```
+
+(e) In `walkInstance`, AFTER the first pass (attribute declarations) and before the child walk, add the per-attribute validation/constraint pass:
+
+```ts
+    // Markup literals + constraint collection (spec "Beyond bodies").
+    const declKindOf = (n: string): string | null => {
+      const d = inst.attrs.find((a) => a.name === n);
+      if (d) return d.tsType === "number" ? "number" : d.tsType === "boolean" ? "boolean"
+           : d.tsType === "string | number" ? "color" : null; // declared color maps back
+      return schemaAttrType(baseTag, n);
+    };
+    for (const a of el.attributes) {
+      if (SKIP_LITERAL.has(a.name) || a.name.startsWith("on")) continue;
+      const cm = CONSTRAINT_RE.exec(a.value);
+      if (cm) {
+        model.constraints.push({
+          expr: cm[1], line: a.line,
+          label: `${a.name} constraint on ${desc}`,
+          ownerType: inst.tsName,
+          parentType: parent ? parent.tsName : "LzNode",
+          classrootType: model.instances[0].tsName,
+          ownerMembers: [
+            ...inst.attrs.map((x) => x.name),
+            ...schemaAttrNames(baseTag),
+          ],
+        });
+        continue;
+      }
+      const issue = literalIssue(a.name, a.value, declKindOf(a.name));
+      if (issue) model.staticIssues.push({ message: issue, line: a.line });
+    }
+```
+
+(`desc` must therefore be computed BEFORE this block — move its `const desc = …` line up. `ownerMembers` also gains named children: push each `nc.name` into the matching constraint after the child walk, or simpler — append `inst.namedChildren.map((c) => c.name)` in a small post-pass at the end of `extractApp`: `for (const c of model.constraints) { const inst = model.instances.find((i) => i.tsName === c.ownerType); if (inst) c.ownerMembers.push(...inst.namedChildren.map((n) => n.name)); }`.)
+
+(f) Duplicate id / sibling-name checks: in `walkInstance` where `id`/`nm` are read:
+
+```ts
+    if (id && seenIds.has(id)) model.staticIssues.push({ message: `duplicate id "${id}"`, line: el.line });
+    if (id) seenIds.add(id);
+```
+
+and for siblings, in the parent: keep `const siblingNames = new Set<string>()` per `walkInstance` call; when a child registers `nm`: `if (siblingNames.has(nm)) model.staticIssues.push({ message: \`duplicate sibling name "${nm}"\`, line: c.line }); siblingNames.add(nm);` — implement by passing the parent's set down or hoisting the named-children registration into the parent's loop (the existing code registers from the child; move the duplicate check next to `parent.namedChildren.push`).
+
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `cd compiler && npm test` — Expected: PASS.
@@ -851,7 +1428,7 @@ Run: `cd compiler && npm test` — Expected: PASS.
 
 ```bash
 git add compiler/src/app-model.ts compiler/test/app-model.test.mjs
-git commit -m "compiler: app-model.ts — per-app type-model extraction for lzx-check"
+git commit -m "compiler: app-model — extraction + markup-literal/ref validation + constraint collection"
 ```
 
 ---
@@ -868,13 +1445,16 @@ git commit -m "compiler: app-model.ts — per-app type-model extraction for lzx-
   - `function generateAppDts(model: AppModel): string`
   - `interface BodySpan { genStartLine: number; srcLine: number; label: string }` — `genStartLine` is the 1-based line of the `function` header in the generated file; body code starts on the NEXT line.
   - `function generateBodies(model: AppModel): { source: string; spans: BodySpan[] }`
+  - `interface ConstraintSpan { genStartLine: number; attrLine: number; label: string; ownerMembers: string[] }` — constraints are single-expression; ALL their diagnostics map to `attrLine`.
+  - `function generateConstraintChecks(model: AppModel): { source: string; spans: ConstraintSpan[] }` — one function per constraint:
+    `function __lz_constraint_<n>(this: <ownerType>, parent: <parentType>, immediateparent: <parentType>, classroot: <classrootType>): any { return (<expr>); }`
 
 - [ ] **Step 1: Write the failing tests**
 
 Append to `compiler/test/app-model.test.mjs`:
 
 ```js
-import { generateAppDts, generateBodies } from "../dist/app-dts.js";
+import { generateAppDts, generateBodies, generateConstraintChecks } from "../dist/app-dts.js";
 
 test("app dts: classes, instance types, named children, ids", () => {
   const m = app('<laszlo-app><class name="rec" extends="view"><attribute name="hue" type="color"></attribute><method name="f" args="a"><script type="text/typescript">return a;</script></method></class><view name="panel" id="p1"><attribute name="count" type="number"></attribute></view></laszlo-app>');
@@ -887,6 +1467,15 @@ test("app dts: classes, instance types, named children, ids", () => {
   assert.ok(dts.includes("declare class LzInst_2 extends LzView {"));
   assert.ok(dts.includes("count: number;"));
   assert.ok(dts.includes("declare const p1: LzInst_2;"));
+});
+
+test("constraint checks: typed this/parent/classroot params, spans carry ownerMembers", () => {
+  const m = app('<laszlo-app><view name="panel"><view width="${parent.width - 20}"></view></view></laszlo-app>');
+  const { source, spans } = generateConstraintChecks(m);
+  assert.ok(source.includes("function __lz_constraint_1(this: LzInst_3, parent: LzInst_2, immediateparent: LzInst_2, classroot: LzInst_1): any {"));
+  assert.ok(source.includes("return (parent.width - 20);"));
+  assert.equal(spans.length, 1);
+  assert.ok(spans[0].ownerMembers.includes("width"));
 });
 
 test("bodies file: typed this + params, spans map generated lines to source lines", () => {
@@ -961,6 +1550,25 @@ export function generateBodies(model: AppModel): { source: string; spans: BodySp
   });
   return { source: lines.join("\n"), spans };
 }
+
+export interface ConstraintSpan { genStartLine: number; attrLine: number; label: string; ownerMembers: string[] }
+
+/** One function per ${…} constraint, with the ACTUAL enclosing instance types
+ *  (spec "Beyond bodies"): this/parent/immediateparent/classroot are precise,
+ *  which is what makes checking possible despite the runtime's with(this)
+ *  scoping. Diagnostics all map to the attribute's line (single expressions). */
+export function generateConstraintChecks(model: AppModel): { source: string; spans: ConstraintSpan[] } {
+  const lines: string[] = ["// AUTO-GENERATED constraint-check harness (lzx-check). Do not edit.", ""];
+  const spans: ConstraintSpan[] = [];
+  model.constraints.forEach((c, idx) => {
+    lines.push(`// ${c.label}`);
+    const genStartLine = lines.length + 1;
+    lines.push(`function __lz_constraint_${idx + 1}(this: ${c.ownerType}, parent: ${c.parentType}, immediateparent: ${c.parentType}, classroot: ${c.classrootType}): any {`);
+    spans.push({ genStartLine, attrLine: c.line, label: c.label, ownerMembers: c.ownerMembers });
+    lines.push(`return (${c.expr.replace(/\n/g, " ")});`, "}", "");
+  });
+  return { source: lines.join("\n"), spans };
+}
 ```
 
 - [ ] **Step 4: Run tests to verify they pass**
@@ -979,19 +1587,22 @@ git commit -m "compiler: app-dts.ts — per-app declaration + body-harness emiss
 ### Task 5: `lzx-check.ts` — driver, CLI, fixtures, committed `lfc.d.ts`
 
 **Files:**
-- Create: `compiler/src/lzx-check.ts`
-- Create: `compiler/test/fixtures/check-clean.html`, `compiler/test/fixtures/check-errors.html`
+- Create: `compiler/src/lzx-check.ts`, `compiler/src/xml-adapter.ts`
+- Create: `compiler/test/fixtures/check-clean.html`, `compiler/test/fixtures/check-errors.html`, `compiler/test/fixtures/check-errors.lzx`
 - Test: `compiler/test/lzx-check.test.mjs`
 - Modify: `compiler/package.json` (bin + `gen:lfcdts` script)
-- Generated + committed: `compiler/lfc.d.ts`
+- Generated + committed: `compiler/lfc.d.ts` (reflection-merged — regenerating parses the LFC, a few seconds)
 
 **Interfaces:**
-- Consumes: everything above; `typescript` devDep.
+- Consumes: everything above; `typescript` devDep; the COMMITTED `compiler/lfc.d.ts` (read at `new URL("../lfc.d.ts", import.meta.url)`, falling back to schema-only `generateLfcDts()` when absent — full reflection is too slow to run per check).
 - Produces:
   - `interface Finding { line: number; col: number; code: number; message: string; element: string }` (`line`/`col` in the SOURCE app file)
-  - `interface CheckResult { findings: Finding[]; skippedLzs: number; bodiesChecked: number }`
-  - `function checkApp(html: string, fileName: string): CheckResult`
-  - CLI: `node dist/lzx-check.js <app.html>` → report + exit 1 on findings, 0 clean; `node dist/lzx-check.js --write-lfc-dts` → prints the generated `lfc.d.ts` to stdout.
+  - `interface CheckResult { findings: Finding[]; skippedLzs: number; bodiesChecked: number; constraintsChecked: number }`
+  - `function checkApp(source: string, fileName: string): CheckResult` — `.lzx` filenames parse via `parseXml` + the `xml-adapter` (ES4 bodies skipped); everything else via `parseHtmlDialect`+`findLaszloApp`.
+  - `export function xmlToHtml(e: XmlElem): HtmlElem` from the new `compiler/src/xml-adapter.ts`
+  - CLI: `node dist/lzx-check.js <app.html|app.lzx>` → report + exit 1 on findings, 0 clean; `node dist/lzx-check.js --write-lfc-dts` → prints the REFLECTION-merged `lfc.d.ts` (loads the LFC root) to stdout.
+
+**Constraint suppression rule (locked):** a diagnostic in `__lzconstraints.ts` with code 2304 whose message matches `Cannot find name '(\w+)'` is SUPPRESSED when that name is in the span's `ownerMembers` (a `with(this)`-legal bare attribute reference); every other constraint diagnostic is a finding at the span's `attrLine`.
 
 - [ ] **Step 1: Write the fixtures**
 
@@ -1021,7 +1632,7 @@ Create `compiler/test/fixtures/check-errors.html`:
 
 ```html
 <laszlo-app width="400" height="200">
-  <view name="box">
+  <view name="box" height="12px" visible="maybe" y="${this.parent.nosuchthing}">
     <attribute name="count" type="number" value="0"></attribute>
     <handler name="onclick">
       <script type="text/typescript">
@@ -1033,8 +1644,25 @@ Create `compiler/test/fixtures/check-errors.html`:
         return this.cuont + w.toUpperCase();
       </script>
     </handler>
+    <view width="${width - 10}" x="${parent.count + wat}"></view>
   </view>
+  <view id="dup"></view>
+  <view id="dup" bgcolor="notacolor!"></view>
 </laszlo-app>
+```
+
+Seeded beyond the body triple: `height="12px"` (bad size literal), `visible="maybe"` (bad boolean), `bgcolor="notacolor!"` (bad color, the `!` fails the name pattern), duplicate `id="dup"`, `${this.parent.nosuchthing}` (member error — `parent` is `LzNode`-typed on `this`, which has no `nosuchthing`), `${parent.count + wat}` (`parent.count` resolves against the TYPED parent param — no finding — while bare `wat` → TS2304 finding), and `${width - 10}` (bare `width` IS an owner member → `with(this)`-legal → suppressed).
+
+Create `compiler/test/fixtures/check-errors.lzx` (the XML dialect):
+
+```xml
+<canvas width="400" height="200">
+  <view name="box" width="oops" x="${nope + 1}">
+    <method name="f">
+      return this doesn't parse as TS but is never checked;
+    </method>
+  </view>
+</canvas>
 ```
 
 Seeded errors: (1) wrong-typed `setAttribute('count', 'oops')` — `count: number`; (2) misspelled member `this.cuont`; (3) `w.toUpperCase()` where `onwidth`'s payload is `number` (resolved) → TS2339. These are exactly the spec's Testing #6 triple.
@@ -1059,22 +1687,38 @@ test("clean fixture: zero findings, bodies counted", () => {
   assert.equal(r.skippedLzs, 0);
 });
 
-test("errors fixture: the spec's three error classes, mapped to source lines", () => {
+test("errors fixture: bodies, literals, refs, constraints — all mapped to source lines", () => {
   const src = read("check-errors.html");
   const r = checkApp(src, "check-errors.html");
-  assert.equal(r.findings.length >= 3, true, JSON.stringify(r.findings, null, 2));
   const lines = src.split("\n");
   const at = (needle) => lines.findIndex((l) => l.includes(needle)) + 1;
   const find = (needle) => r.findings.find((f) => f.line === at(needle));
+  // the spec's body triple
   const wrongType = find("setAttribute('count', 'oops')");
   assert.ok(wrongType, "wrong-typed setAttribute not found");
   assert.equal(wrongType.code, 2345);
   const misspelled = find("this.cuont");
   assert.ok(misspelled, "misspelled member not found");
-  assert.ok([2339, 2551].includes(misspelled.code)); // 2551 = did-you-mean variant
-  const badArg = r.findings.find((f) => f.message.includes("toUpperCase"));
-  assert.ok(badArg, "bad handler-arg use not found");
-  for (const f of r.findings) assert.ok(f.element.includes("<handler"));
+  assert.ok([2339, 2551].includes(misspelled.code));
+  assert.ok(r.findings.some((f) => f.message.includes("toUpperCase")), "bad handler-arg use not found");
+  // markup literals + refs
+  assert.ok(r.findings.some((f) => f.message.includes('height="12px"')));
+  assert.ok(r.findings.some((f) => f.message.includes('visible="maybe"')));
+  assert.ok(r.findings.some((f) => f.message.includes("notacolor")));
+  assert.ok(r.findings.some((f) => f.message.includes('duplicate id "dup"')));
+  // constraints: typed-member error + bare-unknown error; bare OWNER member suppressed
+  assert.ok(r.findings.some((f) => f.message.includes("nosuchthing")));
+  assert.ok(r.findings.some((f) => f.message.includes("'wat'")));
+  assert.ok(!r.findings.some((f) => f.message.includes("'width'")), "with(this)-legal bare width must be suppressed");
+  assert.equal(r.constraintsChecked, 3);
+});
+
+test(".lzx dialect: markup/constraints validated, ES4 bodies skipped", () => {
+  const r = checkApp(read("check-errors.lzx"), "check-errors.lzx");
+  assert.ok(r.findings.some((f) => f.message.includes('width="oops"')));
+  assert.ok(r.findings.some((f) => f.message.includes("'nope'")));  // constraint bare unknown
+  assert.equal(r.bodiesChecked, 0);
+  assert.equal(r.skippedLzs, 1);
 });
 
 test("lzs carriers are skipped, not failed", () => {
@@ -1095,6 +1739,38 @@ test("invalid names surface as findings instead of corrupting the check", () => 
 
 Run: `cd compiler && npm test` — Expected: FAIL (module missing).
 
+- [ ] **Step 4a: Implement the XML adapter**
+
+Create `compiler/src/xml-adapter.ts`:
+
+```ts
+// xml-adapter.ts — XmlElem (parseXml) → HtmlElem-shaped tree, so .lzx apps
+// feed the same model extractor as the DOM dialect (spec "Beyond bodies").
+// parseXml already carries element lines and attrLines.
+
+import type { XmlElem } from "./xml.js";
+import type { HtmlElem, HtmlNode } from "./htmlsource.js";
+
+export function xmlToHtml(e: XmlElem): HtmlElem {
+  const attributes = e.attrOrder.map((n) => ({
+    name: n, value: e.attrs[n], line: e.attrLines?.[n] ?? e.line ?? 0,
+  }));
+  const el: HtmlElem = {
+    nodeType: 1, line: e.line ?? 0, tagName: e.name.toUpperCase(), attributes,
+    childNodes: [],
+    getAttribute(n) { const a = attributes.find((x) => x.name === n); return a ? a.value : null; },
+    attrLine(n) { const a = attributes.find((x) => x.name === n); return a ? a.line : (e.line ?? 0); },
+    setAttribute(n, v) {
+      const a = attributes.find((x) => x.name === n);
+      if (a) a.value = String(v); else attributes.push({ name: n, value: String(v), line: e.line ?? 0 });
+    },
+  };
+  el.childNodes = e.children.map((c): HtmlNode =>
+    c.type === "elem" ? xmlToHtml(c) : { nodeType: 3, nodeValue: c.value, line: c.line ?? 0 });
+  return el;
+}
+```
+
 - [ ] **Step 4: Implement**
 
 Create `compiler/src/lzx-check.ts`:
@@ -1114,28 +1790,42 @@ Create `compiler/src/lzx-check.ts`:
 
 import ts from "typescript";
 import { readFileSync, realpathSync } from "node:fs";
-import { pathToFileURL } from "node:url";
+import { pathToFileURL, fileURLToPath } from "node:url";
 import { parseHtmlDialect, findLaszloApp } from "./htmlsource.js";
+import { parseXml } from "./xml.js";
+import { xmlToHtml } from "./xml-adapter.js";
 import { extractApp } from "./app-model.js";
-import { generateAppDts, generateBodies, BodySpan } from "./app-dts.js";
+import { generateAppDts, generateBodies, generateConstraintChecks, BodySpan } from "./app-dts.js";
 import { generateLfcDts } from "./lfc-dts.js";
+import { loadLfcReflection } from "./lfc-reflect.js";
 
 export interface Finding { line: number; col: number; code: number; message: string; element: string }
-export interface CheckResult { findings: Finding[]; skippedLzs: number; bodiesChecked: number }
+export interface CheckResult { findings: Finding[]; skippedLzs: number; bodiesChecked: number; constraintsChecked: number }
 
 const COMPILER_OPTS: ts.CompilerOptions = {
   noEmit: true, strict: false, types: [], lib: ["lib.es2020.d.ts"],
   target: ts.ScriptTarget.ES2020,
 };
 
-export function checkApp(html: string, fileName: string): CheckResult {
-  const model = extractApp(findLaszloApp(parseHtmlDialect(html)));
+/** The COMMITTED reflection-merged lfc.d.ts (fast, deterministic); schema-only
+ *  fallback if it hasn't been generated yet. */
+function readLfcDts(): string {
+  try { return readFileSync(fileURLToPath(new URL("../lfc.d.ts", import.meta.url)), "utf8"); }
+  catch { return generateLfcDts(); }
+}
+
+export function checkApp(source: string, fileName: string): CheckResult {
+  const isLzx = /\.lzx$/i.test(fileName);
+  const root = isLzx ? xmlToHtml(parseXml(source)) : findLaszloApp(parseHtmlDialect(source));
+  const model = extractApp(root, { es4Bodies: isLzx });
   const appDts = generateAppDts(model);
   const { source: bodiesSrc, spans } = generateBodies(model);
+  const { source: constrSrc, spans: constrSpans } = generateConstraintChecks(model);
   const virtual = new Map<string, string>([
-    ["lfc.d.ts", generateLfcDts()],
+    ["lfc.d.ts", readLfcDts()],
     ["__lzapp.d.ts", appDts],
     ["__lzbodies.ts", bodiesSrc],
+    ["__lzconstraints.ts", constrSrc],
   ]);
 
   const host = ts.createCompilerHost(COMPILER_OPTS);
@@ -1153,6 +1843,9 @@ export function checkApp(html: string, fileName: string): CheckResult {
   // Extraction-time name validation (invalid ids/class/attribute names).
   for (const ni of model.nameIssues)
     findings.push({ line: ni.line, col: 1, code: 0, message: ni.message, element: "(name validation)" });
+  // Markup-literal + cross-reference validation.
+  for (const si of model.staticIssues)
+    findings.push({ line: si.line, col: 1, code: 0, message: si.message, element: "(markup validation)" });
 
   // Diagnostics in the generated APP DECLARATIONS are real findings too (an
   // invalid id/attribute name corrupts the type model): swallowing them would
@@ -1183,7 +1876,23 @@ export function checkApp(html: string, fileName: string): CheckResult {
       element: span?.label ?? "(unknown)",
     });
   }
-  return { findings, skippedLzs: model.skippedLzs, bodiesChecked: model.bodies.length };
+
+  // Constraint diagnostics: precise this/parent/classroot types; the ONE
+  // with(this) accommodation is suppressing TS2304 on the owner's own members.
+  const constrSf = prog.getSourceFile("__lzconstraints.ts")!;
+  for (const d of [...prog.getSyntacticDiagnostics(constrSf), ...prog.getSemanticDiagnostics(constrSf)]) {
+    if (d.start == null) continue;
+    const genLine = d.file!.getLineAndCharacterOfPosition(d.start).line + 1;
+    let span: (typeof constrSpans)[number] | undefined;
+    for (const s of constrSpans) if (s.genStartLine <= genLine) span = s; else break;
+    const msg = ts.flattenDiagnosticMessageText(d.messageText, " ");
+    if (d.code === 2304 && span) {
+      const m = /Cannot find name '(\w+)'/.exec(msg);
+      if (m && span.ownerMembers.includes(m[1])) continue; // with(this)-legal bare name
+    }
+    findings.push({ line: span?.attrLine ?? genLine, col: 1, code: d.code, message: msg, element: span?.label ?? "(constraint)" });
+  }
+  return { findings, skippedLzs: model.skippedLzs, bodiesChecked: model.bodies.length, constraintsChecked: model.constraints.length };
 }
 
 // ── CLI ─────────────────────────────────────────────────────────────────────
@@ -1195,7 +1904,9 @@ const isMain = !!process.argv[1] &&
 if (isMain) {
   const args = process.argv.slice(2);
   if (args[0] === "--write-lfc-dts") {
-    process.stdout.write(generateLfcDts());
+    // Reflection-merged: derive class members + lz.* from the LFC source.
+    const root = fileURLToPath(new URL("../../runtime/lfc-src/LaszloLibrary.lzs", import.meta.url));
+    process.stdout.write(generateLfcDts(loadLfcReflection(root)));
     process.exit(0);
   }
   const file = args[0];
@@ -1207,12 +1918,13 @@ if (isMain) {
   const r = checkApp(html, file);
   for (const f of r.findings)
     console.error(`${file}:${f.line}:${f.col} TS${f.code} ${f.message}   [${f.element}]`);
-  const note = r.skippedLzs ? ` (${r.skippedLzs} text/lzs carrier${r.skippedLzs > 1 ? "s" : ""} skipped)` : "";
+  const note = r.skippedLzs ? ` (${r.skippedLzs} non-TS bod${r.skippedLzs > 1 ? "ies" : "y"} skipped)` : "";
+  const scope = `${r.bodiesChecked} bodies, ${r.constraintsChecked} constraints`;
   if (r.findings.length) {
-    console.error(`${r.findings.length} finding(s) across ${r.bodiesChecked} bodies${note}`);
+    console.error(`${r.findings.length} finding(s) across ${scope}${note}`);
     process.exit(1);
   }
-  console.log(`OK — ${r.bodiesChecked} bodies checked, 0 findings${note}`);
+  console.log(`OK — ${scope} checked, 0 findings${note}`);
 }
 ```
 
@@ -1248,8 +1960,8 @@ Expected: the AUTO-GENERATED banner; a few hundred lines.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add compiler/src/lzx-check.ts compiler/test/lzx-check.test.mjs compiler/test/fixtures/ compiler/package.json compiler/lfc.d.ts
-git commit -m "compiler: lzx-check CLI — app-aware TS checking (lfc.d.ts + per-app decls + typed bodies)"
+git add compiler/src/lzx-check.ts compiler/src/xml-adapter.ts compiler/test/lzx-check.test.mjs compiler/test/fixtures/ compiler/package.json compiler/lfc.d.ts
+git commit -m "compiler: lzx-check CLI — full-surface validation (bodies, literals, refs, constraints; html + lzx)"
 ```
 
 ---
@@ -1302,6 +2014,15 @@ node dist/lzx-check.js test/fixtures/check-errors.html; echo "exit: $?"
 ```
 Expected: three findings printed as `file:line:col TS<code> message [<element>]`, `exit: 1`.
 
+- [ ] **Step 3b: Corpus sweep (.lzx path against real apps)**
+
+```bash
+for f in ../docs/component-browser/components.lzx ../examples/ten-minutes/sessionwindow.lzx; do
+  node dist/lzx-check.js "$f"; echo "-- $f exit: $?"
+done
+```
+Expected: each app **parses, extracts, and reports** (bodies 0 / skipped N, constraints M). Findings against the 2005-era corpus are acceptable and interesting (report a sample in the task summary); crashes/`ScUnsupported`/adapter errors are bugs — fix them. This is the "validate across everything" acceptance check.
+
 - [ ] **Step 4: Document**
 
 Append to `examples/dom-authoring/README.md`:
@@ -1310,16 +2031,22 @@ Append to `examples/dom-authoring/README.md`:
 
 ## Type checking (Slice 2)
 
-`lzx-check` type-checks an app document: TypeScript bodies get a typed
-`this` (your `<attribute>` declarations, named children, LFC API from the
-generated `compiler/lfc.d.ts`), `setAttribute` names/values are checked,
-and handler args are typed from the attribute they observe.
+`lzx-check` validates the whole authored surface: TypeScript bodies get a
+typed `this` (your `<attribute>` declarations, named children, the LFC API
+derived from the compiler schema AND the LFC source — see the generated
+`compiler/lfc.d.ts`), `setAttribute` names/values are checked, handler args
+are typed from the attribute they observe, markup attribute literals are
+validated against their types, `extends`/duplicate-id/duplicate-name refs
+are checked, and `${…}` constraints are checked with the actual enclosing
+instance types. Works on `.html` (DOM dialect) and `.lzx` (XML dialect —
+ES4 bodies skipped, everything else validated).
 
     cd compiler
     node dist/lzx-check.js ../examples/dom-authoring/counter-app.html
+    node dist/lzx-check.js ../docs/component-browser/components.lzx
 
-Exit 1 + `file:line:col TS<code>` diagnostics on findings; `text/lzs`
-carriers are skipped (ES4 is not TypeScript). Checking never blocks
+Exit 1 + `file:line:col TS<code>` diagnostics on findings; non-TS bodies
+(`text/lzs`, `.lzx`) are skipped and counted. Checking never blocks
 running — the browser pipeline only strips types.
 ```
 
@@ -1335,4 +2062,4 @@ git commit -m "lzx-check: verify against shipped demos; de-cast counter demo; do
 
 ## Out of scope (follow-ups, do not build)
 
-Per spec/deferred: `.lzx` XML-dialect checking, top-level `<script>` bodies (canvas-owned), nested template-view bodies inside `<class>`, `${…}` constraint-expression checking (spec says best-effort — deferred), an in-browser `?debug` diagnostics overlay, editor/IDE integration beyond the committed `lfc.d.ts`, `lz.*` namespace typing (currently `any`).
+Per spec/deferred: top-level `<script>` bodies (canvas-owned), nested template-view bodies AND constraints inside `<class>` subtrees, doc-comment (`@param`) type mining for un-annotated LFC params, tightening the `lz` namespace's `[k: string]: any` index signature, `immediateparent`/placement-aware typing (v1 approximates as parent), an in-browser `?debug` diagnostics overlay, editor/IDE integration beyond the committed `lfc.d.ts`.
