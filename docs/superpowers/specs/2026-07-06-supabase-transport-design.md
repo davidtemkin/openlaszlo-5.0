@@ -89,20 +89,21 @@ presence count, persistent chat.
                     └─ 3c: SELECT + postgres_changes INSERT sub + RLS insert
                                    ▼
                          Supabase project (user-provisioned demo;
-                         migrations applied via MCP at execution time)
+                         migration user-applied via dashboard SQL editor,
+                         verified empirically over the Data API)
 ```
 
 ### Components
 
 | Unit | Location | Purpose |
 | --- | --- | --- |
-| transport parsing | `compiler/src/app-model.ts` + `startup/lz-bus.js` | `<server transport= supabase-url= supabase-key=>` into the model AND into the client decls — NOTHING reads `<server>`'s own attributes today (verified: `walkServer` and `extractServerDecls` both ignore them). Pinned extended decl shape: `{ transport, url, key, tags: [{tag, table?, attrs, methods}] }`; `busPrelude`'s node-transport output must be byte-identical to Slice 3 (tested). Supabase-mode findings: methods/handlers, reserved `presence`, missing url/key; `table=` marks table-backed tags |
+| transport parsing | `compiler/src/app-model.ts` + `startup/lz-bus.js` | `<server transport= supabase-url= supabase-key=>` into the model AND into the client decls — NOTHING reads `<server>`'s own attributes today (verified: `walkServer` and `extractServerDecls` both ignore them). Pinned extended decl shape: `{ transport, url, key, tags: [{tag, table?, attrs, methods}] }` — `extractServerDecls` now reads `<server>`'s OWN attributes and returns this object (signature ripple is contained: laszlo-dom.js passes it opaquely to `busPrelude`); the model gains `serverTransport: { mode: "node" | "supabase"; url?: string; key?: string }` (lzx-check gates the second program on `mode === "node"`). `busPrelude`'s node-transport output must be byte-identical to Slice 3 (tested). Supabase-mode findings: methods/handlers, reserved `presence`, missing url/key; `table=` marks table-backed tags |
 | checker typing | `compiler/src/app-dts.ts` + `lzx-check.ts` | supabase mode: ephemeral tags = attrs only; table-backed tags get `rows: any[]` + `insert(record: any): Promise<any>`; `presence` built-in typed `{ count: number }`; server-body SECOND program only runs for node transport |
 | `lz-bus-supabase.js` | `startup/` (new) | the bridge: channel join, broadcast/presence (3b), table select/subscribe/insert (3c), joiner state adoption — pure decision helpers exported for unit tests |
 | vendored client | `startup/vendor/supabase-js-2.110.0.js` | the official UMD single-file build, committed (static hosting; no CDN dependency); classic-script loaded, `window.supabase` |
 | bootstrap hook | `startup/laszlo-dom.js` | route to `connectSupabase(cfg)` instead of `connectBus` when the transport says so |
 | demo | `examples/dom-authoring/bus-supabase-demo.html` | counter (3b) + presence count + persistent chat (3c), static-hostable |
-| migration | `docs/superpowers/assets/2026-07-06-bus-messages.sql` + applied via MCP | `bus_messages` schema + RLS |
+| migration | `docs/superpowers/assets/2026-07-06-bus-messages.sql` (user-applied via dashboard SQL editor; verified empirically via Data API curl) | `bus_messages` schema + RLS + realtime publication |
 
 ## 3b — ephemeral mode semantics
 
@@ -138,16 +139,23 @@ presence count, persistent chat.
   `{ ...record, app: <app-path> }`; RLS decides. Returns the client
   library's promise (errors reject).
 - `rows` is read-only from app code: the proxy's `setAttribute("rows", …)`
-  is a console warning + no-op (state authority is the table), and the
-  checker EXCLUDES `rows` from the strict setter's key union so the no-op
-  can never typecheck silently.
+  is a console warning + no-op (state authority is the table). Checker
+  mechanism (tsc-verified): table-backed `_client` classes still DECLARE
+  `rows: any[]` (constraint typing needs it) but override the setter as
+  `setAttribute<K extends Exclude<keyof this & string, "rows">>(name: K,
+  value: this[K]): void;` — `rows.length` typechecks, `setAttribute("rows",
+  …)` is TS2345 (plain `readonly` does NOT remove a key from `keyof`).
 - **Table-backed prelude story (same "too late" trap as presence):**
   constraints referencing `server.chat.rows.length` bind at app start, so
   the PRELUDE initializes `rows: []` on table-backed proxies and installs
-  an `insert` stub that queues `{op:"insert", tag, record}` — NEVER
-  `op:"call"` — returning a Promise settled by the bridge. On connect the
-  bridge drains queued inserts (executing them as supabase-js inserts) and
-  swaps the stub for the direct implementation.
+  an `insert` stub sending `{op:"insert", tag, record, uid}` through the
+  EXISTING `__lzBusSend` into the ONE shared `window.__lzBusQueue`, with
+  the settle pair registered in `window.__lzBusCalls[uid]` — exactly the
+  op:"call" machinery Slice 3 already has, different op. NEVER
+  `op:"call"`. The supabase bridge drains that one queue on connect
+  (`op:"set"` → broadcast+track; `op:"insert"` → supabase-js insert,
+  settling `__lzBusCalls[uid]` from the result) and thereafter executes
+  directly.
 
 **Schema + RLS (the migration, per the security checklist):**
 
@@ -172,19 +180,30 @@ alter publication supabase_realtime add table public.bus_messages;
 -- default privileges cover anon/authenticated grants)
 ```
 
-Data-API exposure + advisors are checked at apply time (MCP `get_advisors`).
+Data-API exposure is verified empirically (curl, below); advisor review is deferred until the project is MCP-visible (or the user runs the dashboard Security Advisor and reports).
 
-## Provisioning workflow (agreed)
+## Provisioning workflow (revised — the demo project is OUTSIDE the MCP's org)
 
-The user creates the demo project (free tier) in the dashboard; when it
-appears in MCP `list_projects`, execution applies the migration
-(`apply_migration`), verifies with `get_advisors` + a test insert/select,
-**verifies the Realtime "Channel Restrictions / Allow public access"
-setting permits public channels** (docs now lean private-by-default; a
-private-only project refuses `lzbus:` joins absent `realtime.messages`
-RLS), and reads the URL + publishable key (`get_project_url`,
-`get_publishable_keys`) into the demo page. The demo page's committed copy
-carries the real demo-project values (public by design).
+The project exists and is user-supplied: URL
+`https://cqcvnsiitrwlvrdbdqlt.supabase.co`, publishable key
+`sb_publishable_lQyZC9w-mgLN6uG2CW7uaQ_kgOqbZmb` (public by design; both
+committed into the demo page). It is NOT visible to the Supabase MCP
+(different org), so provisioning is hand+empirical:
+
+1. **Migration by hand:** execution hands the user the committed SQL
+   (`docs/superpowers/assets/2026-07-06-bus-messages.sql`) for the
+   dashboard SQL editor; the user confirms success.
+2. **Empirical Data-API verification (replaces MCP advisors/test-insert):**
+   `curl` POST `/rest/v1/bus_messages` with the `apikey` header and
+   `{app, body}` → 201 proves table + Data-API exposure + INSERT RLS;
+   `curl` GET `?app=eq.<app>&select=*` returns the row (SELECT RLS); a
+   >500-char body must be REJECTED (the check actually gates).
+3. **Realtime verification is empirical, in the live E2E:** a public
+   `lzbus:` channel join reaching `SUBSCRIBED` IS the Channel-Restrictions
+   check (a private-only project surfaces as `CHANNEL_ERROR`/timed-out
+   join — the dashboard Realtime settings page is the user-side fix); a
+   `postgres_changes` INSERT event arriving proves the publication ALTER
+   took (that failure mode is otherwise silent).
 
 ## Error handling & degradation
 
@@ -210,8 +229,8 @@ carries the real demo-project values (public by design).
    close; chat insert appears in both tabs AND survives a reload of both
    (durability); joiner-adoption: bump the counter, open a third tab,
    assert it adopts the bumped value.
-3. **Advisors clean** after the migration (MCP `get_advisors`, security +
-   performance).
+3. **Data-API curl checks** (provisioning §2) green; advisor review
+   deferred until the project is MCP-visible (or user-run via dashboard).
 
 ## Known limitations & platform notes (v1)
 
@@ -222,7 +241,10 @@ carries the real demo-project values (public by design).
   channel per app carrying broadcast + presence; 3c's `postgres_changes`
   rides a second channel (subscription lifecycle differs).
 - **Fresh flag:** lives in the bridge; cleared by the FIRST applied state
-  of any kind — including the client's own echo.
+  of any kind — including the client's own echo. Edge (accepted LWW
+  behavior, do not "fix"): a client that sets locally BEFORE its first
+  presence sync skips adoption entirely — its other attrs stay at defaults
+  even when a senior peer holds converged state.
 - `joined_at` oldest-peer adoption trusts client clocks (acceptable for
   ephemeral rooms; documented).
 - **Presence rate caution:** free tier allows ~20 presence msgs/sec and
