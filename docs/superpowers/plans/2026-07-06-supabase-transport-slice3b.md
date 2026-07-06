@@ -298,15 +298,11 @@ test("extractServerDecls: object shape; node default; supabase attrs + table", (
   assert.equal(supa.tags[0].table, "bus_messages");
 });
 
-test("busPrelude: NODE output is byte-identical to Slice 3 (golden)", () => {
+test("busPrelude: NODE output is byte-identical to Slice 3 (FULL-STRING golden)", () => {
   const out = busPrelude(extractServerDecls(NODE_DECLS_INPUT));
-  // Golden: the exact Slice-3 template for this input. If this test fails
-  // after an INTENTIONAL prelude change, Slice-3 semantics changed — stop.
-  assert.ok(out.startsWith("// lz-bus proxy prelude (generated)"));
-  assert.ok(out.includes('var DECLS = [{"tag":"clock","attrs":[{"name":"seconds","value":"0","type":"number"}],"methods":[{"name":"reset"}]}];'));
-  assert.ok(!out.includes("presence"));
-  assert.ok(!out.includes("rows"));
-  assert.ok(out.includes('op: "call"'));
+  // GOLDEN is captured from the PRE-CHANGE Slice-3 busPrelude (see the
+  // capture step below) and pasted here verbatim. assert.equal → byte parity.
+  assert.equal(out, GOLDEN);
 });
 
 test("busPrelude: supabase mode adds presence proxy + table rows/insert stubs", () => {
@@ -322,9 +318,21 @@ test("busPrelude: supabase mode adds presence proxy + table rows/insert stubs", 
 });
 ```
 
+- [ ] **Step 1b: Capture the golden (BEFORE changing lz-bus.js)**
+
+```bash
+node --input-type=module -e "
+import { busPrelude } from './startup/lz-bus.js';
+const decls = [{ tag: 'clock', attrs: [{ name: 'seconds', value: '0', type: 'number' }], methods: [{ name: 'reset' }] }];
+console.log(JSON.stringify(busPrelude(decls)));
+" > /tmp/golden.json
+```
+
+Paste the resulting JSON string into the test as `const GOLDEN = JSON.parse('<paste>');` (or embed via a template literal). This pins the CURRENT Slice-3 output before any edit; the new object-taking busPrelude must reproduce it byte-for-byte for node transport.
+
 - [ ] **Step 2: Run to verify failure**
 
-Run: `cd compiler && npm test` — Expected: FAIL (array shape / missing fields).
+Run: `cd compiler && npm test` — Expected: FAIL (array shape / missing fields). (NOTE: the Task-4 import at the top of this test file makes the WHOLE file fail with module-not-found until Task 4 creates `lz-bus-supabase.js` — either add that import only in Task 4, or create an empty exporting stub now.)
 
 - [ ] **Step 3: Implement — `startup/lz-bus.js`**
 
@@ -393,6 +401,14 @@ ${supa ? `    if (d.table) {
     } else {
       o.setAttribute = function (n, v) { window.__lzBusSend({ op: "set", tag: d.tag, attr: n, value: v }); };
     }
+    // Spec runtime contract: declared methods are ignored with one warning
+    // (they are checker findings; no execution home in supabase mode).
+    d.methods.forEach(function (m) {
+      o[m.name] = function () {
+        if (window.console) console.warn('lz-bus: "' + m.name + '" has no execution home in supabase mode');
+        return Promise.reject(new Error("no execution home in supabase mode"));
+      };
+    });
 ` : `    // Server-authoritative: SEND, never apply locally (deltas apply via the
     // ORIGINAL LzEventable.prototype.setAttribute in connectBus).
     o.setAttribute = function (n, v) { window.__lzBusSend({ op: "set", tag: d.tag, attr: n, value: v }); };
@@ -476,7 +492,7 @@ test("pickAdoptionSource: oldest joined_at wins; malformed ignored; empty null",
   const st = pickAdoptionSource({
     a: [{ joined_at: 200, state: { s: { count: 2 } } }],
     b: [{ joined_at: 100, state: { s: { count: 9 } } }],
-    c: [{ nope: true }, { joined_at: 50 }], // malformed: no state
+    c: [{ nope: true }, { joined_at: 50 }, { joined_at: 10, state: {} }], // malformed / empty state: ignored
   });
   assert.deepEqual(st, { s: { count: 9 } });
 });
@@ -509,7 +525,8 @@ export function pickAdoptionSource(presenceState) {
   let best = null;
   for (const metas of Object.values(presenceState || {})) {
     for (const m of metas || []) {
-      if (!m || typeof m.joined_at !== "number" || !m.state || typeof m.state !== "object") continue;
+      if (!m || typeof m.joined_at !== "number" || !m.state || typeof m.state !== "object"
+          || Object.keys(m.state).length === 0) continue; // empty-state seniors never win
       if (!best || m.joined_at < best.joined_at) best = m;
     }
   }
@@ -540,13 +557,16 @@ export function connectSupabase(decls, appPath) {
     setTimeout(() => waitForProxies(fn, n + 1), 50);
   };
   waitForProxies(async () => {
+    try {
     if (!window.supabase) await loadScript(new URL(VENDOR, import.meta.url).href);
     const client = window.supabase.createClient(decls.url, decls.key, { auth: { persistSession: false } });
     const P = window.__lzBusProxies;
     const C = window.__lzBusCalls;
-    let fresh = true; // never applied ANY tag state (incl. our own echo) -> adoption allowed
-    // apply = raw (presence count uses it — must NOT block adoption);
-    // applyState = tag state (clears the fresh flag).
+    let fresh = true; // never applied any EPHEMERAL tag state -> adoption allowed
+    // apply = raw (presence count AND table rows use it — neither may block
+    // adoption: table state lives in a different authority domain, and peer
+    // presence state can never contain rows);
+    // applyState = EPHEMERAL tag state (delta/echo/adoption; clears fresh).
     const apply = (tag, attr, value) => {
       const o = P[tag];
       if (o) LzEventable.prototype.setAttribute.call(o, attr, value);
@@ -587,7 +607,7 @@ export function connectSupabase(decls, appPath) {
       try {
         const { error } = await client.from(tag.table).insert({ ...m.record, app: path });
         if (error) throw error;
-        if (settle) { delete C[m.uid]; settle.res(null); }
+        if (settle) { delete C[m.uid]; settle.res(null); } // v1: resolves null (row not returned) — accepted divergence
       } catch (e) {
         if (settle) { delete C[m.uid]; settle.rej(e instanceof Error ? e : new Error(String(e.message || e))); }
       }
@@ -597,34 +617,48 @@ export function connectSupabase(decls, appPath) {
       client.channel("lzbus-table:" + path + ":" + t.tag)
         .on("postgres_changes", { event: "INSERT", schema: "public", table: t.table, filter: "app=eq." + path }, (msg) => {
           const next = dedupeAppend(P[t.tag].rows, msg.new);
-          if (next) applyState(t.tag, "rows", next);
+          if (next) apply(t.tag, "rows", next); // raw: table state never blocks adoption
         })
-        .subscribe();
+        .subscribe((status) => {
+          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT")
+            console.warn("lz-bus: table channel " + status + " for " + t.tag);
+        });
       client.from(t.table).select("*").eq("app", path).order("id").then(({ data, error }) => {
         if (error) return console.warn("lz-bus: table select failed:", error.message);
         let rows = P[t.tag].rows;
         for (const r of data || []) { const next = dedupeAppend(rows, r); if (next) rows = next; }
-        applyState(t.tag, "rows", rows);
+        apply(t.tag, "rows", rows); // raw: table state never blocks adoption
       });
     }
 
     chan.subscribe((status) => {
       if (status === "SUBSCRIBED") {
         const q = window.__lzBusQueue.splice(0);
-        window.__lzBusSend = (m) => { JSON.stringify(m); m.op === "insert" ? doInsert(m) : doSet(m); };
-        for (const m of q) (m.op === "insert" ? doInsert : doSet)(m);
+        const route = (m) => m.op === "insert" ? doInsert(m)
+          : m.op === "set" ? doSet(m)
+          : console.warn("lz-bus: unsupported op in supabase mode:", m.op);
+        window.__lzBusSend = (m) => { JSON.stringify(m); route(m); };
+        q.forEach(route);
         chan.track({ state: localState, joined_at: joinedAt });
       } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
         console.warn("lz-bus: supabase channel " + status + " — check the project's Realtime 'Allow public access' setting");
       }
     });
+    } catch (e) {
+      // Spec degradation contract: one warning, defaults hold.
+      console.warn("lz-bus: supabase transport unavailable — server state stays at defaults:", e && e.message);
+    }
   });
 }
 ```
 
 (The `apply`/`applyState` split above is load-bearing: presence-count updates use raw `apply` so they never block adoption; delta/echo/adoption/table paths use `applyState`, which clears the `fresh` flag.)
 
-- [ ] **Step 3: Run tests + syntax check, commit**
+- [ ] **Step 3: Implementation-time platform verification (spec principle 4)**
+
+One search_docs/doc-fetch pass confirming: presence "keys per object" limit (our tracked meta has 2 top-level keys), free-tier message rates, and that `broadcast: { self: true }` + `presenceState()` shapes match the vendored 2.110.0. Note results in the task summary.
+
+- [ ] **Step 4: Run tests + syntax check, commit**
 
 ```bash
 cd compiler && npm test
@@ -763,7 +797,7 @@ Two tabs on `http://localhost:8092/examples/dom-authoring/bus-supabase-demo.html
 2. Click the purple box in tab A → **both** tabs' count and box width update (broadcast + self-echo canary, serverless).
 3. `online: 2` in both tabs (presence).
 4. Send a chat message from tab B → appears in BOTH tabs (postgres_changes proves the publication ALTER took).
-5. Reload tab A → chat persists (durable); counter — adopt from tab B's presence (bumped value, not 0): the joiner-adoption check.
+5. Reload tab A → chat persists (durable); counter adopts from tab B's presence (bumped value, not 0). ALSO open a THIRD tab (the spec's joiner-adoption pin): it must adopt the bumped counter, show `online: 3`, and the chat log. Reload tab B too (chat "survives a reload of BOTH").
 6. Close tab B → tab A shows `online: 1`.
 7. Console: no errors.
 

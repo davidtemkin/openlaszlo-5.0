@@ -114,8 +114,9 @@ presence count, persistent chat.
   (2) `track()` updated presence meta `{ state: {tag:{attr:value,…}},
   joined_at }`.
 - **Joiner state adoption:** on the first presence `sync`, adopt the full
-  `state` of the peer with the OLDEST `joined_at` (the room's senior holds
-  the longest-converged state); no peers → declared defaults. Adoption goes
+  `state` of the peer with the OLDEST `joined_at` that has a NON-EMPTY
+  state (an idle senior never shadows a junior's converged state); no
+  qualifying peers → declared defaults. Adoption goes
   through the ORIGINAL setter, so constraints converge exactly like a
   Slice-3 snapshot. Exported as a pure helper
   (`pickAdoptionSource(presences)`) for unit tests.
@@ -240,8 +241,11 @@ committed into the demo page). It is NOT visible to the Supabase MCP
 - **Broadcast event name:** all 3b traffic uses event `"lzbus"` on ONE
   channel per app carrying broadcast + presence; 3c's `postgres_changes`
   rides a second channel (subscription lifecycle differs).
-- **Fresh flag:** lives in the bridge; cleared by the FIRST applied state
-  of any kind — including the client's own echo. Edge (accepted LWW
+- **Fresh flag:** lives in the bridge; cleared by the first applied
+  EPHEMERAL tag state — delta, echo, or adoption. Presence count and table
+  rows NEVER clear it (table state lives in a different authority domain
+  and peer presence state can never contain rows — a chat row arriving
+  before the first presence sync must not block counter adoption). Edge (accepted LWW
   behavior, do not "fix"): a client that sets locally BEFORE its first
   presence sync skips adoption entirely — its other attrs stay at defaults
   even when a senior peer holds converged state.
