@@ -54,6 +54,37 @@ node server/index.mjs 8090
 # then open http://localhost:8090/
 ```
 
+The Node server is also the dev loop: **live reload is on by default** — edit any served
+app source (or an include it pulls in) and every browser showing it reloads. Opt out
+with `node server/index.mjs 8090 --no-reload`.
+
+## The DOM dialect & friends
+
+A family of additive features — none touch the byte-frozen 4.9 compile path — that let
+you author LZX as native HTML with TypeScript code carriers, statically type-check the
+whole app surface, and share live state between clients. Every feature below was
+spec'd and adversarially reviewed; the specs live in
+[`docs/superpowers/specs/`](docs/superpowers/specs/), and the authoring guide is
+[`examples/dom-authoring/README.md`](examples/dom-authoring/README.md).
+
+| Feature | Try it | Spec |
+| --- | --- | --- |
+| **DOM-native authoring** — LZX as HTML custom tags in `<laszlo-app>`, TypeScript carriers, authored elements adopted as live sprites | [`file-demo`](examples/dom-authoring/file-demo.html) (the counter app) | [`dom-native-authoring`](docs/superpowers/specs/2026-07-05-dom-native-authoring-design.md) |
+| **`lzx-check`** — full-surface static type checking: typed `this`, strict `setAttribute`, markup literals, `${…}` constraints, server & shader bodies | `node compiler/dist/lzx-check.js <app>` | (Slice-2 section of the authoring guide) |
+| **Realtime bus** — a `<server>` section of reactive tags; attributes sync to every client, methods are RPC Promises, state is server-authoritative | [`bus-demo`](examples/dom-authoring/bus-demo.html) (Node server, two browsers) | [`realtime-bus`](docs/superpowers/specs/2026-07-06-realtime-bus-design.md) |
+| **Supabase transport** — the same bus over Supabase Realtime: shared state on *static* hosting, presence, durable table-backed tags | [`bus-supabase-demo`](examples/dom-authoring/bus-supabase-demo.html) | [`supabase-transport`](docs/superpowers/specs/2026-07-06-supabase-transport-design.md) |
+| **JSON databinding** — dreem-style JSONPath datapaths, native JSON datasets, implicit replication, typed shapes | (demos land with the databinding branch) | [`json-databinding`](docs/superpowers/specs/2026-07-06-json-databinding-design.md) |
+| **Live reload** — the dev server watches what it serves (compile closure + observed source traffic) and reloads every viewer | edit anything under `node server/index.mjs` | [`live-reload`](docs/superpowers/specs/2026-07-06-live-reload-design.md) |
+| **`<flexlayout>`** — CSS flexbox as an ordinary LZX layout (vendored css-layout engine); `flex`/`alignself`/`margin` hints on any view, typed | [`flex-demo`](examples/dom-authoring/flex-demo.html) | [`flexlayout`](docs/superpowers/specs/2026-07-06-flexlayout-design.md) |
+| **`<shader>`** — a view whose surface is a fragment shader, authored in TypeScript, compiled to GLSL at app-compile time; declared attributes bind as uniforms, so constraints (and bus deltas) animate the GPU | [`shader-demo`](examples/dom-authoring/shader-demo.html) · [`shader-validate`](examples/dom-authoring/shader-validate.html) (GL conformance, expect ALL PASS) | [`shader-view`](docs/superpowers/specs/2026-07-06-shader-view-design.md) |
+
+These are ports of ideas from the [dreem](https://github.com/teem2/dreem) /
+[dreem2](https://github.com/teem2/dreem2) / [dreemgl](https://github.com/dreemproject/dreemgl)
+lineage, transposed onto the typed OpenLaszlo 5.0 toolchain. The `<flexlayout>` engine is
+Facebook's css-layout (BSD, via dreemgl); the `<shader>` shaderlib (noise / shapes /
+palettes / color / math) is a curated port of dreemgl's (Apache-2.0) — provenance and
+licenses are recorded in the vendored file headers.
+
 ## The compiler
 
 The compiler is a standalone TypeScript package under [`compiler/`](compiler/):
