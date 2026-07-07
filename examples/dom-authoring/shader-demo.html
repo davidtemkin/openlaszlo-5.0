@@ -7,8 +7,8 @@
   <script type="module" src="../../startup/laszlo-dom.js"></script>
 </head>
 <body style="font:14px sans-serif;margin:16px">
-  <h2>&lt;shader&gt; — sliders driving GPU uniforms through ${…} constraints</h2>
-  <p>The <code>zoom</code> and <code>glow</code> uniforms are constraint-bound to the
+  <h2>&lt;shader&gt; — domain-warped noise, sliders driving uniforms through ${…} constraints</h2>
+  <p>The <code>zoom</code> and <code>warp</code> uniforms are constraint-bound to the
      sliders — drag and the GPU follows, no event code. <code>speed</code> changes the
      <em>rate</em> of an integrated <code>phase</code> attribute (<code>phase += speed·dt</code>),
      so the animation never jumps: multiplying <code>time · speed</code> in the shader
@@ -31,33 +31,55 @@
       <view name="zoomrow" width="620" height="42">
         <flexlayout flexdirection="row" alignitems="center" padding="4"></flexlayout>
         <text width="90" text="zoom"></text>
-        <slider name="zv" width="400" minvalue="2" maxvalue="24" value="8">
-          <attribute name="value" type="number" value="8"></attribute>
+        <slider name="zv" width="400" minvalue="1" maxvalue="8" value="3">
+          <attribute name="value" type="number" value="3"></attribute>
         </slider>
       </view>
-      <view name="glowrow" width="620" height="42">
+      <view name="warprow" width="620" height="42">
         <flexlayout flexdirection="row" alignitems="center" padding="4"></flexlayout>
-        <text width="90" text="glow"></text>
-        <slider name="gv" width="400" minvalue="0" maxvalue="100" value="30">
-          <attribute name="value" type="number" value="30"></attribute>
+        <text width="90" text="warp"></text>
+        <slider name="wv" width="400" minvalue="0" maxvalue="8" value="4">
+          <attribute name="value" type="number" value="4"></attribute>
         </slider>
       </view>
     </view>
     <shader name="surf" width="640" height="300" bgcolor="#404040"
             zoom="${parent.controls.zoomrow.zv.value}"
-            glow="${parent.controls.glowrow.gv.value}">
+            warp="${parent.controls.warprow.wv.value}">
       <attribute name="phase" type="number" value="0"></attribute>
-      <!-- zoom/glow declare NO value=: a declaration default silently REPLACES a
+      <!-- zoom/warp declare NO value=: a declaration default silently REPLACES a
            same-tag constraint (the instance emits the literal instead of the
            LzAlwaysExpr). The constraint supplies the initial value. -->
       <attribute name="zoom" type="number"></attribute>
-      <attribute name="glow" type="number"></attribute>
+      <attribute name="warp" type="number"></attribute>
+      <!-- Domain warping: f(p + warp*fbm(p + fbm(p))), with the intermediate q/r
+           vectors driving the palette — Inigo Quilez's technique, independently
+           implemented here in the shader dialect over this distro's own fbm
+           (Ashima simplex port). Reference: iquilezles.org/articles/warp/ and
+           IQ's Shadertoy examples 4s23zzM ("Warping - procedural 1", 2012) and
+           lsl3RH ("Warping - procedural 2"). -->
+      <method name="fbm" args="p: vec2" returns="float"><script type="text/typescript">
+        let f = 0.0;
+        let amp = 0.5;
+        let q = p;
+        for (let i = 0; i < 5; i++) {
+          f = f + amp * noise.snoise2v(q);
+          q = q * 2.03;
+          amp = amp * 0.5;
+        }
+        return f;
+      </script></method>
       <method name="color"><script type="text/typescript">
-        let n = noise.snoise2v(uv * this.zoom + this.phase);
-        let base = pal.pal1(n * 0.5 + 0.5);
-        let d = shape.circle(uv, 0.5, 0.5, 0.08 + this.glow * 0.003);
-        let ring = 1.0 - clamp(abs(d) * 30.0, 0.0, 1.0);
-        return base + vec4(ring * 0.4, ring * 0.4, ring * 0.4, 0.0);
+        let p = uv * this.zoom;
+        let t = this.phase * 0.12;
+        let q = vec2(fbm(p + vec2(0.0, 0.0) + t), fbm(p + vec2(5.2, 1.3)));
+        let r = vec2(fbm(p + this.warp * q + vec2(1.7, 9.2) + t * 0.35),
+                     fbm(p + this.warp * q + vec2(8.3, 2.8)));
+        let f = fbm(p + this.warp * r);
+        let col = pal.pal5(f + 0.35 * q.x + 0.25 * r.y);
+        let shade = clamp(f * f * 2.2 + 0.25, 0.0, 1.0);
+        let veil = clamp(length(q) * 0.7, 0.0, 1.0);
+        return vec4(col.rgb * (0.3 + 0.7 * shade) * (0.75 + 0.25 * veil), 1.0);
       </script></method>
       <handler name="oninit"><script type="text/typescript">
         // Integrate phase at the CURRENT speed each frame: speed changes the rate,

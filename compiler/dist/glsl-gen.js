@@ -470,11 +470,17 @@ export function rewriteOperators(code) {
     const sf = ts.createSourceFile("r.ts", code, ts.ScriptTarget.ES2020, true);
     const splices = [];
     function textOf(n) {
-        // apply nested splices within n's range
+        // Apply nested splices within n's range — OUTERMOST only: a contained splice's
+        // text is already folded into its container's text, and applying both
+        // double-splices (depth-3+ operator chains corrupted before this filter —
+        // see the "fold once" regression test).
         let s = code.slice(n.getStart(sf), n.end);
         const base = n.getStart(sf);
-        const inner = splices.filter((sp) => sp.start >= base && sp.end <= n.end).sort((a, b) => b.start - a.start);
-        for (const sp of inner)
+        const within = splices.filter((sp) => sp.start >= base && sp.end <= n.end);
+        const outer = within
+            .filter((sp) => !within.some((o) => o !== sp && o.start <= sp.start && o.end >= sp.end))
+            .sort((a, b) => b.start - a.start);
+        for (const sp of outer)
             s = s.slice(0, sp.start - base) + sp.text + s.slice(sp.end - base);
         return s;
     }

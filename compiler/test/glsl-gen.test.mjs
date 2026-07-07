@@ -122,3 +122,11 @@ test("the hero example generates clean", () => {
   assert.equal(r.ok, true, JSON.stringify(r));
   assert.match(r.program.glsl, /snoise2v\(uv \* 8\.0 \+ time \* speed\)/);
 });
+
+test("rewriteOperators: depth-3+ chains fold once (regression: nested splices double-applied)", () => {
+  const src = "let r = vec2(fbm(p + w * q + vec2(1.7, 9.2) + t * 0.35),\n             fbm(p + w * q + vec2(8.3, 2.8)));";
+  const { code } = rewriteOperators(src);
+  assert.equal(code.split("\n").length, src.split("\n").length, "line-preserving");
+  assert.match(code, /__add\(__add\(__add\(p, __mul\(w, q\)\), vec2\(1\.7, 9\.2\)\), __mul\(t, 0\.35\)\)/);
+  assert.doesNotMatch(code, /\)\)[a-z]/, "no spliced debris");
+});
