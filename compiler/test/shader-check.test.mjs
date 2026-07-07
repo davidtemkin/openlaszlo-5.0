@@ -56,3 +56,21 @@ test("declaration default + same-tag constraint = the constraint is silently dea
   const ok = checkApp(src.replace(' value="8"', ""), "t.html");
   assert.deepEqual(ok.findings.map(f => f.message), []);
 });
+
+test("helper methods are callable in checked bodies; wrong-arity helper call is a finding", () => {
+  const mk = (colorBody) => `<laszlo-app width="100" height="100"><shader width="100" height="100">
+<method name="fbm" args="p: vec2" returns="float"><script type="text/typescript">
+let f = 0.0;
+let amp = 0.5;
+let q = p;
+for (let i = 0; i < 5; i++) { f = f + amp * noise.snoise2v(q); q = q * 2.03; amp = amp * 0.5; }
+return f;
+</script></method>
+<method name="color"><script type="text/typescript">
+${colorBody}
+</script></method></shader></laszlo-app>`;
+  const good = checkApp(mk("let v = fbm(uv * 4.0);\nreturn vec4(v, v, v, 1.0);"), "t.html");
+  assert.deepEqual(good.findings.map(f => f.message), []);
+  const bad = checkApp(mk("let v = fbm(uv, 2.0);\nreturn vec4(v, v, v, 1.0);"), "t.html");
+  assert.ok(bad.findings.length >= 1, "wrong-arity helper call must be a finding");
+});

@@ -201,11 +201,16 @@ export function checkApp(source, fileName) {
                     findings.push({ line: f.line, col: 1, code: 0, message: f.message, element: sp.label + " (shader)" });
             // layer 2: TS program over rewritten bodies
             const thisTy = `{ ${sp.uniforms.map((u) => `${u.name}: ${u.lzType === "color" ? "vec3" : "number"}`).join("; ")} }`;
+            // Helper methods are callable from every body of THEIR tag — declared as
+            // function-scoped consts inside each wrapper (tag-scoped: two tags may both
+            // define fbm with different signatures; ambient declarations would collide).
+            const helperDecls = sp.helpers.map((h) => `const ${h.name} = (${h.params.map((pp) => `${pp.name}: ${tsNameOf(pp.type)}`).join(", ")}): ${tsNameOf(h.ret)} => (void 0 as any);`);
             const addBody = (label, code, srcLine, params, ret) => {
                 shaderBodiesChecked++;
                 const rewritten = rewriteOperators(code).code;
-                shSpans.push({ genStartLine: bodyLines.length + 2, srcLine, label });
+                shSpans.push({ genStartLine: bodyLines.length + 2 + helperDecls.length, srcLine, label });
                 bodyLines.push(`(function(this: ${thisTy}${params ? ", " + params : ""}): ${ret} {`);
+                bodyLines.push(...helperDecls);
                 bodyLines.push(...rewritten.split("\n"));
                 bodyLines.push("});");
             };
