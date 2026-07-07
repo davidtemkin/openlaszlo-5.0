@@ -438,9 +438,25 @@ ${$i.join(`
 }`}return{findings:Ma,usedUniforms:wc,usedBuiltins:Uc,usedLib:al,usedHelpers:Za,genFunction:Nc}}function oFe(zr,Ma,wc,Uc,al,Za,gm){let lu=aFe({color:{code:"",srcLine:1},helpers:[],uniforms:[],shaderlib:{signatures:gm,glslFor:()=>""}});return{glsl:lu.genFunction(`${zr}_${Ma}`,wc.map(aa=>({name:aa.name,type:aa.type==="number"?"float":aa.type==="boolean"?"bool":aa.type})),Uc==="number"?"float":Uc==="boolean"?"bool":Uc,al,Za),deps:[...lu.usedLib],findings:lu.findings}}function cFe(zr){let{findings:Ma,usedUniforms:wc,usedBuiltins:Uc,usedLib:al,usedHelpers:Za,genFunction:gm}=aFe(zr),lu=gm("color",[],"vec4",zr.color.code,zr.color.srcLine),Rd=[],aa=-1,Zc=new Map;for(;Za.size!==aa;){aa=Za.size;for(let Ve of zr.helpers){if(!Za.has(Ve.name)||Zc.has(Ve.name))continue;let ig=Ve.params.find(wn=>!sFe.has(wn.type));if(ig){Ma.push({message:`helper '${Ve.name}' param '${ig.name}': type '${ig.type}' outside the dialect`,line:Ve.srcLine});continue}Zc.set(Ve.name,gm(Ve.name,Ve.params.map(wn=>({name:wn.name,type:FC(wn.type)})),FC(Ve.ret),Ve.code,Ve.srcLine))}}for(let Ve of zr.helpers)Zc.has(Ve.name)&&Rd.push(Zc.get(Ve.name));if(Ma.length)return{ok:!1,findings:Ma};let el=["precision mediump float;"];Uc.has("uv")&&el.push("varying vec2 uv;"),Uc.has("time")&&el.push("uniform float time;"),Uc.has("mouse")&&el.push("uniform vec2 mouse;"),Uc.has("size")&&el.push("uniform vec2 size;");for(let[Ve,ig]of wc)el.push(`uniform ${ig} ${Ve};`);return al.size&&zr.shaderlib&&el.push(zr.shaderlib.glslFor([...al])),el.push(...Rd),el.push(lu),el.push(`void main() {
   gl_FragColor = color();
 }`),{ok:!0,program:{glsl:el.join(`
-`),uniforms:[...wc].map(([Ve,ig])=>({name:Ve,glslType:ig})),usesTime:Uc.has("time"),usesMouse:Uc.has("mouse")}}}var gQ=xge(lQ(),1);var mQ={noise:`// shaderlib: noise \u2014 curated port of dreemgl system/shaderlib/noiselib.js
-// (github.com/dreemproject/dreemgl, Apache-2.0; original inspired by Stefan Gustavson /
-// Ian McEwan, Ashima Arts simplex noise). Dialect-clean TS (see the shader spec):
+`),uniforms:[...wc].map(([Ve,ig])=>({name:Ve,glslType:ig})),usesTime:Uc.has("time"),usesMouse:Uc.has("mouse")}}}var gQ=xge(lQ(),1);var mQ={noise:`// shaderlib: noise \u2014 simplex + cellular noise.
+// ORIGINAL WORK: Ian McEwan & Stefan Gustavson, Ashima Arts "webgl-noise"
+// (github.com/ashima/webgl-noise, now github.com/stegu/webgl-noise),
+// Copyright (C) 2011 Ashima Arts, MIT License \u2014 reproduced below as MIT requires.
+// The dreemgl file this port descends from (system/shaderlib/noiselib.js,
+// "Copyright Teeming Society, Apache-2.0") is a transliteration of that GLSL into
+// its JS shader dialect with a name-drop comment only; this port restores the
+// attribution. cheapnoise is the classic fract(sin(dot)) one-liner (origin unknown).
+//
+// MIT License (webgl-noise): Permission is hereby granted, free of charge, to any
+// person obtaining a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including without
+// limitation the rights to use, copy, modify, merge, publish, distribute,
+// sublicense, and/or sell copies of the Software, subject to the above copyright
+// notice and this permission notice being included in all copies or substantial
+// portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
+// ANY KIND.
+//
+// Dialect-clean TS (see the shader spec):
 // AMD unwrapped, var\u2192let, alias chains split keeping the primary name, zero-arg
 // constructors expanded, intra-lib calls namespace-qualified.
 // CORRECTIONS vs upstream (documented in the spec's "curated port" section):
@@ -661,9 +677,12 @@ export function cell3v(P: vec3): vec2 {
   d.y = min(d.y, d2.x);               // F2 is now in d.y
   return sqrt(d.xy);                  // F1 and F2
 }
-`,shape:`// shaderlib: shape \u2014 curated port of dreemgl system/shaderlib/shapelib.js
-// (github.com/dreemproject/dreemgl, Apache-2.0; shapes after iquilezles.org
-// distfunctions). Dialect-clean TS.
+`,shape:`// shaderlib: shape \u2014 signed/unsigned distance fields.
+// ORIGINAL WORK: the SDF functions are Inigo Quilez's distance-function library
+// (iquilezles.org/articles/distfunctions \u2014 the canonical SDF reference), ported
+// near-verbatim; the 2D helpers (circle/box/roundbox/line) follow the same source.
+// Descends via dreemgl system/shaderlib/shapelib.js ("based on" + URL upstream).
+// Dialect-clean TS.
 // CORRECTIONS / EXCLUSIONS vs upstream:
 //   - upstream defines \`circle\` TWICE with different signatures (shapelib.js:41 SDF-boolean,
 //     :238 distance-field). The distance-field one keeps the name \`circle\`; the boolean
@@ -904,8 +923,11 @@ export function smoothexp(a: float, b: float, k: float): float {
   let res = exp(-k * a) + exp(-k * b);
   return -log(res) / k;
 }
-`,pal:`// shaderlib: pal \u2014 curated port of dreemgl system/shaderlib/palettelib.js
-// (github.com/dreemproject/dreemgl, Apache-2.0). Dialect-clean TS.
+`,pal:`// shaderlib: pal \u2014 procedural palettes.
+// ORIGINAL WORK: pal() is Inigo Quilez's cosine palette formula
+// (iquilezles.org/articles/palettes); pal0..pal7 are dreemgl's parameter presets
+// for it (system/shaderlib/palettelib.js). hsv2rgb is the standard conversion.
+// Dialect-clean TS.
 // EXCLUSIONS vs upstream (textures are a slice-7 non-goal): fetch, band_with_dither,
 // dither, dithercrystal, checker (5 of 16 \u2014 all texture.sample/gl_FragCoord based).
 // Alias chains split keeping the palN primary names (rainbow/hotcool/\u2026 dropped).

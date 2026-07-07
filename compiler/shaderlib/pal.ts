@@ -1,5 +1,8 @@
-// shaderlib: pal — curated port of dreemgl system/shaderlib/palettelib.js
-// (github.com/dreemproject/dreemgl, Apache-2.0). Dialect-clean TS.
+// shaderlib: pal — procedural palettes.
+// ORIGINAL WORK: pal() is Inigo Quilez's cosine palette formula
+// (iquilezles.org/articles/palettes); pal0..pal7 are dreemgl's parameter presets
+// for it (system/shaderlib/palettelib.js). hsv2rgb is the standard conversion.
+// Dialect-clean TS.
 // EXCLUSIONS vs upstream (textures are a slice-7 non-goal): fetch, band_with_dither,
 // dither, dithercrystal, checker (5 of 16 — all texture.sample/gl_FragCoord based).
 // Alias chains split keeping the palN primary names (rainbow/hotcool/… dropped).

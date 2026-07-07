@@ -1,6 +1,22 @@
-// shaderlib: noise — curated port of dreemgl system/shaderlib/noiselib.js
-// (github.com/dreemproject/dreemgl, Apache-2.0; original inspired by Stefan Gustavson /
-// Ian McEwan, Ashima Arts simplex noise). Dialect-clean TS (see the shader spec):
+// shaderlib: noise — simplex + cellular noise.
+// ORIGINAL WORK: Ian McEwan & Stefan Gustavson, Ashima Arts "webgl-noise"
+// (github.com/ashima/webgl-noise, now github.com/stegu/webgl-noise),
+// Copyright (C) 2011 Ashima Arts, MIT License — reproduced below as MIT requires.
+// The dreemgl file this port descends from (system/shaderlib/noiselib.js,
+// "Copyright Teeming Society, Apache-2.0") is a transliteration of that GLSL into
+// its JS shader dialect with a name-drop comment only; this port restores the
+// attribution. cheapnoise is the classic fract(sin(dot)) one-liner (origin unknown).
+//
+// MIT License (webgl-noise): Permission is hereby granted, free of charge, to any
+// person obtaining a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including without
+// limitation the rights to use, copy, modify, merge, publish, distribute,
+// sublicense, and/or sell copies of the Software, subject to the above copyright
+// notice and this permission notice being included in all copies or substantial
+// portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
+// ANY KIND.
+//
+// Dialect-clean TS (see the shader spec):
 // AMD unwrapped, var→let, alias chains split keeping the primary name, zero-arg
 // constructors expanded, intra-lib calls namespace-qualified.
 // CORRECTIONS vs upstream (documented in the spec's "curated port" section):

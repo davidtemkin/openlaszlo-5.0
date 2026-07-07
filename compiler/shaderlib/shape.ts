@@ -1,6 +1,9 @@
-// shaderlib: shape — curated port of dreemgl system/shaderlib/shapelib.js
-// (github.com/dreemproject/dreemgl, Apache-2.0; shapes after iquilezles.org
-// distfunctions). Dialect-clean TS.
+// shaderlib: shape — signed/unsigned distance fields.
+// ORIGINAL WORK: the SDF functions are Inigo Quilez's distance-function library
+// (iquilezles.org/articles/distfunctions — the canonical SDF reference), ported
+// near-verbatim; the 2D helpers (circle/box/roundbox/line) follow the same source.
+// Descends via dreemgl system/shaderlib/shapelib.js ("based on" + URL upstream).
+// Dialect-clean TS.
 // CORRECTIONS / EXCLUSIONS vs upstream:
 //   - upstream defines `circle` TWICE with different signatures (shapelib.js:41 SDF-boolean,
 //     :238 distance-field). The distance-field one keeps the name `circle`; the boolean
