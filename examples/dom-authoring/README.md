@@ -6,6 +6,24 @@ Author LZX as native HTML inside `<laszlo-app>` (or a separate file via
     node tools/serve-static.mjs . 8087
     open http://localhost:8087/examples/dom-authoring/
 
+The landing page (`index.html`) links every demo below.
+
+## Demos
+
+| Demo | Slice | What it shows | Server? |
+| --- | --- | --- | --- |
+| `index.html` | 1 | Authored elements adopted as live app nodes | no |
+| `counter-app.html` | 1 | Minimal counter; TypeScript carriers | no |
+| `file-demo.html` | 1 | External-file dialect (`<laszlo-app src=…>`) | no |
+| `equivalence.html` | 2 | DOM ↔ XML-text output equivalence | no |
+| `bus-demo.html` | 3 | Realtime bus: shared server state over WebSocket | `node server/index.mjs` |
+| `bikeshop-demo.html` | 4 | JSON databinding: inline dataset, replication, `updateData` | no |
+| `sensors-demo.html` | 4 | JSON databinding: live data over the `/api/data` WebSocket | server + `sensor-feeder.mjs` |
+
+The `bus` and `sensors` demos need the Node server (`node server/index.mjs
+8090`) for their WebSocket routes; the rest — `bikeshop` included — compile in
+the browser and run under the static `serve-static.mjs` command above.
+
 ## Dialect rules (full spec: docs/superpowers/specs/2026-07-05-dom-native-authoring-design.md)
 
 - The app root is `<laszlo-app width height bgcolor …>` (= LZX `<canvas>`).
