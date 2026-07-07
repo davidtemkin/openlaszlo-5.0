@@ -255,6 +255,7 @@ export function extractApp(root, opts = {}) {
             tsName: "LzInst_" + ++instSeq,
             baseTsName: user ? user.tsName : (builtinTsName(tag) ?? "LzView"),
             attrs: [], namedChildren: [],
+            seq: instSeq, parentTs: parent ? parent.tsName : undefined,
         };
         model.instances.push(inst);
         const id = el.getAttribute("id");
@@ -420,6 +421,49 @@ export function extractApp(root, opts = {}) {
         const inst = model.instances.find((i) => i.tsName === c.ownerType);
         if (inst)
             c.ownerMembers.push(...inst.namedChildren.map((n) => n.name));
+    }
+    // Bind-order analysis: constraints capture their dependency OBJECTS at
+    // instantiation time, and the LFC silently drops dependencies that don't
+    // resolve (applyConstraintExpr's empty catch) — so a constraint referencing
+    // an instance declared LATER in the document is a silent no-op (found live:
+    // slider-bound shader uniforms frozen at defaults). Conservative detector:
+    // only `parent.`-rooted dotted chains whose segments fully resolve through
+    // the model's named children are flagged; anything dynamic stays silent.
+    {
+        const byTs = new Map(model.instances.map((i) => [i.tsName, i]));
+        const CHAIN_RE = /\b((?:parent\.)+[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)/g;
+        for (const c of model.constraints) {
+            const owner = byTs.get(c.ownerType);
+            if (!owner || owner.seq === undefined)
+                continue;
+            for (const m of c.expr.matchAll(CHAIN_RE)) {
+                const segs = m[1].split(".");
+                let cur = owner;
+                let i = 0;
+                while (i < segs.length && segs[i] === "parent") {
+                    cur = cur?.parentTs ? byTs.get(cur.parentTs) : undefined;
+                    i++;
+                }
+                let lastName = null;
+                while (cur && i < segs.length) {
+                    const child = cur.namedChildren.find((n) => n.name === segs[i]);
+                    if (!child)
+                        break;
+                    cur = byTs.get(child.tsName);
+                    lastName = segs[i];
+                    i++;
+                    if (cur && cur.seq !== undefined && owner.seq !== undefined && cur.seq > owner.seq) {
+                        model.staticIssues.push({
+                            message: `constraint references "${lastName}" (via ${m[1]}) declared LATER in the document — ` +
+                                `constraints capture dependencies at bind time and unresolved sources are silently dropped; ` +
+                                `declare "${lastName}" before this element`,
+                            line: c.line,
+                        });
+                        break;
+                    }
+                }
+            }
+        }
     }
     return model;
 }

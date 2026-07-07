@@ -49,11 +49,13 @@ running — the browser pipeline only strips types.
 
 ### Constraint gotchas (learned the hard way, both from live demos)
 
-- **Forward references are silent no-ops.** A `${…}` constraint captures its
-  dependency OBJECTS at bind time, and the LFC silently nulls dependencies that
-  don't resolve (`applyConstraintExpr`'s empty catch). Referencing a sibling
-  declared LATER in the document binds against nothing — declare sources before
-  consumers.
+- **Forward references are silent no-ops** — now an `lzx-check` finding. A
+  `${…}` constraint captures its dependency OBJECTS at bind time, and the LFC
+  silently nulls dependencies that don't resolve (`applyConstraintExpr`'s
+  empty catch). Referencing a sibling declared LATER in the document binds
+  against nothing — declare sources before consumers. The checker resolves
+  `parent.`-rooted named-child chains against document order and flags
+  forward references (dynamic accesses stay silent — it's conservative).
 - **A declaration default kills a same-tag constraint** — now an `lzx-check`
   finding. `<attribute name="zoom" value="8"/>` plus `zoom="${…}"` on the same
   tag compiles the literal `8` into the instance and the constraint never
