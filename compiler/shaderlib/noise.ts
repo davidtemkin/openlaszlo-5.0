@@ -2,10 +2,12 @@
 // ORIGINAL WORK: Ian McEwan & Stefan Gustavson, Ashima Arts "webgl-noise"
 // (github.com/ashima/webgl-noise, now github.com/stegu/webgl-noise),
 // Copyright (C) 2011 Ashima Arts, MIT License — reproduced below as MIT requires.
-// The dreemgl file this port descends from (system/shaderlib/noiselib.js,
-// "Copyright Teeming Society, Apache-2.0") is a transliteration of that GLSL into
-// its JS shader dialect with a name-drop comment only; this port restores the
-// attribution. cheapnoise is the classic fract(sin(dot)) one-liner (origin unknown).
+// The dreemgl file this descends from (system/shaderlib/noiselib.js) is a
+// line-for-line transliteration of that GLSL into its JS shader dialect, shipped
+// under a blanket "Copyright Teeming Society" header with a name-drop comment —
+// which is not the notice preservation MIT requires. This port restores the
+// attribution; full lineage with the commit-record receipts: PROVENANCE.md.
+// cheapnoise is the classic fract(sin(dot)) one-liner (origin unknown).
 //
 // MIT License (webgl-noise): Permission is hereby granted, free of charge, to any
 // person obtaining a copy of this software and associated documentation files (the

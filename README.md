@@ -81,9 +81,13 @@ spec'd and adversarially reviewed; the specs live in
 These are ports of ideas from the [dreem](https://github.com/teem2/dreem) /
 [dreem2](https://github.com/teem2/dreem2) / [dreemgl](https://github.com/dreemproject/dreemgl)
 lineage, transposed onto the typed OpenLaszlo 5.0 toolchain. The `<flexlayout>` engine is
-Facebook's css-layout (BSD, via dreemgl); the `<shader>` shaderlib (noise / shapes /
-palettes / color / math) is a curated port of dreemgl's (Apache-2.0) — provenance and
-licenses are recorded in the vendored file headers.
+Facebook's css-layout (BSD, via dreemgl). The `<shader>` shaderlib restores the credit
+dreemgl's headers erased: the noise is Ian McEwan & Stefan Gustavson's Ashima Arts
+[webgl-noise](https://github.com/stegu/webgl-noise) (MIT, notice reproduced), the SDFs
+and cosine palettes are [Inigo Quilez's](https://iquilezles.org/articles/distfunctions/)
+— dreemgl shipped dialect transliterations of that public GLSL under a blanket
+"Copyright Teeming Society" header. Full lineage, receipts included, in
+[`compiler/shaderlib/PROVENANCE.md`](compiler/shaderlib/PROVENANCE.md).
 
 ## The compiler
 
