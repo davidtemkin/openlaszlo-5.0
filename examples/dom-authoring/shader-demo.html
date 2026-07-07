@@ -19,7 +19,8 @@
      <a href="https://www.shadertoy.com/view/4s23zzM">4s23zzM</a> and
      <a href="https://www.shadertoy.com/view/lsl3RH">lsl3RH</a>) — implemented
      independently here over this distro's own simplex-noise port
-     (McEwan/Gustavson, Ashima Arts) and his cosine palettes.</p>
+     (McEwan/Gustavson, Ashima Arts); the color grading constants are borrowed
+     from lsl3RH with thanks.</p>
   <laszlo-app width="640" height="480" bgcolor="#f7f2ee">
     <!-- Controls are declared BEFORE the shader (y= keeps them visually below):
          the shader's zoom/glow constraints capture their dependency objects at
@@ -74,7 +75,9 @@
           q = q * 2.03;
           amp = amp * 0.5;
         }
-        return f;
+        // remap to [0,1]: IQ's fbm is value-noise-based and his grading constants
+        // assume that range; our simplex sum is centered at 0.
+        return 0.5 + 0.5 * f;
       </script></method>
       <method name="color"><script type="text/typescript">
         let p = uv * this.zoom;
@@ -83,10 +86,17 @@
         let r = vec2(fbm(p + this.warp * q + vec2(1.7, 9.2) + t * 0.35),
                      fbm(p + this.warp * q + vec2(8.3, 2.8)));
         let f = fbm(p + this.warp * r);
-        let col = pal.pal5(f + 0.35 * q.x + 0.25 * r.y);
-        let shade = clamp(f * f * 2.2 + 0.25, 0.0, 1.0);
-        let veil = clamp(length(q) * 0.7, 0.0, 1.0);
-        return vec4(col.rgb * (0.3 + 0.7 * shade) * (0.75 + 0.25 * veil), 1.0);
+        // Color grading borrowed from IQ's "Warping - procedural 2"
+        // (shadertoy.com/view/lsl3RH): the teal->olive base mix on f^2, the deep-blue
+        // pull by |q|, the pale-cyan highlight by |r.x|, and his brightness
+        // polynomial f^3 + 0.6f^2 + 0.5f.
+        let col = mix(vec3(0.101961, 0.619608, 0.666667),
+                      vec3(0.666667, 0.666667, 0.498039),
+                      clamp(f * f * 4.0, 0.0, 1.0));
+        col = mix(col, vec3(0.0, 0.0, 0.164706), clamp(length(q), 0.0, 1.0));
+        col = mix(col, vec3(0.666667, 1.0, 1.0), clamp(abs(r.x), 0.0, 1.0));
+        let lum = f * f * f + 0.6 * f * f + 0.5 * f;
+        return vec4(clamp(col * lum * 1.7, 0.0, 1.0), 1.0);
       </script></method>
       <handler name="oninit"><script type="text/typescript">
         // Integrate phase at the CURRENT speed each frame: speed changes the rate,

@@ -43,9 +43,11 @@ with incompatible signatures).
 **Inigo Quilez's technique** ([article](https://iquilezles.org/articles/warp/),
 Shadertoy [4s23zzM](https://www.shadertoy.com/view/4s23zzM) /
 [lsl3RH](https://www.shadertoy.com/view/lsl3RH)), implemented independently in
-the shader dialect (no Shadertoy code copied — its default license is
-CC BY-NC-SA) over this port's noise and palettes. Credited on the page, in the
-source, and here.
+the shader dialect over this port's noise (the technique is implemented
+independently — Shadertoy's default license is CC BY-NC-SA — while the color
+grading CONSTANTS of lsl3RH, a teal/olive/deep-blue palette and the
+f³+0.6f²+0.5f brightness curve, are borrowed as de-minimis values with
+explicit attribution). Credited on the page, in the source, and here.
 
 ## What this port does
 
