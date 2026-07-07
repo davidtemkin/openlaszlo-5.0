@@ -138,7 +138,11 @@
                 }
             }
         } catch (err) {
-            if ($debug) Debug.warn("flexlayout: engine error %w — positions left untouched", err);
+            // NOT $debug-guarded: DOM-authored apps are production builds, where a
+            // $debug-only warning strips to an EMPTY catch and layout failures
+            // become silent (found debugging flex-demo). console is always real
+            // in the DHTML runtime.
+            if (typeof console != 'undefined') console.error('flexlayout update failed:', err);
         } finally {
             this.locked = false;
         }
