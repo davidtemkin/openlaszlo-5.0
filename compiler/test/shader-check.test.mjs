@@ -28,3 +28,16 @@ test("shader findings map to source lines; client program is untouched both ways
     "invalid constraint on the shader tag IS a finding (attrs still constraint-checked)");
   assert.ok(r.constraintsChecked >= 1);
 });
+
+test("vec types are nominally distinct: vec4+vec4 stays vec4; vec4 into a vec2 param is a finding", () => {
+  const mk = (body) => `<laszlo-app width="100" height="100"><shader width="100" height="100">
+<method name="color"><script type="text/typescript">
+${body}
+</script></method></shader></laszlo-app>`;
+  // regression: structural subsumption made __add(vec4, vec4) match the (vec2, vec2)
+  // overload (vec4 has every vec2 property), inferring vec2 and failing the return check.
+  const good = checkApp(mk("let base = pal.pal1(0.5);\nreturn base + vec4(0.1, 0.1, 0.1, 0.0);"), "t.html");
+  assert.deepEqual(good.findings.map(f => f.message), []);
+  const bad = checkApp(mk("let q = vec4(1.0, 1.0, 1.0, 1.0);\nlet n = noise.snoise2v(q);\nreturn vec4(n, n, n, 1.0);"), "t.html");
+  assert.ok(bad.findings.length >= 1, "vec4 into vec2 param must be a finding");
+});

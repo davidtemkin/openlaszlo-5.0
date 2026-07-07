@@ -167,8 +167,13 @@ for real: `uv * 8.0` types as `vec2` end-to-end, a wrong swizzle or a
 Fallbacks: no WebGL, a driver compile failure, or the `.lzx` path (no GLSL
 emission) → the view shows its `bgcolor` with one debug warning.
 
-Demos: shader-demo.html (animated noise + palette; buttons drive the
-`speed` uniform) and shader-validate.html — a self-checking GL conformance
+Gotcha worth knowing: `time * this.speed` JUMPS when speed changes (you are
+rescaling accumulated time). Integrate instead — a `phase` attribute advanced
+`phase += speed * dt` per frame; speed then changes the rate, never the
+position (shader-demo.html does exactly this).
+
+Demos: shader-demo.html (sliders constraint-bound to the zoom/glow uniforms;
+integrated-phase speed) and shader-validate.html — a self-checking GL conformance
 page that compiles generator output for every shaderlib namespace on YOUR
 GPU and must show ALL PASS. Spec:
 docs/superpowers/specs/2026-07-06-shader-view-design.md. Textures, vertex

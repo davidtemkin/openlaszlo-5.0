@@ -142,7 +142,11 @@ function* swizzleCombos(n: number): Generator<string> {
 
 function vecInterface(name: ShaderType): string {
   const n = componentCount(name);
-  const lines: string[] = [`interface ${name} {`];
+  // The brand makes vec types NOMINALLY distinct. Without it, vec4 contains every
+  // vec2 property (structural subsumption), so overload resolution matched
+  // __add(vec2, vec2) for vec4 operands — inferring vec2 and poisoning downstream
+  // checks (found by the shader-demo rework; regression-tested in shader-check).
+  const lines: string[] = [`interface ${name} {`, `  readonly __lzvec: "${name}";`];
   const seen = new Set<string>();
   for (const prop of swizzleCombos(n)) {
     if (seen.has(prop)) continue;

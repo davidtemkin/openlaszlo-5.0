@@ -7,34 +7,65 @@
   <script type="module" src="../../startup/laszlo-dom.js"></script>
 </head>
 <body style="font:14px sans-serif;margin:16px">
-  <h2>&lt;shader&gt; — animated simplex noise through a palette</h2>
-  <p>Click the buttons to change <code>speed</code> — a plain <code>setAttribute</code> on a
-     declared attribute drives the uniform. (A constraint or a bus delta would too.)</p>
-  <laszlo-app width="640" height="440" bgcolor="#f7f2ee">
-    <shader name="surf" width="640" height="360" bgcolor="#404040">
-      <attribute name="speed" type="number" value="1"></attribute>
+  <h2>&lt;shader&gt; — sliders driving GPU uniforms through ${…} constraints</h2>
+  <p>The <code>zoom</code> and <code>glow</code> uniforms are constraint-bound to the
+     sliders — drag and the GPU follows, no event code. <code>speed</code> changes the
+     <em>rate</em> of an integrated <code>phase</code> attribute (<code>phase += speed·dt</code>),
+     so the animation never jumps: multiplying <code>time · speed</code> in the shader
+     would rescale accumulated time and snap the pattern on every change.</p>
+  <laszlo-app width="640" height="480" bgcolor="#f7f2ee">
+    <shader name="surf" width="640" height="300" bgcolor="#404040"
+            zoom="${parent.controls.zoomrow.zv.value}"
+            glow="${parent.controls.glowrow.gv.value}">
+      <attribute name="phase" type="number" value="0"></attribute>
       <attribute name="zoom" type="number" value="8"></attribute>
+      <attribute name="glow" type="number" value="30"></attribute>
       <method name="color"><script type="text/typescript">
-        let n = noise.snoise2v(uv * this.zoom + time * this.speed);
-        return pal.pal1(n * 0.5 + 0.5);
+        let n = noise.snoise2v(uv * this.zoom + this.phase);
+        let base = pal.pal1(n * 0.5 + 0.5);
+        let d = shape.circle(uv, 0.5, 0.5, 0.08 + this.glow * 0.003);
+        let ring = 1.0 - clamp(abs(d) * 30.0, 0.0, 1.0);
+        return base + vec4(ring * 0.4, ring * 0.4, ring * 0.4, 0.0);
       </script></method>
+      <handler name="oninit"><script type="text/typescript">
+        // Integrate phase at the CURRENT speed each frame: speed changes the rate,
+        // never the position — that's what keeps the animation jump-free.
+        const me = this as any;
+        const G: any = globalThis;
+        let last = Date.now();
+        const tick = () => {
+          const now = Date.now();
+          const dt = Math.min(0.1, (now - last) / 1000);
+          last = now;
+          const sp = me.parent.controls.speedrow.sv.value;
+          me.setAttribute('phase', (me.phase + dt * sp) % 6283.0);
+          G.requestAnimationFrame(tick);
+        };
+        G.requestAnimationFrame(tick);
+      </script></handler>
     </shader>
-    <view name="controls" y="372" width="640" height="48">
-      <flexlayout flexdirection="row" alignitems="center" padding="8"></flexlayout>
-      <text text="speed:"></text>
-      <view width="40" height="28" bgcolor="#cccccc" margin="4">
-        <text text="−" x="15" y="4"></text>
-        <handler name="onclick"><script type="text/typescript">
-          const s = (this.parent as any).parent.surf;
-          s.setAttribute('speed', Math.max(0, s.speed - 0.5));
-        </script></handler>
+    <view name="controls" y="310" width="640" height="160">
+      <flexlayout flexdirection="column" padding="6"></flexlayout>
+      <view name="speedrow" width="620" height="42">
+        <flexlayout flexdirection="row" alignitems="center" padding="4"></flexlayout>
+        <text width="90" text="speed"></text>
+        <slider name="sv" width="400" minvalue="0" maxvalue="4" value="1">
+          <attribute name="value" type="number" value="1"></attribute>
+        </slider>
       </view>
-      <view width="40" height="28" bgcolor="#cccccc" margin="4">
-        <text text="+" x="15" y="4"></text>
-        <handler name="onclick"><script type="text/typescript">
-          const s = (this.parent as any).parent.surf;
-          s.setAttribute('speed', s.speed + 0.5);
-        </script></handler>
+      <view name="zoomrow" width="620" height="42">
+        <flexlayout flexdirection="row" alignitems="center" padding="4"></flexlayout>
+        <text width="90" text="zoom"></text>
+        <slider name="zv" width="400" minvalue="2" maxvalue="24" value="8">
+          <attribute name="value" type="number" value="8"></attribute>
+        </slider>
+      </view>
+      <view name="glowrow" width="620" height="42">
+        <flexlayout flexdirection="row" alignitems="center" padding="4"></flexlayout>
+        <text width="90" text="glow"></text>
+        <slider name="gv" width="400" minvalue="0" maxvalue="100" value="30">
+          <attribute name="value" type="number" value="30"></attribute>
+        </slider>
       </view>
     </view>
   </laszlo-app>
