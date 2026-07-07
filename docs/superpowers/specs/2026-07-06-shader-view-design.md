@@ -11,9 +11,9 @@ transpiles-finding-free). Deviations: routing needed ZERO compile.ts changes
 injected like transpileTs via a new lzts-entry bundle entry); helper params
 typed inline in args="p: vec2" + returns= attr; shaderlib deferred bits:
 cell3w, math macro-constants (documented in port headers); signature-table
-docs consumer deferred. Browser conformance pass = user opens
-examples/dom-authoring/shader-validate.html (ALL PASS expected) + the demo —
-no browser automation available in the implementing environment.
+docs consumer deferred. Browser conformance CONFIRMED 2026-07-07: user ran
+shader-validate.html on real GL — ALL PASS across all 12 cases; flex-demo
+wrap confirmed on-screen (runtime coords matched the headless engine).
 **Builds on:** Slices 1–4. Shader bodies check in their own
 `ts.createProgram` — the same isolation the bus spec establishes for server
 bodies (realtime-bus spec, "Checker integration": a separate *program*, not
