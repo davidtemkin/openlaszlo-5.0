@@ -36,6 +36,17 @@ also introduced real defects this port had to fix (`snoise2` referencing an unde
 variable, `sdTorus82/88` calling functions that exist nowhere, `circle` defined twice
 with incompatible signatures).
 
+## Demos
+
+`examples/dom-authoring/shader-demo.html` renders **domain warping** —
+`fbm(p + warp·fbm(p + fbm(p)))` with the intermediate vectors driving color —
+**Inigo Quilez's technique** ([article](https://iquilezles.org/articles/warp/),
+Shadertoy [4s23zzM](https://www.shadertoy.com/view/4s23zzM) /
+[lsl3RH](https://www.shadertoy.com/view/lsl3RH)), implemented independently in
+the shader dialect (no Shadertoy code copied — its default license is
+CC BY-NC-SA) over this port's noise and palettes. Credited on the page, in the
+source, and here.
+
 ## What this port does
 
 - Credits the original authors in every file header, and reproduces the webgl-noise

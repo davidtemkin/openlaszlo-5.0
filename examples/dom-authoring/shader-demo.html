@@ -13,6 +13,13 @@
      <em>rate</em> of an integrated <code>phase</code> attribute (<code>phase += speed·dt</code>),
      so the animation never jumps: multiplying <code>time · speed</code> in the shader
      would rescale accumulated time and snap the pattern on every change.</p>
+  <p style="color:#666">The visual is <b>domain warping</b> — technique by
+     <a href="https://iquilezles.org/articles/warp/">Inigo Quilez</a>
+     (see his Shadertoy examples
+     <a href="https://www.shadertoy.com/view/4s23zzM">4s23zzM</a> and
+     <a href="https://www.shadertoy.com/view/lsl3RH">lsl3RH</a>) — implemented
+     independently here over this distro's own simplex-noise port
+     (McEwan/Gustavson, Ashima Arts) and his cosine palettes.</p>
   <laszlo-app width="640" height="480" bgcolor="#f7f2ee">
     <!-- Controls are declared BEFORE the shader (y= keeps them visually below):
          the shader's zoom/glow constraints capture their dependency objects at
