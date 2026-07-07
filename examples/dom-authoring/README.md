@@ -47,6 +47,19 @@ Exit 1 + `file:line:col TS<code>` diagnostics on findings; non-TS bodies
 (`text/lzs`, `.lzx`) are skipped and counted. Checking never blocks
 running — the browser pipeline only strips types.
 
+### Constraint gotchas (learned the hard way, both from live demos)
+
+- **Forward references are silent no-ops.** A `${…}` constraint captures its
+  dependency OBJECTS at bind time, and the LFC silently nulls dependencies that
+  don't resolve (`applyConstraintExpr`'s empty catch). Referencing a sibling
+  declared LATER in the document binds against nothing — declare sources before
+  consumers.
+- **A declaration default kills a same-tag constraint** — now an `lzx-check`
+  finding. `<attribute name="zoom" value="8"/>` plus `zoom="${…}"` on the same
+  tag compiles the literal `8` into the instance and the constraint never
+  binds. Declare the attribute WITHOUT `value=`; the constraint supplies the
+  initial value.
+
 ## Realtime bus (Slice 3)
 
 A `<server>` section inside `<laszlo-app>` declares server-side reactive tags

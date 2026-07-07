@@ -14,36 +14,11 @@
      so the animation never jumps: multiplying <code>time · speed</code> in the shader
      would rescale accumulated time and snap the pattern on every change.</p>
   <laszlo-app width="640" height="480" bgcolor="#f7f2ee">
-    <shader name="surf" width="640" height="300" bgcolor="#404040"
-            zoom="${parent.controls.zoomrow.zv.value}"
-            glow="${parent.controls.glowrow.gv.value}">
-      <attribute name="phase" type="number" value="0"></attribute>
-      <attribute name="zoom" type="number" value="8"></attribute>
-      <attribute name="glow" type="number" value="30"></attribute>
-      <method name="color"><script type="text/typescript">
-        let n = noise.snoise2v(uv * this.zoom + this.phase);
-        let base = pal.pal1(n * 0.5 + 0.5);
-        let d = shape.circle(uv, 0.5, 0.5, 0.08 + this.glow * 0.003);
-        let ring = 1.0 - clamp(abs(d) * 30.0, 0.0, 1.0);
-        return base + vec4(ring * 0.4, ring * 0.4, ring * 0.4, 0.0);
-      </script></method>
-      <handler name="oninit"><script type="text/typescript">
-        // Integrate phase at the CURRENT speed each frame: speed changes the rate,
-        // never the position — that's what keeps the animation jump-free.
-        const me = this as any;
-        const G: any = globalThis;
-        let last = Date.now();
-        const tick = () => {
-          const now = Date.now();
-          const dt = Math.min(0.1, (now - last) / 1000);
-          last = now;
-          const sp = me.parent.controls.speedrow.sv.value;
-          me.setAttribute('phase', (me.phase + dt * sp) % 6283.0);
-          G.requestAnimationFrame(tick);
-        };
-        G.requestAnimationFrame(tick);
-      </script></handler>
-    </shader>
+    <!-- Controls are declared BEFORE the shader (y= keeps them visually below):
+         the shader's zoom/glow constraints capture their dependency objects at
+         BIND time, and the LFC silently nulls a constraint whose source doesn't
+         exist yet (applyConstraintExpr's empty catch). Forward-referencing a
+         later sibling from a constraint is a silent no-op. -->
     <view name="controls" y="310" width="640" height="160">
       <flexlayout flexdirection="column" padding="6"></flexlayout>
       <view name="speedrow" width="620" height="42">
@@ -68,6 +43,39 @@
         </slider>
       </view>
     </view>
+    <shader name="surf" width="640" height="300" bgcolor="#404040"
+            zoom="${parent.controls.zoomrow.zv.value}"
+            glow="${parent.controls.glowrow.gv.value}">
+      <attribute name="phase" type="number" value="0"></attribute>
+      <!-- zoom/glow declare NO value=: a declaration default silently REPLACES a
+           same-tag constraint (the instance emits the literal instead of the
+           LzAlwaysExpr). The constraint supplies the initial value. -->
+      <attribute name="zoom" type="number"></attribute>
+      <attribute name="glow" type="number"></attribute>
+      <method name="color"><script type="text/typescript">
+        let n = noise.snoise2v(uv * this.zoom + this.phase);
+        let base = pal.pal1(n * 0.5 + 0.5);
+        let d = shape.circle(uv, 0.5, 0.5, 0.08 + this.glow * 0.003);
+        let ring = 1.0 - clamp(abs(d) * 30.0, 0.0, 1.0);
+        return base + vec4(ring * 0.4, ring * 0.4, ring * 0.4, 0.0);
+      </script></method>
+      <handler name="oninit"><script type="text/typescript">
+        // Integrate phase at the CURRENT speed each frame: speed changes the rate,
+        // never the position — that's what keeps the animation jump-free.
+        const me = this as any;
+        const G: any = globalThis;
+        let last = Date.now();
+        const tick = () => {
+          const now = Date.now();
+          const dt = Math.min(0.1, (now - last) / 1000);
+          last = now;
+          const sp = me.parent.controls.speedrow.sv.value;
+          me.setAttribute('phase', (me.phase + dt * sp) % 6283.0);
+          G.requestAnimationFrame(tick);
+        };
+        G.requestAnimationFrame(tick);
+      </script></handler>
+    </shader>
   </laszlo-app>
 </body>
 </html>

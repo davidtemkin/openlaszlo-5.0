@@ -41,3 +41,18 @@ ${body}
   const bad = checkApp(mk("let q = vec4(1.0, 1.0, 1.0, 1.0);\nlet n = noise.snoise2v(q);\nreturn vec4(n, n, n, 1.0);"), "t.html");
   assert.ok(bad.findings.length >= 1, "vec4 into vec2 param must be a finding");
 });
+
+test("declaration default + same-tag constraint = the constraint is silently dead — now a finding", () => {
+  const src = `<laszlo-app width="100" height="100">
+<view name="src" width="10" height="10"></view>
+<view name="tgt" zoom="\${parent.src.width * 2}">
+  <attribute name="zoom" type="number" value="8"></attribute>
+</view>
+</laszlo-app>`;
+  const r = checkApp(src, "t.html");
+  assert.ok(r.findings.some(f => /constraint.*value|value.*constraint|dead/i.test(f.message)),
+    "expected a dead-constraint finding: " + JSON.stringify(r.findings));
+  // declaring WITHOUT a value is the sanctioned pattern — no finding
+  const ok = checkApp(src.replace(' value="8"', ""), "t.html");
+  assert.deepEqual(ok.findings.map(f => f.message), []);
+});

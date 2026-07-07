@@ -296,6 +296,18 @@ export function extractApp(root, opts = {}) {
                 }
                 if (checkName("attribute", an, c.line))
                     inst.attrs.push(declAttr(an, c.getAttribute("type")));
+                // A declaration DEFAULT silently replaces a same-tag constraint: the compiled
+                // instance emits the literal instead of the LzAlwaysExpr, so the constraint
+                // never binds (found live: a slider-bound shader uniform frozen at its
+                // declared default). Statically detectable — so it's a finding.
+                const markup = el.attributes.find((a) => a.name === an);
+                if (c.getAttribute("value") !== null && markup && CONSTRAINT_RE.test(markup.value)) {
+                    model.staticIssues.push({
+                        message: `<attribute name="${an}" value=…> overrides the ${an}="\${…}" constraint on this tag — ` +
+                            `the constraint is silently dead. Drop value= from the declaration (the constraint supplies the initial value).`,
+                        line: c.line,
+                    });
+                }
             }
         // Markup literals + constraint collection (spec "Beyond bodies").
         // Declared attrs validate by their ORIGINAL LZX type (declKind).
