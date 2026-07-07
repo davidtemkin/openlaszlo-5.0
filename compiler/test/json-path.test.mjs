@@ -74,3 +74,14 @@ test("resolvePointer: keys, array indices, misses", () => {
   assert.equal(resolvePointer(bikeshop, "/nope/x"), null);
   assert.equal(resolvePointer(bikeshop, ""), null); // pointer cannot address the root
 });
+
+test("resolvePointer: prototype-pollution keys are refused (untrusted wire input)", () => {
+  const o = { a: { b: 1 } };
+  assert.equal(resolvePointer(o, "/__proto__/polluted"), null);
+  assert.equal(resolvePointer(o, "/__proto__/toString"), null); // existing proto member — the real hazard
+  assert.equal(resolvePointer(o, "/constructor/prototype/x"), null);
+  assert.equal(resolvePointer(o, "/a/__proto__/x"), null);
+  assert.equal(({}).polluted, undefined);        // nothing leaked onto Object.prototype
+  // inherited (non-own) members are not addressable even without the magic names
+  assert.equal(resolvePointer(o, "/a/hasOwnProperty"), null);
+});

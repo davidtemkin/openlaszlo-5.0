@@ -109,22 +109,32 @@ export function evaluatePath(root, p, filterFn) {
 /** Pointer paths (updateData / wire "update.path"): /prop or /int steps, no
  *  selectors, cannot address the root. Integer-looking steps index arrays and
  *  are plain keys otherwise. */
+const DANGEROUS_KEY = new Set(["__proto__", "constructor", "prototype"]);
+const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 export function resolvePointer(root, pointer) {
     if (!pointer.startsWith("/"))
         return null;
     const steps = pointer.slice(1).split("/");
-    if (steps.some((s) => s === "" || s.includes("[") || s.includes("]")))
+    // Pointer updates apply UNTRUSTED wire input (server/data-relay.mjs), so reject
+    // empty/bracketed steps AND prototype-chain keys, and traverse OWN properties
+    // only — otherwise `/__proto__/toString` etc. would be prototype pollution.
+    if (steps.some((s) => s === "" || s.includes("[") || s.includes("]") || DANGEROUS_KEY.has(s)))
         return null;
     let parent = root;
     for (let i = 0; i < steps.length - 1; i++) {
+        if (parent == null || typeof parent !== "object")
+            return null;
         const k = Array.isArray(parent) && INT_RE.test(steps[i]) ? +steps[i] : steps[i];
-        parent = parent == null ? undefined : parent[k];
+        if (!hasOwn(parent, k))
+            return null;
+        parent = parent[k];
     }
     if (parent == null || typeof parent !== "object")
         return null;
     const last = steps[steps.length - 1];
     const key = Array.isArray(parent) && INT_RE.test(last) ? +last : last;
-    if (!(key in parent) && !(Array.isArray(parent) && typeof key === "number" && key >= 0 && key <= parent.length))
+    const arrayAppend = Array.isArray(parent) && typeof key === "number" && key >= 0 && key <= parent.length;
+    if (!hasOwn(parent, key) && !arrayAppend)
         return null;
     return { parent, key };
 }

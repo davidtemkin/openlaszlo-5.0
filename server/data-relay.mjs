@@ -35,6 +35,11 @@ function handle(msg, socket) {
   if (msg.update && typeof msg.update.path === "string") {
     const r = resolvePointer(e.data, msg.update.path);
     if (!r) return send({ dataset: msg.dataset, error: `update "${msg.update.path}" resolves nothing` });
+    // resolvePointer already rejects prototype-chain keys and non-own targets;
+    // this guard is defense-in-depth against a future parser swap (the write
+    // takes UNTRUSTED wire input from any connected peer).
+    if (r.key === "__proto__" || r.key === "constructor" || r.key === "prototype")
+      return send({ dataset: msg.dataset, error: `update "${msg.update.path}" refused` });
     r.parent[r.key] = msg.update.value;
     const frame = encodeText(JSON.stringify({ dataset: msg.dataset, update: msg.update }));
     for (const s of e.subs) { try { s.write(frame); } catch {} }
