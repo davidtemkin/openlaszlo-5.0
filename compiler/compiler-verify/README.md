@@ -8,18 +8,24 @@ the oracle — across **app compiles** (production / debug / profile / backtrace
 the **LFC runtime library build**, and **real apps**.
 
 The oracle is the ground truth: the harness compiles a set of inputs with *both*
-compilers and asserts the (normalized) output is identical. It bundles **only the
-OL4-unique files the Java compiler needs at runtime** — a minimal `LPS_HOME`. It does
-**NOT** bundle the JDK, the OpenLaszlo jar, the runtime components/fonts/LFC (those are
-symlinked into `../../runtime/`), or any golds (those are regenerated locally).
+compilers and asserts the (normalized) output is identical. It is **self-contained** —
+`oracle/prebuilt/` bundles the 4.9.0 compiler jar, its resource classes, and the
+dependency jars the compiler loads, alongside a minimal `LPS_HOME`. The runtime
+components/fonts/LFC are symlinked into `../../runtime/` (not duplicated), and golds are
+regenerated locally (never committed). **The only external requirement is a JDK 17** —
+no OpenLaszlo source tree, no servlet download.
 
 ```
-compiler-verify/                         (~400 KB committed; no golds/JDK/jar)
+compiler-verify/                         (bundled jar+deps ≈ 7 MB; no golds/JDK)
   oracle/
-    lzc.sh              # self-contained oracle driver ($JAVA_HOME + $OL_ORACLE_JAR)
+    lzc.sh              # self-contained oracle driver (needs only $JAVA_HOME)
                         #   - app compiles via org.openlaszlo.compiler.Main
                         #   - LZC_SOLO=1 → proxied=false (SOLO builds, via solo-config/)
                         #   - LZC_SC=1   → org.openlaszlo.sc.Main (the LFC library build)
+    prebuilt/           # the self-contained 4.9.0 oracle (no external tree needed):
+                        #   lps-4.9.0.jar  the compiler (unreproducible 4.9.0 artifact)
+                        #   classes/       its resource classes
+                        #   lib/           the 7 dependency jars the compiler loads
     lps-home/           # the MINIMAL LPS_HOME (config/schema/misc/font-metric files)
       WEB-INF/lps/{config,misc,schema}/
       lps/
@@ -56,26 +62,22 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 ```
 (Any JDK 17 works; just point `$JAVA_HOME` at it.)
 
-### b. The prebuilt OpenLaszlo 4.9.0 compiler classpath — `$OL_ORACLE_JAR`
-The compiler jar itself IS bundled: **`oracle/prebuilt/`** carries `lps-4.9.0.jar`
-(+ `WEB-INF/classes`) — the one artifact of the 4.9.0 servlet distribution that
-cannot be rebuilt from the 4.9 source drop (see `oracle/prebuilt/README.md`).
-Its 78 **dependency** jars are not duplicated here; they live, byte-identical to
-the servlet's (verified 2026-07-02), in the 4.9 source tree's `WEB-INF/lib`.
-Compose the classpath from the two:
+### b. The oracle is bundled — nothing to set
+`oracle/prebuilt/` ships the complete 4.9.0 compiler, self-contained:
+- `lps-4.9.0.jar` — the compiler (the one 4.9.0 artifact that cannot be rebuilt from
+  the source drop; see `oracle/prebuilt/README.md`),
+- `classes/` — its resource classes,
+- `lib/` — the **7 dependency jars the compiler actually loads** (≈ 5 MB: `jdom`,
+  `saxon`, `batik-all-flex`, `commons-collections`, `log4j`, `jakarta-regexp`,
+  `velocity-dep` — the subset of the servlet's 78 jars the DHTML app + LFC compiles
+  touch, determined by JVM class-load tracing over the whole corpus).
 
-```
-PRE=/path/to/openlaszlo-5.0/compiler/compiler-verify/oracle/prebuilt
-SRC=/path/to/openlaszlo-4.9.0-src/lps-4.9.0
-export OL_ORACLE_JAR="$PRE/lps-4.9.0.jar:$PRE/classes:$(ls "$SRC"/WEB-INF/lib/*.jar | tr '\n' ':')"
-```
-
-`$OL_ORACLE_JAR` also still accepts the classic forms: an unpacked **servlet
-webapp root** (the dir containing `WEB-INF/lib/*.jar`, from
-`openlaszlo-4.9.0.servlet.tar.gz`/`.zip` in the OpenLaszlo archives), a single
-`lps.jar`, or any pre-assembled colon-separated classpath. (Gate on record: the
-composed form and the full servlet produce byte-identical output modulo the
-`appbuilddate` timestamp.)
+`lzc.sh` composes the classpath from these automatically, so **`$OL_ORACLE_JAR` is
+optional — leave it unset.** Set it only to point at a DIFFERENT 4.9.0 build: an
+unpacked **servlet webapp root** (the dir containing `WEB-INF/lib/*.jar`, from
+`openlaszlo-4.9.0.servlet.tar.gz`/`.zip`), a single `lps.jar`, or any pre-assembled
+colon-separated classpath. (Gate on record: the bundled subset and the full 78-jar
+servlet produce byte-identical output modulo the `appbuilddate` timestamp.)
 
 ### c. The TS compiler must be built
 ```
@@ -180,8 +182,8 @@ are:
 | `check-explorer-solo` | 0 diff / 0 unsup             |
 | `check-explorer-debug`| 0 diff / 0 unsup  (62 / 0 / 0 canonical) |
 | `check-dashboard`     | BYTE-IDENTICAL               |
-| `dbg3`                | RAW IDENTICAL (845661 canonical) |
-| `btshow`              | RAW IDENTICAL (1340227 canonical)|
+| `dbg3`                | RAW IDENTICAL — **842284**   |
+| `btshow`              | RAW IDENTICAL — **1336920**  |
 | `check-lfc`           | RAW IDENTICAL — **426989**   |
 | `check-lfc-debug`     | RAW IDENTICAL — **1179477**  |
 | `check-lfc-backtrace` | RAW IDENTICAL — **2207200**  |

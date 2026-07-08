@@ -8,13 +8,14 @@
 # at runtime. The runtime components/ and fonts/ are SYMLINKS into the distro's
 # openlaszlo-5.0/runtime/ tree (no duplication).
 #
-# EXTERNAL prerequisites (NOT bundled — install/obtain yourself; see README.md):
+# EXTERNAL prerequisite (the ONLY thing not bundled; see README.md):
 #   $JAVA_HOME      -> a JDK 17 install (e.g. /opt/homebrew/opt/openjdk@17)
-#   $OL_ORACLE_JAR  -> the prebuilt OpenLaszlo 4.9.0 compiler classpath. Either:
-#                        * a single lps.jar, OR
-#                        * a colon-separated classpath, OR
-#                        * a directory containing the WEB-INF/lib/*.jar + classes
-#                          (the unpacked 4.9.0 servlet's WEB-INF dir works).
+#
+# The 4.9.0 compiler itself IS bundled: ./prebuilt/ carries lps-4.9.0.jar, its
+# resource classes, and the few dependency jars the compiler actually loads
+# (./prebuilt/lib/) — so NO external OpenLaszlo tree is needed. $OL_ORACLE_JAR is
+# OPTIONAL: set it only to override with a DIFFERENT 4.9.0 build — a single
+# lps.jar, a colon-separated classpath, or an unpacked servlet WEB-INF directory.
 #
 # PATCH: patch/classes (prepended to the classpath) holds THREE debug-only
 # source-location bug-fixes (see patch/README.md). Production output is
@@ -46,17 +47,21 @@ if [ ! -x "$JAVA_HOME/bin/java" ]; then
   echo "lzc.sh: ERROR no java at \$JAVA_HOME/bin/java ($JAVA_HOME/bin/java)." >&2
   exit 2
 fi
-if [ -z "${OL_ORACLE_JAR:-}" ]; then
-  echo "lzc.sh: ERROR \$OL_ORACLE_JAR is unset. Point it at the prebuilt OL 4.9.0" >&2
-  echo "        compiler classpath (a single lps.jar, a colon-separated classpath," >&2
-  echo "        or an unpacked servlet WEB-INF directory). See README.md." >&2
-  exit 2
-fi
-
 # --- assemble the oracle classpath ---------------------------------------
-# Accept a directory (resolve WEB-INF/lib/*.jar + WEB-INF/classes), a single
-# jar, or an already-formed colon-separated classpath.
-if [ -d "$OL_ORACLE_JAR" ]; then
+# DEFAULT (nothing to set): the fully self-contained bundle under ./prebuilt/ —
+# lps-4.9.0.jar + its resource classes + ./prebuilt/lib/ (the dependency jars the
+# compiler actually loads). OVERRIDE via $OL_ORACLE_JAR: a directory (resolve
+# WEB-INF/lib/*.jar + WEB-INF/classes), a single jar, or a colon-separated classpath.
+PREBUILT="$HERE/prebuilt"
+if [ -z "${OL_ORACLE_JAR:-}" ]; then
+  if [ ! -f "$PREBUILT/lps-4.9.0.jar" ]; then
+    echo "lzc.sh: ERROR bundled oracle jar missing ($PREBUILT/lps-4.9.0.jar)." >&2
+    exit 2
+  fi
+  DEPCP="$(find "$PREBUILT/lib" -name '*.jar' 2>/dev/null | tr '\n' ':')"
+  ORACLE_CP="$PREBUILT/lps-4.9.0.jar:$PREBUILT/classes"
+  [ -n "$DEPCP" ] && ORACLE_CP="$ORACLE_CP:${DEPCP%:}"
+elif [ -d "$OL_ORACLE_JAR" ]; then
   WI="$OL_ORACLE_JAR"
   [ -d "$WI/WEB-INF/lib" ] && WI="$WI/WEB-INF"          # given the webapp root
   JARCP="$(find "$WI/lib" -name '*.jar' 2>/dev/null | tr '\n' ':')"

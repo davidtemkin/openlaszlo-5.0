@@ -1,9 +1,12 @@
 // CLI: compile an LZX file to DHTML JS on stdout.
-//   lzc-ts <file.lzx> [--solo | --proxied=false] [--debug] [--backtrace] [--canvas]
+//   lzc-ts <file.lzx> [--proxied] [--debug] [--backtrace] [--canvas]
 // --canvas (or --runtime=canvas / LZC_CANVAS=1) targets the own-pixels canvas kernel
 // (LFCcanvas.js); dhtml-family, so the app JS is byte-identical — it only sets $canvas.
-// SOLO build flag (or env LZC_SOLO=1) flips the single `__LZproxied` byte to
-// "false" — the oracle's SOLO mode. Default is the proxied (normal) build.
+// SOLO IS THE DEFAULT: `__LZproxied="false"`, so the compiled app fetches its data with
+// a direct GET and runs on any static host — the same build the in-browser Service
+// Worker and the Node server emit (both are SOLO-only). Opt into a PROXIED build with
+// --proxied (or --no-solo / LZC_PROXIED=1) only when deploying behind an LPS server
+// that proxies data requests; --solo / --proxied=false / LZC_SOLO=1 re-assert the default.
 // --debug / --backtrace (or LZC_DEBUG_FORCE=1 / LZC_BACKTRACE=1) select the debug
 // and DEBUG_BACKTRACE (lzc -g2) backends; backtrace implies debug.
 import { readFileSync, writeSync } from "node:fs";
@@ -15,7 +18,7 @@ const flags = args.filter((a) => a.startsWith("--"));
 const positional = args.filter((a) => !a.startsWith("--"));
 const file = positional[0];
 if (!file) {
-    console.error("usage: lzc-ts <file.lzx> [--solo | --proxied=false]   |   lzc-ts --lfc <LaszloLibrary.lzs>");
+    console.error("usage: lzc-ts <file.lzx> [--proxied]   |   lzc-ts --lfc <LaszloLibrary.lzs>");
     process.exit(2);
 }
 // LFC library-root mode: compile a bare `.lzs` library root (LaszloLibrary.lzs,
@@ -74,7 +77,15 @@ if (process.env.LZC_PROFILE === "1" || flags.includes("--profile"))
 // oracle's `--runtime=dhtml` spelling.
 if (process.env.LZC_CANVAS === "1" || flags.includes("--canvas") || flags.includes("--runtime=canvas"))
     opts.canvas = true;
-// SOLO build: emit __LZproxied="false" (the one-byte oracle SOLO delta).
+// SOLO by DEFAULT (__LZproxied="false"): the compiled app fetches data with a direct
+// GET, so it runs on a static host — matching the Service Worker + Node-server
+// compilers. Opt into a PROXIED build (__LZproxied="true", data routed through an LPS
+// data-proxy server) with --proxied / --no-solo / LZC_PROXIED=1. An explicit
+// --solo / --proxied=false / LZC_SOLO=1 re-asserts the default and wins on conflict.
+opts.proxied = false;
+if (process.env.LZC_PROXIED === "1" || flags.includes("--proxied") ||
+    flags.includes("--proxied=true") || flags.includes("--no-solo"))
+    opts.proxied = true;
 if (process.env.LZC_SOLO === "1" || flags.includes("--solo") || flags.includes("--proxied=false"))
     opts.proxied = false;
 // Sheet-free output: drop the sprite-sheet machinery (multi-frame resources render
