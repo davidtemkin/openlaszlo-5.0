@@ -33,8 +33,8 @@
 //     check-dashboard [main] examples/dashboard byte-parity (live)  [BYTE-IDENTICAL]
 //     build-explorer-solo / check-explorer-solo     nav-derived SOLO set   [62/0/0]
 //     build-explorer-debug / check-explorer-debug   nav-derived DEBUG set  [62/0/0]
-//     dbg3   [file]          forced-debug RAW byte probe (bundled dbg3.lzx) [845661]
-//     btshow [file]          backtrace RAW byte probe (backtrace.lzx)     [1340227]
+//     dbg3   [file]          forced-debug RAW byte probe (bundled dbg3.lzx) [842284]
+//     btshow [file]          backtrace RAW byte probe (backtrace.lzx)     [1336920]
 //
 // Prerequisites (see ../README.md): $JAVA_HOME (JDK 17), $OL_ORACLE_JAR (the
 // prebuilt OL 4.9.0 compiler classpath), and the TS compiler built (npm run build).
@@ -99,7 +99,9 @@ function normalize(js) {
 function die(msg) { console.error(msg); process.exit(2); }
 function checkEnv() {
   if (!process.env.JAVA_HOME) die("verify.mjs: ERROR $JAVA_HOME unset (need JDK 17). See ../README.md");
-  if (!process.env.OL_ORACLE_JAR) die("verify.mjs: ERROR $OL_ORACLE_JAR unset (prebuilt OL 4.9.0 classpath). See ../README.md");
+  // $OL_ORACLE_JAR is OPTIONAL — when unset, lzc.sh falls back to the bundled,
+  // self-contained oracle (oracle/prebuilt/: jar + classes + lib). Set it only to
+  // point the harness at a DIFFERENT 4.9.0 build. See ../README.md.
   if (!existsSync(CLI)) die(`verify.mjs: ERROR TS compiler not built at ${CLI} (run: cd openlaszlo-5.0/compiler && npm run build)`);
 }
 function needCli() {
@@ -181,7 +183,11 @@ function oracleApp(src, { solo = false, debug = false, profile = false } = {}) {
 // montage next to the (read-only) distro source. Never drop it.
 function tsApp(src, { solo = false, debug = false, profile = false } = {}) {
   const env = { ...process.env, LPS_HOME, LZC_SPRITES: "none" };
+  // The CLI now defaults SOLO. The proxied corpus golds come from the oracle's
+  // proxied default, so pin the TS side to proxied for the non-solo suites (the
+  // solo suites match via LZC_SOLO=1 on both sides).
   if (solo) env.LZC_SOLO = "1";
+  else env.LZC_PROXIED = "1";
   if (debug) env.LZC_DEBUG_FORCE = "1";
   if (profile) env.LZC_PROFILE = "1";
   return normalize(execFileSync("node", [CLI, src], {
@@ -497,8 +503,8 @@ if (cmd === "build" || cmd === "regen") {
     check-dashboard [main]  examples/dashboard byte-parity (live) [BYTE-IDENTICAL]
     build-explorer-solo / check-explorer-solo    nav SOLO set         [62/0/0]
     build-explorer-debug / check-explorer-debug  nav DEBUG set        [62/0/0]
-    dbg3 [file]             forced-debug RAW probe (bundled dbg3.lzx) [845661]
-    btshow [file]           backtrace RAW probe (backtrace.lzx)       [1340227]
+    dbg3 [file]             forced-debug RAW probe (bundled dbg3.lzx) [842284]
+    btshow [file]           backtrace RAW probe (backtrace.lzx)       [1336920]
 `);
   process.exit(1);
 }
