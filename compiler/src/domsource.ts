@@ -21,6 +21,14 @@ export interface DomSourceOptions {
   domAdopt?: boolean;
   /** TypeScript carrier transpile (injected; typically ts-carrier's transpileTsBody). */
   transpileTs?: (code: string) => string;
+  /** <shader> GLSL generation (injected like transpileTs — glsl-gen must never join the
+   *  lzc-browser bundle graph; lz-ts provides it in the browser, node callers pass it
+   *  directly). Input/result shapes match glsl-gen's generateShader. */
+  glslGen?: (input: {
+    color: { code: string; srcLine: number };
+    helpers: Array<{ name: string; params: { name: string; type: string }[]; ret: string; code: string; srcLine: number }>;
+    uniforms: Array<{ name: string; lzType: "number" | "color" }>;
+  }) => { ok: boolean; program?: unknown; findings?: Array<{ message: string; line: number }> };
 }
 export class DomDialectError extends Error {}
 
@@ -158,6 +166,21 @@ function walkElem(el: DomElementLike, ctx: Ctx, isRoot: boolean): XmlElem {
   const isCodeParent = CODE_PARENTS.has(name);
   let sawCarrier = false;
   let sawServer = false;
+  // <shader> tags (spec 2026-07-06-shader-view-design.md): method carriers are the GLSL
+  // dialect, NOT client TS. They are collected RAW (never transpiled, never compiled),
+  // handed to the injected glslGen, and replaced by ONE stamped `shaderprogram` attribute
+  // whose JSON-escaped value survives normAttr (stamped attrs bypass it anyway) and
+  // compile.ts's string-attr emission — zero compile.ts changes.
+  const isShader = name === "shader";
+  const shaderMethods: Array<{ name: string; args: string; returns: string; code: string }> = [];
+  const shaderRaw = (mEl: DomElementLike): string => {
+    for (let i = 0; i < mEl.childNodes.length; i++) {
+      const c = mEl.childNodes[i] as DomNodeLike;
+      if (c.nodeType === ELEMENT && localName(c as DomElementLike) === "script")
+        return textContentOf(c as DomElementLike);
+    }
+    return textContentOf(mEl);
+  };
   for (let i = 0; i < el.childNodes.length; i++) {
     const c = el.childNodes[i] as DomNodeLike;
     if (c.nodeType === COMMENT) continue;
@@ -176,6 +199,15 @@ function walkElem(el: DomElementLike, ctx: Ctx, isRoot: boolean): XmlElem {
       if (sawServer) throw new DomDialectError("at most one <server> section per app");
       sawServer = true;
       continue;
+    }
+    if (isShader && localName(ce) === "method") {
+      shaderMethods.push({
+        name: ce.getAttribute("name") ?? "",
+        args: ce.getAttribute("args") ?? "",
+        returns: ce.getAttribute("returns") ?? "float",
+        code: shaderRaw(ce),
+      });
+      continue;   // stripped: a type-erased color() referencing vec4 must never ship
     }
     if (localName(ce) === "script") {
       children.push(...scriptNodes(ce, name, childCtx));
@@ -200,6 +232,33 @@ function walkElem(el: DomElementLike, ctx: Ctx, isRoot: boolean): XmlElem {
         children.push({ type: "text", value: transpile(childCtx, joined, name), cdata: false });
       }
     }
+  }
+
+  if (isShader && shaderMethods.length) {
+    if (!ctx.opts.glslGen)
+      throw new DomDialectError("<shader> present but no glslGen was provided (inject it like transpileTs)");
+    const colorM = shaderMethods.find((m) => m.name === "color");
+    if (!colorM) throw new DomDialectError('<shader> needs a <method name="color">');
+    const uniforms: Array<{ name: string; lzType: "number" | "color" }> = [];
+    for (const k of children) {
+      if (k.type === "elem" && k.name === "attribute") {
+        const ty = k.attrs["type"];
+        if (ty === "number" || ty === "color") uniforms.push({ name: k.attrs["name"], lzType: ty });
+      }
+    }
+    const helpers = shaderMethods.filter((m) => m.name !== "color").map((m) => ({
+      name: m.name,
+      params: m.args.split(",").map((x) => x.trim()).filter(Boolean)
+        .map((x) => { const [n, ty] = x.split(":").map((y) => y.trim()); return { name: n, type: ty || "float" }; }),
+      ret: m.returns, code: m.code, srcLine: 1,
+    }));
+    const r = ctx.opts.glslGen({ color: { code: colorM.code, srcLine: 1 }, helpers, uniforms });
+    if (!r.ok) {
+      const first = r.findings?.[0];
+      throw new DomDialectError(`<shader> dialect: ${first ? first.message : "generation failed"}`);
+    }
+    attrs["shaderprogram"] = JSON.stringify(r.program);
+    attrOrder.push("shaderprogram");
   }
 
   const elem: XmlElem = { type: "elem", name, attrs, attrOrder, children };

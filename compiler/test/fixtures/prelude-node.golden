@@ -1,0 +1,36 @@
+// lz-bus proxy prelude (generated)
+(function () {
+  var DECLS = [{"tag":"clock","attrs":[{"name":"seconds","value":"0","type":"number"}],"methods":[{"name":"reset"}]}];
+  var P = window.__lzBusProxies = {};
+  var Q = window.__lzBusQueue = [];
+  var C = window.__lzBusCalls = {};
+  var uid = 0;
+  function __lzCoerce(t, v) {
+  if (v == null) return v;
+  if (t === "number" || t === "size") return Number(v);
+  if (t === "boolean") return v === "true" || v === true;
+  return v;
+}
+  window.__lzBusSend = function (m) { JSON.stringify(m); Q.push(m); }; // JSON guard at the call site
+  window.server = {};
+  DECLS.forEach(function (d) {
+    var o = new LzEventable();
+    d.attrs.forEach(function (a) { o[a.name] = __lzCoerce(a.type, a.value); });
+    // Server-authoritative: SEND, never apply locally (deltas apply via the
+    // ORIGINAL LzEventable.prototype.setAttribute in connectBus).
+    o.setAttribute = function (n, v) { window.__lzBusSend({ op: "set", tag: d.tag, attr: n, value: v }); };
+    d.methods.forEach(function (m) {
+      o[m.name] = function () {
+        var args = Array.prototype.slice.call(arguments);
+        var id = ++uid;
+        var settle = {};
+        var prom = new Promise(function (res, rej) { settle.res = res; settle.rej = rej; });
+        C[id] = settle;
+        window.__lzBusSend({ op: "call", tag: d.tag, method: m.name, args: args, uid: id });
+        return prom;
+      };
+    });
+    P[d.tag] = o;
+    window.server[d.tag] = o;
+  });
+})();

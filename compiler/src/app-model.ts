@@ -8,12 +8,16 @@
 import type { HtmlElem, HtmlNode } from "./htmlsource.js";
 import { builtinTsName, tsTypeOf } from "./lfc-dts.js";
 import { SCHEMA, schemaAttrType } from "./schema-types.js";
+import { registryFindings } from "./component-registry.js";
 
 export interface AppAttr { name: string; tsType: string; declKind?: string }
 export interface BodyParam { name: string; tsType: string }
 export interface BodyInfo { label: string; ownerType: string; params: BodyParam[]; code: string; srcLine: number }
 export interface AppClassModel { tsName: string; extTsName: string; attrs: AppAttr[]; methodSigs: string[] }
-export interface AppInstanceModel { tsName: string; baseTsName: string; attrs: AppAttr[]; namedChildren: { name: string; tsName: string }[]; id?: string }
+export interface AppInstanceModel {
+  /** document/instantiation order + parent linkage (constraint bind-order analysis) */
+  seq?: number;
+  parentTs?: string; tsName: string; baseTsName: string; attrs: AppAttr[]; namedChildren: { name: string; tsName: string }[]; id?: string }
 export interface NameIssue { message: string; line: number }
 export interface ServerBody { name: string; args: string[]; code: string; srcLine: number } // RAW TS (untranspiled)
 export interface ServerTagModel {
@@ -22,6 +26,14 @@ export interface ServerTagModel {
   attrs: AppAttr[];         // via declAttr (tsType + declKind)
   methods: ServerBody[];
   handlers: ServerBody[];   // includes oninit and on<attr> handlers
+  table?: string;           // table-backed (supabase 3c)
+}
+export interface ShaderProgramModel {
+  label: string;            // for finding elements
+  line: number;
+  uniforms: Array<{ name: string; lzType: "number" | "color" }>;
+  color: { code: string; srcLine: number } | null;
+  helpers: Array<{ name: string; params: { name: string; type: string }[]; ret: string; code: string; srcLine: number }>;
 }
 export interface ConstraintInfo {
   expr: string;           // the inner expression of ${…} / $once{…} / …
@@ -39,6 +51,8 @@ export interface AppModel {
   nameIssues: NameIssue[]; // invalid TS identifiers — excluded from emission, reported as findings
   staticIssues: NameIssue[]; // markup-literal + cross-reference findings
   serverTags: ServerTagModel[]; // the <server> section (realtime bus)
+  shaderPrograms: ShaderProgramModel[]; // <shader> tags (typed GPU leaf view)
+  serverTransport: { mode: "node" | "supabase"; url?: string; key?: string };
 }
 export interface ExtractOptions {
   es4Bodies?: boolean;      // .lzx mode: skip every body (ES4, not TS)
@@ -113,7 +127,8 @@ const textOf = (el: HtmlElem): { code: string; line: number } => {
 
 export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel {
   const model: AppModel = { classes: [], instances: [], bodies: [], constraints: [],
-    skippedLzs: 0, nameIssues: [], staticIssues: [], serverTags: [] };
+    skippedLzs: 0, nameIssues: [], staticIssues: [], serverTags: [], shaderPrograms: [],
+    serverTransport: { mode: "node" } };
   const seenIds = new Set<string>();
   const userClasses = new Map<string, AppClassModel>();
   let instSeq = 0;
@@ -220,16 +235,29 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
   // The <server> section (realtime bus): tags -> typed model with RAW TS
   // bodies (the bus transpiles; the checker's SERVER program checks them).
   function walkServer(serverEl: HtmlElem): void {
+    const transport = (serverEl.getAttribute("transport") ?? "node").toLowerCase();
+    if (transport === "supabase") {
+      const url = serverEl.getAttribute("supabase-url") ?? undefined;
+      const key = serverEl.getAttribute("supabase-key") ?? undefined;
+      model.serverTransport = { mode: "supabase", url, key };
+      if (!url || !key)
+        model.staticIssues.push({ message: `transport="supabase" requires supabase-url and supabase-key`, line: serverEl.line });
+    }
     const seen = new Set<string>();
     for (const tagEl of elemChildren(serverEl)) {
       const name = tagEl.getAttribute("name") ?? "";
       if (!checkName("server tag name", name, tagEl.line)) continue;
+      if (model.serverTransport.mode === "supabase" && name === "presence") {
+        model.staticIssues.push({ message: `server tag name "presence" is reserved in supabase mode (built-in)`, line: tagEl.line });
+        continue;
+      }
       if (seen.has(name)) {
         model.staticIssues.push({ message: `duplicate server tag name "${name}"`, line: tagEl.line });
         continue;
       }
       seen.add(name);
-      const tag: ServerTagModel = { name, tsName: "LzSrv_" + name, attrs: [], methods: [], handlers: [] };
+      const table = tagEl.getAttribute("table") ?? undefined;
+      const tag: ServerTagModel = { name, tsName: "LzSrv_" + name, attrs: [], methods: [], handlers: [], ...(table ? { table } : {}) };
       const rawBody = (el: HtmlElem): { code: string; line: number } => {
         const carrier = elemChildren(el).find((c) => c.tagName === "SCRIPT");
         return textOf(carrier ?? el);
@@ -241,9 +269,13 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
         if (t === "attribute") {
           if (checkName("attribute", cn, c.line)) tag.attrs.push(declAttr(cn, c.getAttribute("type")));
         } else if (t === "method") {
+          if (model.serverTransport.mode === "supabase")
+            model.staticIssues.push({ message: `<method> on server tag "${name}": no execution home in supabase mode — use the Node bus, or a table-backed tag`, line: c.line });
           const { code, line } = rawBody(c);
           if (checkName("method", cn, c.line)) tag.methods.push({ name: cn, args, code, srcLine: line });
         } else if (t === "handler") {
+          if (model.serverTransport.mode === "supabase")
+            model.staticIssues.push({ message: `<handler> on server tag "${name}": no execution home in supabase mode — use the Node bus, or a table-backed tag`, line: c.line });
           const { code, line } = rawBody(c);
           tag.handlers.push({ name: cn, args, code, srcLine: line });
         }
@@ -259,6 +291,7 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
       tsName: "LzInst_" + ++instSeq,
       baseTsName: user ? user.tsName : (builtinTsName(tag) ?? "LzView"),
       attrs: [], namedChildren: [],
+      seq: instSeq, parentTs: parent ? parent.tsName : undefined,
     };
     model.instances.push(inst);
     const id = el.getAttribute("id");
@@ -293,6 +326,18 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
         const an = c.getAttribute("name") ?? "";
         if (an === "server") { model.staticIssues.push({ message: `attribute name "server" is reserved`, line: c.line }); continue; }
         if (checkName("attribute", an, c.line)) inst.attrs.push(declAttr(an, c.getAttribute("type")));
+        // A declaration DEFAULT silently replaces a same-tag constraint: the compiled
+        // instance emits the literal instead of the LzAlwaysExpr, so the constraint
+        // never binds (found live: a slider-bound shader uniform frozen at its
+        // declared default). Statically detectable — so it's a finding.
+        const markup = el.attributes.find((a) => a.name === an);
+        if (c.getAttribute("value") !== null && markup && CONSTRAINT_RE.test(markup.value)) {
+          model.staticIssues.push({
+            message: `<attribute name="${an}" value=…> overrides the ${an}="\${…}" constraint on this tag — ` +
+              `the constraint is silently dead. Drop value= from the declaration (the constraint supplies the initial value).`,
+            line: c.line,
+          });
+        }
       }
 
     // Markup literals + constraint collection (spec "Beyond bodies").
@@ -302,6 +347,7 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
       if (d) return d.declKind ?? null; // the ORIGINAL LZX type string, no reverse-mapping
       return schemaAttrType(baseTag, n);
     };
+    const litAttrs: Array<{ name: string; value: string; line: number }> = [];
     for (const a of el.attributes) {
       if (SKIP_LITERAL.has(a.name) || a.name.startsWith("on")) continue;
       const cm = CONSTRAINT_RE.exec(a.value);
@@ -323,7 +369,31 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
       }
       const issue = literalIssue(a.name, a.value, declKindOf(a.name));
       if (issue) model.staticIssues.push({ message: issue, line: a.line });
+      litAttrs.push({ name: a.name, value: a.value, line: a.line });
     }
+    // Component-registry validation (curated component attrs + view layout hints);
+    // constraint-valued attrs never reach litAttrs (the `continue` above).
+    for (const f of registryFindings(el.tagName.toLowerCase(), true, litAttrs))
+      model.staticIssues.push(f);
+
+    // <shader> tags: method bodies are GLSL dialect, NOT client TS — they route to
+    // model.shaderPrograms (raw, like walkServer's bodies) and are checked in the
+    // shader program. The tag itself stays a FULL instance (attrs, id/name, constraint
+    // checking on its markup attributes) — a NON_INSTANCE-style prune would silently
+    // uncheck the tag's own ${…} constraints.
+    const isShader = tag === "shader";
+    const shaderProg: ShaderProgramModel | null = isShader ? {
+      label: desc, line: el.line,
+      uniforms: inst.attrs
+        .filter((a) => a.declKind === "number" || a.declKind === "color")
+        .map((a) => ({ name: a.name, lzType: a.declKind as "number" | "color" })),
+      color: null, helpers: [],
+    } : null;
+    if (shaderProg) model.shaderPrograms.push(shaderProg);
+    const shaderRawBody = (mEl: HtmlElem): { code: string; line: number } => {
+      const carrier = elemChildren(mEl).find((cc) => cc.tagName === "SCRIPT");
+      return textOf(carrier ?? mEl);
+    };
 
     const childSiblings = new Set<string>();
     for (const c of elemChildren(el)) {
@@ -335,6 +405,18 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
       }
       if (t === "class" || t === "interface" || t === "mixin") { walkClass(c); continue; }
       if (t === "dataset") continue; // data, not code
+      if (t === "method" && shaderProg) {
+        const mn = c.getAttribute("name") ?? "";
+        const { code, line } = shaderRawBody(c);
+        if (mn === "color") shaderProg.color = { code, srcLine: line };
+        else {
+          // helper params: `args="p: vec2, k: float"` (type defaults float); `returns="vec4"`
+          const params = (c.getAttribute("args") ?? "").split(",").map((s) => s.trim()).filter(Boolean)
+            .map((s) => { const [n, ty] = s.split(":").map((x) => x.trim()); return { name: n, type: ty || "float" }; });
+          shaderProg.helpers.push({ name: mn, params, ret: c.getAttribute("returns") ?? "float", code, srcLine: line });
+        }
+        continue;   // NOT collectBody: shader bodies never join the client program
+      }
       if (t === "method") {
         const args = (c.getAttribute("args") ?? "").split(/[\s,]+/).filter(Boolean);
         // instance methods surface on the instance type via methodSigs-like attr
@@ -355,6 +437,49 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
   for (const c of model.constraints) {
     const inst = model.instances.find((i) => i.tsName === c.ownerType);
     if (inst) c.ownerMembers.push(...inst.namedChildren.map((n) => n.name));
+  }
+
+  // Bind-order analysis: constraints capture their dependency OBJECTS at
+  // instantiation time, and the LFC silently drops dependencies that don't
+  // resolve (applyConstraintExpr's empty catch) — so a constraint referencing
+  // an instance declared LATER in the document is a silent no-op (found live:
+  // slider-bound shader uniforms frozen at defaults). Conservative detector:
+  // only `parent.`-rooted dotted chains whose segments fully resolve through
+  // the model's named children are flagged; anything dynamic stays silent.
+  {
+    const byTs = new Map(model.instances.map((i) => [i.tsName, i]));
+    const CHAIN_RE = /\b((?:parent\.)+[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)/g;
+    for (const c of model.constraints) {
+      const owner = byTs.get(c.ownerType);
+      if (!owner || owner.seq === undefined) continue;
+      for (const m of c.expr.matchAll(CHAIN_RE)) {
+        const segs = m[1].split(".");
+        let cur: AppInstanceModel | undefined = owner;
+        let i = 0;
+        while (i < segs.length && segs[i] === "parent") {
+          cur = cur?.parentTs ? byTs.get(cur.parentTs) : undefined;
+          i++;
+        }
+        let lastName: string | null = null;
+        while (cur && i < segs.length) {
+          const child: { name: string; tsName: string } | undefined =
+            cur.namedChildren.find((n) => n.name === segs[i]);
+          if (!child) break;
+          cur = byTs.get(child.tsName);
+          lastName = segs[i];
+          i++;
+          if (cur && cur.seq !== undefined && owner.seq !== undefined && cur.seq > owner.seq) {
+            model.staticIssues.push({
+              message: `constraint references "${lastName}" (via ${m[1]}) declared LATER in the document — ` +
+                `constraints capture dependencies at bind time and unresolved sources are silently dropped; ` +
+                `declare "${lastName}" before this element`,
+              line: c.line,
+            });
+            break;
+          }
+        }
+      }
+    }
   }
   return model;
 }

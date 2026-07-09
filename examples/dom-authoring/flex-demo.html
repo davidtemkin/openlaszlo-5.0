@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>OpenLaszlo — flexlayout demo</title>
+  <style>laszlo-app{visibility:hidden;display:block;position:relative}</style>
+  <script type="module" src="../../startup/laszlo-dom.js"></script>
+</head>
+<body style="font:14px sans-serif;margin:16px">
+  <h2>&lt;flexlayout&gt; — toolbar (space-between) + wrapping gallery</h2>
+  <p>Click anywhere in the toolbar to toggle the app between wide (640) and narrow
+     (420): the toolbar's spacer re-flexes with the right label pinned, and the
+     gallery re-wraps its tiles (3-across &#8596; 2-across).</p>
+  <laszlo-app width="640" height="420" bgcolor="#f7f2ee">
+    <view name="toolbar" width="640" height="48" bgcolor="#e8e0d8">
+      <attribute name="wide" type="boolean" value="true"></attribute>
+      <handler name="onclick">
+        <script type="text/typescript">
+          const wide = !(this as any).wide;
+          this.setAttribute('wide', wide);
+          this.setAttribute('width', wide ? 640 : 420);
+          (this as any).parent.gallery.setAttribute('width', wide ? 640 : 420);
+        </script>
+      </handler>
+      <flexlayout flexdirection="row" justifycontent="space-between" alignitems="center" padding="8"></flexlayout>
+      <text text="flexlayout" fontsize="16"></text>
+      <view flex="1" height="1"></view>
+      <text text="click toolbar to resize"></text>
+    </view>
+    <view name="gallery" y="56" width="640" height="330" bgcolor="#efe9e2">
+      <flexlayout flexdirection="row" flexwrap="wrap" padding="8"></flexlayout>
+      <view width="150" height="90" bgcolor="#4488cc" margin="6"></view>
+      <view width="150" height="90" bgcolor="#44cc88" margin="6"></view>
+      <view width="150" height="90" bgcolor="#cc8844" margin="6"></view>
+      <view width="150" height="90" bgcolor="#8844cc" margin="6"></view>
+      <view width="150" height="90" bgcolor="#cc4488" margin="6"></view>
+      <view width="150" height="90" bgcolor="#88cc44" margin="6"></view>
+    </view>
+  </laszlo-app>
+</body>
+</html>

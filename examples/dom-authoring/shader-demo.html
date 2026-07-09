@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>OpenLaszlo — &lt;shader&gt; demo</title>
+  <style>laszlo-app{visibility:hidden;display:block;position:relative}</style>
+  <script type="module" src="../../startup/laszlo-dom.js"></script>
+</head>
+<body style="font:14px sans-serif;margin:16px">
+  <h2>&lt;shader&gt; — domain-warped noise, sliders driving uniforms through ${…} constraints</h2>
+  <p>The <code>zoom</code> and <code>warp</code> uniforms are constraint-bound to the
+     sliders — drag and the GPU follows, no event code. <code>speed</code> changes the
+     <em>rate</em> of an integrated <code>phase</code> attribute (<code>phase += speed·dt</code>),
+     so the animation never jumps: multiplying <code>time · speed</code> in the shader
+     would rescale accumulated time and snap the pattern on every change.</p>
+  <p style="color:#666">The visual is <b>domain warping</b> — technique by
+     <a href="https://iquilezles.org/articles/warp/">Inigo Quilez</a>
+     (see his Shadertoy examples
+     <a href="https://www.shadertoy.com/view/4s23zzM">4s23zzM</a> and
+     <a href="https://www.shadertoy.com/view/lsl3RH">lsl3RH</a>) — implemented
+     independently here over this distro's own simplex-noise port
+     (McEwan/Gustavson, Ashima Arts); the color grading constants are borrowed
+     from lsl3RH with thanks.</p>
+  <laszlo-app width="640" height="480" bgcolor="#f7f2ee">
+    <!-- Controls are declared BEFORE the shader (y= keeps them visually below):
+         the shader's zoom/glow constraints capture their dependency objects at
+         BIND time, and the LFC silently nulls a constraint whose source doesn't
+         exist yet (applyConstraintExpr's empty catch). Forward-referencing a
+         later sibling from a constraint is a silent no-op. -->
+    <view name="controls" y="310" width="640" height="160">
+      <flexlayout flexdirection="column" padding="6"></flexlayout>
+      <view name="speedrow" width="620" height="42">
+        <flexlayout flexdirection="row" alignitems="center" padding="4"></flexlayout>
+        <text width="90" text="speed"></text>
+        <slider name="sv" width="400" minvalue="0" maxvalue="4" value="1">
+          <attribute name="value" type="number" value="1"></attribute>
+        </slider>
+      </view>
+      <view name="zoomrow" width="620" height="42">
+        <flexlayout flexdirection="row" alignitems="center" padding="4"></flexlayout>
+        <text width="90" text="zoom"></text>
+        <slider name="zv" width="400" minvalue="1" maxvalue="8" value="3">
+          <attribute name="value" type="number" value="3"></attribute>
+        </slider>
+      </view>
+      <view name="warprow" width="620" height="42">
+        <flexlayout flexdirection="row" alignitems="center" padding="4"></flexlayout>
+        <text width="90" text="warp"></text>
+        <slider name="wv" width="400" minvalue="0" maxvalue="8" value="4">
+          <attribute name="value" type="number" value="4"></attribute>
+        </slider>
+      </view>
+    </view>
+    <shader name="surf" width="640" height="300" bgcolor="#404040"
+            zoom="${parent.controls.zoomrow.zv.value}"
+            warp="${parent.controls.warprow.wv.value}">
+      <attribute name="phase" type="number" value="0"></attribute>
+      <!-- zoom/warp declare NO value=: a declaration default silently REPLACES a
+           same-tag constraint (the instance emits the literal instead of the
+           LzAlwaysExpr). The constraint supplies the initial value. -->
+      <attribute name="zoom" type="number"></attribute>
+      <attribute name="warp" type="number"></attribute>
+      <!-- Domain warping: f(p + warp*fbm(p + fbm(p))), with the intermediate q/r
+           vectors driving the palette — Inigo Quilez's technique, independently
+           implemented here in the shader dialect over this distro's own fbm
+           (Ashima simplex port). Reference: iquilezles.org/articles/warp/ and
+           IQ's Shadertoy examples 4s23zzM ("Warping - procedural 1", 2012) and
+           lsl3RH ("Warping - procedural 2"). -->
+      <method name="fbm" args="p: vec2" returns="float"><script type="text/typescript">
+        let f = 0.0;
+        let amp = 0.5;
+        let q = p;
+        for (let i = 0; i < 5; i++) {
+          f = f + amp * noise.snoise2v(q);
+          q = q * 2.03;
+          amp = amp * 0.5;
+        }
+        // remap to [0,1]: IQ's fbm is value-noise-based and his grading constants
+        // assume that range; our simplex sum is centered at 0.
+        return 0.5 + 0.5 * f;
+      </script></method>
+      <method name="color"><script type="text/typescript">
+        let p = uv * this.zoom;
+        let t = this.phase * 0.12;
+        let q = vec2(fbm(p + vec2(0.0, 0.0) + t), fbm(p + vec2(5.2, 1.3)));
+        let r = vec2(fbm(p + this.warp * q + vec2(1.7, 9.2) + t * 0.35),
+                     fbm(p + this.warp * q + vec2(8.3, 2.8)));
+        let f = fbm(p + this.warp * r);
+        // Color grading borrowed from IQ's "Warping - procedural 2"
+        // (shadertoy.com/view/lsl3RH): the teal->olive base mix on f^2, the deep-blue
+        // pull by |q|, the pale-cyan highlight by |r.x|, and his brightness
+        // polynomial f^3 + 0.6f^2 + 0.5f.
+        let col = mix(vec3(0.101961, 0.619608, 0.666667),
+                      vec3(0.666667, 0.666667, 0.498039),
+                      clamp(f * f * 4.0, 0.0, 1.0));
+        col = mix(col, vec3(0.0, 0.0, 0.164706), clamp(length(q), 0.0, 1.0));
+        col = mix(col, vec3(0.666667, 1.0, 1.0), clamp(abs(r.x), 0.0, 1.0));
+        let lum = f * f * f + 0.6 * f * f + 0.5 * f;
+        return vec4(clamp(col * lum * 1.7, 0.0, 1.0), 1.0);
+      </script></method>
+      <handler name="oninit"><script type="text/typescript">
+        // Integrate phase at the CURRENT speed each frame: speed changes the rate,
+        // never the position — that's what keeps the animation jump-free.
+        const me = this as any;
+        const G: any = globalThis;
+        let last = Date.now();
+        const tick = () => {
+          const now = Date.now();
+          const dt = Math.min(0.1, (now - last) / 1000);
+          last = now;
+          const sp = me.parent.controls.speedrow.sv.value;
+          me.setAttribute('phase', (me.phase + dt * sp) % 6283.0);
+          G.requestAnimationFrame(tick);
+        };
+        G.requestAnimationFrame(tick);
+      </script></handler>
+    </shader>
+  </laszlo-app>
+</body>
+</html>

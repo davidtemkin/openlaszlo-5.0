@@ -87,13 +87,16 @@ async function boot(host) {
   }
 
   // TS transpile, lazy-loaded only when the app has code to transpile.
-  let transpileTs;
+  // <shader> tags additionally need the GLSL generator (same bundle).
+  let transpileTs, glslGen;
   if (host.querySelector("method,handler,setter,script")) {
-    transpileTs = (await import(new URL("lz-ts.js", HERE).href)).transpileTsBody;
+    const lzts = await import(new URL("lz-ts.js", HERE).href);
+    transpileTs = lzts.transpileTsBody;
+    if (host.querySelector("shader")) glslGen = lzts.glslGen;
   }
 
   // DOM → XmlElem. Stamps data-lz-adopt on live plain-view elements.
-  const rootXml = domToXmlElem(host, { domAdopt: true, transpileTs });
+  const rootXml = domToXmlElem(host, { domAdopt: true, transpileTs, glslGen });
 
   // Adoption registry (consume-once; read by lz-adopt-patch.js).
   const reg = new Map();
@@ -157,7 +160,14 @@ async function boot(host) {
   window.lz.embed.applications.lzapp.onload = function () {
     host.style.visibility = "visible";
   };
-  if (busDecls) busDecls.mod.connectBus(location.pathname);
+  if (busDecls) {
+    if (busDecls.decls.transport === "supabase") {
+      const supaMod = await import(new URL("lz-bus-supabase.js", HERE).href);
+      supaMod.connectSupabase(busDecls.decls, location.pathname);
+    } else {
+      busDecls.mod.connectBus(location.pathname);
+    }
+  }
 }
 
 // embed.js hard-caps ONE DHTML app per window (dhtmlapploaded guard), so boot

@@ -1,0 +1,13 @@
+<laszlo-app width="400" height="200">
+  <view width="400" height="60">
+    <flexlayout flexdirection="row" alignitems="center" padding="4"></flexlayout>
+    <view flex="1" height="20"></view>
+    <view width="40" height="20" margin="2">
+      <method name="grow">
+        <script type="text/typescript">
+          this.setAttribute('flex', 2);
+        </script>
+      </method>
+    </view>
+  </view>
+</laszlo-app>

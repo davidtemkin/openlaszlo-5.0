@@ -10,12 +10,13 @@ import { srcTextHtml, framesetHtml, editorHtml } from "../startup/views.mjs";
 import { renderWrapper, canvasAttrsFromText } from "./wrapper.mjs";
 import { compileApp, DISTRO } from "./compile.mjs";
 import { toSourceUrl } from "../startup/urlmap.mjs";
+import { injectHtml, reloadTagIfEnabled } from "./dev-reload.mjs";
 
 const CSS = "/runtime/theme/explore.css";
 const edits = new Map();   // token -> { js, src }  (an edited app's compiled JS + its source)
 let editSeq = 0;
 
-const sendHtml = (res, body, status = 200) => { res.writeHead(status, { "Content-Type": "text/html;charset=utf-8", "Cache-Control": "no-cache" }); res.end(body); };
+const sendHtml = (res, body, status = 200) => { res.writeHead(status, { "Content-Type": "text/html;charset=utf-8", "Cache-Control": "no-cache" }); res.end(injectHtml(body, reloadTagIfEnabled())); };
 const sendJson = (res, obj) => { res.writeHead(200, { "Content-Type": "application/json;charset=utf-8", "Cache-Control": "no-cache" }); res.end(JSON.stringify(obj)); };
 const sendJs = (res, js) => { res.writeHead(200, { "Content-Type": "text/javascript;charset=utf-8", "Cache-Control": "no-cache" }); res.end(js); };
 
