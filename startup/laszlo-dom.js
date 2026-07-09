@@ -92,6 +92,14 @@ async function boot(host) {
     transpileTs = (await import(new URL("lz-ts.js", HERE).href)).transpileTsBody;
   }
 
+  // JSON databinding (spec 2026-07-06-json-databinding-design.md): include the
+  // micro-runtime in the app blob when the app declares json datasets. Order is
+  // a relative constraint: after the LFC + adopt patch, before the app JS.
+  let jsonRt = "";
+  if (host.querySelector('dataset[type="json"],lz-dataset[type="json"]')) {
+    jsonRt = (await (await fetch(new URL("lz-json-data.js", HERE))).text()) + "\n";
+  }
+
   // DOM → XmlElem. Stamps data-lz-adopt on live plain-view elements.
   const rootXml = domToXmlElem(host, { domAdopt: true, transpileTs });
 
@@ -115,7 +123,7 @@ async function boot(host) {
   // first, then this blob — so the patch installs before any view constructs.
   const patch = await (await fetch(new URL("lz-adopt-patch.js", HERE))).text();
   const prelude = busDecls ? busDecls.mod.busPrelude(busDecls.decls) : "";
-  const appUrl = URL.createObjectURL(new Blob([prelude, patch, "\n", r.js], { type: "text/javascript" }));
+  const appUrl = URL.createObjectURL(new Blob([prelude, patch, "\n", jsonRt, r.js], { type: "text/javascript" }));
 
   if (typeof window.lz === "undefined" || !window.lz.embed) {
     await loadScript(RUNTIME + "/embed.js");

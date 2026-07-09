@@ -403,6 +403,28 @@ function datasetArgs(el, globals, globalOrigins, opts) {
     globalOrigins.push(el.origin ?? "");
     return { name, content, trim, nsprefix };
 }
+/** A `<dataset type="json">` (spec 2026-07-06-json-databinding-design.md):
+ *  registers with the json micro-runtime instead of lzAddLocalData. Emits NO
+ *  global binding. Inline JSON is validated (and normalized) at compile time. */
+function compileJsonDataset(el) {
+    const name = el.attrs["name"];
+    if (!name)
+        throw new Unsupported(`<dataset type="json"> without name`);
+    const src = el.attrs["src"];
+    if (src != null) {
+        const kind = /^wss?:/.test(src) ? "ws" : "src";
+        return `lz.jsondata.register(${jsString(name)},{${kind}:${jsString(src)}});`;
+    }
+    const text = el.children.filter((c) => c.type === "text").map((c) => c.value).join("");
+    let parsed;
+    try {
+        parsed = JSON.parse(text);
+    }
+    catch (e) {
+        throw new Unsupported(`dataset "${name}": invalid JSON — ${e.message}`);
+    }
+    return `lz.jsondata.register(${jsString(name)},{json:${JSON.stringify(parsed)}});`;
+}
 /** Compile a local `<dataset>` to its global declaration + `lzAddLocalData`
  *  statement. The content is a `<data>` element wrapping either the src file's
  *  root element (read + serialized raw) or the dataset's own inline children. */
@@ -4014,6 +4036,14 @@ function compileInner(root, opts, debug) {
             // A local `<dataset>` (literal/src content, not http/url/constraint) becomes
             // a global + a `name=canvas.lzAddLocalData(name,'<data>…',trim,nsprefix)`
             // statement, emitted in document order (DataCompiler).
+            if (child.name === "dataset" && child.attrs["type"] === "json") {
+                // JSON datasets are DOM-authored-only (spec); debug builds are the
+                // byte-parity .lzx path — refusing beats silent miscompilation.
+                if (DEBUG_STMTS)
+                    throw new Unsupported(`<dataset type="json"> in a debug build`);
+                js += compileJsonDataset(child);
+                continue;
+            }
             if (child.name === "dataset" && isLocalDataset(child)) {
                 if (DEBUG_STMTS) {
                     // Immediately after a constraint/method `<debug>` anon class, the running

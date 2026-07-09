@@ -6,6 +6,24 @@ Author LZX as native HTML inside `<laszlo-app>` (or a separate file via
     node tools/serve-static.mjs . 8087
     open http://localhost:8087/examples/dom-authoring/
 
+The landing page (`index.html`) links every demo below.
+
+## Demos
+
+| Demo | Slice | What it shows | Server? |
+| --- | --- | --- | --- |
+| `index.html` | 1 | Authored elements adopted as live app nodes | no |
+| `counter-app.html` | 1 | Minimal counter; TypeScript carriers | no |
+| `file-demo.html` | 1 | External-file dialect (`<laszlo-app src=…>`) | no |
+| `equivalence.html` | 2 | DOM ↔ XML-text output equivalence | no |
+| `bus-demo.html` | 3 | Realtime bus: shared server state over WebSocket | `node server/index.mjs` |
+| `bikeshop-demo.html` | 4 | JSON databinding: inline dataset, replication, `updateData` | no |
+| `sensors-demo.html` | 4 | JSON databinding: live data over the `/api/data` WebSocket | server + `sensor-feeder.mjs` |
+
+The `bus` and `sensors` demos need the Node server (`node server/index.mjs
+8090`) for their WebSocket routes; the rest — `bikeshop` included — compile in
+the browser and run under the static `serve-static.mjs` command above.
+
 ## Dialect rules (full spec: docs/superpowers/specs/2026-07-05-dom-native-authoring-design.md)
 
 - The app root is `<laszlo-app width height bgcolor …>` (= LZX `<canvas>`).
@@ -63,3 +81,51 @@ State is server-authoritative and shared (one singleton per app).
 `lzx-check` types both sides — server bodies run in Node (so `setInterval`
 is legal there and flagged in client code). Static hosting: the section is
 inert (console warning, defaults hold).
+
+## JSON databinding (Slice 4)
+
+Native JSON datasets with dreem's JSONPath slash dialect. A `<dataset
+type="json">` holds inline JSON (`<script type="application/json">`), fetches
+it (`src="./bikes.json"`), or subscribes live over WebSocket
+(`src="ws://host/api/data"`). A `datapath` starting with `$` replicates the
+view per match; the datum lands on the bound view's `data` attribute and
+binds through ordinary `${}` constraints:
+
+    <dataset name="bikeshop" type="json">
+      <script type="application/json">
+        { "bicycle": [ { "color": "red", "price": 19.95 } ] }
+      </script>
+    </dataset>
+    <lz-view datapath="$bikeshop/bicycle[*]">
+      <lz-text text="${parent.data.color + ' — $' + parent.data.price}"/>
+    </lz-view>
+
+Mutate with `lz.jsondata.get('bikeshop').updateData('/bicycle/0/price', 9.99)`
+— bound views reconcile automatically. Selectors: `[*]`, `[2]`, `[0,4,2]`
+(start,end,step), terminal `[@]` (calls `filterfunction(obj, accum)` on the
+parent view); `sortfield`/`sortasc` sort matches. Relative paths
+(`datapath="/sub[*]"`) nest inside replicated views. `lzx-check` infers a
+type from inline JSON (or a `<script type="application/lz-shape">` TS literal)
+and validates paths and `${parent.data.*}` members statically.
+
+**Demos:** `bikeshop-demo.html` (inline + updateData button);
+`sensors-demo.html` + `sensor-feeder.mjs` (live over the wire):
+
+    node server/index.mjs 8090
+    node examples/dom-authoring/sensor-feeder.mjs
+    open http://localhost:8090/examples/dom-authoring/sensors-demo.html
+
+**Wire protocol** (JSON over WebSocket text frames, `/api/data` relay): a
+conforming peer needs only a socket and a JSON encoder — a micropython
+device can BE the data source:
+
+    client → server   {"lz":1, "subscribe":"sensors"}
+    server → client   {"dataset":"sensors", "data":{...}}            (snapshot; null if none retained)
+    either direction  {"dataset":"sensors", "update":{"path":"/temp", "value":22.4}}
+    server → client   {"dataset":"sensors", "error":"..."}
+
+    # micropython sketch
+    ws.send(ujson.dumps({"dataset":"sensors",
+                         "update":{"path":"/temp","value":read_temp()}}))
+
+Spec: `docs/superpowers/specs/2026-07-06-json-databinding-design.md`.

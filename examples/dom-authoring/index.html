@@ -8,7 +8,22 @@
   <script type="module" src="../../startup/laszlo-dom.js"></script>
 </head>
 <body style="font:14px sans-serif;margin:16px">
-  <h2>DOM-authored LZX (Slice 1 demo)</h2>
+  <h2>DOM-authored LZX — demos</h2>
+
+  <nav style="background:#f4f6fa;border:1px solid #d6dde8;border-radius:6px;padding:10px 14px;margin:0 0 20px;max-width:640px">
+    <strong>Demos in this folder</strong>
+    <ul style="margin:8px 0 4px;padding-left:20px;line-height:1.7">
+      <li><a href="index.html">This page</a> — Slice 1: authored elements adopted as live app nodes.</li>
+      <li><a href="counter-app.html">counter-app.html</a> — Slice 1: minimal counter, TypeScript carriers.</li>
+      <li><a href="file-demo.html">file-demo.html</a> — Slice 1: external-file dialect (<code>&lt;laszlo-app src=…&gt;</code>).</li>
+      <li><a href="equivalence.html">equivalence.html</a> — Slice 2: DOM ↔ XML-text output equivalence.</li>
+      <li><a href="bus-demo.html">bus-demo.html</a> — Slice 3: realtime bus, shared server state over WebSocket. <em>Needs <code>node server/index.mjs</code>.</em></li>
+      <li><a href="bikeshop-demo.html">bikeshop-demo.html</a> — Slice 4: JSON databinding — inline dataset, replication, <code>updateData</code>.</li>
+      <li><a href="sensors-demo.html">sensors-demo.html</a> — Slice 4: live JSON over the <code>/api/data</code> WebSocket. <em>Needs <code>node server/index.mjs</code> + <code>node examples/dom-authoring/sensor-feeder.mjs</code>.</em></li>
+    </ul>
+    See <a href="README.md">README.md</a> for the dialect spec and details.
+  </nav>
+
   <p>The colored boxes below are the <em>authored elements</em> — inspect them:
      the <code>&lt;view&gt;</code> tags you see in this file's source are the
      live nodes of the running app.</p>

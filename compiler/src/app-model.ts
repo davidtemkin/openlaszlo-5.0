@@ -8,6 +8,11 @@
 import type { HtmlElem, HtmlNode } from "./htmlsource.js";
 import { builtinTsName, tsTypeOf } from "./lfc-dts.js";
 import { SCHEMA, schemaAttrType } from "./schema-types.js";
+import { parsePath, isJsonAbsolutePath, JsonPathError, ParsedPath } from "./json-path.js";
+import { inferShape, renderShape, walkShapePath, Shape } from "./json-shape.js";
+
+export interface JsonDatasetModel { name: string; rootType: string; shape: Shape | null; declaredLiteral?: string; line: number }
+export interface JsonCtx { shape: Shape | null; tsType: string }
 
 export interface AppAttr { name: string; tsType: string; declKind?: string }
 export interface BodyParam { name: string; tsType: string }
@@ -39,6 +44,7 @@ export interface AppModel {
   nameIssues: NameIssue[]; // invalid TS identifiers — excluded from emission, reported as findings
   staticIssues: NameIssue[]; // markup-literal + cross-reference findings
   serverTags: ServerTagModel[]; // the <server> section (realtime bus)
+  jsonDatasets: JsonDatasetModel[]; // <dataset type="json"> (JSON databinding)
 }
 export interface ExtractOptions {
   es4Bodies?: boolean;      // .lzx mode: skip every body (ES4, not TS)
@@ -113,7 +119,7 @@ const textOf = (el: HtmlElem): { code: string; line: number } => {
 
 export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel {
   const model: AppModel = { classes: [], instances: [], bodies: [], constraints: [],
-    skippedLzs: 0, nameIssues: [], staticIssues: [], serverTags: [] };
+    skippedLzs: 0, nameIssues: [], staticIssues: [], serverTags: [], jsonDatasets: [] };
   const seenIds = new Set<string>();
   const userClasses = new Map<string, AppClassModel>();
   let instSeq = 0;
@@ -252,7 +258,7 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
     }
   }
 
-  function walkInstance(el: HtmlElem, parent: AppInstanceModel | null, siblingNames: Set<string>): void {
+  function walkInstance(el: HtmlElem, parent: AppInstanceModel | null, siblingNames: Set<string>, jsonCtx: JsonCtx | null): void {
     const tag = tagOf(el);
     const user = userClasses.get(tag);
     const inst: AppInstanceModel = {
@@ -286,6 +292,52 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
     const baseTag = builtinTsName(tag) ? tag : "view";
     const extChain = user ? [tag] : [];
     const desc = `<${el.tagName.toLowerCase()}${nm ? ` name="${nm}"` : ""}>`;
+
+    // JSON datapath (spec 2026-07-06-json-databinding-design.md): same static
+    // dialect rule as domsource. Types `data` on the bound instance; validates
+    // the path against the dataset shape when one is known.
+    let childJsonCtx = jsonCtx;
+    const dp = el.getAttribute("datapath");
+    if (dp != null && !/^\s*\$\w*\{/.test(dp)) {
+      const isAbs = isJsonAbsolutePath(dp);
+      const isRel = dp.startsWith("/") && jsonCtx != null;
+      if (isAbs || isRel) {
+        const dpLine = [...el.attributes].find((a) => a.name === "datapath")?.line ?? el.line;
+        let parsed: ParsedPath | null = null;
+        try { parsed = parsePath(dp); }
+        catch (e) { model.staticIssues.push({ message: `datapath "${dp}": ${(e as JsonPathError).message}`, line: dpLine }); }
+        if (parsed) {
+          let baseShape: Shape | null; let baseType: string;
+          if (isAbs) {
+            const ds = model.jsonDatasets.find((d) => d.name === parsed!.dataset);
+            if (!ds) {
+              model.staticIssues.push({ message: `datapath "${dp}": unknown dataset "$${parsed.dataset}"`, line: dpLine });
+              baseShape = null; baseType = "any";
+            } else { baseShape = ds.shape; baseType = ds.rootType; }
+          } else { baseShape = jsonCtx!.shape; baseType = jsonCtx!.tsType; }
+          let elemShape: Shape | null = null; let elemType = "any";
+          if (baseShape) {
+            const r = walkShapePath(baseShape, parsed);
+            if ("error" in r) model.staticIssues.push({ message: `datapath "${dp}": ${r.error}`, line: dpLine });
+            else { elemShape = r.ok; elemType = renderShape(r.ok); }
+          } else if (baseType !== "any") {
+            // declared (lz-shape) dataset: indexed-access typing; segment errors
+            // surface as TS diagnostics on the generated declarations
+            let t = baseType;
+            for (const seg of parsed.segments) {
+              t = `NonNullable<${t}>[${JSON.stringify(seg.prop)}]`;
+              for (const _sel of seg.selectors) t = `NonNullable<${t}>[number]`;
+            }
+            elemType = t;
+          }
+          inst.attrs.push({ name: "data", tsType: elemType });
+          inst.attrs.push({ name: "clonenumber", tsType: "number" });
+          childJsonCtx = { shape: elemShape, tsType: elemType };
+        }
+      } else {
+        childJsonCtx = null; // classic binding resets the JSON context (nearest-bound-ancestor)
+      }
+    }
 
     // First pass: attribute declarations (so handler payloads can see them).
     for (const c of elemChildren(el))
@@ -346,11 +398,34 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
       }
       if (t === "handler" || t === "setter") { collectBody(c, inst.tsName, desc, bodyParams(c, t, inst.attrs, baseTag, extChain)); continue; }
       if (t === "script") continue; // top-level scripts: canvas-owned checking is a follow-up
-      if (!NON_INSTANCE.has(t)) walkInstance(c, inst, childSiblings);
+      if (!NON_INSTANCE.has(t)) walkInstance(c, inst, childSiblings, childJsonCtx);
     }
   }
 
-  walkInstance(root, null, new Set());
+  // JSON datasets (root children): collect names + shapes BEFORE the instance
+  // walk so datapath validation/typing can see them.
+  for (const c of elemChildren(root)) {
+    if (c.tagName.toLowerCase() !== "dataset" || c.getAttribute("type") !== "json") continue;
+    const name = c.getAttribute("name") ?? "";
+    if (!checkName("dataset", name, c.line)) continue;
+    const scripts = elemChildren(c).filter((s) => s.tagName === "SCRIPT");
+    const jsonEl = scripts.find((s) => (s.getAttribute("type") ?? "").toLowerCase() === "application/json");
+    const shapeEl = scripts.find((s) => (s.getAttribute("type") ?? "").toLowerCase() === "application/lz-shape");
+    let shape: Shape | null = null;
+    let rootType = "any";
+    let declaredLiteral: string | undefined;
+    if (jsonEl) {
+      const { code, line } = textOf(jsonEl);
+      try { shape = inferShape(JSON.parse(code)); rootType = renderShape(shape); }
+      catch (e) { model.staticIssues.push({ message: `dataset "${name}": invalid JSON — ${(e as Error).message}`, line }); }
+    } else if (shapeEl) {
+      rootType = `__LzShape_${name}`;   // declared literal, emitted as a type alias
+      declaredLiteral = textOf(shapeEl).code.trim();
+    }
+    model.jsonDatasets.push({ name, rootType, shape, declaredLiteral, line: c.line });
+  }
+
+  walkInstance(root, null, new Set(), null);
   // Named children become with(this)-legal after the walk.
   for (const c of model.constraints) {
     const inst = model.instances.find((i) => i.tsName === c.ownerType);
