@@ -484,6 +484,9 @@ declare class LzView extends LzNode {
   bringToFront(): void;
   sendToBack(): void;
   setSource(source: string, cache?: any, headers?: any, filetype?: any): void;
+  flex?: number;
+  alignself?: string;
+  margin?: number;
   static tagname: any;
   static attributes: any;
   _visible: any;

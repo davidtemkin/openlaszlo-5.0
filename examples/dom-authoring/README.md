@@ -63,3 +63,29 @@ State is server-authoritative and shared (one singleton per app).
 `lzx-check` types both sides — server bodies run in Node (so `setInterval`
 is legal there and flagged in client code). Static hosting: the section is
 inert (console warning, defaults hold).
+
+## Supabase transport (Slice 3b/3c) — shared state on STATIC hosting
+
+`<server transport="supabase" supabase-url=… supabase-key=…>` runs the bus
+over Supabase Realtime — no Node server:
+
+    node tools/serve-static.mjs . 8087
+    open http://localhost:8087/examples/dom-authoring/bus-supabase-demo.html  # two browsers
+
+Ephemeral tags sync via broadcast + presence. Late joiners adopt the oldest
+peer's non-empty state; because every client mirrors received deltas into
+its own presence meta, ANY peer (not just the originator) can seed a joiner.
+`server.presence.count` is a built-in; an empty room = declared defaults.
+
+Tags with `table=` are DURABLE (3c): `rows` fills from the table and follows
+inserts live (RLS-gated `insert()`); state survives everyone leaving. The
+bridge also maintains an escaped `rowsText` — chat bodies are untrusted and
+LzText renders via innerHTML, so text is escaped in ONE place (constraints
+can't run computed calls anyway: the LZX dependency analyzer refuses them).
+
+Methods/handlers have no execution home in supabase mode (lzx-check flags
+them) — use the Node bus for server code. Presence meta rides every set;
+real apps should throttle (free tier ~20/sec). Inline apps only (rooms key
+on the page path). The demo project's publishable key is committed by
+design; RLS is the security boundary; the free tier pauses after ~1 week
+idle.

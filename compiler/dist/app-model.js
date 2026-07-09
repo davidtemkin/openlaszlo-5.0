@@ -6,6 +6,7 @@
 // ACTUAL enclosing instance types.
 import { builtinTsName, tsTypeOf } from "./lfc-dts.js";
 import { SCHEMA, schemaAttrType } from "./schema-types.js";
+import { registryFindings } from "./component-registry.js";
 const ELEMENT = 1, TEXT = 3;
 const NON_INSTANCE = new Set(["attribute", "method", "handler", "setter", "script",
     "class", "interface", "mixin", "dataset", "include", "font", "resource",
@@ -75,7 +76,8 @@ const textOf = (el) => {
 };
 export function extractApp(root, opts = {}) {
     const model = { classes: [], instances: [], bodies: [], constraints: [],
-        skippedLzs: 0, nameIssues: [], staticIssues: [], serverTags: [] };
+        skippedLzs: 0, nameIssues: [], staticIssues: [], serverTags: [],
+        serverTransport: { mode: "node" } };
     const seenIds = new Set();
     const userClasses = new Map();
     let instSeq = 0;
@@ -193,17 +195,30 @@ export function extractApp(root, opts = {}) {
     // The <server> section (realtime bus): tags -> typed model with RAW TS
     // bodies (the bus transpiles; the checker's SERVER program checks them).
     function walkServer(serverEl) {
+        const transport = (serverEl.getAttribute("transport") ?? "node").toLowerCase();
+        if (transport === "supabase") {
+            const url = serverEl.getAttribute("supabase-url") ?? undefined;
+            const key = serverEl.getAttribute("supabase-key") ?? undefined;
+            model.serverTransport = { mode: "supabase", url, key };
+            if (!url || !key)
+                model.staticIssues.push({ message: `transport="supabase" requires supabase-url and supabase-key`, line: serverEl.line });
+        }
         const seen = new Set();
         for (const tagEl of elemChildren(serverEl)) {
             const name = tagEl.getAttribute("name") ?? "";
             if (!checkName("server tag name", name, tagEl.line))
                 continue;
+            if (model.serverTransport.mode === "supabase" && name === "presence") {
+                model.staticIssues.push({ message: `server tag name "presence" is reserved in supabase mode (built-in)`, line: tagEl.line });
+                continue;
+            }
             if (seen.has(name)) {
                 model.staticIssues.push({ message: `duplicate server tag name "${name}"`, line: tagEl.line });
                 continue;
             }
             seen.add(name);
-            const tag = { name, tsName: "LzSrv_" + name, attrs: [], methods: [], handlers: [] };
+            const table = tagEl.getAttribute("table") ?? undefined;
+            const tag = { name, tsName: "LzSrv_" + name, attrs: [], methods: [], handlers: [], ...(table ? { table } : {}) };
             const rawBody = (el) => {
                 const carrier = elemChildren(el).find((c) => c.tagName === "SCRIPT");
                 return textOf(carrier ?? el);
@@ -217,11 +232,15 @@ export function extractApp(root, opts = {}) {
                         tag.attrs.push(declAttr(cn, c.getAttribute("type")));
                 }
                 else if (t === "method") {
+                    if (model.serverTransport.mode === "supabase")
+                        model.staticIssues.push({ message: `<method> on server tag "${name}": no execution home in supabase mode — use the Node bus, or a table-backed tag`, line: c.line });
                     const { code, line } = rawBody(c);
                     if (checkName("method", cn, c.line))
                         tag.methods.push({ name: cn, args, code, srcLine: line });
                 }
                 else if (t === "handler") {
+                    if (model.serverTransport.mode === "supabase")
+                        model.staticIssues.push({ message: `<handler> on server tag "${name}": no execution home in supabase mode — use the Node bus, or a table-backed tag`, line: c.line });
                     const { code, line } = rawBody(c);
                     tag.handlers.push({ name: cn, args, code, srcLine: line });
                 }
@@ -286,6 +305,7 @@ export function extractApp(root, opts = {}) {
                 return d.declKind ?? null; // the ORIGINAL LZX type string, no reverse-mapping
             return schemaAttrType(baseTag, n);
         };
+        const litAttrs = [];
         for (const a of el.attributes) {
             if (SKIP_LITERAL.has(a.name) || a.name.startsWith("on"))
                 continue;
@@ -309,7 +329,12 @@ export function extractApp(root, opts = {}) {
             const issue = literalIssue(a.name, a.value, declKindOf(a.name));
             if (issue)
                 model.staticIssues.push({ message: issue, line: a.line });
+            litAttrs.push({ name: a.name, value: a.value, line: a.line });
         }
+        // Component-registry validation (curated component attrs + view layout hints);
+        // constraint-valued attrs never reach litAttrs (the `continue` above).
+        for (const f of registryFindings(el.tagName.toLowerCase(), true, litAttrs))
+            model.staticIssues.push(f);
         const childSiblings = new Set();
         for (const c of elemChildren(el)) {
             const t = c.tagName.toLowerCase();

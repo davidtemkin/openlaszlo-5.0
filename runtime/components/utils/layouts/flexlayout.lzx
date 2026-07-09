@@ -1,0 +1,160 @@
+<library>
+<include href="utils/layouts/layout.lzx"/>
+<script src="css-layout.js"/>
+<script src="flex-adapter.js"/>
+<class name="flexlayout" extends="layout">
+    <!--- Main axis: row (default), column, row-reverse, column-reverse. -->
+    <attribute name="flexdirection" value="row" type="string"/>
+    <!--- Main-axis distribution: flex-start (default), center, flex-end, space-between, space-around. -->
+    <attribute name="justifycontent" value="flex-start" type="string"/>
+    <!--- Cross-axis alignment: stretch (default), flex-start, center, flex-end. -->
+    <attribute name="alignitems" value="stretch" type="string"/>
+    <!--- nowrap (default) or wrap. -->
+    <attribute name="flexwrap" value="nowrap" type="string"/>
+    <!--- Uniform container padding, px. -->
+    <attribute name="padding" value="0" type="number"/>
+
+    <!--- @keywords private -->
+    <method name="construct" args="view, args"><![CDATA[
+        super.construct(view, args);
+        this.$snapshots = {};      // uid -> {width:{auto,value}|null, height:{auto,value}|null, controlled:{width,height}}
+        this.$subDelegates = {};   // uid -> [LzDelegate]
+        this.updateDelegate.register(this.immediateparent, "onwidth");
+        this.updateDelegate.register(this.immediateparent, "onheight");
+        // One layout per parent: we claim x, y, width AND height (documented; the base
+        // class keeps a list but does not enforce disjointness).
+        if (this.immediateparent.layouts && this.immediateparent.layouts.length > 1) {
+            if ($debug) Debug.warn("flexlayout: another layout on %w — flexlayout claims x/y/width/height", this.immediateparent);
+        }
+    ]]></method>
+
+    <!--- @keywords private -->
+    <method name="addSubview" args="sd"><![CDATA[
+        super.addSubview(sd);
+        var uid = sd.getUID();
+        // Snapshot container: filled lazily AT TAKEOVER (first engine write), not at
+        // adoption — a ${…} constraint may not have applied yet when onaddsubview fires,
+        // and hasset* only becomes reliable once it has. Until we control a dim, live
+        // hasset* is the truth.
+        this.$snapshots[uid] = { width: null, height: null, controlled: { width: false, height: false } };
+        var mk = new LzDelegate(this, "update");
+        mk.register(sd, "onvisible");
+        mk.register(sd, "onwidth");
+        mk.register(sd, "onheight");
+        mk.register(sd, "onflex");
+        mk.register(sd, "onalignself");
+        mk.register(sd, "onmargin");
+        this.$subDelegates[uid] = [mk];
+        this.update();
+    ]]></method>
+
+    <!--- @keywords private -->
+    <method name="removeSubview" args="sd"><![CDATA[
+        this.$restore(sd);
+        var uid = sd.getUID();
+        var dels = this.$subDelegates[uid];
+        if (dels) { for (var i = 0; i < dels.length; i++) dels[i].unregisterAll(); delete this.$subDelegates[uid]; }
+        delete this.$snapshots[uid];
+        super.removeSubview(sd);
+        this.update();
+    ]]></method>
+
+    <!--- @keywords private -->
+    <method name="destroy"><![CDATA[
+        for (var i = 0; i < this.subviews.length; i++) this.$restore(this.subviews[i]);
+        for (var uid in this.$subDelegates) {
+            var dels = this.$subDelegates[uid];
+            for (var j = 0; j < dels.length; j++) dels[j].unregisterAll();
+        }
+        this.$subDelegates = {};
+        super.destroy();
+    ]]></method>
+
+    <!--- Put a subview's engine-controlled dimensions back the way we found them. -->
+    <method name="$restore" args="sd"><![CDATA[
+        var snap = this.$snapshots[sd.getUID()];
+        if (!snap) return;
+        if (snap.controlled.width) this.$restoreDim(sd, snap, 'width');
+        if (snap.controlled.height) this.$restoreDim(sd, snap, 'height');
+    ]]></method>
+
+    <!--- Restore ONE dimension that just left engine control (spec: size restoration). -->
+    <method name="$restoreDim" args="sd, snap, dim"><![CDATA[
+        if (snap[dim] && snap[dim].auto) {
+            sd.setAttribute(dim, null);
+            // LzText's null path dead-ends in the sprite; force a re-measure.
+            if (sd is LzText && sd['_updateSize']) sd._updateSize();
+        } else if (snap[dim]) {
+            sd.setAttribute(dim, snap[dim].value);
+        }
+        snap.controlled[dim] = false;
+    ]]></method>
+
+    <!--- @keywords private -->
+    <method name="update" args="e=null"><![CDATA[
+        if (this.locked) return;
+        this.lock();
+        try {
+            var parent = this.immediateparent;
+            var subs = this.subviews;
+            var kids = [];
+            for (var i = 0; i < subs.length; i++) {
+                var s = subs[i], snap = this.$snapshots[s.getUID()];
+                kids.push({
+                    width: s.width, height: s.height,
+                    // Live hasset* unless WE set it (our own setAttribute flips hasset*).
+                    autoWidth: snap && snap.controlled.width ? snap.width.auto : !s.hassetwidth,
+                    autoHeight: snap && snap.controlled.height ? snap.height.auto : !s.hassetheight,
+                    // flex on a non-auto main dim is inert by the dimension rule (only
+                    // genuinely-auto dims are engine-controlled).
+                    flex: Number(s['flex']) > 0 ? Number(s['flex']) : 0,
+                    alignself: s['alignself'] || null,
+                    margin: Number(s['margin']) || 0,
+                    visible: s.visible,
+                    ignore: !!(s.options && s.options['ignorelayout'])
+                });
+            }
+            var tree = LzFlexAdapter.buildTree({
+                width: parent.width, height: parent.height,
+                flexdirection: this.flexdirection, justifycontent: this.justifycontent,
+                alignitems: this.alignitems, flexwrap: this.flexwrap, padding: this.padding
+            }, kids);
+            var writes = LzFlexAdapter.computeWrites(tree, parent.width);
+            for (var w = 0; w < writes.length; w++) {
+                var wr = writes[w], sv = subs[wr.idx], sn = this.$snapshots[sv.getUID()];
+                if (sv.x !== wr.x) sv.setAttribute('x', wr.x);
+                if (sv.y !== wr.y) sv.setAttribute('y', wr.y);
+                if (wr.width != null) {
+                    if (sn && !sn.controlled.width) { sn.width = { auto: !sv.hassetwidth, value: sv.width }; sn.controlled.width = true; }
+                    if (sv.width !== wr.width) sv.setAttribute('width', wr.width);
+                } else if (sn && sn.controlled.width) {
+                    this.$restoreDim(sv, sn, 'width');
+                }
+                if (wr.height != null) {
+                    if (sn && !sn.controlled.height) { sn.height = { auto: !sv.hassetheight, value: sv.height }; sn.controlled.height = true; }
+                    if (sv.height !== wr.height) sv.setAttribute('height', wr.height);
+                } else if (sn && sn.controlled.height) {
+                    this.$restoreDim(sv, sn, 'height');
+                }
+            }
+        } catch (err) {
+            if ($debug) Debug.warn("flexlayout: engine error %w — positions left untouched", err);
+        } finally {
+            this.locked = false;
+        }
+    ]]></method>
+
+    <doc>
+        <tag name="shortdesc"><text>CSS flexbox layout (vendored css-layout engine).</text></tag>
+        <text>Positions and (for flex/stretch children) sizes the parent's direct subviews
+        with CSS flexbox semantics. Container attributes: flexdirection, justifycontent,
+        alignitems, flexwrap, padding. Subview hints: flex (grow factor; grow-only — this
+        engine has no flex-shrink), alignself, margin (uniform). Only genuinely-auto
+        dimensions are engine-controlled: authored, constrained, or previously-set sizes
+        are inputs, never outputs. No gap property — use margins. One flexlayout per
+        parent (it claims x, y, width and height).</text>
+    </doc>
+</class>
+</library>
+<!-- css-layout.js: Facebook BSD-style license + patents grant (see file header);
+     vendored via dreemgl. flex-adapter.js: this project. -->

@@ -9,11 +9,12 @@
 // namespace map stay in the SW). A dumb static host serves index.html verbatim → the SW
 // compiles in-browser. One distro, two modes, one Explorer.
 //
-//   node server/index.mjs [port=8090]   →  http://localhost:8090/
+//   node server/index.mjs [port=8090] [--no-reload]   →  http://localhost:8090/
 
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { toSourceUrl } from "../startup/urlmap.mjs";
 import { classifyLzxRequest, OP } from "../startup/reqtypes.mjs";
 import { compileApp, DISTRO, RUNTIME } from "./compile.mjs";
@@ -23,8 +24,7 @@ import { handleApi } from "./example-data/index.mjs";
 import { handleDataProxy } from "./data-proxy.mjs";
 import { wrapperFor } from "./wrapper.mjs";
 import { serveSource, serveSrcText, serveEditor, editCompile, editToken, serveEditApp } from "./dev-views.mjs";
-
-const PORT = parseInt(process.argv[2] || "8090", 10);
+import { createReloadHub, injectHtml, reloadTagIfEnabled, setReloadEnabled } from "./dev-reload.mjs";
 
 const MIME = {
   ".html": "text/html;charset=utf-8", ".htm": "text/html;charset=utf-8",
@@ -51,7 +51,7 @@ p.textContent=${safe};(document.body||document.documentElement).appendChild(p);}
 };
 
 // ── <name>.lzx.js → compile the sibling .lzx (TS, disk-cached) + ETag/304 ──────────────
-function compileEndpoint(req, res, url) {
+function compileEndpoint(req, res, url, hub) {
   const lzxPath = url.pathname.replace(/\.js$/, "");        // /…/<name>.lzx
   const srcAbs = path.join(DISTRO, toSourceUrl(lzxPath));   // same namespace map as the SW
   if (!fs.existsSync(srcAbs)) return send(res, 200, errStub("404 source: " + lzxPath), JS_HDR);
@@ -72,6 +72,9 @@ function compileEndpoint(req, res, url) {
   try { r = compileApp(srcAbs, { debug, backtrace, profile, canvas }); }
   catch (e) { return send(res, 200, errStub("compile error: " + (e && e.message || e)), JS_HDR); }
   if (r.unsupported) return send(res, 200, errStub("compile UNSUPPORTED: " + r.unsupported), JS_HDR);
+  // Store the dependency closure for live reload BEFORE the 304 return — the closure is in
+  // hand on cache hits too, and the reload client's `watch` frame may not have arrived yet.
+  if (hub && r.closure) hub.noteClosure(url.pathname.replace(/\.js$/, ""), r.closure);
   const etag = `"${r.tag}"`;
   if (req.headers["if-none-match"] === etag) return send(res, 304, undefined, { ETag: etag });
   send(res, 200, r.js, { ...JS_HDR, ETag: etag, "Cache-Control": "no-cache" });
@@ -83,11 +86,18 @@ function serveStatic(req, res, abs, { inject = false } = {}) {
   try { st = fs.statSync(abs); } catch { return notFound(req, res); }
   if (st.isDirectory()) return serveStatic(req, res, path.join(abs, "index.html"), { inject });
 
-  // index.html → inject window.__OL_COMPILE="server" so the SW registers in server mode.
-  if (inject) {
+  // HTML → serve from memory so the reload client can be injected (dev mode). index.html
+  // additionally gets window.__OL_COMPILE="server" so the SW registers in server mode.
+  // The ETag carries an "-r" suffix: injected bodies must never revalidate against a
+  // pre-injection cache entry. (It does NOT key on the reload flag — a client that cached
+  // with-reload HTML keeps its self-quieting reload client across a --no-reload restart.)
+  if (mimeOf(abs).startsWith("text/html") || inject) {
     let html = fs.readFileSync(abs, "utf8");
-    html = html.replace(/<\/head>/i, '<script>window.__OL_COMPILE="server"</script></head>');
-    return send(res, 200, html, { "Content-Type": "text/html;charset=utf-8", "Cache-Control": "no-cache" });
+    if (inject) html = html.replace(/<\/head>/i, '<script>window.__OL_COMPILE="server"</script></head>');
+    html = injectHtml(html, reloadTagIfEnabled());
+    const etag = `"${st.size.toString(16)}-${Math.floor(st.mtimeMs).toString(16)}-r"`;
+    if (req.headers["if-none-match"] === etag) return send(res, 304, undefined, { ETag: etag });
+    return send(res, 200, html, { "Content-Type": "text/html;charset=utf-8", "Cache-Control": "no-cache", ETag: etag });
   }
 
   const etag = `"${st.size.toString(16)}-${Math.floor(st.mtimeMs).toString(16)}"`;
@@ -132,12 +142,16 @@ function serveWrapper(req, res, p, url) {
   if (!srcAbs.startsWith(DISTRO) || !fs.existsSync(srcAbs)) return notFound(req, res);
   const r = wrapperFor(p, srcAbs, url.searchParams);
   if (r.unsupported) return send(res, 200, errStub("compile UNSUPPORTED: " + r.unsupported), JS_HDR);
-  send(res, 200, r.html, { "Content-Type": "text/html;charset=utf-8", "Cache-Control": "no-cache" });
+  send(res, 200, injectHtml(r.html, reloadTagIfEnabled()), { "Content-Type": "text/html;charset=utf-8", "Cache-Control": "no-cache" });
 }
 
-const server = http.createServer(async (req, res) => {
+const refererPath = (req) => {
+  try { return req.headers.referer ? new URL(req.headers.referer).pathname : null; } catch { return null; }
+};
+
+const makeHandler = (hub) => async function handleRequest(req, res) {
   let url;
-  try { url = new URL(req.url, `http://localhost:${PORT}`); }
+  try { url = new URL(req.url, "http://localhost"); }   // host part unused; parsing only
   catch { return send(res, 400, "bad request\n"); }
   const p = decodeURIComponent(url.pathname);
 
@@ -172,7 +186,7 @@ const server = http.createServer(async (req, res) => {
       const t = editToken(p);                              // `.edit-<token>` editor preview
       if (t) return serveEditApp(res, p, t);
       switch (op) {
-        case OP.COMPILED:  return compileEndpoint(req, res, url);
+        case OP.COMPILED:  return compileEndpoint(req, res, url, hub);
         case OP.RUN:       return serveWrapper(req, res, p, url);
         case OP.SOURCE:    return serveSource(res, p);
         case OP.SRCTEXT:   return serveSrcText(res, p);
@@ -181,6 +195,9 @@ const server = http.createServer(async (req, res) => {
       }
     }
     // 3) everything else → static, via the shared namespace map.
+    // Live-reload watch-set formation: register source-typed serves (200s AND 304s — the
+    // hub filters type/denylist itself) against the referring app page.
+    if (hub) hub.noteRequest(p, refererPath(req));
     const isIndex = (p === "/" || p === "/index.html");
     let rel = toSourceUrl(p);
     if (rel === "/" || rel.endsWith("/")) rel += "index.html";
@@ -190,14 +207,46 @@ const server = http.createServer(async (req, res) => {
   } catch (e) {
     send(res, 500, "500 " + (e && e.message || e) + "\n", { "Content-Type": "text/plain" });
   }
-});
+};
 
-attachUpgradeDispatcher(server, {
-  "/api/connection": connectionUpgradeHandler,
-  "/api/bus": busUpgradeHandler,           // realtime bus (spec 2026-07-06-realtime-bus-design.md)
-});
-console.log("  connection (WebSocket) server on /api/connection");
-server.listen(PORT, () => {
-  console.log(`OpenLaszlo dynamic server → http://localhost:${PORT}/`);
-  console.log("  server-side compile (TS, disk-cached) + /api + persistent connection");
-});
+export function parseServerArgs(argv) {
+  const flags = new Set(argv.filter(a => a.startsWith("--")));
+  const pos = argv.find(a => !a.startsWith("--"));
+  return { port: parseInt(pos || "8090", 10), reload: !flags.has("--no-reload") };
+}
+
+export function createDevServer({ port = 8090, reload = true } = {}) {
+  setReloadEnabled(reload);
+  const hub = reload ? createReloadHub({ distro: DISTRO, runtime: RUNTIME }) : null;
+  if (hub) hub.start();
+  const server = http.createServer(makeHandler(hub));
+  attachUpgradeDispatcher(server, {
+    "/api/connection": connectionUpgradeHandler,
+    "/api/bus": busUpgradeHandler,           // realtime bus (spec 2026-07-06-realtime-bus-design.md)
+    ...(hub ? { "/api/dev-reload": hub.upgradeHandler } : {}),
+  });
+  // Track EVERY connection ourselves: upgraded (WebSocket) sockets leave the http server's
+  // internal pool, so closeAllConnections() can't reach them and server.close() would wait
+  // forever on a live WS — hanging any test (or shutdown) that awaits close().
+  const socks = new Set();
+  server.on("connection", (s) => { socks.add(s); s.on("close", () => socks.delete(s)); });
+  return new Promise((resolve) => {
+    server.listen(port, () => resolve({
+      server, port: server.address().port, hub,
+      close: () => new Promise((r) => {
+        hub?.stop();
+        server.close(r);
+        for (const s of socks) s.destroy();
+      }),
+    }));
+  });
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const { port, reload } = parseServerArgs(process.argv.slice(2));
+  createDevServer({ port, reload }).then((s) => {
+    console.log(`OpenLaszlo dynamic server → http://localhost:${s.port}/`);
+    console.log("  server-side compile (TS, disk-cached) + /api + persistent connection");
+    console.log("  connection (WebSocket) server on /api/connection");
+  });
+}

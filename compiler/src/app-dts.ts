@@ -85,20 +85,35 @@ declare function fetch(input: any, init?: any): Promise<any>;
 
 /** Client-side proxy types + server-side class types from the <server> model. */
 export function generateServerDts(model: AppModel): { clientDts: string; serverDts: string } {
+  const supa = model.serverTransport?.mode === "supabase";
   const client: string[] = [];
   const server: string[] = [];
   for (const t of model.serverTags) {
     client.push(`declare class ${t.tsName}_client extends LzEventable {`);
-    server.push(`declare class ${t.tsName} extends SrvNode {`);
-    for (const a of t.attrs) { client.push(`  ${a.name}: ${a.tsType};`); server.push(`  ${a.name}: ${a.tsType};`); }
-    for (const m of t.methods) client.push(`  ${m.name}(...args: any[]): Promise<any>;`);
-    client.push(`  setAttribute<K extends keyof this & string>(name: K, value: this[K]): void;`);
+    if (!supa) server.push(`declare class ${t.tsName} extends SrvNode {`);
+    for (const a of t.attrs) { client.push(`  ${a.name}: ${a.tsType};`); if (!supa) server.push(`  ${a.name}: ${a.tsType};`); }
+    if (supa && t.table) {
+      client.push(`  rows: any[];`);
+      // rowsText: bridge-maintained escaped newline-joined text — constraints
+      // can't run computed calls (the LZX dependency analyzer refuses IIFEs),
+      // so array->text derivation lives in the bridge, not in constraints.
+      client.push(`  rowsText: string;`);
+      client.push(`  insert(record: any): Promise<any>;`);
+      // rows/rowsText are read-only: Exclude removes them from the setter
+      // union while the property declarations keep constraint typing alive.
+      client.push(`  setAttribute<K extends Exclude<keyof this & string, "rows" | "rowsText">>(name: K, value: this[K]): void;`);
+    } else {
+      for (const m of t.methods) client.push(`  ${m.name}(...args: any[]): Promise<any>;`);
+      client.push(`  setAttribute<K extends keyof this & string>(name: K, value: this[K]): void;`);
+    }
     client.push("}", "");
-    server.push("}", "");
+    if (!supa) server.push("}", "");
   }
   if (model.serverTags.length) {
+    if (supa) client.push(`declare class LzSrvPresence_client extends LzEventable { count: number; }`, "");
     client.push("declare const server: {");
     for (const t of model.serverTags) client.push(`  ${t.name}: ${t.tsName}_client;`);
+    if (supa) client.push(`  presence: LzSrvPresence_client;`);
     client.push("};", "");
   }
   return { clientDts: client.join("\n"), serverDts: server.join("\n") };

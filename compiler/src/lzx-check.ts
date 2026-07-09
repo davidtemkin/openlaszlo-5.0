@@ -131,7 +131,7 @@ export function checkApp(source: string, fileName: string): CheckResult {
   // Server bodies: the SECOND program (no lfc.d.ts — setInterval et al must
   // never leak into client bodies, and canvas/LzView must not leak here).
   let serverBodiesChecked = 0;
-  if (model.serverTags.length) {
+  if (model.serverTags.length && model.serverTransport.mode === "node") {
     serverBodiesChecked = model.serverTags.reduce((n, t) => n + t.methods.length + t.handlers.length, 0);
     const { source: srvSrc, spans: srvSpans } = generateServerBodies(model);
     const srvVirtual = new Map<string, string>([
