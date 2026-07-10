@@ -114,6 +114,13 @@ The Service Worker is **base-agnostic** — it adapts to whatever URL serves it
 (origin root, a `/openlaszlo-5.0/` GitHub-Pages project path, etc.), so the same
 files work on any host with no build configuration.
 
+Cache-busting is automatic: `service-worker.js` carries a content-hash `BUILD_ID`
+([`tools/stamp-version.mjs`](tools/stamp-version.mjs)) that a committed **pre-commit
+hook** ([`tools/hooks/pre-commit`](tools/hooks/pre-commit)) re-stamps before every
+commit, so any pushed deploy reflects the current platform (a changed `BUILD_ID`
+installs the fresh worker, which clears the old caches and reloads open clients).
+Activate the hook once per clone: `git config core.hooksPath tools/hooks`.
+
 ## Repository layout
 
 | Path | What |
@@ -124,7 +131,7 @@ files work on any host with no build configuration.
 | `examples/` | demo applications (including the Dashboard ported from 3.x) |
 | `docs/` | documentation and the developer example corpus |
 | `server/` | the optional Java-free Node server — server-side compile (`index.mjs`, `compile.mjs`), example-data backends, and a dep-free WebSocket server (`connection.mjs`) |
-| `tools/` | `serve-static.mjs`, a zero-dependency static file server for local testing |
+| `tools/` | `serve-static.mjs` (a zero-dependency static file server), `stamp-version.mjs` (the cache-bust `BUILD_ID` stamp), and the committed `hooks/` (pre-commit auto-stamp) |
 | `index.html`, `service-worker.js` | the static bootstrap + the in-browser-compile Service Worker |
 
 ## Status
