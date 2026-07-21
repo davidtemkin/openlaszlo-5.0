@@ -157,7 +157,14 @@ async function boot(host) {
   window.lz.embed.applications.lzapp.onload = function () {
     host.style.visibility = "visible";
   };
-  if (busDecls) busDecls.mod.connectBus(location.pathname);
+  if (busDecls) {
+    if (busDecls.decls.transport === "supabase") {
+      const supaMod = await import(new URL("lz-bus-supabase.js", HERE).href);
+      supaMod.connectSupabase(busDecls.decls, location.pathname);
+    } else {
+      busDecls.mod.connectBus(location.pathname);
+    }
+  }
 }
 
 // embed.js hard-caps ONE DHTML app per window (dhtmlapploaded guard), so boot
