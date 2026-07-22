@@ -22,6 +22,7 @@ export interface ServerTagModel {
   attrs: AppAttr[];         // via declAttr (tsType + declKind)
   methods: ServerBody[];
   handlers: ServerBody[];   // includes oninit and on<attr> handlers
+  table?: string;           // table-backed (supabase 3c)
 }
 export interface ConstraintInfo {
   expr: string;           // the inner expression of ${…} / $once{…} / …
@@ -39,6 +40,7 @@ export interface AppModel {
   nameIssues: NameIssue[]; // invalid TS identifiers — excluded from emission, reported as findings
   staticIssues: NameIssue[]; // markup-literal + cross-reference findings
   serverTags: ServerTagModel[]; // the <server> section (realtime bus)
+  serverTransport: { mode: "node" | "supabase"; url?: string; key?: string };
 }
 export interface ExtractOptions {
   es4Bodies?: boolean;      // .lzx mode: skip every body (ES4, not TS)
@@ -113,7 +115,8 @@ const textOf = (el: HtmlElem): { code: string; line: number } => {
 
 export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel {
   const model: AppModel = { classes: [], instances: [], bodies: [], constraints: [],
-    skippedLzs: 0, nameIssues: [], staticIssues: [], serverTags: [] };
+    skippedLzs: 0, nameIssues: [], staticIssues: [], serverTags: [],
+    serverTransport: { mode: "node" } };
   const seenIds = new Set<string>();
   const userClasses = new Map<string, AppClassModel>();
   let instSeq = 0;
@@ -220,16 +223,29 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
   // The <server> section (realtime bus): tags -> typed model with RAW TS
   // bodies (the bus transpiles; the checker's SERVER program checks them).
   function walkServer(serverEl: HtmlElem): void {
+    const transport = (serverEl.getAttribute("transport") ?? "node").toLowerCase();
+    if (transport === "supabase") {
+      const url = serverEl.getAttribute("supabase-url") ?? undefined;
+      const key = serverEl.getAttribute("supabase-key") ?? undefined;
+      model.serverTransport = { mode: "supabase", url, key };
+      if (!url || !key)
+        model.staticIssues.push({ message: `transport="supabase" requires supabase-url and supabase-key`, line: serverEl.line });
+    }
     const seen = new Set<string>();
     for (const tagEl of elemChildren(serverEl)) {
       const name = tagEl.getAttribute("name") ?? "";
       if (!checkName("server tag name", name, tagEl.line)) continue;
+      if (model.serverTransport.mode === "supabase" && name === "presence") {
+        model.staticIssues.push({ message: `server tag name "presence" is reserved in supabase mode (built-in)`, line: tagEl.line });
+        continue;
+      }
       if (seen.has(name)) {
         model.staticIssues.push({ message: `duplicate server tag name "${name}"`, line: tagEl.line });
         continue;
       }
       seen.add(name);
-      const tag: ServerTagModel = { name, tsName: "LzSrv_" + name, attrs: [], methods: [], handlers: [] };
+      const table = tagEl.getAttribute("table") ?? undefined;
+      const tag: ServerTagModel = { name, tsName: "LzSrv_" + name, attrs: [], methods: [], handlers: [], ...(table ? { table } : {}) };
       const rawBody = (el: HtmlElem): { code: string; line: number } => {
         const carrier = elemChildren(el).find((c) => c.tagName === "SCRIPT");
         return textOf(carrier ?? el);
@@ -241,9 +257,13 @@ export function extractApp(root: HtmlElem, opts: ExtractOptions = {}): AppModel 
         if (t === "attribute") {
           if (checkName("attribute", cn, c.line)) tag.attrs.push(declAttr(cn, c.getAttribute("type")));
         } else if (t === "method") {
+          if (model.serverTransport.mode === "supabase")
+            model.staticIssues.push({ message: `<method> on server tag "${name}": no execution home in supabase mode — use the Node bus, or a table-backed tag`, line: c.line });
           const { code, line } = rawBody(c);
           if (checkName("method", cn, c.line)) tag.methods.push({ name: cn, args, code, srcLine: line });
         } else if (t === "handler") {
+          if (model.serverTransport.mode === "supabase")
+            model.staticIssues.push({ message: `<handler> on server tag "${name}": no execution home in supabase mode — use the Node bus, or a table-backed tag`, line: c.line });
           const { code, line } = rawBody(c);
           tag.handlers.push({ name: cn, args, code, srcLine: line });
         }
